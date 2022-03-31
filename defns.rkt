@@ -1,0 +1,155 @@
+#lang racket
+
+(provide
+  ;; level info
+  (contract-out
+    [struct level-info ([monster-level natural-number/c]
+                        [gold natural-number/c]
+                        [trap-damage natural-number/c]
+                        [hazardous-terrain natural-number/c]
+                        [exp natural-number/c])]
+    [get-level-info (-> (integer-in 0 number-of-levels) level-info?)]
+    [inspiration-reward (-> (integer-in 1 max-players) natural-number/c)])
+
+  ;; loot deck
+  (enum-out material-kind)
+  (enum-out herb-kind)
+  (singleton-out random-item)
+  (contract-out
+    [struct money ([amount (integer-in 1 3)])]
+    [struct material ([name material-kind?]
+                      [amount (apply list/c (build-list max-players (const natural-number/c)))])]
+    [struct herb ([name herb-kind?])]
+    [loot-card? predicate/c])
+
+  ;; scenario
+  (enum-out element)
+  (enum-out monster-modifier)
+  (enum-out condition)
+  (contract-out
+    [initiative? predicate/c]
+    [action? predicate/c]
+    [monster-deck (listof monster-modifier?)]
+    [shuffle-modifier-deck? (-> (listof monster-modifier?) boolean?)]
+    [better-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
+    [worse-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
+    [monster-curse-deck (listof condition?)])
+
+  ;; monster cards
+  (contract-out
+    [struct monster-stats ([hp natural-number/c]
+                           [move natural-number/c]
+                           [attack natural-number/c]
+                           [bonuses (listof string?)]
+                           [effects (listof string?)]
+                           [immunities (listof string?)])]
+    [struct monster-info ([set-name string?]
+                          [name string?]
+                          [normal-stats (apply list/c (build-list number-of-levels (const monster-stats?)))]
+                          [elite-stats (apply list/c (build-list number-of-levels (const monster-stats?)))])]
+    [struct monster-action ([set-name string?]
+                            [name string?]
+                            [initiative initiative?]
+                            [abilities (listof string?)]
+                            [shuffle? boolean?])]
+    [struct monster ([hp natural-number/c]
+                     [move natural-number/c]
+                     [attack natural-number/c]
+                     [bonuses (listof string?)]
+                     [effects (listof string?)]
+                     [immunities (listof string?)]
+                     [number (integer-in 0 10)]
+                     [elite? boolean?]
+                     [level (integer-in 0 number-of-levels)]
+                     [conditions (listof condition?)])]
+    [make-monster (-> monster-info? (integer-in 0 10) boolean? (integer-in 0 number-of-levels)
+                      monster?)]))
+
+(require
+  rebellion/type/enum
+  rebellion/type/singleton)
+
+(define max-players 4)
+
+;; level info
+
+(struct level-info [monster-level gold trap-damage hazardous-terrain exp] #:transparent)
+
+(define level-table
+  (list (level-info 0 2 2 1 4)
+        (level-info 1 2 3 2 6)
+        (level-info 2 3 4 2 8)
+        (level-info 3 3 5 2 10)
+        (level-info 4 4 6 3 12)
+        (level-info 5 4 7 3 14)
+        (level-info 6 5 8 3 16)
+        (level-info 7 6 9 4 18)))
+(define number-of-levels (length level-table))
+(define (get-level-info level)
+  (list-ref level-table level))
+
+(define (inspiration-reward num-players)
+  (- 4 num-players))
+
+;; loot deck
+
+(struct money [amount] #:transparent)
+(define-enum-type material-kind (lumber metal hide))
+(struct material [name amount] #:transparent)
+(define-enum-type herb-kind (arrowvine axenut corpsecap flamefruit rockroot snowthistle))
+(struct herb [name] #:transparent)
+(define-singleton-type random-item)
+
+(define loot-card? (or/c money? material? herb? random-item?))
+
+;; scenario
+
+(define initiative? (integer-in 0 99))
+(define action? string?)
+(define-enum-type element (fire ice air earth light dark))
+(define-enum-type monster-modifier (zero minus1 plus1 minus2 plus2 null crit))
+(define monster-deck
+  (append (build-list 6 (const zero))
+          (build-list 5 (const minus1))
+          (build-list 5 (const plus1))
+          (list minus2 plus2 null crit)))
+
+(define (shuffle-modifier-deck? pulled-cards)
+  (ormap (disjoin (curry equal? null)
+                  (curry equal? crit)) pulled-cards))
+
+(define (better-modifier x y)
+  (cond
+    ;; if either is null, the other is better
+    [(equal? x null) y] [(equal? y null) x]
+    ;; idem. for -2, since null is eliminated
+    [(equal? x minus2) y] [(equal? y minus2) x]
+    ;; repeat for all
+    [(equal? x minus1) y] [(equal? y minus1) x]
+    [(equal? x zero) y] [(equal? y zero) x]
+    [(equal? x plus1) y] [(equal? y plus1) x]
+    [(equal? x plus2) y] [(equal? y plus2) x]
+    [(equal? x crit) y] [(equal? y crit) x]))
+
+(define (worse-modifier x y)
+  (if (equal? (better-modifier x y) x)
+    y
+    x))
+
+(define-enum-type condition (regenerate ward invisible strengthen bless
+                             wound brittle bane poison immobilize disarm impair stun muddle curse))
+(define monster-curse-deck (build-list 10 (const curse)))
+
+;; monster cards
+
+(struct monster-stats [hp move attack bonuses effects immunities] #:prefab)
+(struct monster-info [set-name name normal-stats elite-stats] #:prefab)
+(struct monster-action [set-name name initiative abilities shuffle?] #:prefab)
+(struct monster monster-stats [number elite? level conditions] #:transparent)
+
+(define (make-monster info number elite? level)
+  (apply monster (list-ref (if elite?
+                             (monster-info-elite-stats info)
+                             (monster-info-normal-stats info))
+                           level)
+         number elite? level empty))
