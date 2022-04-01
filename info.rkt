@@ -1,7 +1,8 @@
 #lang info
 
 (define collection "frosthaven-manager")
-(define deps '("gui-easy-lib"
+(define deps '("qi-lib"
+               "gui-easy-lib"
                "rebellion"
                "base"))
 (define build-deps '("scribble-lib" "racket-doc"))

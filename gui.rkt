@@ -2,9 +2,10 @@
 
 (provide render-manager)
 
-(require racket/gui/easy)
+(require racket/gui/easy
+         "defns.rkt")
 
 (define (render-manager)
   (render
     (window
-      (text "hello world"))))
+      (text (~a "hello world" " " curse)))))

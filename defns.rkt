@@ -67,7 +67,8 @@
 
 (require
   rebellion/type/enum
-  rebellion/type/singleton)
+  rebellion/type/singleton
+  "enum-helpers.rkt")
 
 (define max-players 4)
 
@@ -94,9 +95,13 @@
 ;; loot deck
 
 (struct money [amount] #:transparent)
-(define-enum-type material-kind (lumber metal hide))
+(define-enum-type material-kind
+  (lumber metal hide)
+  #:property-maker make-property-maker-that-displays-as-constant-names)
 (struct material [name amount] #:transparent)
-(define-enum-type herb-kind (arrowvine axenut corpsecap flamefruit rockroot snowthistle))
+(define-enum-type herb-kind
+  (arrowvine axenut corpsecap flamefruit rockroot snowthistle)
+  #:property-maker make-property-maker-that-displays-as-constant-names)
 (struct herb [name] #:transparent)
 (define-singleton-type random-item)
 
@@ -106,8 +111,12 @@
 
 (define initiative? (integer-in 0 99))
 (define action? string?)
-(define-enum-type element (fire ice air earth light dark))
-(define-enum-type monster-modifier (zero minus1 plus1 minus2 plus2 null crit))
+(define-enum-type element
+  (fire ice air earth light dark)
+  #:property-maker make-property-maker-that-displays-as-constant-names)
+(define-enum-type monster-modifier
+  (zero minus1 plus1 minus2 plus2 null crit)
+  #:property-maker make-property-maker-that-displays-as-constant-names)
 (define monster-deck
   (append (build-list 6 (const zero))
           (build-list 5 (const minus1))
@@ -136,8 +145,9 @@
     y
     x))
 
-(define-enum-type condition (regenerate ward invisible strengthen bless
-                             wound brittle bane poison immobilize disarm impair stun muddle curse))
+(define-enum-type condition
+  (regenerate ward invisible strengthen bless wound brittle bane poison immobilize disarm impair stun muddle curse)
+  #:property-maker make-property-maker-that-displays-as-constant-names)
 (define monster-curse-deck (build-list 10 (const curse)))
 
 ;; monster cards
