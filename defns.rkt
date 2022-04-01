@@ -46,7 +46,7 @@
 
   ;; monster cards
   (contract-out
-    [struct monster-stats ([hp natural-number/c]
+    [struct monster-stats ([max-hp positive-integer?]
                            [move natural-number/c]
                            [attack natural-number/c]
                            [bonuses (listof string?)]
@@ -62,7 +62,7 @@
                             [abilities (listof string?)]
                             [shuffle? boolean?])]
     [struct monster (;; monster-stats
-                     [hp natural-number/c]
+                     [max-hp positive-integer?]
                      [move natural-number/c]
                      [attack natural-number/c]
                      [bonuses (listof string?)]
@@ -72,11 +72,13 @@
                      [number (integer-in 0 10)]
                      [elite? boolean?]
                      [level (integer-in 0 number-of-levels)]
+                     [current-hp natural-number/c]
                      [conditions (listof condition?)])]
     [make-monster (-> monster-info? (integer-in 0 10) boolean? (integer-in 0 number-of-levels)
                       monster?)]))
 
 (require
+  racket/struct
   rebellion/type/enum
   rebellion/type/singleton
   qi
@@ -166,14 +168,18 @@
 
 ;; monster cards
 
-(struct monster-stats [hp move attack bonuses effects immunities] #:prefab)
+(struct monster-stats [max-hp move attack bonuses effects immunities] #:prefab)
 (struct monster-info [set-name name normal-stats elite-stats] #:prefab)
 (struct monster-action [set-name name initiative abilities shuffle?] #:prefab)
-(struct monster monster-stats [number elite? level conditions] #:transparent)
+(struct monster monster-stats [number elite? level current-hp conditions] #:transparent)
 
 (define (make-monster info number elite? level)
-  (apply monster (list-ref (if elite?
-                             (monster-info-elite-stats info)
-                             (monster-info-normal-stats info))
-                           level)
-         number elite? level empty))
+  (define level-stats
+    (list-ref (if elite?
+                (monster-info-elite-stats info)
+                (monster-info-normal-stats info))
+              level))
+  (apply monster
+         (append
+           (struct->list level-stats)
+           (list number elite? level (monster-stats-max-hp level-stats) empty))))
