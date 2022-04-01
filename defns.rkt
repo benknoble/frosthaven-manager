@@ -126,9 +126,8 @@
           (build-list 5 (const plus1))
           (list minus2 plus2 null crit)))
 
-(define (shuffle-modifier-deck? pulled-cards)
-  (ormap (disjoin (curry equal? null)
-                  (curry equal? crit)) pulled-cards))
+(define-flow (shuffle-modifier-deck? pulled-cards)
+  (~> sep (any (one-of? null crit))))
 
 (define modifier-rankings
   (list null
