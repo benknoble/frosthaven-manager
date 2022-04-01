@@ -1,6 +1,8 @@
 #lang info
 
 (define collection "frosthaven-manager")
+(define racket-launcher-names '("frosthaven-manager"))
+(define racket-launcher-libraries '("main"))
 (define deps '("qi-lib"
                "gui-easy-lib"
                "rebellion"
