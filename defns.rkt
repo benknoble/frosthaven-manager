@@ -52,12 +52,14 @@
                             [initiative initiative?]
                             [abilities (listof string?)]
                             [shuffle? boolean?])]
-    [struct monster ([hp natural-number/c]
+    [struct monster (;; monster-stats
+                     [hp natural-number/c]
                      [move natural-number/c]
                      [attack natural-number/c]
                      [bonuses (listof string?)]
                      [effects (listof string?)]
                      [immunities (listof string?)]
+                     ;; end monster-stats
                      [number (integer-in 0 10)]
                      [elite? boolean?]
                      [level (integer-in 0 number-of-levels)]
