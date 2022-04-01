@@ -70,6 +70,7 @@
 (require
   rebellion/type/enum
   rebellion/type/singleton
+  qi
   "enum-helpers.rkt")
 
 (define max-players 4)
@@ -129,23 +130,20 @@
   (ormap (disjoin (curry equal? null)
                   (curry equal? crit)) pulled-cards))
 
-(define (better-modifier x y)
-  (cond
-    ;; if either is null, the other is better
-    [(equal? x null) y] [(equal? y null) x]
-    ;; idem. for -2, since null is eliminated
-    [(equal? x minus2) y] [(equal? y minus2) x]
-    ;; repeat for all
-    [(equal? x minus1) y] [(equal? y minus1) x]
-    [(equal? x zero) y] [(equal? y zero) x]
-    [(equal? x plus1) y] [(equal? y plus1) x]
-    [(equal? x plus2) y] [(equal? y plus2) x]
-    [(equal? x crit) y] [(equal? y crit) x]))
-
-(define (worse-modifier x y)
-  (if (equal? (better-modifier x y) x)
-    y
-    x))
+(define modifier-rankings
+  (list null
+        minus2
+        minus1
+        zero
+        plus1
+        plus2
+        crit))
+(define-flow (modifier-ranking mod)
+  (~>> (index-of modifier-rankings)))
+(define-flow (better-modifier x y)
+  (~>> list (argmax modifier-ranking)))
+(define-flow (worse-modifier x y)
+  (~>> list (argmin modifier-ranking)))
 
 (define-enum-type condition
   (regenerate ward invisible strengthen bless wound brittle bane poison immobilize disarm impair stun muddle curse)
