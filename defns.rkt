@@ -11,6 +11,15 @@
     [get-level-info (-> (integer-in 0 number-of-levels) level-info?)]
     [inspiration-reward (-> (integer-in 1 max-players) natural-number/c)])
 
+  ;; players
+  (contract-out
+    [struct player ([name string?]
+                    [max-hp positive-integer?]
+                    [current-hp natural-number/c]
+                    [xp natural-number/c]
+                    [conditions (listof condition?)])]
+    [make-player (-> string? positive-integer? player?)])
+
   ;; loot deck
   (enum-out material-kind)
   (enum-out herb-kind)
@@ -94,6 +103,12 @@
 
 (define (inspiration-reward num-players)
   (- 4 num-players))
+
+;; players
+
+(struct player [name max-hp current-hp xp conditions] #:transparent)
+(define (make-player name max-hp)
+  (player name max-hp max-hp 0 empty))
 
 ;; loot deck
 
