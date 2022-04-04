@@ -117,13 +117,15 @@
 
   (define (element-cycler e)
     (define/obs @element-state 'unfused)
+    (define (make-pict-for-canvas p)
+      (inset p (/ size 3) 0 0 0))
     (define pict-view
       (pict-canvas @element-state
                    (match-lambda
-                     ['unfused (element-pics-unfused e)]
-                     ['infused (element-pics-infused e)]
-                     ['waning (element-pics-waning e)]
-                     [_ (element-pics-unfused e)])
+                     ['unfused (make-pict-for-canvas (element-pics-unfused e))]
+                     ['infused (make-pict-for-canvas (element-pics-infused e))]
+                     ['waning (make-pict-for-canvas (element-pics-waning e))]
+                     [_ (make-pict-for-canvas (element-pics-unfused e))])
                    #:min-size (list size size)))
     (define cycler-view
       (vpanel #:stretch '(#f #f)
