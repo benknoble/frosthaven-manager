@@ -97,7 +97,6 @@
 (define elements (list fire ice air earth light dark))
 
 (module+ gui
-
   (define element-state/c (or/c 'unfused 'infused 'waning))
 
   (provide (contract-out
@@ -171,4 +170,4 @@
                                         (thunk (for-each (curryr obs-update! wane-element)
                                                          @states)))))))
   ;; testing errors
-  #;(obs-update! (car @states) (thunk* 'gibberish)))
+  #;(void (obs-update! (car @states) (thunk* 'gibberish))))
