@@ -1,27 +1,25 @@
 #lang racket
 
-(provide
- (contract-out
-  [struct element-pics ([infused pict?]
-                        [waning pict?]
-                        [unfused pict?])]
-  [fire element-pics?]
-  [ice element-pics?]
-  [air element-pics?]
-  [earth element-pics?]
-  [light element-pics?]
-  [dark element-pics?]
-  [elts (listof element-pics?)]))
+(provide (contract-out
+           [struct element-pics ([infused pict?]
+                                 [waning pict?]
+                                 [unfused pict?])]
+           [fire element-pics?]
+           [ice element-pics?]
+           [air element-pics?]
+           [earth element-pics?]
+           [light element-pics?]
+           [dark element-pics?]
+           [elements (listof element-pics?)]))
 
-(require
-  pict
-  (rename-in pict/color
-             [dark darken]
-             [light lighten])
-  pict/flash
-  (only-in 2htdp/image
-           triangle
-           wedge))
+(require pict
+         (rename-in pict/color
+                    [dark darken]
+                    [light lighten])
+         pict/flash
+         (only-in 2htdp/image
+                  triangle
+                  wedge))
 
 (struct element-pics [infused waning unfused] #:transparent)
 
@@ -96,4 +94,67 @@
                                (disk (/ size 2) #:color "black" #:border-color "white" #:border-width 1)))
 (define dark (element-pics infused-dark waning-dark unfused-dark))
 
-(define elts (list fire ice air earth light dark))
+(define elements (list fire ice air earth light dark))
+
+(module+ gui
+
+  (define element-state/c (or/c 'unfused 'infused 'waning))
+
+  (provide (contract-out
+             [element-state/c contract?]
+             [elements-cycler (-> (listof element-pics?)
+                                  (values (listof (obs/c element-state/c))
+                                          (is-a?/c view<%>)))]))
+
+  (require racket/gui/easy
+           racket/gui/easy/operator
+           racket/gui/easy/contract)
+
+  (define (elements-cycler es)
+    (define-values (states views) (element-cyclers es))
+    (values states (apply hpanel #:stretch '(#f #f) views)))
+
+  (define (element-cycler e)
+    (define/obs element-state 'unfused)
+    (define pict-view
+      (pict-canvas element-state
+                   (match-lambda
+                     ['unfused (element-pics-unfused e)]
+                     ['infused (element-pics-infused e)]
+                     ['waning (element-pics-waning e)]
+                     [_ (element-pics-unfused e)])
+                   #:min-size (list size size)))
+    (define (make-button new-state)
+      (button "Cycle" (thunk (:= element-state new-state))))
+    (define cycler-view
+      (vpanel #:stretch '(#f #f)
+              pict-view
+              (button (~> element-state (match-lambda
+                                          ['unfused "Infuse"]
+                                          ['infused "Wane"]
+                                          ['waning "Unfuse"]
+                                          [_ "Infuse"]))
+                      (thunk (<~ element-state (match-lambda
+                                                 ['unfused 'infused]
+                                                 ['infused 'waning]
+                                                 ['waning 'unfused]
+                                                 [_ 'infused]))))))
+    (values element-state cycler-view))
+
+  (define (element-cyclers es)
+    (for/fold ([states empty]
+               [views empty]
+               #:result (values (reverse states)
+                                (reverse views)))
+      ([e (in-list es)])
+      (define-values (state view) (element-cycler e))
+      (values (cons state states)
+              (cons view views)))))
+
+(module+ main
+  (require (submod ".." gui)
+           racket/gui/easy)
+  (define-values (states view) (elements-cycler elements))
+  (render (window view))
+  ;; testing errors
+  #;(obs-update! (car states) (thunk* 'gibberish)))
