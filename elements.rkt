@@ -132,12 +132,15 @@
                                           ['infused "Wane"]
                                           ['waning "Unfuse"]
                                           [_ "Infuse"]))
-                      (thunk (<~ element-state (match-lambda
-                                                 ['unfused 'infused]
-                                                 ['infused 'waning]
-                                                 ['waning 'unfused]
-                                                 [_ 'infused]))))))
+                      (thunk (<~ element-state transition-element-state)))))
     (values element-state cycler-view))
+
+  (define transition-element-state
+    (match-lambda
+      ['unfused 'infused]
+      ['infused 'waning]
+      ['waning 'unfused]
+      [_ 'infused]))
 
   (define (element-cyclers es)
     (for/fold ([states empty]
