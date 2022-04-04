@@ -3,7 +3,9 @@
 (define collection "frosthaven-manager")
 (define racket-launcher-names '("frosthaven-manager"))
 (define racket-launcher-libraries '("main"))
-(define deps '("qi-lib"
+(define deps '("htdp-lib"
+               "pict-lib"
+               "qi-lib"
                "gui-easy-lib"
                "rebellion"
                "base"))
