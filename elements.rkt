@@ -124,8 +124,6 @@
                      ['waning (element-pics-waning e)]
                      [_ (element-pics-unfused e)])
                    #:min-size (list size size)))
-    (define (make-button new-state)
-      (button "Cycle" (thunk (:= element-state new-state))))
     (define cycler-view
       (vpanel #:stretch '(#f #f)
               pict-view
