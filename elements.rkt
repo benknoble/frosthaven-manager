@@ -104,7 +104,8 @@
              [element-state/c contract?]
              [elements-cycler (-> (listof element-pics?)
                                   (values (listof (obs/c element-state/c))
-                                          (is-a?/c view<%>)))]))
+                                          (is-a?/c view<%>)))]
+             [wane-element (-> element-state/c element-state/c)]))
 
   (require racket/gui/easy
            racket/gui/easy/operator
@@ -141,6 +142,12 @@
       ['infused 'waning]
       ['waning 'unfused]
       [_ 'infused]))
+
+  (define wane-element
+    (match-lambda
+      ['infused 'waning]
+      ['waning 'unfused]
+      [_ 'unfused]))
 
   (define (element-cyclers es)
     (for/fold ([@states empty]
