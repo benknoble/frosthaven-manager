@@ -165,6 +165,10 @@
   (require (submod ".." gui)
            racket/gui/easy)
   (define-values (@states view) (elements-cycler elements))
-  (render (window view))
+  ;; demo
+  (void (render (window (vpanel view
+                                (button "Next Round"
+                                        (thunk (for-each (curryr obs-update! wane-element)
+                                                         @states)))))))
   ;; testing errors
   #;(obs-update! (car @states) (thunk* 'gibberish)))
