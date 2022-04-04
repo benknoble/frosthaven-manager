@@ -115,9 +115,9 @@
     (values states (apply hpanel #:stretch '(#f #f) views)))
 
   (define (element-cycler e)
-    (define/obs element-state 'unfused)
+    (define/obs @element-state 'unfused)
     (define pict-view
-      (pict-canvas element-state
+      (pict-canvas @element-state
                    (match-lambda
                      ['unfused (element-pics-unfused e)]
                      ['infused (element-pics-infused e)]
@@ -127,13 +127,13 @@
     (define cycler-view
       (vpanel #:stretch '(#f #f)
               pict-view
-              (button (~> element-state (match-lambda
-                                          ['unfused "Infuse"]
-                                          ['infused "Wane"]
-                                          ['waning "Unfuse"]
-                                          [_ "Infuse"]))
-                      (thunk (<~ element-state transition-element-state)))))
-    (values element-state cycler-view))
+              (button (~> @element-state (match-lambda
+                                           ['unfused "Infuse"]
+                                           ['infused "Wane"]
+                                           ['waning "Unfuse"]
+                                           [_ "Infuse"]))
+                      (thunk (<~ @element-state transition-element-state)))))
+    (values @element-state cycler-view))
 
   (define transition-element-state
     (match-lambda
@@ -143,19 +143,19 @@
       [_ 'infused]))
 
   (define (element-cyclers es)
-    (for/fold ([states empty]
+    (for/fold ([@states empty]
                [views empty]
-               #:result (values (reverse states)
+               #:result (values (reverse @states)
                                 (reverse views)))
       ([e (in-list es)])
-      (define-values (state view) (element-cycler e))
-      (values (cons state states)
+      (define-values (@state view) (element-cycler e))
+      (values (cons @state @states)
               (cons view views)))))
 
 (module+ main
   (require (submod ".." gui)
            racket/gui/easy)
-  (define-values (states view) (elements-cycler elements))
+  (define-values (@states view) (elements-cycler elements))
   (render (window view))
   ;; testing errors
-  #;(obs-update! (car states) (thunk* 'gibberish)))
+  #;(obs-update! (car @states) (thunk* 'gibberish)))
