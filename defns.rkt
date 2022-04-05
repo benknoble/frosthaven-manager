@@ -44,7 +44,9 @@
     [max-money-cards natural-number/c]
     [max-material-cards natural-number/c]
     [max-herb-cards natural-number/c]
-    [max-random-item-cards natural-number/c])
+    [max-random-item-cards natural-number/c]
+    [material-kinds (listof material-kind?)]
+    [herb-kinds (listof herb-kind?)])
 
   ;; scenario
   (enum-out element)
@@ -164,11 +166,15 @@
 (define-enum-type material-kind
   (lumber metal hide)
   #:property-maker make-property-maker-that-displays-as-constant-names)
+(define material-kinds
+  (list lumber metal hide))
 (struct material [name amount] #:transparent)
 (define max-material-cards 8) ;; each
 (define-enum-type herb-kind
   (arrowvine axenut corpsecap flamefruit rockroot snowthistle)
   #:property-maker make-property-maker-that-displays-as-constant-names)
+(define herb-kinds
+  (list arrowvine axenut corpsecap flamefruit rockroot snowthistle))
 (struct herb [name] #:transparent) ;; amount is always 1
 (define max-herb-cards 2) ;; each
 (define-singleton-type random-item)
