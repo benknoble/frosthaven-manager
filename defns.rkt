@@ -53,6 +53,7 @@
   (contract-out
     [initiative? predicate/c]
     [action? predicate/c]
+    [conditions (listof condition?)]
     [monster-deck (listof monster-modifier?)]
     [shuffle-modifier-deck? (-> (listof monster-modifier?) boolean?)]
     [better-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
@@ -214,6 +215,8 @@
 (define-enum-type condition
   (regenerate ward invisible strengthen bless wound brittle bane poison immobilize disarm impair stun muddle)
   #:property-maker make-property-maker-that-displays-as-constant-names)
+(define conditions
+  (list regenerate ward invisible strengthen bless wound brittle bane poison immobilize disarm impair stun muddle))
 
 ;; monster cards
 
