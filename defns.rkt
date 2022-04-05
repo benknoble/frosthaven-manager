@@ -20,7 +20,16 @@
                     [current-hp natural-number/c]
                     [xp natural-number/c]
                     [conditions (listof condition?)])]
-    [make-player (-> string? positive-integer? player?)])
+    [make-player (-> string? positive-integer? player?)]
+    [act-on-hp (-> (-> natural-number/c natural-number/c)
+                   (-> player? player?))]
+    [act-on-xp (-> (-> natural-number/c natural-number/c)
+                   (-> player? player?))]
+    [remove-condition (-> condition? (-> player? player?))]
+    [add-condition (-> condition? (-> player? player?))]
+    [afflicted-by? (-> condition? (-> player? boolean?))]
+    [dead? (-> player? boolean?)]
+    [at-max-health? (-> player? boolean?)])
 
   ;; loot deck
   (enum-out material-kind)
@@ -117,6 +126,35 @@
 (struct player [name max-hp current-hp xp conditions] #:transparent)
 (define (make-player name max-hp)
   (player name max-hp max-hp 0 empty))
+
+(define (act-on-hp proc)
+  (match-lambda
+    [(player name max-hp curr-hp xp conds)
+     (player name max-hp (proc curr-hp) xp conds)]))
+
+(define (act-on-xp proc)
+  (match-lambda
+    [(player name max-hp curr-hp xp conds)
+     (player name max-hp curr-hp (proc xp) conds)]))
+
+(define (remove-condition c)
+  (match-lambda
+    [(player name max-hp curr-hp xp conds)
+     (player name max-hp curr-hp xp (remove* (list c) conds))]))
+
+(define (add-condition c)
+  (match-lambda
+    [(player name max-hp curr-hp xp conds)
+     (player name max-hp curr-hp xp (cons c (remove* (list c) conds)))]))
+
+(define ((afflicted-by? c) p)
+  (and (member c (player-conditions p)) #t))
+
+(define (dead? p)
+  (zero? (player-current-hp p)))
+
+(define (at-max-health? p)
+  (= (player-max-hp p) (player-current-hp p)))
 
 ;; loot deck
 
