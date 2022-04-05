@@ -1,8 +1,11 @@
 #lang racket
 
 (provide (contract-out
-           [player-info-views (-> (integer-in 1 max-players)
-                                  (values (listof (obs/c player?))
+           [struct @player ([id any/c]
+                            [@name (obs/c string?)]
+                            [@hp (obs/c positive-integer?)])]
+           [player-info-views (-> (obs/c (integer-in 1 max-players))
+                                  (values (obs/c (listof @player?))
                                           (is-a?/c view<%>)))]))
 
 (require racket/gui/easy
@@ -10,39 +13,39 @@
          racket/gui/easy/contract
          "defns.rkt")
 
-(define (player-info-views num-players)
-  (define-values (@ps vs) (player-infos num-players))
-  (values @ps (apply vpanel vs)))
+(define (player-info-views @num-players)
+  (define @ps (~> @num-players (λ (np)
+                                (map (thunk* (make-@player)) (range np)))))
+  (define v
+    (list-view @ps
+               #:key @player-id
+               (match-lambda**
+                 [(id (app obs-peek (@player id @name @hp)))
+                  (player-info-view @name @hp)])))
+  (values @ps v))
 
-(define (player-infos num-players)
-  (for/fold ([@ps empty]
-             [vs empty]
-             #:result (values (reverse @ps)
-                              (reverse vs)))
-    ([_ (in-range num-players)])
-    (define-values (@p v) (player-info-view))
-    (values (cons @p @ps)
-            (cons v vs))))
-
-(define (player-info-view)
-  (define/obs @player-name "")
-  (define/obs @player-hp 1)
-  (define @player (obs-combine make-player @player-name @player-hp))
+(define (player-info-view @name @hp)
   (define input-view
     (hpanel
-      (input #:label "Name" @player-name
+      (input #:label "Name" @name
              (match-lambda**
-               [(_ (? string? s)) (:= @player-name s)]
+               [(_ (? string? s)) (:= @name s)]
                [(_ _) (void)]))
-      (button "-" (thunk (if (obs-peek (~> @player-hp (curry = 1)))
+      (button "-" (thunk (if (obs-peek (~> @hp (curry = 1)))
                            (void)
-                           (<~ @player-hp sub1))))
-      (text (~> @player-hp ~a))
-      (button "+" (thunk (<~ @player-hp add1)))))
-  (values @player input-view))
+                           (<~ @hp sub1))))
+      (text (~> @hp ~a))
+      (button "+" (thunk (<~ @hp add1)))))
+  input-view)
+
+(struct @player [id @name @hp] #:transparent)
+(define (make-@player)
+  (define/obs @name "")
+  (define/obs @hp 1)
+  (@player (gensym) @name @hp))
 
 (module+ main
-  (define-values (@ps view) (player-info-views 3))
+  (define-values (@ps view) (player-info-views (@ 3)))
   (void (render (window (vpanel
                           view
                           (button "Debug" (thunk (displayln @ps))))))))
