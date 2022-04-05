@@ -48,7 +48,7 @@
     [shuffle-modifier-deck? (-> (listof monster-modifier?) boolean?)]
     [better-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
     [worse-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
-    [monster-curse-deck (listof condition?)])
+    [monster-curse-deck (listof monster-modifier?)])
 
   ;; monster cards
   (contract-out
@@ -145,19 +145,21 @@
   (fire ice air earth light dark)
   #:property-maker make-property-maker-that-displays-as-constant-names)
 (define-enum-type monster-modifier
-  (zero minus1 plus1 minus2 plus2 null crit)
+  (zero minus1 plus1 minus2 plus2 null crit curse)
   #:property-maker make-property-maker-that-displays-as-constant-names)
 (define monster-deck
   (append (build-list 6 (const zero))
           (build-list 5 (const minus1))
           (build-list 5 (const plus1))
           (list minus2 plus2 null crit)))
+(define monster-curse-deck (build-list 10 (const curse)))
 
 (define-flow (shuffle-modifier-deck? pulled-cards)
   (~> sep (any (one-of? null crit))))
 
 (define modifier-rankings
-  (list null
+  (list curse
+        null
         minus2
         minus1
         zero
@@ -172,9 +174,8 @@
   (~>> list (argmin modifier-ranking)))
 
 (define-enum-type condition
-  (regenerate ward invisible strengthen bless wound brittle bane poison immobilize disarm impair stun muddle curse)
+  (regenerate ward invisible strengthen bless wound brittle bane poison immobilize disarm impair stun muddle)
   #:property-maker make-property-maker-that-displays-as-constant-names)
-(define monster-curse-deck (build-list 10 (const curse)))
 
 ;; monster cards
 
