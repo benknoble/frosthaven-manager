@@ -94,7 +94,7 @@
       (button "-" (thunk (if (obs-peek (~> @hp (curry = 1)))
                            (void)
                            (<~ @hp sub1))))
-      (text (~> @hp ~a))
+      (text (~> @hp (λ (hp) (~a "Max HP: " hp))))
       (button "+" (thunk (<~ @hp add1)))))
   input-view)
 
