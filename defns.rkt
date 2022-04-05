@@ -45,6 +45,9 @@
     [max-material-cards natural-number/c]
     [max-herb-cards natural-number/c]
     [max-random-item-cards natural-number/c]
+    [money-deck (listof money?)]
+    [material-decks (hash/c material-kind? (listof material?))]
+    [herb-decks (hash/c herb-kind? (listof herb?))]
     [material-kinds (listof material-kind?)]
     [herb-kinds (listof herb-kind?)])
 
@@ -181,6 +184,22 @@
 (define max-random-item-cards 1)
 
 (define loot-card? (or/c money? material? herb? random-item?))
+
+;; placeholders
+(define money-deck
+  (build-list
+    max-money-cards
+    (thunk* (money (random 1 4)))))
+(define (make-material-deck m)
+  (build-list
+    max-material-cards
+    (thunk* (material m (build-list max-players (thunk* (random 1 3)))))))
+(define material-decks
+  (for/hash ([m (in-list material-kinds)])
+    (values m (make-material-deck m))))
+(define herb-decks
+  (for/hash ([h (in-list herb-kinds)])
+    (values h (build-list max-herb-cards (thunk* (herb h))))))
 
 ;; scenario
 
