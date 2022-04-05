@@ -10,7 +10,7 @@
 
 (define (render-manager)
   (define/obs @mode 'start)
-  (define-values (@ps p-view) (player-info-views @num-players))
+  (define-values (@ps p-view) (player-input-views @num-players))
   (render
     (window
       (case-view @mode
