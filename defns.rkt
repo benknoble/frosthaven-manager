@@ -8,6 +8,8 @@
                         [trap-damage natural-number/c]
                         [hazardous-terrain natural-number/c]
                         [exp natural-number/c])]
+    [number-of-levels natural-number/c]
+    [max-players natural-number/c]
     [get-level-info (-> (integer-in 0 number-of-levels) level-info?)]
     [inspiration-reward (-> (integer-in 1 max-players) natural-number/c)])
 
