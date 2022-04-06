@@ -67,4 +67,5 @@
                     loot-view
                     (table '("Card")
                            (~> @loot-deck list->vector)
-                           #:entry->row (compose1 vector ~a)))))))
+                           #:entry->row (compose1 vector ~a)
+                           #:min-size '(250 #f)))))))
