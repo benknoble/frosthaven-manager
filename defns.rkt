@@ -90,12 +90,12 @@
                      [effects (listof string?)]
                      [immunities (listof string?)]
                      ;; end monster-stats
-                     [number (integer-in 0 10)]
+                     [number (integer-in 1 10)]
                      [elite? boolean?]
                      [level (integer-in 0 number-of-levels)]
                      [current-hp natural-number/c]
                      [conditions (listof condition?)])]
-    [make-monster (-> monster-info? (integer-in 0 10) boolean? (integer-in 0 number-of-levels)
+    [make-monster (-> monster-info? (integer-in 1 10) boolean? (integer-in 0 number-of-levels)
                       monster?)]))
 
 (require
