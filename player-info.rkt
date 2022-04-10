@@ -1,12 +1,9 @@
 #lang racket
 
 (provide (contract-out
-           [struct @player-input ([id any/c]
-                                  [@name (obs/c string?)]
-                                  [@hp (obs/c positive-integer?)])]
-           [player-input-views (-> (obs/c (integer-in 1 max-players))
-                                   (values (obs/c (listof @player-input?))
-                                           (is-a?/c view<%>)))]
+           [player-input-views (-> (obs/c (listof (cons/c natural-number/c
+                                                          (obs/c player?))))
+                                   (is-a?/c view<%>))]
            [player-view (-> (obs/c player?) (obs/c initiative?)
                             (is-a?/c view<%>))]))
 
@@ -15,16 +12,27 @@
          racket/gui/easy/contract
          "defns.rkt")
 
-(define (player-input-views @num-players)
-  (define @ps (~> @num-players (λ (np)
-                                 (map (thunk* (make-@player-input)) (range np)))))
-  (define v
-    (list-view @ps
-               #:key @player-input-id
-               (match-lambda**
-                 [(id (app obs-peek (@player-input id @name @hp)))
-                  (player-input-view @name @hp)])))
-  (values @ps v))
+(define (player-input-views @players)
+  (list-view @players
+             #:key car
+             (λ (k _@player-derived) ;; don't use this derived thing
+               (define @player (cdr (list-ref (obs-peek @players) k)))
+               (player-input-view
+                 (~> @player player-name)
+                 (~> @player player-max-hp)
+                 #:on-name
+                 (λ (name)
+                   (<~ @player (λ (p) (struct-copy player p [name name]))))
+                 #:on-hp
+                 (λ (f)
+                   (<~ @player
+                       (match-lambda
+                         [(and p (struct* player ([max-hp hp])))
+                          (define new-hp (f hp))
+                          (if (not (positive? new-hp))
+                            p
+                            (struct-copy player p [max-hp new-hp]))])))))
+             #:min-size (~> @players (λ (ps) (list #f (* (length ps) 40))))))
 
 (define (player-view @player @initiative)
   (define (make-condition-checkbox c)
@@ -84,43 +92,30 @@
           name-hp-xp
           conditions-panel))
 
-(define (player-input-view @name @hp)
-  (define input-view
-    (hpanel
-      (input #:label "Name" @name
-             (match-lambda**
-               [(_ (? string? s)) (:= @name s)]
-               [(_ _) (void)]))
-      (button "-" (thunk (if (obs-peek (~> @hp (curry = 1)))
-                           (void)
-                           (<~ @hp sub1))))
-      (text (~> @hp (λ (hp) (~a "Max HP: " hp))))
-      (button "+" (thunk (<~ @hp add1)))))
-  input-view)
-
-(struct @player-input [id @name @hp] #:transparent)
-(define (make-@player-input)
-  (define/obs @name "")
-  (define/obs @hp 1)
-  (@player-input (gensym) @name @hp))
+(define (player-input-view @name @hp #:on-name [on-name void] #:on-hp [on-hp void])
+  (hpanel
+    (input #:label "Name" @name (match-lambda** [(_ s) (on-name s)])
+           #:min-size '(200 #f))
+    (button "-" (thunk (on-hp sub1)))
+    (text (~> @hp (λ (hp) (~a "Max HP: " hp))))
+    (button "+" (thunk (on-hp add1)))))
 
 (module+ main
-  (define-values (@ps i-view) (player-input-views (@ 3)))
-  (render (window
-            (hpanel
-              (button "Input views"
-                      (thunk
-                        (render (window (vpanel i-view
-                                                (button "Debug" (thunk (displayln @ps))))))))
-              (button "Player views"
-                      (thunk
-                        (render
-                          (window
-                            (vpanel (player-view (@ (player "A" 15 10 3 (list regenerate invisible immobilize)))
-                                                 (@ 23))
-                                    (spacer)
-                                    (player-view (@ (player "B" 20 20 0 (list brittle)))
-                                                 (@ 57))
-                                    (spacer)
-                                    (player-view (@ (player "C" 8 0 5 empty))
-                                                 (@ 99)) )))))))))
+  (define/obs @players
+    (list
+      (cons 0 (@ (player "A" 15 10 3 (list regenerate invisible immobilize))))
+      (cons 1 (@ (player "B" 20 20 0 (list brittle))))
+      (cons 2 (@ (player "C" 8 0 5 empty)))))
+  (define i-view (player-input-views @players))
+  (void
+    (render (window i-view))
+    (render
+      (window
+        (vpanel (player-view (cdr (first (obs-peek @players)))
+                             (@ 23))
+                (spacer)
+                (player-view (cdr (second (obs-peek @players)))
+                             (@ 57))
+                (spacer)
+                (player-view (cdr (third (obs-peek @players)))
+                             (@ 99)))))))
