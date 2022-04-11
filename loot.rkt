@@ -20,7 +20,8 @@
 (define (loot-picker #:on-card [on-card void])
   (define (make-cards-picker! label max-cards deck in-deck?)
     (define/obs @n 0)
-    (hpanel (button "-" (thunk (if (obs-peek (~> @n zero?))
+    (hpanel (spacer)
+            (button "-" (thunk (if (obs-peek (~> @n zero?))
                                  (void)
                                  (begin
                                    (<~ @n sub1)
@@ -30,7 +31,8 @@
                                  (void)
                                  (begin
                                    (<~ @n add1)
-                                   (on-card `(add ,deck))))))))
+                                   (on-card `(add ,deck))))))
+            (spacer)))
   (define money-view
     (make-cards-picker! "Money Cards: " max-money-cards money-deck money?))
   (define material-views
