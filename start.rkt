@@ -1,32 +1,29 @@
 #lang racket
 
 (provide (contract-out
-           [start-view (is-a?/c view<%>)]
-           [@level (obs/c (integer-in 0 number-of-levels))]
-           [@num-players (obs/c (integer-in 1 max-players))]))
+           [start-view (->* ()
+                            (#:on-level (-> natural-number/c any)
+                             #:on-player (-> positive-integer? any))
+                            (is-a?/c view<%>))]))
 
 (require racket/gui/easy
-         racket/gui/easy/operator
-         racket/gui/easy/contract
          "defns.rkt")
 
-(define/obs @level 0)
-(define/obs @num-players 1)
-
-(define start-view
+(define (start-view #:on-level [on-level void] #:on-player [on-player void])
   (vpanel
     (spacer)
     (text "FROSTHAVEN")
     (spacer)
     (choice #:label "Scenario Level"
-            (build-list number-of-levels values)
+            (build-list number-of-levels identity)
             #:choice->label ~a
-            (λ:= @level identity))
+            on-level)
     (choice #:label "Number of Players"
             (build-list max-players add1)
             #:choice->label ~a
-            (λ:= @num-players identity))
+            on-player)
     (spacer)))
 
 (module+ main
-  (void (render (window start-view))))
+  (void (render (window (start-view #:on-level displayln
+                                    #:on-player displayln)))))
