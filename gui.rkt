@@ -18,6 +18,7 @@
   ;; gui
   (render
     (window
+      #:title "FROSTHAVEN Manager"
       (case-view @mode
         [(start)
          (vpanel (start-view #:on-level (λ:= @level identity)
