@@ -160,7 +160,7 @@
   (zero? (player-current-hp p)))
 
 (define (at-max-health? p)
-  (= (player-max-hp p) (player-current-hp p)))
+  (>= (player-current-hp p) (player-max-hp p)))
 
 ;; loot deck
 
