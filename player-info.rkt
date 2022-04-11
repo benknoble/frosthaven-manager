@@ -8,7 +8,7 @@
                             (is-a?/c view<%>))]))
 
 (require racket/gui/easy
-         racket/gui/easy/operator
+         "observable-operator.rkt"
          racket/gui/easy/contract
          "defns.rkt")
 
@@ -16,74 +16,74 @@
   (list-view @players
              #:key car
              (λ (k _@player-derived) ;; don't use this derived thing
-               (define @player (cdr (list-ref (obs-peek @players) k)))
+               (define @player (cdr (list-ref (@! @players) k)))
                (player-input-view
-                 (~> @player player-name)
-                 (~> @player player-max-hp)
+                 (@> @player player-name)
+                 (@> @player player-max-hp)
                  #:on-name
                  (λ (name)
-                   (<~ @player (λ (p) (struct-copy player p [name name]))))
+                   (<@ @player (λ (p) (struct-copy player p [name name]))))
                  #:on-hp
                  (λ (f)
-                   (<~ @player
+                   (<@ @player
                        (match-lambda
                          [(and p (struct* player ([max-hp hp])))
                           (define new-hp (f hp))
                           (if (not (positive? new-hp))
                             p
                             (struct-copy player p [max-hp new-hp]))])))))
-             #:min-size (~> @players (λ (ps) (list #f (* (length ps) 40))))))
+             #:min-size (@~> @players (~>> length (* 40) (list #f)))))
 
 (define (player-view @player @initiative)
   (define (make-condition-checkbox c)
     (checkbox #:label (~a c)
-              #:checked? (~> @player (afflicted-by? c))
+              #:checked? (@> @player (afflicted-by? c))
               (match-lambda
-                [#f (<~ @player (remove-condition c))]
-                [#t (<~ @player (add-condition c))])))
+                [#f (<@ @player (remove-condition c))]
+                [#t (<@ @player (add-condition c))])))
   (define hp-panel
-    (hpanel (button "-" (thunk (if (obs-peek (~> @player dead?))
+    (hpanel (button "-" (thunk (if (@! (@> @player dead?))
                                  (void)
-                                 (<~ @player (act-on-hp sub1)))))
-            (text (~> @player
+                                 (<@ @player (act-on-hp sub1)))))
+            (text (@> @player
                       (match-lambda
                         [(struct* player ([max-hp max] [current-hp current]))
                          (~a "HP: " current "/" max)])))
-            (button "+" (thunk (if (obs-peek (~> @player at-max-health?))
+            (button "+" (thunk (if (@! (@> @player at-max-health?))
                                  (void)
-                                 (<~ @player (act-on-hp add1)))))))
+                                 (<@ @player (act-on-hp add1)))))))
   (define xp-panel
-    (hpanel (button "-" (thunk (if (obs-peek (~> @player (compose1 zero? player-xp)))
+    (hpanel (button "-" (thunk (if (@! (@~> @player (~> player-xp zero?)))
                                  (void)
-                                 (<~ @player (act-on-xp sub1)))))
-            (text (~> @player (compose1 (curry ~a "XP: ") player-xp)))
-            (button "+" (thunk (<~ @player (act-on-xp add1))))))
+                                 (<@ @player (act-on-xp sub1)))))
+            (text (@~> @player (~>> player-xp (~a "XP: "))))
+            (button "+" (thunk (<@ @player (act-on-xp add1))))))
   (define name-hp-xp
     (vpanel #:alignment '(center center)
             #:stretch '(#f #t)
-            (text (~> @player player-name))
+            (text (@> @player player-name))
             hp-panel
             xp-panel))
   (define initiative-panel
     (vpanel #:style '(border)
             #:stretch '(#f #t)
-            (text (~> @initiative ~a))
+            (text (@> @initiative ~a))
             (button "Initiative"
                     (thunk
                       (render
                         (dialog (slider @initiative (λ:= @initiative identity)
                                         #:min-value 0
                                         #:max-value 99
-                                        #:label (~> @player (λ (p) (~a "Initiative for " (player-name p)))))))))))
+                                        #:label (@~> @player (~>> player-name (~a "Initiative for "))))))))))
   (define conditions-panel
-    (vpanel (text (~> @player (compose1 (curryr string-join ", " #:before-last " and ")
-                                        (curry map ~a)
-                                        player-conditions)))
+    (vpanel (text (@~> @player (~> player-conditions
+                                   (sep ~a) collect
+                                   (string-join ", " #:before-last " and "))))
             (button "Conditions"
                     (thunk
                       (render
                         (apply dialog
-                               #:title (~> @player (λ (p) (~a "Conditions for " (player-name p))))
+                               #:title (@~> @player (~>> player-name (~a "Conditions for ")))
                                (map make-condition-checkbox conditions)))))))
   ;; final view
   (hpanel #:alignment '(center center)
@@ -97,7 +97,7 @@
     (input #:label "Name" @name (match-lambda** [(_ s) (on-name s)])
            #:min-size '(200 #f))
     (button "-" (thunk (on-hp sub1)))
-    (text (~> @hp (λ (hp) (~a "Max HP: " hp))))
+    (text (@~> @hp (~a "Max HP: " _)))
     (button "+" (thunk (on-hp add1)))))
 
 (module+ main
@@ -111,11 +111,11 @@
     (render (window i-view))
     (render
       (window
-        (vpanel (player-view (cdr (first (obs-peek @players)))
+        (vpanel (player-view (cdr (first (@! @players)))
                              (@ 23))
                 (spacer)
-                (player-view (cdr (second (obs-peek @players)))
+                (player-view (cdr (second (@! @players)))
                              (@ 57))
                 (spacer)
-                (player-view (cdr (third (obs-peek @players)))
+                (player-view (cdr (third (@! @players)))
                              (@ 99)))))))

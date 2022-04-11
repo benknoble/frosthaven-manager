@@ -107,7 +107,7 @@
              [wane-element (-> element-state/c element-state/c)]))
 
   (require racket/gui/easy
-           racket/gui/easy/operator
+           "observable-operator.rkt"
            racket/gui/easy/contract)
 
   (define (elements-cycler es)
@@ -129,12 +129,12 @@
     (define cycler-view
       (vpanel #:stretch '(#f #f)
               pict-view
-              (button (~> @element-state (match-lambda
+              (button (@> @element-state (match-lambda
                                            ['unfused "Infuse"]
                                            ['infused "Wane"]
                                            ['waning "Unfuse"]
                                            [_ "Infuse"]))
-                      (thunk (<~ @element-state transition-element-state)))))
+                      (thunk (<@ @element-state transition-element-state)))))
     (values @element-state cycler-view))
 
   (define transition-element-state

@@ -13,7 +13,7 @@
                      any))]))
 
 (require racket/gui/easy
-         racket/gui/easy/operator
+         "observable-operator.rkt"
          racket/gui/easy/contract
          "defns.rkt")
 
@@ -21,16 +21,16 @@
   (define (make-cards-picker! label max-cards deck in-deck?)
     (define/obs @n 0)
     (hpanel (spacer)
-            (button "-" (thunk (if (obs-peek (~> @n zero?))
+            (button "-" (thunk (if (@! (@> @n zero?))
                                  (void)
                                  (begin
-                                   (<~ @n sub1)
+                                   (<@ @n sub1)
                                    (on-card `(remove ,in-deck?))))))
-            (text (~> @n (λ (n) (~a label n))))
-            (button "+" (thunk (if (>= (obs-peek @n) max-cards)
+            (text (@~> @n (~a label _)))
+            (button "+" (thunk (if (>= (@! @n) max-cards)
                                  (void)
                                  (begin
-                                   (<~ @n add1)
+                                   (<@ @n add1)
                                    (on-card `(add ,deck))))))
             (spacer)))
   (define money-view
@@ -68,7 +68,7 @@
       [`(add ,from-deck) (cons (car (shuffle from-deck))
                                old-loot-deck)]
       [`(remove ,in-deck?) (remf in-deck? old-loot-deck)]))
-  (<~ @loot-deck (compose1 shuffle update-old-deck)))
+  (<~@ @loot-deck (~> update-old-deck shuffle)))
 
 (module+ main
   (define/obs @loot-deck empty)
@@ -76,6 +76,6 @@
                   (hpanel
                     (loot-picker #:on-card (loot-picker-updater @loot-deck))
                     (table '("Card")
-                           (~> @loot-deck list->vector)
+                           (@> @loot-deck list->vector)
                            #:entry->row (compose1 vector ~a)
                            #:min-size '(250 #f)))))))

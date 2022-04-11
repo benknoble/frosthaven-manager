@@ -45,7 +45,7 @@
                                                 (is-a?/c view<%>)))]))
 
   (require racket/gui/easy
-           racket/gui/easy/operator
+           "observable-operator.rkt"
            racket/gui/easy/contract)
 
   ;; TODO: monster-view
@@ -57,15 +57,15 @@
   (define (single-monster-picker info-db #|@monsters|#)
     (define sets (hash-keys info-db))
     (define/obs @set (car sets))
-    (define @set-map (~> @set (flow (hash-ref info-db _))))
+    (define @set-map (@~> @set (hash-ref info-db _)))
     (define set-picker (choice #:label "Set" sets (λ:= @set identity)))
-    (define @valid-monsters (~> @set-map hash-keys))
+    (define @valid-monsters (@> @set-map hash-keys))
     (define/obs @info (on (@valid-monsters)
-                        (~>> obs-peek
+                        (~>> @!
                              car
-                             (hash-ref (obs-peek @set-map)))))
+                             (hash-ref (@! @set-map)))))
     (define monster-picker (choice #:label "Monster" @valid-monsters
-                                   (λ:= @info (flow (hash-ref (obs-peek @set-map) _)))))
+                                   (λ:= @info (flow (hash-ref (@! @set-map) _)))))
     (define @add-monster-states
       (@ (for/list ([num (in-inclusive-range 1 10)])
            (list num #|elite?|# #f #|to-add?|# #f))))
@@ -77,35 +77,35 @@
     (define (make-monster-picker k @e)
       (hpanel
         (checkbox (λ (added?)
-                    (<~ @add-monster-states
+                    (<@ @add-monster-states
                         (update-@add-monster-states
                           k
                           (match-lambda
                             [(list (== k) elite? _)
                              (list k elite? added?)]))))
-                  #:label (~> @e (flow (~> car ~a)))
-                  #:checked? (~> @e caddr))
+                  #:label (@~> @e (~> car ~a))
+                  #:checked? (@> @e caddr))
         (checkbox (λ (elite?)
-                    (<~ @add-monster-states
+                    (<@ @add-monster-states
                         (update-@add-monster-states
                           k
                           (match-lambda
                             [(list (== k) _ added?)
                              (list k elite? added?)]))))
                   #:label "Elite?"
-                  #:checked? (~> @e cadr)
-                  #:enabled? (~> @e caddr))))
+                  #:checked? (@> @e cadr)
+                  #:enabled? (@> @e caddr))))
     (define picker
       (vpanel
         (hpanel set-picker monster-picker
                 #:alignment '(center top)
                 #:stretch '(#f #f))
-        (hpanel (list-view (~> @add-monster-states (flow (take 5)))
+        (hpanel (list-view (@~> @add-monster-states (take 5))
                            make-monster-picker
                            #:key car
                            #:stretch '(#t #f)
                            #:min-size '(#f 120))
-                (list-view (~> @add-monster-states (flow (drop 5)))
+                (list-view (@~> @add-monster-states (drop 5))
                            make-monster-picker
                            #:key car
                            #:stretch '(#t #f)

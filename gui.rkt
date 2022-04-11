@@ -3,7 +3,7 @@
 (provide render-manager)
 
 (require racket/gui/easy
-         racket/gui/easy/operator
+         "observable-operator.rkt"
          "defns.rkt"
          "start.rkt"
          "player-info.rkt"
@@ -27,9 +27,9 @@
          (vpanel (start-view #:on-level (λ:= @level identity)
                              #:on-player (λ:= @num-players identity))
                  (button "Play"
-                         (thunk (when (empty? (obs-peek @players))
+                         (thunk (when (empty? (@! @players))
                                   (:= @players (build-list
-                                                 (obs-peek @num-players)
+                                                 (@! @num-players)
                                                  (λ (i) (cons i (@ (make-player "" 1)))))))
                                 (:= @mode 'input-player-info))))]
         [(input-player-info)
