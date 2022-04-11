@@ -1,32 +1,36 @@
 #lang racket
 
 (provide (contract-out
-           [loot-picker (-> (obs/c (listof (or/c money? material? herb? random-item?)))
-                            (is-a?/c view<%>))]))
+           [loot-picker (->* ()
+                             (#:on-card (-> (or/c (list/c 'add (listof (or/c money? material? herb? random-item?)))
+                                                  (list/c 'remove predicate/c))
+                                            any))
+                             (is-a?/c view<%>))]
+           [loot-picker-updater
+             (-> (obs/c (listof (or/c money? material? herb? random-item?)))
+                 (-> (or/c (list/c 'add (listof (or/c money? material? herb? random-item?)))
+                           (list/c 'remove predicate/c))
+                     any))]))
 
 (require racket/gui/easy
          racket/gui/easy/operator
          racket/gui/easy/contract
          "defns.rkt")
 
-(define (loot-picker @loot-deck)
+(define (loot-picker #:on-card [on-card void])
   (define (make-cards-picker! label max-cards deck in-deck?)
     (define/obs @n 0)
-    (obs-observe! @n
-      (λ (amount)
-        (<~ @loot-deck
-            (λ (old-loot-deck)
-              (shuffle
-                (append (filter-not in-deck? old-loot-deck)
-                        (take (shuffle deck) amount)))))))
-    (define view (hpanel (button "-" (thunk (if (obs-peek (~> @n zero?))
-                                              (void)
-                                              (<~ @n sub1))))
-                         (text (~> @n (λ (n) (~a label n))))
-                         (button "+" (thunk (if (>= (obs-peek @n) max-cards)
-                                              (void)
-                                              (<~ @n add1))))))
-    view)
+    (hpanel (button "-" (thunk (if (obs-peek (~> @n zero?))
+                                 (void)
+                                 (begin
+                                   (<~ @n sub1)
+                                   (on-card `(remove ,in-deck?))))))
+            (text (~> @n (λ (n) (~a label n))))
+            (button "+" (thunk (if (>= (obs-peek @n) max-cards)
+                                 (void)
+                                 (begin
+                                   (<~ @n add1)
+                                   (on-card `(add ,deck))))))))
   (define money-view
     (make-cards-picker! "Money Cards: " max-money-cards money-deck money?))
   (define material-views
@@ -46,31 +50,29 @@
                             [(herb (== h)) #t]
                             [_ #f]))))
   (define/obs @random-item? #f)
-  (obs-observe! @random-item?
-    (λ (rand-item?)
-      (<~ @loot-deck
-          (λ (old-loot-deck)
-            (define deck-sans-random
-              (filter-not random-item? old-loot-deck))
-            (if rand-item?
-              (shuffle
-                (cons random-item deck-sans-random))
-              deck-sans-random)))))
   (define random-item-view
     (checkbox #:label "Random Item Card?"
-              (λ:= @random-item? identity)))
-  (define loot-view
-    (apply vpanel
-           random-item-view
-           money-view
-           (append material-views herb-views)))
-  loot-view)
+              (match-lambda
+                [#t (on-card `(add ,(list random-item)))]
+                [#f (on-card `(remove ,random-item?))])))
+  (apply vpanel
+         random-item-view
+         money-view
+         (append material-views herb-views)))
+
+(define ((loot-picker-updater @loot-deck) evt)
+  (define (update-old-deck old-loot-deck)
+    (match evt
+      [`(add ,from-deck) (cons (car (shuffle from-deck))
+                               old-loot-deck)]
+      [`(remove ,in-deck?) (remf in-deck? old-loot-deck)]))
+  (<~ @loot-deck (compose1 shuffle update-old-deck)))
 
 (module+ main
   (define/obs @loot-deck empty)
   (void (render (window
                   (hpanel
-                    (loot-picker @loot-deck)
+                    (loot-picker #:on-card (loot-picker-updater @loot-deck))
                     (table '("Card")
                            (~> @loot-deck list->vector)
                            #:entry->row (compose1 vector ~a)
