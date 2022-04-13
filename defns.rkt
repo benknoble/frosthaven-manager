@@ -1,6 +1,11 @@
 #lang racket
 
 (provide
+  (contract-out
+    [no-duplicates? (-> list? boolean?)]
+    [unique/c (-> flat-contract? contract?)]
+    [unique-with/c (-> (-> any/c any/c) flat-contract? contract?)])
+
   ;; level info
   (contract-out
     [struct level-info ([monster-level natural-number/c]
@@ -96,7 +101,8 @@
                       (integer-in 1 10) boolean?
                       monster?)]
     [make-monster-group (-> monster-info? (integer-in 0 number-of-levels)
-                            (listof (cons/c (integer-in 1 10) boolean?))
+                            (and/c (listof (cons/c (integer-in 1 10) boolean?))
+                                   (unique-with/c car any/c))
                             monster-group?)]))
 
 (require
@@ -104,6 +110,20 @@
   rebellion/type/singleton
   qi
   "enum-helpers.rkt")
+
+(define-flow no-duplicates?
+  (not (and check-duplicates #t)))
+
+(define (unique/c c)
+  (flat-named-contract
+    'unique/c
+    (and/c (listof c) no-duplicates?)))
+
+(define (unique-with/c key c)
+  (flat-named-contract
+    (list 'unique-with/c (object-name key) (object-name c))
+    (λ (xs)
+      ((unique/c c) (map key xs)))))
 
 (define max-players 4)
 
