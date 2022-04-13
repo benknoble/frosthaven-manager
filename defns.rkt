@@ -85,24 +85,21 @@
                             [initiative initiative?]
                             [abilities (listof string?)]
                             [shuffle? boolean?])]
-    [struct monster (;; monster-stats
-                     [max-hp positive-integer?]
-                     [move natural-number/c]
-                     [attack natural-number/c]
-                     [bonuses (listof string?)]
-                     [effects (listof string?)]
-                     [immunities (listof string?)]
-                     ;; end monster-stats
-                     [number (integer-in 1 10)]
+    [struct monster ([number (integer-in 1 10)]
                      [elite? boolean?]
-                     [level (integer-in 0 number-of-levels)]
                      [current-hp natural-number/c]
                      [conditions (listof condition?)])]
-    [make-monster (-> monster-info? (integer-in 1 10) boolean? (integer-in 0 number-of-levels)
-                      monster?)]))
+    [struct monster-group ([normal-stats monster-stats?]
+                           [elite-stats monster-stats?]
+                           [monsters (listof monster?)])]
+    [make-monster (-> monster-info? (integer-in 0 number-of-levels)
+                      (integer-in 1 10) boolean?
+                      monster?)]
+    [make-monster-group (-> monster-info? (integer-in 0 number-of-levels)
+                            (listof (cons/c (integer-in 1 10) boolean?))
+                            monster-group?)]))
 
 (require
-  racket/struct
   rebellion/type/enum
   rebellion/type/singleton
   qi
@@ -257,15 +254,29 @@
 (struct monster-stats [max-hp move attack bonuses effects immunities] #:prefab)
 (struct monster-info [set-name name normal-stats elite-stats] #:prefab)
 (struct monster-action [set-name name initiative abilities shuffle?] #:prefab)
-(struct monster monster-stats [number elite? level current-hp conditions] #:transparent)
+(struct monster [number elite? current-hp conditions] #:transparent)
+(struct monster-group [normal-stats elite-stats monsters] #:transparent)
 
-(define (make-monster info number elite? level)
+(define (make-monster* stats number elite?)
+  (monster number elite? (monster-stats-max-hp stats) empty))
+
+(define (make-monster info level number elite?)
   (define level-stats
     (list-ref (if elite?
                 (monster-info-elite-stats info)
                 (monster-info-normal-stats info))
               level))
-  (apply monster
-         (append
-           (struct->list level-stats)
-           (list number elite? level (monster-stats-max-hp level-stats) empty))))
+  (make-monster* level-stats number elite?))
+
+(define (make-monster-group info level num+elite?s)
+  (define-values (normal elite)
+    (~> (info)
+        (-< monster-info-normal-stats
+            monster-info-elite-stats)
+        (amp (list-ref level))))
+  (monster-group
+    normal elite
+    (map (match-lambda
+           [(cons num elite?)
+            (make-monster* (if elite? elite normal) num elite?)])
+         num+elite?s)))
