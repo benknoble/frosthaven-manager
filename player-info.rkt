@@ -4,8 +4,7 @@
            [player-input-views (-> (obs/c (listof (cons/c natural-number/c
                                                           (obs/c player?))))
                                    (is-a?/c view<%>))]
-           [player-view (-> (obs/c player?) (obs/c initiative?)
-                            (is-a?/c view<%>))]))
+           [player-view (-> (obs/c player?) (is-a?/c view<%>))]))
 
 (require racket/gui/easy
          "observable-operator.rkt"
@@ -34,7 +33,7 @@
                             (struct-copy player p [max-hp new-hp]))])))))
              #:min-size (@~> @players (~>> length (* 40) (list #f)))))
 
-(define (player-view @player @initiative)
+(define (player-view @player)
   (define (make-condition-checkbox c)
     (checkbox #:label (~a c)
               #:checked? (@> @player (afflicted-by? c))
@@ -65,16 +64,21 @@
             hp-panel
             xp-panel))
   (define initiative-panel
-    (vpanel #:style '(border)
-            #:stretch '(#f #t)
-            (text (@> @initiative ~a))
-            (button "Initiative"
-                    (thunk
-                      (render
-                        (dialog (slider @initiative (λ:= @initiative identity)
-                                        #:min-value 0
-                                        #:max-value 99
-                                        #:label (@~> @player (~>> player-name (~a "Initiative for "))))))))))
+    (let ([@init (@> @player player-initiative)])
+      (vpanel #:style '(border)
+              #:stretch '(#f #t)
+              (text (@> @init ~a))
+              (button
+                "Initiative"
+                (thunk
+                  (render
+                    (dialog
+                      (slider @init
+                              (λ (i)
+                                (<~@ @player (set-initiative i)))
+                              #:min-value 0
+                              #:max-value 99
+                              #:label (@~> @player (~>> player-name (~a "Initiative for ")))))))))))
   (define conditions-panel
     (vpanel (text (@~> @player (~> player-conditions
                                    (sep ~a) collect
@@ -103,19 +107,16 @@
 (module+ main
   (define/obs @players
     (list
-      (cons 0 (@ (player "A" 15 10 3 (list regenerate invisible immobilize))))
-      (cons 1 (@ (player "B" 20 20 0 (list brittle))))
-      (cons 2 (@ (player "C" 8 0 5 empty)))))
+      (cons 0 (@ (player "A" 15 10 3 (list regenerate invisible immobilize) 23)))
+      (cons 1 (@ (player "B" 20 20 0 (list brittle) 57)))
+      (cons 2 (@ (player "C" 8 0 5 empty 99)))))
   (define i-view (player-input-views @players))
   (void
     (render (window i-view))
     (render
       (window
-        (vpanel (player-view (cdr (first (@! @players)))
-                             (@ 23))
+        (vpanel (player-view (cdr (first (@! @players))))
                 (spacer)
-                (player-view (cdr (second (@! @players)))
-                             (@ 57))
+                (player-view (cdr (second (@! @players))))
                 (spacer)
-                (player-view (cdr (third (@! @players)))
-                             (@ 99)))))))
+                (player-view (cdr (third (@! @players)))))))))

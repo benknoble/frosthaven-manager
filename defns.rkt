@@ -19,7 +19,8 @@
                     [max-hp positive-integer?]
                     [current-hp natural-number/c]
                     [xp natural-number/c]
-                    [conditions (listof condition?)])]
+                    [conditions (listof condition?)]
+                    [initiative initiative?])]
     [make-player (-> string? positive-integer? player?)]
     [act-on-hp (-> (-> natural-number/c natural-number/c)
                    (-> player? player?))]
@@ -29,7 +30,9 @@
     [add-condition (-> condition? (-> player? player?))]
     [afflicted-by? (-> condition? (-> player? boolean?))]
     [dead? (-> player? boolean?)]
-    [at-max-health? (-> player? boolean?)])
+    [at-max-health? (-> player? boolean?)]
+    [set-initiative (-> player? initiative? player?)]
+    [clear-initiative (-> player? player?)])
 
   ;; loot deck
   (enum-out material-kind)
@@ -129,29 +132,29 @@
 
 ;; players
 
-(struct player [name max-hp current-hp xp conditions] #:transparent)
+(struct player [name max-hp current-hp xp conditions initiative] #:transparent)
 (define (make-player name max-hp)
-  (player name max-hp max-hp 0 empty))
+  (player name max-hp max-hp 0 empty 0))
 
 (define (act-on-hp proc)
   (match-lambda
-    [(player name max-hp curr-hp xp conds)
-     (player name max-hp (proc curr-hp) xp conds)]))
+    [(player name max-hp curr-hp xp conds init)
+     (player name max-hp (proc curr-hp) xp conds init)]))
 
 (define (act-on-xp proc)
   (match-lambda
-    [(player name max-hp curr-hp xp conds)
-     (player name max-hp curr-hp (proc xp) conds)]))
+    [(player name max-hp curr-hp xp conds init)
+     (player name max-hp curr-hp (proc xp) conds init)]))
 
 (define (remove-condition c)
   (match-lambda
-    [(player name max-hp curr-hp xp conds)
-     (player name max-hp curr-hp xp (remove* (list c) conds))]))
+    [(player name max-hp curr-hp xp conds init)
+     (player name max-hp curr-hp xp (remove* (list c) conds) init)]))
 
 (define (add-condition c)
   (match-lambda
-    [(player name max-hp curr-hp xp conds)
-     (player name max-hp curr-hp xp (cons c (remove* (list c) conds)))]))
+    [(player name max-hp curr-hp xp conds init)
+     (player name max-hp curr-hp xp (cons c (remove* (list c) conds)) init)]))
 
 (define ((afflicted-by? c) p)
   (and (member c (player-conditions p)) #t))
@@ -161,6 +164,12 @@
 
 (define (at-max-health? p)
   (>= (player-current-hp p) (player-max-hp p)))
+
+(define (set-initiative p init)
+  (struct-copy player p [initiative init]))
+
+(define (clear-initiative p)
+  (struct-copy player p [initiative 0]))
 
 ;; loot deck
 
