@@ -7,7 +7,7 @@
            [default-monster-db path-string?]))
 
 (require racket/runtime-path
-         qi
+         "qi.rkt"
          "defns.rkt")
 
 (define info-db/c
@@ -17,23 +17,17 @@
 
 (define-runtime-path default-monster-db "monster-db.rktd")
 
-(define (list->hash xs #:->key [->key identity] #:->value [->value identity])
-  (for/hash ([x (in-list xs)])
-    (on (x) (-< ->key ->value))))
-
 (define (get-dbs db-file)
   (~> (db-file)
       file->list sep
-      (-<
+      (partition
         ;; info db
-        (~>> (pass monster-info?) collect
-             (group-by monster-info-set-name)
-             (list->hash #:->key (flow (~> car monster-info-set-name))
-                         #:->value (flow (list->hash #:->key monster-info-name))))
+        [monster-info? (~>> collect (group-by monster-info-set-name)
+                            (list~>hash #:->key (~> car monster-info-set-name)
+                                        #:->value (list~>hash #:->key monster-info-name)))]
         ;; actions deck
-        (~>> (pass monster-action?) collect
-             (group-by monster-action-set-name)
-             (list->hash #:->key (flow (~> car monster-action-set-name)))))))
+        [monster-action? (~>> collect (group-by monster-action-set-name)
+                              (list~>hash #:->key (~> car monster-action-set-name)))])))
 
 (module+ gui
   (provide (contract-out

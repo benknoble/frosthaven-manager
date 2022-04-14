@@ -108,7 +108,7 @@
 (require
   rebellion/type/enum
   rebellion/type/singleton
-  qi
+  "qi.rkt"
   "enum-helpers.rkt")
 
 (define-flow no-duplicates?

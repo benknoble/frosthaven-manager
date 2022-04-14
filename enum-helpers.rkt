@@ -9,7 +9,7 @@
 (require
   rebellion/type/enum
   rebellion/collection/keyset
-  qi)
+  "qi.rkt")
 
 (define (make-property-maker-that-displays-as-constant-names desc)
   (define default-props-sans-custom-writer
