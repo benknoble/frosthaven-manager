@@ -9,7 +9,9 @@
                "gui-easy-lib"
                "rebellion"
                "base"))
-(define build-deps '("scribble-lib" "racket-doc"))
+(define build-deps '("rackunit-lib"
+                     "scribble-lib"
+                     "racket-doc"))
 (define scribblings '(("scribblings/frosthaven-manager.scrbl" ())))
 (define pkg-desc "Frosthaven Scenario Manager")
 (define version "0.0")
