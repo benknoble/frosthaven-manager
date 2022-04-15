@@ -2,7 +2,8 @@
 
 (provide (for-space qi partition))
 
-(require qi)
+(require qi
+         (for-syntax syntax/parse))
 
 (define-qi-syntax-parser partition-inefficient
   [(_) #'ground]
@@ -36,7 +37,9 @@
   (apply values (apply append results)))
 
 (define-qi-syntax-parser partition
-  [(_ [cond? body] ...)
+  [(_) #'ground]
+  [(_ [cond? body]) #'(~> (pass cond?) body)]
+  [(_ [cond? body] ...+)
    #:with c+bs #'(list (cons cond? (flow body)) ...)
    #'(~>> (partition-values c+bs))])
 
