@@ -31,98 +31,105 @@
 
 (module+ gui
   (provide (contract-out
-             [single-monster-picker (-> info-db/c
-                                        (values (obs/c (listof (list/c (integer-in 1 10)
-                                                                       boolean?
-                                                                       boolean?)))
-                                                (obs/c monster-info?)
-                                                (is-a?/c view<%>)))]))
+             [monster-event/c contract?]
+             [single-monster-picker (->* (info-db/c)
+                                         (#:on-change (-> monster-event/c any))
+                                         (is-a?/c view<%>))]))
 
   (require racket/gui/easy
-           "observable-operator.rkt"
-           racket/gui/easy/contract)
+           "observable-operator.rkt")
+
+  (define monster-event/c
+    (or/c
+      (list/c 'set 'from string? 'to string?)
+      (list/c 'monster 'from monster-info? 'to monster-info?)
+      (list/c 'include? (integer-in 1 10) 'to boolean?)
+      (list/c 'elite? (integer-in 1 10) 'to boolean?)))
 
   ;; TODO: monster-view
   ;; some similarities to player-view, but need room for actions and overall
   ;; stats, the monster numbers + elite? status, ability to "hide" action, etc.
 
-  ;; TODO: how to give back state of which monsters were added?
-  ;; can we just return the add-monster-states, too?
-  (define (single-monster-picker info-db #|@monsters|#)
+  (define (single-monster-picker info-db #:on-change [on-change (void)])
     (define sets (hash-keys info-db))
     (define/obs @set (car sets))
-    (define @set-map (@~> @set (hash-ref info-db _)))
-    (define set-picker (choice #:label "Set" sets (λ:= @set identity)))
-    (define @valid-monsters (@> @set-map hash-keys))
-    (define/obs @info (on (@valid-monsters)
-                        (~>> @!
-                             car
-                             (hash-ref (@! @set-map)))))
-    (define monster-picker (choice #:label "Monster" @valid-monsters
-                                   (λ:= @info (flow (hash-ref (@! @set-map) _)))))
-    (define @add-monster-states
-      (@ (for/list ([num (in-inclusive-range 1 10)])
-           (list num #|elite?|# #f #|to-add?|# #f))))
-    (define ((update-@add-monster-states k proc) add-monster-states)
-      (for/list ([e (in-list add-monster-states)])
-        (match e
-          [(list (== k) _ _) (proc e)]
-          [_ e])))
-    (define (make-monster-picker k @e)
-      (hpanel
-        (checkbox (λ (added?)
-                    (<@ @add-monster-states
-                        (update-@add-monster-states
-                          k
-                          (match-lambda
-                            [(list (== k) elite? _)
-                             (list k elite? added?)]))))
-                  #:label (@~> @e (~> car ~a))
-                  #:checked? (@> @e caddr))
-        (checkbox (λ (elite?)
-                    (<@ @add-monster-states
-                        (update-@add-monster-states
-                          k
-                          (match-lambda
-                            [(list (== k) _ added?)
-                             (list k elite? added?)]))))
-                  #:label "Elite?"
-                  #:checked? (@> @e cadr)
-                  #:enabled? (@> @e caddr))))
-    (define picker
-      (vpanel
-        (hpanel set-picker monster-picker
-                #:alignment '(center top)
-                #:stretch '(#f #f))
-        (hpanel (list-view (@~> @add-monster-states (take 5))
-                           make-monster-picker
-                           #:key car
-                           #:stretch '(#t #f)
-                           #:min-size '(#f 120))
-                (list-view (@~> @add-monster-states (drop 5))
-                           make-monster-picker
-                           #:key car
-                           #:stretch '(#t #f)
-                           #:min-size '(#f 120)))))
-    (values @add-monster-states @info picker))
+    (define @name->info (@~> @set (hash-ref info-db _)))
+    (define set-picker
+      (choice #:label "Set"
+              sets
+              (λ (set)
+                (on-change `(set from ,(@! @set) to ,set))
+                (:= @set set))))
+    (define @valid-monsters (@> @name->info hash-keys))
+    (define/obs @info (~>> (@valid-monsters) @! car (hash-ref (@! @name->info))))
+    (define monster-picker
+      (choice #:label "Monster"
+              @valid-monsters
+              (λ (monster-name)
+                (define new-info (hash-ref (@! @name->info) monster-name))
+                (on-change `(monster from ,(@! @info) to ,new-info))
+                (:= @info new-info))))
+    (define (make-monster-selector num)
+      (define/obs @included? #f)
+      (hpanel (checkbox (λ (included?)
+                          (on-change `(include? ,num to ,included?))
+                          (:= @included? included?))
+                        #:label (~a num))
+              (checkbox (λ (elite?)
+                          (on-change `(elite? ,num to ,elite?)))
+                        #:label "Elite?"
+                        #:enabled? @included?)))
+    (vpanel (hpanel set-picker monster-picker
+                    #:alignment '(center top)
+                    #:stretch '(#f #f))
+            (hpanel (apply vpanel (map make-monster-selector (inclusive-range 1 5)))
+                    (apply vpanel (map make-monster-selector (inclusive-range 5 10))))))
 
   )
 
 (module+ main
   (require (submod ".." gui)
-           racket/gui/easy)
+           racket/gui/easy
+           "observable-operator.rkt")
   (define-values (info-db actions-db)
     (get-dbs "sample-db.rktd"))
-  (define-values (@monster-states @info picker)
-    (single-monster-picker info-db))
-  (void (render (window picker)))
-  (void (render (window
-                  (vpanel
-                    (text (obs-map @info monster-info-name))
-                    (list-view @monster-states
-                               (λ (k @e)
-                                 (text (obs-map @e ~a)))
-                               #:key car))))))
+  (define/obs @state
+    (let* ([take-first (flow (~> hash-keys car))]
+           [set (take-first info-db)]
+           [name->info (hash-ref info-db set)]
+           [info (hash-ref name->info (take-first name->info))])
+      (list
+        ;; 1: set
+        set
+        ;; 2: info
+        info
+        ;; 3: hash number -> elite
+        (hash))))
+  (void
+    (render
+      (window
+        (single-monster-picker
+          info-db
+          #:on-change
+          (match-lambda
+            [`(set from ,old to ,new) (<~@ @state (list-set 0 new))]
+            [`(monster from ,old to ,new) (<~@ @state (list-set 1 new))]
+            [`(include? ,n to #t)
+              (<~@ @state (list-update 2 (flow (hash-update n values #f))))]
+            [`(include? ,n to #f)
+              (<~@ @state (list-update 2 (flow (hash-remove n))))]
+            [`(elite? ,n to ,elite?)
+              ;; looks like hash-set, but I want the missing-key semantics of
+              ;; hash-update with no failure-result as a guard against bugs
+              (<~@ @state (list-update 2 (flow (hash-update n (const elite?)))))])))))
+  (void
+    (render
+      (window
+        (vpanel #:min-size '(100 300)
+                (text (@~> @state (~> (-< car " " (~> cadr (if _ monster-info-name ~a))) ~a)))
+                (list-view (@~> @state (~> caddr (hash->list #t))) #:key car
+                           (λ (k @e)
+                             (text (@~> @e (~>> cdr (if _ "Elite" "Normal") (~a k ": ")))))))))))
 
 (module+ test
   (require rackunit)
