@@ -3,6 +3,8 @@
 (define collection "frosthaven-manager")
 (define racket-launcher-names '("frosthaven-manager"))
 (define racket-launcher-libraries '("main"))
+(define gracket-launcher-names '("FrosthavenManager"))
+(define gracket-launcher-libraries '("main"))
 (define deps '("htdp-lib"
                "pict-lib"
                "qi-lib"
