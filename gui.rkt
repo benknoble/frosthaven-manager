@@ -4,10 +4,13 @@
 
 (require racket/gui/easy
          "observable-operator.rkt"
+         "qi.rkt"
          "defns.rkt"
          "start.rkt"
          "player-info.rkt"
-         "loot.rkt")
+         "loot.rkt"
+         (only-in "elements.rkt" elements)
+         (submod "elements.rkt" gui))
 
 (define (render-manager)
   ;; gui state
@@ -38,5 +41,19 @@
                          (thunk (:= @mode 'build-loot-deck))))]
         [(build-loot-deck)
          (vpanel (loot-picker #:on-card (loot-picker-updater @loot-deck))
-                 (button "Next" (thunk (displayln (list @level @num-players @players @loot-deck)))))]
+                 (button "Next" (thunk (println (list @level @num-players @players @loot-deck))
+                                       (:= @mode 'play))))]
+        [(play)
+         (let-values ([(@elements elements-view) (elements-cycler elements)])
+           (vpanel
+             (hpanel (spacer) elements-view)
+             (spacer)
+             (hpanel
+               (button "Next Round"
+                       (thunk
+                         ;; wane elements
+                         (for-each (flow (<@ wane-element)) @elements)
+                         ))
+               (spacer))
+             ))]
         [else (text "Broken")]))))
