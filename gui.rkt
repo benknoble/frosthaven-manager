@@ -20,6 +20,7 @@
   (define/obs @num-players 1)
   (define/obs @players empty)
   (define/obs @loot-deck empty)
+  (define/obs @num-loot-cards #f)
   ;; gui
   (render
     (window
@@ -42,6 +43,7 @@
         [(build-loot-deck)
          (vpanel (loot-picker #:on-card (loot-picker-updater @loot-deck))
                  (button "Next" (thunk (println (list @level @num-players @players @loot-deck))
+                                       (:= @num-loot-cards (length (@! @loot-deck)))
                                        (:= @mode 'play))))]
         [(play)
          (let-values ([(@elements elements-view) (elements-cycler elements)])
@@ -54,6 +56,18 @@
                          ;; wane elements
                          (for-each (flow (<@ wane-element)) @elements)
                          ))
+               (button (obs-combine (flow (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
+                                    @loot-deck @num-loot-cards)
+                       #:enabled? (@~> @loot-deck (not empty?))
+                       (thunk
+                         (render
+                           (dialog #:title "Loot card"
+                                   #:size '(250 100)
+                                   (text (@~> @loot-deck
+                                              (if (not empty?)
+                                                (~> first (format-loot-card (@! @num-players)))
+                                                "")))))
+                         (<@ @loot-deck rest)))
                (spacer))
              ))]
         [else (text "Broken")]))))
