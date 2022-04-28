@@ -20,19 +20,20 @@
 (define (loot-picker #:on-card [on-card void])
   (define (make-cards-picker! label max-cards deck in-deck?)
     (define/obs @n 0)
-    (hpanel (spacer)
-            (button "-" (thunk (if (@! (@> @n zero?))
-                                 (void)
-                                 (begin
-                                   (<@ @n sub1)
-                                   (on-card `(remove ,in-deck?))))))
-            (text (@~> @n (~a label _)))
-            (button "+" (thunk (if (>= (@! @n) max-cards)
-                                 (void)
-                                 (begin
-                                   (<@ @n add1)
-                                   (on-card `(add ,deck))))))
-            (spacer)))
+    (hpanel
+      (spacer)
+      (button "-" (thunk (if (@! (@> @n zero?))
+                           (void)
+                           (begin
+                             (<@ @n sub1)
+                             (on-card `(remove ,in-deck?))))))
+      (text (@~> @n (~a label _)))
+      (button "+" (thunk (if (>= (@! @n) max-cards)
+                           (void)
+                           (begin
+                             (<@ @n add1)
+                             (on-card `(add ,deck))))))
+      (spacer)))
   (define money-view
     (make-cards-picker! "Money Cards: " max-money-cards money-deck money?))
   (define material-views
@@ -58,6 +59,7 @@
                 [#t (on-card `(add ,(list random-item)))]
                 [#f (on-card `(remove ,random-item?))])))
   (apply vpanel
+         #:stretch '(#t #f)
          random-item-view
          money-view
          (append material-views herb-views)))

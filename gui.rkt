@@ -42,20 +42,27 @@
                          (thunk (:= @mode 'build-loot-deck))))]
         [(build-loot-deck)
          (vpanel (loot-picker #:on-card (loot-picker-updater @loot-deck))
-                 (button "Next" (thunk (println (list @level @num-players @players @loot-deck))
-                                       (:= @num-loot-cards (length (@! @loot-deck)))
-                                       (:= @mode 'play))))]
+                 (spacer)
+                 (button "Next"
+                         (thunk (println (list @level @num-players @players @loot-deck))
+                                (:= @num-loot-cards (length (@! @loot-deck)))
+                                (:= @mode 'play))))]
         [(play)
          (let-values ([(@elements elements-view) (elements-cycler elements)])
            (vpanel
-             (hpanel (spacer) elements-view)
+             (hpanel
+               #:stretch '(#t #f)
+               (spacer)
+               elements-view)
              (spacer)
              (hpanel
+               #:stretch '(#t #f)
                (button "Next Round"
                        (thunk
                          ;; wane elements
                          (for-each (flow (<@ wane-element)) @elements)
                          ))
+               (spacer)
                (button (obs-combine (flow (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
                                     @loot-deck @num-loot-cards)
                        #:enabled? (@~> @loot-deck (not empty?))
