@@ -21,6 +21,12 @@
   (define/obs @players empty)
   (define/obs @loot-deck empty)
   (define/obs @num-loot-cards #f)
+  (define (update-players players k f)
+    (map (λ (e)
+           (if (eq? (car e) k)
+             (cons k (f (cdr e)))
+             e))
+         players))
   ;; gui
   (render
     (window
@@ -34,12 +40,18 @@
                          (thunk (when (empty? (@! @players))
                                   (:= @players (build-list
                                                  (@! @num-players)
-                                                 (λ (i) (cons i (@ (make-player "" 1)))))))
+                                                 (λ (i) (cons i (make-player "" 1))))))
                                 (:= @mode 'input-player-info))))]
         [(input-player-info)
-         (vpanel (player-input-views @players)
-                 (button "Next"
-                         (thunk (:= @mode 'build-loot-deck))))]
+         (vpanel
+           (player-input-views
+             @num-players
+             #:on-name (λ (k name)
+                         (<~@ @players (update-players k (update-name name))))
+             #:on-hp (λ (k f)
+                       (<~@ @players (update-players k (act-on-max-hp f)))))
+           (button "Next"
+                   (thunk (:= @mode 'build-loot-deck))))]
         [(build-loot-deck)
          (vpanel (loot-picker #:on-card (loot-picker-updater @loot-deck))
                  (spacer)
