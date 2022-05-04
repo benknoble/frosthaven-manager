@@ -25,7 +25,8 @@
                     [current-hp natural-number/c]
                     [xp natural-number/c]
                     [conditions (listof condition?)]
-                    [initiative initiative?])]
+                    [initiative initiative?]
+                    [loot (listof loot-card?)])]
     [make-player (-> string? positive-integer? player?)]
     [update-name (-> string? (-> player? player?))]
     [act-on-hp (-> (-> natural-number/c number?)
@@ -155,9 +156,9 @@
 
 ;; players
 
-(struct player [name max-hp current-hp xp conditions initiative] #:transparent)
+(struct player [name max-hp current-hp xp conditions initiative loot] #:transparent)
 (define (make-player name max-hp)
-  (player name max-hp max-hp 0 empty 0))
+  (player name max-hp max-hp 0 empty 0 empty))
 
 (define ((update-name name) p)
   (struct-copy player p [name name]))

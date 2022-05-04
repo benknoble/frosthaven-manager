@@ -130,9 +130,12 @@
          players))
   (define/obs @players
     (list
-      (cons 0 (player "A" 15 10 3 (list regenerate invisible immobilize) 23))
-      (cons 1 (player "B" 20 20 0 (list brittle) 57))
-      (cons 2 (player "C" 8 0 5 empty 99))))
+      (cons 0 (player "A" 15 10 3 (list regenerate invisible immobilize) 23
+                      (list random-item)))
+      (cons 1 (player "B" 20 20 0 (list brittle) 57
+                      (list (first money-deck)
+                            (first (hash-ref material-decks lumber)))))
+      (cons 2 (player "C" 8 0 5 empty 99 empty))))
   (define i-view
     (player-input-views
       (@> @players length)
