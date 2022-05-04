@@ -59,17 +59,17 @@
                                  (on-xp sub1))))
             (text (@~> @player (~>> player-xp (~a "XP: "))))
             (button "+" (thunk (on-xp add1)))))
-  (define name-hp-xp
+  (define hp-xp
     (vpanel #:alignment '(center center)
             #:stretch '(#f #t)
-            (text (@> @player player-name))
             hp-panel
             xp-panel))
-  (define initiative-panel
+  (define name-initiative-panel
     (let ([@init (@> @player player-initiative)]
           [@label (@~> @player (~>> player-name (~a "Initiative for ")))])
       (vpanel #:style '(border)
               #:stretch '(#f #t)
+              (text (@> @player player-name))
               (text (@> @init ~a))
               (button
                 "Initiative"
@@ -97,8 +97,8 @@
   (hpanel #:alignment '(center center)
           #:style '(border)
           #:stretch '(#t #f)
-          initiative-panel
-          name-hp-xp
+          name-initiative-panel
+          hp-xp
           conditions-panel))
 
 (define (player-input-view
