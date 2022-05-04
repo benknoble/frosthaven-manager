@@ -85,6 +85,7 @@
                    (<~@ @players (update-players k proc)))
                  (player-view
                    (@> @e cdr)
+                   @num-players
                    #:on-condition (flow (~> condition-handler update))
                    #:on-hp (flow (~> act-on-hp update))
                    #:on-xp (flow (~> act-on-xp update))

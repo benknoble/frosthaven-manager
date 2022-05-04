@@ -9,7 +9,8 @@
                                      #:names (listof string?)
                                      #:hps (listof positive-integer?))
                                     (is-a?/c view<%>))]
-           [player-view (->* ((obs/c player?))
+           [player-view (->* ((obs/c player?)
+                              (obs/c (integer-in 1 max-players)))
                              (#:on-condition (-> (list/c condition? boolean?) any)
                               #:on-hp (-> (-> number? number?) any)
                               #:on-xp (-> (-> number? number?) any)
@@ -37,6 +38,7 @@
         #:hp (if hps (list-ref hps k) 1)))))
 
 (define (player-view @player
+                     @num-players
                      #:on-condition [on-condition void]
                      #:on-hp [on-hp void]
                      #:on-xp [on-xp void]
@@ -93,13 +95,32 @@
                         (apply dialog
                                #:title (@~> @player (~>> player-name (~a "Conditions for ")))
                                (map make-condition-checkbox conditions)))))))
+  (define loot-panel
+    (button "Show Loot"
+            (thunk
+              (render
+                (window
+                  #:title (@~> @player (~> player-name (~a "'s Loot")))
+                  #:min-size (list 200 40)
+                  (list-view (@> @player
+                                 (λ (p)
+                                   (for/list ([(loot i) (in-indexed (player-loot p))])
+                                     (cons i loot))))
+                    (λ (k @e)
+                      (text (@~> @e (~> cdr (format-loot-card (@! @num-players))))))
+                    #:key car
+                    #:min-size (@~> @player
+                                    (~> (-< #f (~> player-loot length (* 40)))
+                                        list))))))))
   ;; final view
   (hpanel #:alignment '(center center)
           #:style '(border)
           #:stretch '(#t #f)
           name-initiative-panel
           hp-xp
-          conditions-panel))
+          (vpanel
+            conditions-panel
+            loot-panel)))
 
 (define (player-input-view
           #:on-name [on-name void]
@@ -157,6 +178,7 @@
               (<~@ @players (update-players k proc)))
             (player-view
               (@> @e cdr)
+              (@> @players length)
               #:on-condition (flow (~> condition-handler update))
               #:on-hp (flow (~> act-on-hp update))
               #:on-xp (flow (~> act-on-xp update))
