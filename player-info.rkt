@@ -66,7 +66,8 @@
             hp-panel
             xp-panel))
   (define initiative-panel
-    (let ([@init (@> @player player-initiative)])
+    (let ([@init (@> @player player-initiative)]
+          [@label (@~> @player (~>> player-name (~a "Initiative for ")))])
       (vpanel #:style '(border)
               #:stretch '(#f #t)
               (text (@> @init ~a))
@@ -75,12 +76,13 @@
                 (thunk
                   (render
                     (dialog
+                      #:title @label
                       (slider
                         @init
                         on-initiative
                         #:min-value 0
                         #:max-value 99
-                        #:label (@~> @player (~>> player-name (~a "Initiative for ")))))))))))
+                        #:label @label))))))))
   (define conditions-panel
     (vpanel (text (@~> @player (~> player-conditions
                                    (sep ~a) collect
