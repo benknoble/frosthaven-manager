@@ -116,6 +116,7 @@
   (hpanel #:alignment '(center center)
           #:style '(border)
           #:stretch '(#t #f)
+          #:margin '(20 0)
           name-initiative-panel
           hp-xp
           (vpanel
