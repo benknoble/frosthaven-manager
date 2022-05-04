@@ -1,9 +1,14 @@
 #lang racket
 
 (provide (contract-out
-           [player-input-views (-> (obs/c (listof (cons/c natural-number/c
-                                                          (obs/c player?))))
-                                   (is-a?/c view<%>))]
+           [player-input-views (->* ((obs/c natural-number/c))
+                                    (#:on-name (-> natural-number/c string? any)
+                                     #:on-hp (-> natural-number/c
+                                                 (-> number? number?)
+                                                 any)
+                                     #:names (listof string?)
+                                     #:hps (listof positive-integer?))
+                                    (is-a?/c view<%>))]
            [player-view (->* ((obs/c player?))
                              (#:on-condition (-> (list/c condition? boolean?) any)
                               #:on-hp (-> (-> number? number?) any)
@@ -17,27 +22,19 @@
          racket/gui/easy/contract
          "defns.rkt")
 
-(define (player-input-views @players)
-  (list-view @players
-             #:key car
-             (λ (k _@player-derived) ;; don't use this derived thing
-               (define @player (cdr (list-ref (@! @players) k)))
-               (player-input-view
-                 (@> @player player-name)
-                 (@> @player player-max-hp)
-                 #:on-name
-                 (λ (name)
-                   (<@ @player (λ (p) (struct-copy player p [name name]))))
-                 #:on-hp
-                 (λ (f)
-                   (<@ @player
-                       (match-lambda
-                         [(and p (struct* player ([max-hp hp])))
-                          (define new-hp (f hp))
-                          (if (not (positive? new-hp))
-                            p
-                            (struct-copy player p [max-hp new-hp]))])))))
-             #:min-size (@~> @players (~>> length (* 40) (list #f)))))
+(define (player-input-views @num-players
+                            #:on-name [on-name void]
+                            #:on-hp [on-hp void]
+                            #:names [names #f]
+                            #:hps [hps #f])
+  (list-view (@> @num-players range)
+    #:min-size (@~> @num-players (~>> (* 40) (list #f)))
+    (λ (k _@i)
+      (player-input-view
+        #:on-name (flow (on-name k _))
+        #:on-hp (flow (on-hp k _))
+        #:name (if names (list-ref names k) "")
+        #:hp (if hps (list-ref hps k) 1)))))
 
 (define (player-view @player
                      #:on-condition [on-condition void]
@@ -101,44 +98,73 @@
           name-hp-xp
           conditions-panel))
 
-(define (player-input-view @name @hp #:on-name [on-name void] #:on-hp [on-hp void])
+(define (player-input-view
+          #:on-name [on-name void]
+          #:on-hp [on-hp void]
+          #:name [name ""]
+          #:hp [hp 1])
+  (define/obs @name name)
+  (define/obs @hp hp)
   (hpanel
-    (input #:label "Name" @name (match-lambda** [(_ s) (on-name s)])
+    (input #:label "Name" @name (flow (~> 2> on-name))
            #:min-size '(200 #f))
-    (button "-" (thunk (on-hp sub1)))
+    (button "-" (thunk
+                  (on-hp sub1)
+                  (unless (<= (@! @hp) 1)
+                    (<@ @hp sub1))))
     (text (@~> @hp (~a "Max HP: " _)))
-    (button "+" (thunk (on-hp add1)))))
+    (button "+" (thunk
+                  (on-hp add1)
+                  (<@ @hp add1)))))
 
 (module+ main
-  (define (condition-handler @player)
+  (define condition-handler
     (match-lambda
-      [`(,c #f) (<@ @player (remove-condition c))]
-      [`(,c #t) (<@ @player (add-condition c))]))
-  (define ((hp-handler @player) proc)
-    (<@ @player (act-on-hp proc)))
-  (define ((xp-handler @player) proc)
-    (<@ @player (act-on-xp proc)))
-  (define ((initiative-handler @player) i)
-    (<~@ @player (set-initiative i)))
+      [`(,c #f) (remove-condition c)]
+      [`(,c #t) (add-condition c)]))
+  (define (update-players players k f)
+    (map (λ (e)
+           (if (eq? (car e) k)
+             (cons k (f (cdr e)))
+             e))
+         players))
+  (define ((update-name name) p)
+    (struct-copy player p [name name]))
+  (define (update-hp f)
+    (match-lambda
+      [(and p (struct* player ([max-hp hp])))
+       (define new-hp (f hp))
+       (if (not (positive? new-hp))
+         p
+         (struct-copy player p [max-hp new-hp]))]))
 
   (define/obs @players
     (list
-      (cons 0 (@ (player "A" 15 10 3 (list regenerate invisible immobilize) 23)))
-      (cons 1 (@ (player "B" 20 20 0 (list brittle) 57)))
-      (cons 2 (@ (player "C" 8 0 5 empty 99)))))
-  (define i-view (player-input-views @players))
+      (cons 0 (player "A" 15 10 3 (list regenerate invisible immobilize) 23))
+      (cons 1 (player "B" 20 20 0 (list brittle) 57))
+      (cons 2 (player "C" 8 0 5 empty 99))))
+  (define i-view
+    (player-input-views
+      (@> @players length)
+      #:on-name (λ (k name)
+                  (<~@ @players (update-players k (update-name name))))
+      #:on-hp (λ (k f)
+                (<~@ @players (update-players k (update-hp f))))
+      #:names (map (flow (~> cdr player-name)) (@! @players))
+      #:hps (map (flow (~> cdr player-max-hp)) (@! @players))))
   (void
     (render (window i-view))
     (render
       (window
-        (apply
-          vpanel
-          (map (match-lambda
-                 [(cons _ @p)
-                  (player-view
-                    @p
-                    #:on-condition (condition-handler @p)
-                    #:on-hp (hp-handler @p)
-                    #:on-xp (xp-handler @p)
-                    #:on-initiative (initiative-handler @p))])
-               (@! @players)))))))
+        (list-view @players
+          #:key car
+          #:min-size (@~> @players (~>> length (* 100) (list #f)))
+          (λ (k @e)
+            (define (update proc)
+              (<~@ @players (update-players k proc)))
+            (player-view
+              (@> @e cdr)
+              #:on-condition (flow (~> condition-handler update))
+              #:on-hp (flow (~> act-on-hp update))
+              #:on-xp (flow (~> act-on-xp update))
+              #:on-initiative (λ (i) (update (flow (set-initiative i)))))))))))
