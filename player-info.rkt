@@ -94,6 +94,7 @@
   ;; final view
   (hpanel #:alignment '(center center)
           #:style '(border)
+          #:stretch '(#t #f)
           initiative-panel
           name-hp-xp
           conditions-panel))
@@ -106,6 +107,7 @@
   (define/obs @name name)
   (define/obs @hp hp)
   (hpanel
+    #:stretch '(#t #f)
     (input #:label "Name" @name (flow (~> 2> on-name))
            #:min-size '(200 #f))
     (button "-" (thunk
