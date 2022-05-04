@@ -8,6 +8,7 @@
          "defns.rkt"
          "start.rkt"
          "player-info.rkt"
+         "level-info.rkt"
          "loot.rkt"
          (only-in "elements.rkt" elements)
          (submod "elements.rkt" gui))
@@ -115,5 +116,11 @@
                        (thunk
                          ;; order players
                          (<~@ @players
-                              (sort < #:key (flow (~> cdr player-initiative)))))))))]
+                              (sort < #:key (flow (~> cdr player-initiative)))))))
+             (hpanel
+               #:stretch '(#f #f)
+               (level-stats @level @num-players)
+               (vpanel
+                 (level-table @level)
+                 (inspiration-table @num-players)))))]
         [else (text "Broken")]))))
