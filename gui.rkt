@@ -27,6 +27,8 @@
              (cons k (f (cdr e)))
              e))
          players))
+  (define (update-all-players players f)
+    (map (match-lambda [(cons id p) (cons id (f p))]) players))
   ;; gui
   (render
     (window
@@ -51,7 +53,14 @@
              #:on-hp (λ (k f)
                        (<~@ @players (update-players k (act-on-max-hp f)))))
            (button "Next"
-                   (thunk (:= @mode 'build-loot-deck))))]
+                   (thunk
+                     ;; give each player max-hp
+                     (<~@ @players
+                          (update-all-players
+                            (flow (~> (-< (~> player-max-hp const act-on-hp)
+                                          _)
+                                      apply))))
+                     (:= @mode 'build-loot-deck))))]
         [(build-loot-deck)
          (vpanel (loot-picker #:on-card (loot-picker-updater @loot-deck))
                  (spacer)
@@ -67,13 +76,27 @@
                (spacer)
                elements-view)
              (spacer)
+             (list-view @players
+               #:min-size (@~> @players (~>> length (* 100) (list #f)))
+               #:key car
+               (λ (k @e)
+                 (define (update proc)
+                   (<~@ @players (update-players k proc)))
+                 (player-view
+                   (@> @e cdr)
+                   #:on-condition (flow (~> condition-handler update))
+                   #:on-hp (flow (~> act-on-hp update))
+                   #:on-xp (flow (~> act-on-xp update))
+                   #:on-initiative (λ (i) (update (flow (set-initiative i)))))))
+             (spacer)
              (hpanel
                #:stretch '(#t #f)
                (button "Next Round"
                        (thunk
                          ;; wane elements
                          (for-each (flow (<@ wane-element)) @elements)
-                         ))
+                         ;; reset player initiative
+                         (<~@ @players (update-all-players clear-initiative))))
                (spacer)
                (button (obs-combine (flow (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
                                     @loot-deck @num-loot-cards)
@@ -87,6 +110,10 @@
                                                 (~> first (format-loot-card (@! @num-players)))
                                                 "")))))
                          (<@ @loot-deck rest)))
-               (spacer))
-             ))]
+               (spacer)
+               (button "Draw!"
+                       (thunk
+                         ;; order players
+                         (<~@ @players
+                              (sort < #:key (flow (~> cdr player-initiative)))))))))]
         [else (text "Broken")]))))
