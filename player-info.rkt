@@ -122,26 +122,12 @@
                   (<@ @hp add1)))))
 
 (module+ main
-  (define condition-handler
-    (match-lambda
-      [`(,c #f) (remove-condition c)]
-      [`(,c #t) (add-condition c)]))
   (define (update-players players k f)
     (map (λ (e)
            (if (eq? (car e) k)
              (cons k (f (cdr e)))
              e))
          players))
-  (define ((update-name name) p)
-    (struct-copy player p [name name]))
-  (define (update-hp f)
-    (match-lambda
-      [(and p (struct* player ([max-hp hp])))
-       (define new-hp (f hp))
-       (if (not (positive? new-hp))
-         p
-         (struct-copy player p [max-hp new-hp]))]))
-
   (define/obs @players
     (list
       (cons 0 (player "A" 15 10 3 (list regenerate invisible immobilize) 23))
@@ -153,7 +139,7 @@
       #:on-name (λ (k name)
                   (<~@ @players (update-players k (update-name name))))
       #:on-hp (λ (k f)
-                (<~@ @players (update-players k (update-hp f))))
+                (<~@ @players (update-players k (act-on-max-hp f))))
       #:names (map (flow (~> cdr player-name)) (@! @players))
       #:hps (map (flow (~> cdr player-max-hp)) (@! @players))))
   (void

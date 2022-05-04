@@ -27,12 +27,17 @@
                     [conditions (listof condition?)]
                     [initiative initiative?])]
     [make-player (-> string? positive-integer? player?)]
-    [act-on-hp (-> (-> natural-number/c natural-number/c)
+    [update-name (-> string? (-> player? player?))]
+    [act-on-hp (-> (-> natural-number/c number?)
                    (-> player? player?))]
+    [act-on-max-hp (-> (-> natural-number/c number?)
+                       (-> player? player?))]
     [act-on-xp (-> (-> natural-number/c natural-number/c)
                    (-> player? player?))]
     [remove-condition (-> condition? (-> player? player?))]
     [add-condition (-> condition? (-> player? player?))]
+    [condition-handler (-> (list/c condition? boolean?)
+                           (-> player? player?))]
     [afflicted-by? (-> condition? (-> player? boolean?))]
     [dead? (-> player? boolean?)]
     [at-max-health? (-> player? boolean?)]
@@ -154,25 +159,39 @@
 (define (make-player name max-hp)
   (player name max-hp max-hp 0 empty 0))
 
-(define (act-on-hp proc)
-  (match-lambda
-    [(player name max-hp curr-hp xp conds init)
-     (player name max-hp (proc curr-hp) xp conds init)]))
+(define ((update-name name) p)
+  (struct-copy player p [name name]))
 
-(define (act-on-xp proc)
-  (match-lambda
-    [(player name max-hp curr-hp xp conds init)
-     (player name max-hp curr-hp (proc xp) conds init)]))
+(define ((act-on-hp proc) p)
+  (define new-hp (proc (player-current-hp p)))
+  (if (not (positive? new-hp))
+    p
+    (struct-copy player p [current-hp new-hp])))
 
-(define (remove-condition c)
-  (match-lambda
-    [(player name max-hp curr-hp xp conds init)
-     (player name max-hp curr-hp xp (remove* (list c) conds) init)]))
+(define ((act-on-max-hp proc) p)
+  (define new-max-hp (proc (player-max-hp p)))
+  (if (not (positive? new-max-hp))
+    p
+    (struct-copy player p [max-hp new-max-hp])))
 
-(define (add-condition c)
+(define ((act-on-xp proc) p)
+  (define new-xp (proc (player-xp p)))
+  (if (not (>= new-xp 0))
+    p
+    (struct-copy player p [xp new-xp])))
+
+(define ((remove-condition c) p)
+  (define new-conditions (remove* (list c) (player-conditions p)))
+  (struct-copy player p [conditions new-conditions]))
+
+(define ((add-condition c) p)
+  (define new-conditions (cons c (remove* (list c) (player-conditions p))))
+  (struct-copy player p [conditions new-conditions]))
+
+(define condition-handler
   (match-lambda
-    [(player name max-hp curr-hp xp conds init)
-     (player name max-hp curr-hp xp (cons c (remove* (list c) conds)) init)]))
+    [`(,c #f) (remove-condition c)]
+    [`(,c #t) (add-condition c)]))
 
 (define ((afflicted-by? c) p)
   (and (member c (player-conditions p)) #t))
