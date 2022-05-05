@@ -43,7 +43,8 @@
     [dead? (-> player? boolean?)]
     [at-max-health? (-> player? boolean?)]
     [set-initiative (-> player? initiative? player?)]
-    [clear-initiative (-> player? player?)])
+    [clear-initiative (-> player? player?)]
+    [add-loot (-> loot-card? (-> player? player?))])
 
   ;; loot deck
   (enum-out material-kind)
@@ -208,6 +209,10 @@
 
 (define (clear-initiative p)
   (struct-copy player p [initiative 0]))
+
+(define ((add-loot card) p)
+  (define loot (player-loot p))
+  (struct-copy player p [loot (cons card loot)]))
 
 ;; loot deck
 
