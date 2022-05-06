@@ -21,7 +21,7 @@
   (define/obs @num-players 1)
   (define/obs @players empty)
   (define/obs @loot-deck empty)
-  (define/obs @num-loot-cards #f)
+  (define/obs @num-loot-cards 0)
   (define (update-players players k f)
     (map (λ (e)
            (if (eq? (car e) k)
@@ -63,11 +63,12 @@
                                       apply))))
                      (:= @mode 'build-loot-deck))))]
         [(build-loot-deck)
-         (vpanel (loot-picker #:on-card (loot-picker-updater @loot-deck))
+         (vpanel (loot-picker #:on-card (flow (-< (loot-picker-updater @loot-deck)
+                                                  ;; order important
+                                                  (gen (:= @num-loot-cards (length (@! @loot-deck)))))))
                  (spacer)
                  (button "Next"
                          (thunk (println (list @level @num-players @players @loot-deck))
-                                (:= @num-loot-cards (length (@! @loot-deck)))
                                 (:= @mode 'play))))]
         [(play)
          (let-values ([(@elements elements-view) (elements-cycler elements)])
