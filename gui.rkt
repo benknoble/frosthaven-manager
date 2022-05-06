@@ -68,8 +68,7 @@
                                                   (gen (:= @num-loot-cards (length (@! @loot-deck)))))))
                  (spacer)
                  (button "Next"
-                         (thunk (println (list @level @num-players @players @loot-deck))
-                                (:= @mode 'play))))]
+                         (thunk (:= @mode 'play))))]
         [(play)
          (let-values ([(@elements elements-view) (elements-cycler elements)])
            (vpanel
