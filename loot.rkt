@@ -10,12 +10,22 @@
              (-> (obs/c (listof (or/c money? material? herb? random-item?)))
                  (-> (or/c (list/c 'add (listof (or/c money? material? herb? random-item?)))
                            (list/c 'remove predicate/c))
-                     any))]))
+                     any))]
+           [loot-button
+             (->* ((obs/c (listof loot-card?))
+                   (obs/c natural-number/c)
+                   (obs/c natural-number/c)
+                   (obs/c (listof (cons/c any/c player?))))
+                  (#:on-close (-> any)
+                   #:on-player (-> any/c any))
+                  (is-a?/c view<%>))]))
 
 (require racket/gui/easy
          "observable-operator.rkt"
+         "qi.rkt"
          racket/gui/easy/contract
-         "defns.rkt")
+         "defns.rkt"
+         "gui/mixins.rkt")
 
 (define (loot-picker #:on-card [on-card void])
   (define (make-cards-picker! label max-cards deck in-deck?)
@@ -71,6 +81,59 @@
                                old-loot-deck)]
       [`(remove ,in-deck?) (remf in-deck? old-loot-deck)]))
   (<~@ @loot-deck (~> update-old-deck shuffle)))
+
+(define (loot-button @loot-deck
+                     @num-loot-cards
+                     @num-players
+                     @players
+                     #:on-player [on-player void]
+                     #:on-close [on-close void])
+  (button
+    (obs-combine (flow (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
+                 @loot-deck
+                 @num-loot-cards)
+    #:enabled? (@~> @loot-deck (not empty?))
+    (thunk
+      (render
+        (loot-assigner
+          @loot-deck
+          @num-players
+          @players
+          on-player
+          on-close)))))
+
+(define (loot-assigner @loot-deck
+                       @num-players
+                       @players
+                       on-player
+                       on-close)
+  (define close #f)
+  (define-flow mixin
+    (~> (make-closing-proc-mixin (λ (c) (set! close c)))
+        (make-on-close-mixin on-close)))
+  (dialog
+    #:mixin mixin
+    #:title "Loot card"
+    #:size '(250 100)
+    #:style empty
+    (text (obs-combine (flow
+                         (if (~> 2> (not empty?))
+                           (~> (== format-loot-card first) apply)
+                           ""))
+                       @num-players
+                       @loot-deck))
+    (apply
+      hpanel
+      ;; valid because only called inside a thunk, and part of a dialog; doesn't
+      ;; need to react to adding/subtracting players
+      (map
+        (λ (e)
+          (button
+            (player-name (cdr e))
+            (thunk
+              (on-player (car e))
+              (close))))
+        (@! @players)))))
 
 (module+ main
   (define/obs @loot-deck empty)

@@ -100,18 +100,22 @@
                          ;; reset player initiative
                          (<~@ @players (update-all-players clear-initiative))))
                (spacer)
-               (button (obs-combine (flow (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
-                                    @loot-deck @num-loot-cards)
-                       #:enabled? (@~> @loot-deck (not empty?))
-                       (thunk
-                         (render
-                           (dialog #:title "Loot card"
-                                   #:size '(250 100)
-                                   (text (@~> @loot-deck
-                                              (if (not empty?)
-                                                (~> first (format-loot-card (@! @num-players)))
-                                                "")))))
-                         (<@ @loot-deck rest)))
+               (loot-button
+                 @loot-deck @num-loot-cards @num-players @players
+                 ;; valid because only enabled if loot-deck non-empty, and only
+                 ;; closing if loot assigned
+                 #:on-close (thunk (<@ @loot-deck rest))
+                 #:on-player
+                 (λ (k)
+                   (<~@ @players
+                        (update-players
+                          k
+                          (λ (p)
+                            (define card
+                              (@! (@~> @loot-deck (if (not empty?) first #f))))
+                            (if card
+                              ((add-loot card) p)
+                              p))))))
                (spacer)
                (button "Draw!"
                        (thunk
