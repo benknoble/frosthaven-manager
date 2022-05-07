@@ -28,14 +28,17 @@
                             #:on-hp [on-hp void]
                             #:names [names #f]
                             #:hps [hps #f])
+  (define (make-input-view k _@i)
+    (define-flow do-name (on-name k _))
+    (define-flow do-hp (on-hp k _))
+    (player-input-view
+      #:on-name do-name
+      #:on-hp do-hp
+      #:name (if names (list-ref names k) "")
+      #:hp (if hps (list-ref hps k) 1)))
   (list-view (@> @num-players range)
     #:min-size (@~> @num-players (~>> (* 40) (list #f)))
-    (λ (k _@i)
-      (player-input-view
-        #:on-name (flow (on-name k _))
-        #:on-hp (flow (on-hp k _))
-        #:name (if names (list-ref names k) "")
-        #:hp (if hps (list-ref hps k) 1)))))
+    make-input-view))
 
 (define (player-view @player
                      @num-players
@@ -47,71 +50,76 @@
     (checkbox #:label (~a c)
               #:checked? (@> @player (afflicted-by? c))
               (flow (~>> (list c) on-condition))))
+  (define (subtract-hp)
+    (unless (@! (@> @player dead?))
+      (on-hp sub1)))
+  (define (add-hp)
+    (unless (@! (@> @player at-max-health?))
+      (on-hp add1)))
   (define hp-panel
-    (hpanel (button "-" (thunk (unless (@! (@> @player dead?))
-                                 (on-hp sub1))))
-            (text (@> @player
-                      (match-lambda
-                        [(struct* player ([max-hp max] [current-hp current]))
-                         (~a "HP: " current "/" max)])))
-            (button "+" (thunk (unless (@! (@> @player at-max-health?))
-                                 (on-hp add1))))))
+    (hpanel (button "-" subtract-hp)
+            (text (@> @player player->hp-text))
+            (button "+" add-hp)))
+  (define (subtract-xp)
+    (unless (@! (@~> @player (~> player-xp zero?)))
+      (on-xp sub1)))
+  (define (add-xp)
+    (on-xp add1))
   (define xp-panel
-    (hpanel (button "-" (thunk (unless (@! (@~> @player (~> player-xp zero?)))
-                                 (on-xp sub1))))
+    (hpanel (button "-" subtract-xp)
             (text (@~> @player (~>> player-xp (~a "XP: "))))
-            (button "+" (thunk (on-xp add1)))))
+            (button "+" add-xp)))
   (define hp-xp
     (vpanel #:alignment '(center center)
             #:stretch '(#f #t)
             hp-panel
             xp-panel))
+  (define @init (@> @player player-initiative))
+  (define @init-label (@~> @player (~>> player-name (~a "Initiative for "))))
+  (define (show-initiative-slider)
+    (render
+      (dialog
+        #:title @init-label
+        (slider
+          @init
+          on-initiative
+          #:min-value 0
+          #:max-value 99
+          #:label @init-label))))
   (define name-initiative-panel
-    (let ([@init (@> @player player-initiative)]
-          [@label (@~> @player (~>> player-name (~a "Initiative for ")))])
-      (vpanel #:style '(border)
-              #:stretch '(#f #t)
-              (text (@> @player player-name))
-              (text (@> @init ~a))
-              (button
-                "Initiative"
-                (thunk
-                  (render
-                    (dialog
-                      #:title @label
-                      (slider
-                        @init
-                        on-initiative
-                        #:min-value 0
-                        #:max-value 99
-                        #:label @label))))))))
+    (vpanel #:style '(border)
+            #:stretch '(#f #t)
+            (text (@> @player player-name))
+            (text (@> @init ~a))
+            (button "Initiative" show-initiative-slider)))
+  (define (show-conditions)
+    (render
+      (apply dialog
+             #:title (@~> @player (~>> player-name (~a "Conditions for ")))
+             (map make-condition-checkbox conditions))))
   (define conditions-panel
     (vpanel (text (@~> @player (~> player-conditions
                                    (sep ~a) collect
                                    (string-join ", " #:before-last " and "))))
-            (button "Conditions"
-                    (thunk
-                      (render
-                        (apply dialog
-                               #:title (@~> @player (~>> player-name (~a "Conditions for ")))
-                               (map make-condition-checkbox conditions)))))))
+            (button "Conditions" show-conditions)))
+  (define (make-loot-list p)
+    (for/list ([(loot i) (in-indexed (player-loot p))])
+      (cons i loot)))
+  (define (make-loot-view k @e)
+    (text (@~> @e (~> cdr (format-loot-card (@! @num-players))))))
+  (define (show-loot)
+    (render
+      (window
+        #:title (@~> @player (~> player-name (~a "'s Loot")))
+        #:min-size (list 200 40)
+        (list-view (@> @player make-loot-list)
+          #:key car
+          make-loot-view
+          #:min-size (@~> @player
+                          (~> (-< #f (~> player-loot length (* 40)))
+                              list))))))
   (define loot-panel
-    (button "Show Loot"
-            (thunk
-              (render
-                (window
-                  #:title (@~> @player (~> player-name (~a "'s Loot")))
-                  #:min-size (list 200 40)
-                  (list-view (@> @player
-                                 (λ (p)
-                                   (for/list ([(loot i) (in-indexed (player-loot p))])
-                                     (cons i loot))))
-                    (λ (k @e)
-                      (text (@~> @e (~> cdr (format-loot-card (@! @num-players))))))
-                    #:key car
-                    #:min-size (@~> @player
-                                    (~> (-< #f (~> player-loot length (* 40)))
-                                        list))))))))
+    (button "Show Loot" show-loot))
   ;; final view
   (hpanel #:alignment '(center center)
           #:style '(border)
@@ -130,18 +138,20 @@
           #:hp [hp 1])
   (define/obs @name name)
   (define/obs @hp hp)
+  (define (subtract-hp)
+    (on-hp sub1)
+    (unless (<= (@! @hp) 1)
+      (<@ @hp sub1)))
+  (define (add-hp)
+    (on-hp add1)
+    (<@ @hp add1))
   (hpanel
     #:stretch '(#t #f)
     (input #:label "Name" @name (flow (~> 2> on-name))
            #:min-size '(200 #f))
-    (button "-" (thunk
-                  (on-hp sub1)
-                  (unless (<= (@! @hp) 1)
-                    (<@ @hp sub1))))
+    (button "-" subtract-hp)
     (text (@~> @hp (~a "Max HP: " _)))
-    (button "+" (thunk
-                  (on-hp add1)
-                  (<@ @hp add1)))))
+    (button "+" add-hp)))
 
 (module+ main
   (define (update-players players k f)

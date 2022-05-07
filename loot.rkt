@@ -30,19 +30,19 @@
 (define (loot-picker #:on-card [on-card void])
   (define (make-cards-picker! label max-cards deck in-deck?)
     (define/obs @n 0)
+    (define (subtract-card)
+      (unless (@! (@> @n zero?))
+        (<@ @n sub1)
+        (on-card `(remove ,in-deck?))))
+    (define (add-card)
+      (unless (>= (@! @n) max-cards)
+        (<@ @n add1)
+        (on-card `(add ,deck))))
     (hpanel
       (spacer)
-      (button "-" (thunk (if (@! (@> @n zero?))
-                           (void)
-                           (begin
-                             (<@ @n sub1)
-                             (on-card `(remove ,in-deck?))))))
+      (button "-" subtract-card)
       (text (@~> @n (~a label _)))
-      (button "+" (thunk (if (>= (@! @n) max-cards)
-                           (void)
-                           (begin
-                             (<@ @n add1)
-                             (on-card `(add ,deck))))))
+      (button "+" add-card)
       (spacer)))
   (define money-view
     (make-cards-picker! "Money Cards: " max-money-cards money-deck money?))
@@ -88,52 +88,40 @@
                      @players
                      #:on-player [on-player void]
                      #:on-close [on-close void])
-  (button
-    (obs-combine (flow (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
-                 @loot-deck
-                 @num-loot-cards)
-    #:enabled? (@~> @loot-deck (not empty?))
-    (thunk
-      (render
-        (loot-assigner
-          @loot-deck
-          @num-players
-          @players
-          on-player
-          on-close)))))
+  (define-flow (loot-text deck num-cards)
+    (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
+  (define (show-assigner)
+    (render
+      (loot-assigner @loot-deck @num-players @players on-player on-close)))
+  (button (obs-combine loot-text @loot-deck @num-loot-cards)
+          #:enabled? (@~> @loot-deck (not empty?))
+          show-assigner))
 
-(define (loot-assigner @loot-deck
-                       @num-players
-                       @players
-                       on-player
-                       on-close)
+(define (loot-assigner @loot-deck @num-players @players on-player on-close)
   (define close #f)
+  (define (set-close! c) (set! close c))
   (define-flow mixin
-    (~> (make-closing-proc-mixin (λ (c) (set! close c)))
+    (~> (make-closing-proc-mixin set-close!)
         (make-on-close-mixin on-close)))
+  (define (make-player-button e)
+    (define (action)
+      (on-player (car e))
+      (close))
+    (button (player-name (cdr e)) action))
+  (define-flow (card-text num-players deck)
+    (if (~> 2> (not empty?))
+      (~> (== format-loot-card first) apply)
+      ""))
   (dialog
     #:mixin mixin
     #:title "Loot card"
     #:size '(250 100)
     #:style empty
-    (text (obs-combine (flow
-                         (if (~> 2> (not empty?))
-                           (~> (== format-loot-card first) apply)
-                           ""))
-                       @num-players
-                       @loot-deck))
-    (apply
-      hpanel
-      ;; valid because only called inside a thunk, and part of a dialog; doesn't
-      ;; need to react to adding/subtracting players
-      (map
-        (λ (e)
-          (button
-            (player-name (cdr e))
-            (thunk
-              (on-player (car e))
-              (close))))
-        (@! @players)))))
+    (text (obs-combine card-text @num-players @loot-deck))
+    (apply hpanel
+           ;; valid because only called inside a thunk, and part of a dialog;
+           ;; doesn't need to react to adding/subtracting players
+           (map make-player-button (@! @players)))))
 
 (module+ main
   (define/obs @loot-deck empty)

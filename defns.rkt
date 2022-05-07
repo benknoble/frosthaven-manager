@@ -44,7 +44,8 @@
     [at-max-health? (-> player? boolean?)]
     [set-initiative (-> player? initiative? player?)]
     [clear-initiative (-> player? player?)]
-    [add-loot (-> loot-card? (-> player? player?))])
+    [add-loot (-> loot-card? (-> player? player?))]
+    [player->hp-text (-> player? string?)])
 
   ;; loot deck
   (enum-out material-kind)
@@ -128,10 +129,11 @@
     (and/c (listof c) no-duplicates?)))
 
 (define (unique-with/c key c)
+  (define (ctc xs)
+    ((unique/c c) (map key xs)))
   (flat-named-contract
     (list 'unique-with/c (object-name key) (object-name c))
-    (λ (xs)
-      ((unique/c c) (map key xs)))))
+    ctc))
 
 (define max-players 4)
 
@@ -213,6 +215,11 @@
 (define ((add-loot card) p)
   (define loot (player-loot p))
   (struct-copy player p [loot (cons card loot)]))
+
+(define (player->hp-text p)
+  (match p
+    [(struct* player ([max-hp max] [current-hp current]))
+      (~a "HP: " current "/" max)]))
 
 ;; loot deck
 

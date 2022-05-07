@@ -116,26 +116,33 @@
 
   (define (element-cycler e)
     (define/obs @element-state 'unfused)
-    (define (make-pict-for-canvas p)
-      (inset p (/ size 3) 0 0 0))
+    (define (make-pict-for-canvas s)
+      (inset ((state->pict e) s) (/ size 3) 0 0 0))
     (define pict-view
       (pict-canvas @element-state
-                   (match-lambda
-                     ['unfused (make-pict-for-canvas (element-pics-unfused e))]
-                     ['infused (make-pict-for-canvas (element-pics-infused e))]
-                     ['waning (make-pict-for-canvas (element-pics-waning e))]
-                     [_ (make-pict-for-canvas (element-pics-unfused e))])
+                   make-pict-for-canvas
                    #:min-size (list size size)))
+    (define (action)
+      (<@ @element-state transition-element-state))
     (define cycler-view
       (vpanel #:stretch '(#f #f)
               pict-view
-              (button (@> @element-state (match-lambda
-                                           ['unfused "Infuse"]
-                                           ['infused "Wane"]
-                                           ['waning "Unfuse"]
-                                           [_ "Infuse"]))
-                      (thunk (<@ @element-state transition-element-state)))))
+              (button (@> @element-state state->text) action)))
     (values @element-state cycler-view))
+
+  (define (state->pict e)
+    (match-lambda
+      ['unfused (element-pics-unfused e)]
+      ['infused (element-pics-infused e)]
+      ['waning (element-pics-waning e)]
+      [_ (element-pics-unfused e)]))
+
+  (define state->text
+    (match-lambda
+      ['unfused "Infuse"]
+      ['infused "Wane"]
+      ['waning "Unfuse"]
+      [_ "Infuse"]))
 
   (define transition-element-state
     (match-lambda

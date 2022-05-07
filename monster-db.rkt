@@ -54,31 +54,28 @@
     (define sets (hash-keys info-db))
     (define/obs @set (car sets))
     (define @name->info (@~> @set (hash-ref info-db _)))
+    (define (choose-set set)
+      (on-change `(set from ,(@! @set) to ,set))
+      (:= @set set))
     (define set-picker
-      (choice #:label "Set"
-              sets
-              (λ (set)
-                (on-change `(set from ,(@! @set) to ,set))
-                (:= @set set))))
+      (choice #:label "Set" sets choose-set))
     (define @valid-monsters (@> @name->info hash-keys))
     (define/obs @info (~>> (@valid-monsters) @! car (hash-ref (@! @name->info))))
+    (define (choose-monster monster-name)
+      (define new-info (hash-ref (@! @name->info) monster-name))
+      (on-change `(monster from ,(@! @info) to ,new-info))
+      (:= @info new-info))
     (define monster-picker
-      (choice #:label "Monster"
-              @valid-monsters
-              (λ (monster-name)
-                (define new-info (hash-ref (@! @name->info) monster-name))
-                (on-change `(monster from ,(@! @info) to ,new-info))
-                (:= @info new-info))))
+      (choice #:label "Monster" @valid-monsters choose-monster))
     (define (make-monster-selector num)
       (define/obs @included? #f)
-      (hpanel (checkbox (λ (included?)
-                          (on-change `(include? ,num to ,included?))
-                          (:= @included? included?))
-                        #:label (~a num))
-              (checkbox (λ (elite?)
-                          (on-change `(elite? ,num to ,elite?)))
-                        #:label "Elite?"
-                        #:enabled? @included?)))
+      (define (set-included included?)
+        (on-change `(include? ,num to ,included?))
+        (:= @included? included?))
+      (define (set-elite elite?)
+        (on-change `(elite? ,num to ,elite?)))
+      (hpanel (checkbox set-included #:label (~a num))
+              (checkbox set-elite #:label "Elite?" #:enabled? @included?)))
     (vpanel (hpanel set-picker monster-picker
                     #:alignment '(center top)
                     #:stretch '(#f #f))

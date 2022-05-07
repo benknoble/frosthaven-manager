@@ -40,6 +40,10 @@
   (define column-widths (or widths
                             (for/list ([(e i) (in-indexed columns)])
                               (list i (* 10 (string-length e))))))
+  (define (make-row i)
+    (define v (index->value i))
+    (for/vector ([f (in-list (cons (const i) entry->columns))])
+      (~a (f v))))
   (table
     columns
     (for/vector ([i (in-range num-rows)])
@@ -49,8 +53,4 @@
                      (* 30 num-rows))
     #:column-widths column-widths
     #:stretch '(#f #f)
-    #:entry->row
-    (λ (i)
-      (define v (index->value i))
-      (for/vector ([f (in-list (cons (const i) entry->columns))])
-        (~a (f v))))))
+    #:entry->row make-row))

@@ -31,32 +31,36 @@
       (text (@~> @num-players (~>> inspiration-reward (~a "Inspiration: ")))))))
 
 (define (level-table @level)
-  (button "Level Table"
-          (thunk
-            (render
-              (window
-                #:title "Level Information"
-                #:stretch '(#f #f)
-                (static-table
-                  '("Level" "Gold" "Bonus XP" "Trap Damage" "Hazardous Terrain Damage")
-                  number-of-levels
-                  (list level-info-gold
-                        level-info-exp
-                        level-info-trap-damage
-                        level-info-hazardous-terrain)
-                  #:index->value get-level-info
-                  #:selection @level))))))
+  (define table
+    (static-table
+      '("Level" "Gold" "Bonus XP" "Trap Damage" "Hazardous Terrain Damage")
+      number-of-levels
+      (list level-info-gold
+            level-info-exp
+            level-info-trap-damage
+            level-info-hazardous-terrain)
+      #:index->value get-level-info
+      #:selection @level))
+  (define (action)
+    (render
+      (window
+        #:title "Level Information"
+        #:stretch '(#f #f)
+        table)))
+  (button "Level Table" action))
 
 (define (inspiration-table @num-players)
-  (button "Inspiration Table"
-          (thunk
-            (render
-              (window
-                #:title "Inspiration"
-                #:stretch '(#f #f)
-                (static-table
-                  '("Players" "Inspiration")
-                  max-players
-                  (list inspiration-reward)
-                  #:index->entry add1
-                  #:selection (@> @num-players sub1)))))))
+  (define table
+    (static-table
+      '("Players" "Inspiration")
+      max-players
+      (list inspiration-reward)
+      #:index->entry add1
+      #:selection (@> @num-players sub1)))
+  (define (action)
+    (render
+      (window
+        #:title "Inspiration"
+        #:stretch '(#f #f)
+        table)))
+  (button "Inspiration Table" action))
