@@ -39,7 +39,9 @@
       (unless (>= (@! @n) max-cards)
         (<@ @n add1)
         (on-card `(add ,deck))))
-    (counter (@~> @n (~a label _)) add-card subtract-card))
+    (hpanel (spacer)
+            (counter (@~> @n (~a label _)) add-card subtract-card)
+            (spacer)))
   (define money-view
     (make-cards-picker! "Money Cards: " max-money-cards money-deck money?))
   (define material-views
@@ -65,7 +67,7 @@
                 [#t (on-card `(add ,(list random-item)))]
                 [#f (on-card `(remove ,random-item?))])))
   (apply vpanel
-         #:stretch '(#t #f)
+         #:stretch '(#f #f)
          random-item-view
          money-view
          (append material-views herb-views)))
