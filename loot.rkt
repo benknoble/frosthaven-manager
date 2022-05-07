@@ -25,7 +25,8 @@
          "qi.rkt"
          racket/gui/easy/contract
          "defns.rkt"
-         "gui/mixins.rkt")
+         "gui/mixins.rkt"
+         "gui/counter.rkt")
 
 (define (loot-picker #:on-card [on-card void])
   (define (make-cards-picker! label max-cards deck in-deck?)
@@ -38,12 +39,7 @@
       (unless (>= (@! @n) max-cards)
         (<@ @n add1)
         (on-card `(add ,deck))))
-    (hpanel
-      (spacer)
-      (button "-" subtract-card)
-      (text (@~> @n (~a label _)))
-      (button "+" add-card)
-      (spacer)))
+    (counter (@~> @n (~a label _)) add-card subtract-card))
   (define money-view
     (make-cards-picker! "Money Cards: " max-money-cards money-deck money?))
   (define material-views

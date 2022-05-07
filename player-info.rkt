@@ -21,7 +21,8 @@
          "observable-operator.rkt"
          "qi.rkt"
          racket/gui/easy/contract
-         "defns.rkt")
+         "defns.rkt"
+         "gui/counter.rkt")
 
 (define (player-input-views @num-players
                             #:on-name [on-name void]
@@ -57,18 +58,14 @@
     (unless (@! (@> @player at-max-health?))
       (on-hp add1)))
   (define hp-panel
-    (hpanel (button "-" subtract-hp)
-            (text (@> @player player->hp-text))
-            (button "+" add-hp)))
+    (counter (@> @player player->hp-text) add-hp subtract-hp))
   (define (subtract-xp)
     (unless (@! (@~> @player (~> player-xp zero?)))
       (on-xp sub1)))
   (define (add-xp)
     (on-xp add1))
   (define xp-panel
-    (hpanel (button "-" subtract-xp)
-            (text (@~> @player (~>> player-xp (~a "XP: "))))
-            (button "+" add-xp)))
+    (counter (@~> @player (~>> player-xp (~a "XP: "))) add-xp subtract-xp))
   (define hp-xp
     (vpanel #:alignment '(center center)
             #:stretch '(#f #t)
@@ -149,9 +146,7 @@
     #:stretch '(#t #f)
     (input #:label "Name" @name (flow (~> 2> on-name))
            #:min-size '(200 #f))
-    (button "-" subtract-hp)
-    (text (@~> @hp (~a "Max HP: " _)))
-    (button "+" add-hp)))
+    (counter (@~> @hp (~a "Max HP: " _)) add-hp subtract-hp)))
 
 (module+ main
   (define (update-players players k f)
