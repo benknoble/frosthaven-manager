@@ -50,7 +50,7 @@
   ;; some similarities to player-view, but need room for actions and overall
   ;; stats, the monster numbers + elite? status, ability to "hide" action, etc.
 
-  (define (single-monster-picker info-db #:on-change [on-change (void)])
+  (define (single-monster-picker info-db #:on-change [on-change void])
     (define sets (hash-keys info-db))
     (define/obs @set (car sets))
     (define @name->info (@~> @set (hash-ref info-db _)))
