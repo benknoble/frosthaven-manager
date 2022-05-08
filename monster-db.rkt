@@ -39,12 +39,24 @@
 (module+ gui
   (provide (contract-out
              [single-monster-event/c contract?]
+             [add-monster-event/c contract?]
+             [remove-monster-event/c contract?]
              [single-monster-picker (->* (info-db/c)
                                          (#:on-change (-> single-monster-event/c any))
-                                         (is-a?/c view<%>))]))
+                                         (is-a?/c view<%>))]
+             [simple-monster-group-view (-> (obs/c monster-group?)
+                                            (is-a?/c view<%>))]
+             [multi-monster-picker (->* (info-db/c)
+                                        (#:on-change (-> (or/c single-monster-event/c
+                                                               add-monster-event/c
+                                                               remove-monster-event/c)
+                                                         any))
+                                        (is-a?/c view<%>))]))
 
   (require racket/gui/easy
-           "observable-operator.rkt")
+           racket/gui/easy/contract
+           "observable-operator.rkt"
+           "gui/mixins.rkt")
 
   (define single-monster-event/c
     (or/c
@@ -57,6 +69,8 @@
   ;; some similarities to player-view, but need room for actions and overall
   ;; stats, the monster numbers + elite? status, ability to "hide" action, etc.
 
+  ;; TODO: should be able to change "level"; needs to update single-monster-event/c
+  ;; TODO: should be able to manipulate individual HP (? dialog with counter)
   (define (single-monster-picker info-db #:on-change [on-change void])
     (define sets (hash-keys info-db))
     (define-values (set info) (initial-set+info info-db))
@@ -90,7 +104,94 @@
             (hpanel (apply vpanel (map make-monster-selector (inclusive-range 1 5)))
                     (apply vpanel (map make-monster-selector (inclusive-range 6 10))))))
 
-  )
+  (define add-monster-event/c
+    (list/c 'add monster-group?))
+  (define remove-monster-event/c
+    (list/c 'remove monster-group?))
+
+  (define (multi-monster-picker info-db #:on-change [on-change void])
+    (define/obs @monster-groups empty)
+    (define/obs @next-id
+      (@~> @monster-groups
+           (~> sep (>< car) (rectify -1) max add1)))
+    (define (make-simple-monster-group-view k @e)
+      (define @m (@> @e cdr))
+      (define @name (@> @m monster-group-name))
+      (define (remove-group)
+        (on-change `(remove ,(@! @m)))
+        (<~@ @monster-groups (remove (@! @e) _)))
+      (hpanel
+        (vpanel #:stretch '(#f #t)
+                (button (@~> @name (~a "Remove " _)) remove-group)
+                (spacer))
+        (simple-monster-group-view @m)))
+    (define-values (set info) (initial-set+info info-db))
+    (define (add-monster-group)
+      ;; 0: set
+      ;; 1: info
+      ;; 2: hash number -> elite
+      (define new-group (vector set info (hash)))
+      (define (finish)
+        (match-define (vector set info num->elite) new-group)
+        (define the-group
+          (make-monster-group
+            ;; TODO level
+            info 3
+            (hash->list num->elite #t)))
+        (on-change `(add ,the-group))
+        (<~@ @monster-groups (append (list (cons (@! @next-id) the-group)))))
+      (render
+        (dialog
+          #:mixin (make-on-close-mixin finish)
+          #:title "Pick a Monster"
+          (single-monster-picker
+            info-db
+            #:on-change
+            (λ (e)
+              ;; forward events upstream
+              (on-change e)
+              ;; update internal state
+              (match e
+                [`(set from ,old to ,new) (vector-set! new-group 0 new)]
+                [`(monster from ,old to ,new) (vector-set! new-group 1 new)]
+                [`(include? ,n to #t)
+                  (vector-update! new-group 2 (flow (hash-update n values #f)))]
+                [`(include? ,n to #f)
+                  (vector-update! new-group 2 (flow (hash-remove n)))]
+                [`(elite? ,n to ,elite?)
+                  ;; looks like hash-set, but I want the missing-key semantics of
+                  ;; hash-update with no failure-result as a guard against bugs
+                  (vector-update! new-group 2 (flow (hash-update n (const elite?))))]))))))
+    (vpanel
+      (list-view @monster-groups
+        #:key car
+        ;; TODO edit monster
+        make-simple-monster-group-view)
+      (hpanel
+        #:stretch '(#t #f)
+        (spacer)
+        (button "Add Monster" add-monster-group))))
+
+  (define (simple-monster-group-view @monster-group)
+    (vpanel
+      #:alignment '(left top)
+      (hpanel
+        #:stretch '(#f #f)
+        (text (@> @monster-group monster-group-name))
+        (text (@~> @monster-group (~>> monster-group-level (~a "Level: ")))))
+      (table
+        '("Number" "Type" "HP")
+        (@~> @monster-group (~> monster-group-monsters list->vector))
+        void
+        #:entry->row monster-info->row)))
+
+  (define (monster-info->row monster)
+    (vector
+      (~a (monster-number monster))
+      (if (monster-elite? monster)
+        "Elite"
+        "Normal")
+      (~a (monster-current-hp monster)))))
 
 (module+ main
   (require (submod ".." gui)
@@ -104,31 +205,40 @@
     ;; 1: info
     ;; 2: hash number -> elite
     (list set info (hash)))
+
+  ;; (void
+  ;;   (render
+  ;;     (window
+  ;;       (single-monster-picker
+  ;;         info-db
+  ;;         #:on-change
+  ;;         (match-lambda
+  ;;           [`(set from ,old to ,new) (<~@ @state (list-set 0 new))]
+  ;;           [`(monster from ,old to ,new) (<~@ @state (list-set 1 new))]
+  ;;           [`(include? ,n to #t)
+  ;;             (<~@ @state (list-update 2 (flow (hash-update n values #f))))]
+  ;;           [`(include? ,n to #f)
+  ;;             (<~@ @state (list-update 2 (flow (hash-remove n))))]
+  ;;           [`(elite? ,n to ,elite?)
+  ;;             ;; looks like hash-set, but I want the missing-key semantics of
+  ;;             ;; hash-update with no failure-result as a guard against bugs
+  ;;             (<~@ @state (list-update 2 (flow (hash-update n (const elite?)))))])))))
+
+  ;; (void
+  ;;   (render
+  ;;     (window
+  ;;       (simple-monster-group-view
+  ;;         (@> @state
+  ;;             (match-lambda
+  ;;               [(list set info num->elite?)
+  ;;                (make-monster-group
+  ;;                  info 3
+  ;;                  (hash->list num->elite? #t))]))))))
+
   (void
     (render
       (window
-        (single-monster-picker
-          info-db
-          #:on-change
-          (match-lambda
-            [`(set from ,old to ,new) (<~@ @state (list-set 0 new))]
-            [`(monster from ,old to ,new) (<~@ @state (list-set 1 new))]
-            [`(include? ,n to #t)
-              (<~@ @state (list-update 2 (flow (hash-update n values #f))))]
-            [`(include? ,n to #f)
-              (<~@ @state (list-update 2 (flow (hash-remove n))))]
-            [`(elite? ,n to ,elite?)
-              ;; looks like hash-set, but I want the missing-key semantics of
-              ;; hash-update with no failure-result as a guard against bugs
-              (<~@ @state (list-update 2 (flow (hash-update n (const elite?)))))])))))
-  (void
-    (render
-      (window
-        (vpanel #:min-size '(100 300)
-                (text (@~> @state (~> (-< car " " (~> cadr (if _ monster-info-name ~a))) ~a)))
-                (list-view (@~> @state (~> caddr (hash->list #t))) #:key car
-                  (λ (k @e)
-                    (text (@~> @e (~>> cdr (if _ "Elite" "Normal") (~a k ": ")))))))))))
+        (multi-monster-picker info-db #:on-change displayln)))))
 
 (module+ test
   (require rackunit)
