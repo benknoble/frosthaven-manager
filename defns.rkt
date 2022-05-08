@@ -103,7 +103,9 @@
                      [elite? boolean?]
                      [current-hp natural-number/c]
                      [conditions (listof condition?)])]
-    [struct monster-group ([normal-stats monster-stats?]
+    [struct monster-group ([set-name string?]
+                           [name string?]
+                           [normal-stats monster-stats?]
                            [elite-stats monster-stats?]
                            [monsters (listof monster?)])]
     [make-monster (-> monster-info? (integer-in 0 number-of-levels)
@@ -318,7 +320,7 @@
 (struct monster-info [set-name name normal-stats elite-stats] #:prefab)
 (struct monster-action [set-name name initiative abilities shuffle?] #:prefab)
 (struct monster [number elite? current-hp conditions] #:transparent)
-(struct monster-group [normal-stats elite-stats monsters] #:transparent)
+(struct monster-group [set-name name normal-stats elite-stats monsters] #:transparent)
 
 (define (make-monster* stats number elite?)
   (monster number elite? (monster-stats-max-hp stats) empty))
@@ -338,6 +340,8 @@
             monster-info-elite-stats)
         (amp (list-ref level))))
   (monster-group
+    (monster-info-set-name info)
+    (monster-info-name info)
     normal elite
     (map (match-lambda
            [(cons num elite?)
