@@ -31,15 +31,15 @@
 
 (module+ gui
   (provide (contract-out
-             [monster-event/c contract?]
+             [single-monster-event/c contract?]
              [single-monster-picker (->* (info-db/c)
-                                         (#:on-change (-> monster-event/c any))
+                                         (#:on-change (-> single-monster-event/c any))
                                          (is-a?/c view<%>))]))
 
   (require racket/gui/easy
            "observable-operator.rkt")
 
-  (define monster-event/c
+  (define single-monster-event/c
     (or/c
       (list/c 'set 'from string? 'to string?)
       (list/c 'monster 'from monster-info? 'to monster-info?)
