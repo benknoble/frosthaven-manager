@@ -4,7 +4,11 @@
   (contract-out
     [no-duplicates? (-> list? boolean?)]
     [unique/c (-> flat-contract? contract?)]
-    [unique-with/c (-> (-> any/c any/c) flat-contract? contract?)])
+    [unique-with/c (-> (-> any/c any/c) flat-contract? contract?)]
+    [vector-update! (-> (and/c vector? (not/c immutable?))
+                        natural-number/c
+                        (-> any/c any/c)
+                        void?)])
 
   ;; level info
   (contract-out
@@ -138,6 +142,9 @@
   (flat-named-contract
     (list 'unique-with/c (object-name key) (object-name c))
     ctc))
+
+(define (vector-update! v pos f)
+  (vector-set! v pos (f (vector-ref v pos))))
 
 (define max-players 4)
 
