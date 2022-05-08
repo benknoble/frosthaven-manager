@@ -125,8 +125,8 @@
         (vpanel #:min-size '(100 300)
                 (text (@~> @state (~> (-< car " " (~> cadr (if _ monster-info-name ~a))) ~a)))
                 (list-view (@~> @state (~> caddr (hash->list #t))) #:key car
-                           (λ (k @e)
-                             (text (@~> @e (~>> cdr (if _ "Elite" "Normal") (~a k ": ")))))))))))
+                  (λ (k @e)
+                    (text (@~> @e (~>> cdr (if _ "Elite" "Normal") (~a k ": ")))))))))))
 
 (module+ test
   (require rackunit)
