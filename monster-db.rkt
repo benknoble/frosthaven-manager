@@ -29,6 +29,13 @@
         [monster-action? (~>> collect (group-by monster-action-set-name)
                               (list~>hash #:->key (~> car monster-action-set-name)))])))
 
+(define-flow take-first (~> hash-keys car))
+(define (initial-set+info info-db)
+  (define set (take-first info-db))
+  (define name->info (hash-ref info-db set))
+  (define info (hash-ref name->info (take-first name->info)))
+  (values set info))
+
 (module+ gui
   (provide (contract-out
              [single-monster-event/c contract?]
@@ -52,7 +59,9 @@
 
   (define (single-monster-picker info-db #:on-change [on-change void])
     (define sets (hash-keys info-db))
-    (define/obs @set (car sets))
+    (define-values (set info) (initial-set+info info-db))
+    (define/obs @set set)
+    (define/obs @info info)
     (define @name->info (@~> @set (hash-ref info-db _)))
     (define (choose-set set)
       (on-change `(set from ,(@! @set) to ,set))
@@ -60,7 +69,6 @@
     (define set-picker
       (choice #:label "Set" sets choose-set))
     (define @valid-monsters (@> @name->info hash-keys))
-    (define/obs @info (~>> (@valid-monsters) @! car (hash-ref (@! @name->info))))
     (define (choose-monster monster-name)
       (define new-info (hash-ref (@! @name->info) monster-name))
       (on-change `(monster from ,(@! @info) to ,new-info))
@@ -90,18 +98,12 @@
            "observable-operator.rkt")
   (define-values (info-db actions-db)
     (get-dbs "sample-db.rktd"))
+  (define-values (set info) (initial-set+info info-db))
   (define/obs @state
-    (let* ([take-first (flow (~> hash-keys car))]
-           [set (take-first info-db)]
-           [name->info (hash-ref info-db set)]
-           [info (hash-ref name->info (take-first name->info))])
-      (list
-        ;; 0: set
-        set
-        ;; 1: info
-        info
-        ;; 2: hash number -> elite
-        (hash))))
+    ;; 0: set
+    ;; 1: info
+    ;; 2: hash number -> elite
+    (list set info (hash)))
   (void
     (render
       (window
