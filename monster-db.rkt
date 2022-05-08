@@ -80,7 +80,7 @@
                     #:alignment '(center top)
                     #:stretch '(#f #f))
             (hpanel (apply vpanel (map make-monster-selector (inclusive-range 1 5)))
-                    (apply vpanel (map make-monster-selector (inclusive-range 5 10))))))
+                    (apply vpanel (map make-monster-selector (inclusive-range 6 10))))))
 
   )
 
