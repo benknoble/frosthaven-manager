@@ -96,11 +96,11 @@
            [name->info (hash-ref info-db set)]
            [info (hash-ref name->info (take-first name->info))])
       (list
-        ;; 1: set
+        ;; 0: set
         set
-        ;; 2: info
+        ;; 1: info
         info
-        ;; 3: hash number -> elite
+        ;; 2: hash number -> elite
         (hash))))
   (void
     (render
