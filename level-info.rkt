@@ -2,10 +2,10 @@
 
 (provide
   (contract-out
-    [level-stats (-> (obs/c (integer-in 0 number-of-levels))
+    [level-stats (-> (obs/c (integer-in 0 max-level))
                      (obs/c natural-number/c)
                      (is-a?/c view<%>))]
-    [level-table (-> (obs/c (integer-in 0 number-of-levels))
+    [level-table (-> (obs/c (integer-in 0 max-level))
                      (is-a?/c view<%>))]
     [inspiration-table (-> (obs/c (integer-in 1 max-players))
                            (is-a?/c view<%>))]))

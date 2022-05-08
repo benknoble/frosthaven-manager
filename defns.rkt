@@ -14,8 +14,9 @@
                         [hazardous-terrain natural-number/c]
                         [exp natural-number/c])]
     [number-of-levels natural-number/c]
+    [max-level natural-number/c]
     [max-players natural-number/c]
-    [get-level-info (-> (integer-in 0 number-of-levels) level-info?)]
+    [get-level-info (-> (integer-in 0 max-level) level-info?)]
     [inspiration-reward (-> (integer-in 1 max-players) natural-number/c)])
 
   ;; players
@@ -153,6 +154,7 @@
         (level-info 6 5 8 3 16)
         (level-info 7 6 9 4 18)))
 (define number-of-levels (length level-table))
+(define max-level (sub1 number-of-levels))
 (define (get-level-info level)
   (list-ref level-table level))
 
