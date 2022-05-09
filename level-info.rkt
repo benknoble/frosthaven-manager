@@ -64,3 +64,10 @@
         #:stretch '(#f #f)
         table)))
   (button "Inspiration Table" action))
+
+(module+ main
+  (define/obs @level 3)
+  (define/obs @num-players 2)
+  (render (window (vpanel (level-stats @level @num-players)
+                          (level-table @level)
+                          (inspiration-table @num-players)))))
