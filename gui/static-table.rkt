@@ -42,11 +42,11 @@
                               (list i (* 10 (string-length e))))))
   (define (make-row i)
     (define v (index->value i))
-    (for/vector ([f (in-list (cons (const i) entry->columns))])
+    (for/vector #:length (add1 (length entry->columns)) ([f (in-list (cons (const i) entry->columns))])
       (~a (f v))))
   (table
     columns
-    (for/vector ([i (in-range num-rows)])
+    (for/vector #:length num-rows ([i (in-range num-rows)])
       (index->entry i))
     #:selection selection
     #:min-size (list (~> (column-widths) sep (>< second) (+ 40))
