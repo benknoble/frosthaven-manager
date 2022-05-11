@@ -15,14 +15,17 @@
     (spacer)
     (text "FROSTHAVEN")
     (spacer)
-    (choice #:label "Scenario Level"
-            (build-list number-of-levels identity)
-            #:choice->label ~a
-            on-level)
-    (choice #:label "Number of Players"
-            (build-list max-players add1)
-            #:choice->label ~a
-            on-player)
+    (group
+      "Party Information"
+      #:stretch '(#f #f)
+      (choice #:label "Scenario Level"
+              (build-list number-of-levels identity)
+              #:choice->label ~a
+              on-level)
+      (choice #:label "Number of Players"
+              (build-list max-players add1)
+              #:choice->label ~a
+              on-player))
     (spacer)))
 
 (module+ main
