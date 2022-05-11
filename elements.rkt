@@ -119,11 +119,11 @@
   (define (element-cycler e)
     (define/obs @element-state 'unfused)
     (define (make-pict-for-canvas s)
-      (inset ((state->pict e) s) (/ size 3) 0 0 0))
+      (inset ((state->pict e) s) (+ 3 (/ size 3)) 3 0 0))
     (define pict-view
       (pict-canvas @element-state
                    make-pict-for-canvas
-                   #:min-size (list size size)))
+                   #:min-size (list (+ 6 size) (+ 6 size))))
     (define (action)
       (<@ @element-state transition-element-state))
     (define cycler-view
