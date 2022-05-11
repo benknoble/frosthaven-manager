@@ -51,7 +51,8 @@
              [add-monster-event/c contract?]
              [remove-monster-event/c contract?]
              [single-monster-picker (->* (info-db/c)
-                                         (#:on-change (-> single-monster-event/c any))
+                                         (#:on-change (-> single-monster-event/c any)
+                                          #:unavailable (set/c string?))
                                          (is-a?/c view<%>))]
              [simple-monster-group-view (-> (obs/c monster-group?)
                                             (is-a?/c view<%>))]
@@ -80,7 +81,9 @@
 
   ;; TODO: should be able to change "level"; needs to update single-monster-event/c
   ;; TODO: should be able to manipulate individual HP (? dialog with counter)
-  (define (single-monster-picker info-db #:on-change [on-change void])
+  (define (single-monster-picker info-db
+                                 #:on-change [on-change void]
+                                 #:unavailable [unavailable empty])
     (define sets (hash-keys info-db))
     (define-values (set info) (initial-set+info info-db))
     (define/obs @set set)
@@ -95,12 +98,16 @@
                                              (longest-set-length info-db)))
                                     50)
                                #f)))
-    (define @valid-monsters (@> @name->info hash-keys))
+    (define @valid-monsters (@~> @name->info (~> hash-keys (set-subtract unavailable))))
     (define (choose-monster monster-name)
       (when monster-name
         (define new-info (hash-ref (@! @name->info) monster-name))
         (on-change `(monster from ,(@! @info) to ,new-info))
         (:= @info new-info)))
+    ;; Set initial monster, which may not be info if info is already unavailable
+    ;; according to @valid-monsters (or if the set operation re-orders the
+    ;; keys…). Use #f like choice if no valid monster.
+    (choose-monster (@! (@~> @valid-monsters (and (not empty?) first))))
     (define monster-picker
       (choice #:label "Monster" @valid-monsters choose-monster
               #:min-size (list (max (* 10 (+ (longest-name-length info-db)
@@ -175,6 +182,9 @@
                            #f)
           (single-monster-picker
             info-db
+            ;; valid because inside a dialog: @monster-names won't update until
+            ;; the dialog is closed
+            #:unavailable (@! @monster-names)
             #:on-change
             (λ (e)
               ;; TODO is this forwarding needed?
