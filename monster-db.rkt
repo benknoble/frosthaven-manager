@@ -238,7 +238,7 @@
   (void
     (render
       (window
-        (multi-monster-picker info-db #:on-change displayln)))))
+        (multi-monster-picker info-db #:on-change println)))))
 
 (module+ test
   (require rackunit)
