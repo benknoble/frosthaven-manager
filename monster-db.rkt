@@ -36,6 +36,15 @@
   (define info (hash-ref name->info (take-first name->info)))
   (values set info))
 
+(define (longest-set-length info-db)
+  (apply max (map string-length (hash-keys info-db))))
+
+(define (longest-name-length info-db)
+  (apply max
+         (for*/list ([monster-name->monster-info (in-hash-values info-db)]
+                     [monster-name (in-hash-keys monster-name->monster-info)])
+           (string-length monster-name))))
+
 (module+ gui
   (provide (contract-out
              [single-monster-event/c contract?]
@@ -81,14 +90,22 @@
       (on-change `(set from ,(@! @set) to ,set))
       (:= @set set))
     (define set-picker
-      (choice #:label "Set" sets choose-set))
+      (choice #:label "Set" sets choose-set
+              #:min-size (list (max (* 10 (+ (string-length "Set")
+                                             (longest-set-length info-db)))
+                                    50)
+                               #f)))
     (define @valid-monsters (@> @name->info hash-keys))
     (define (choose-monster monster-name)
       (define new-info (hash-ref (@! @name->info) monster-name))
       (on-change `(monster from ,(@! @info) to ,new-info))
       (:= @info new-info))
     (define monster-picker
-      (choice #:label "Monster" @valid-monsters choose-monster))
+      (choice #:label "Monster" @valid-monsters choose-monster
+              #:min-size (list (max (* 10 (+ (longest-name-length info-db)
+                                             (string-length "Monster")))
+                                    50)
+                               #f)))
     (define (make-monster-selector num)
       (define/obs @included? #f)
       (define (set-included included?)
@@ -144,6 +161,10 @@
         (dialog
           #:mixin (make-on-close-mixin finish)
           #:title "Pick a Monster"
+          #:min-size (list (max (* 10 (+ (longest-name-length info-db)
+                                         (longest-set-length info-db)))
+                                400)
+                           #f)
           (single-monster-picker
             info-db
             #:on-change
