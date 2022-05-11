@@ -57,8 +57,7 @@
              [simple-monster-group-view (-> (obs/c monster-group?)
                                             (is-a?/c view<%>))]
              [multi-monster-picker (->* (info-db/c (integer-in 0 max-level))
-                                        (#:on-change (-> (or/c single-monster-event/c
-                                                               add-monster-event/c
+                                        (#:on-change (-> (or/c add-monster-event/c
                                                                remove-monster-event/c)
                                                          any))
                                         (is-a?/c view<%>))]))
@@ -179,9 +178,6 @@
           (on-change `(add ,the-group))
           (<~@ @monster-groups (append (list (cons (@! @next-id) the-group))))))
       (define (on-single-change e)
-        ;; TODO is this forwarding needed?
-        ;; forward events upstream
-        (on-change e)
         ;; update internal state
         (match e
           [`(set from ,old to ,new) (vector-set! new-group 0 new)]
