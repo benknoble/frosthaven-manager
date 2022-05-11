@@ -50,13 +50,13 @@
              [single-monster-event/c contract?]
              [add-monster-event/c contract?]
              [remove-monster-event/c contract?]
-             [single-monster-picker (->* (info-db/c)
+             [single-monster-picker (->* (info-db/c (integer-in 0 max-level))
                                          (#:on-change (-> single-monster-event/c any)
                                           #:unavailable (set/c string?))
                                          (is-a?/c view<%>))]
              [simple-monster-group-view (-> (obs/c monster-group?)
                                             (is-a?/c view<%>))]
-             [multi-monster-picker (->* (info-db/c)
+             [multi-monster-picker (->* (info-db/c (integer-in 0 max-level))
                                         (#:on-change (-> (or/c single-monster-event/c
                                                                add-monster-event/c
                                                                remove-monster-event/c)
@@ -73,15 +73,16 @@
       (list/c 'set 'from string? 'to string?)
       (list/c 'monster 'from monster-info? 'to monster-info?)
       (list/c 'include? (integer-in 1 10) 'to boolean?)
-      (list/c 'elite? (integer-in 1 10) 'to boolean?)))
+      (list/c 'elite? (integer-in 1 10) 'to boolean?)
+      (list/c 'level (integer-in 0 max-level))))
 
   ;; TODO: monster-view
   ;; some similarities to player-view, but need room for actions and overall
   ;; stats, the monster numbers + elite? status, ability to "hide" action, etc.
 
-  ;; TODO: should be able to change "level"; needs to update single-monster-event/c
   ;; TODO: should be able to manipulate individual HP (? dialog with counter)
   (define (single-monster-picker info-db
+                                 initial-level
                                  #:on-change [on-change void]
                                  #:unavailable [unavailable empty])
     (define sets (hash-keys info-db))
@@ -121,9 +122,14 @@
         (on-change `(elite? ,num to ,elite?)))
       (hpanel (checkbox set-included #:label (~a num))
               (checkbox set-elite #:label "Elite?" #:enabled? @included?)))
+    (define/obs @level initial-level)
     (vpanel (hpanel set-picker monster-picker
                     #:alignment '(center top)
                     #:stretch '(#f #f))
+            (slider @level (λ (level) (on-change `(level ,level)))
+                    #:label "Level"
+                    #:min-value 0
+                    #:max-value max-level)
             (hpanel (apply vpanel (map make-monster-selector (inclusive-range 1 5)))
                     (apply vpanel (map make-monster-selector (inclusive-range 6 10))))))
 
@@ -132,7 +138,9 @@
   (define remove-monster-event/c
     (list/c 'remove monster-group?))
 
-  (define (multi-monster-picker info-db #:on-change [on-change void])
+  (define (multi-monster-picker info-db
+                                initial-level
+                                #:on-change [on-change void])
     (define/obs @monster-groups empty)
     (define @monster-names
       (@~> @monster-groups
@@ -156,17 +164,17 @@
       ;; 0: set
       ;; 1: info
       ;; 2: hash number -> elite
-      (define new-group (vector set info (hash)))
+      ;; 3: level
+      (define new-group (vector set info (hash) initial-level))
       (define (finish)
-        (match-define (vector set info num->elite) new-group)
+        (match-define (vector set info num->elite level) new-group)
         (when (not (or (hash-empty? num->elite)
                        ;; valid because inside a dialog-closer: @monster-names won't
                        ;; update until the end of this form
                        (set-member? (@! @monster-names) (monster-info-name info))))
           (define the-group
             (make-monster-group
-              ;; TODO level
-              info 3
+              info level
               (hash->list num->elite #t)))
           (on-change `(add ,the-group))
           (<~@ @monster-groups (append (list (cons (@! @next-id) the-group))))))
@@ -185,7 +193,8 @@
           [`(elite? ,n to ,elite?)
             ;; looks like hash-set, but I want the missing-key semantics of
             ;; hash-update with no failure-result as a guard against bugs
-            (vector-update! new-group 2 (flow (hash-update n (const elite?))))]))
+            (vector-update! new-group 2 (flow (hash-update n (const elite?))))]
+          [`(level ,level) (vector-set! new-group 3 level)]))
       (render
         (dialog
           #:mixin (make-on-close-mixin finish)
@@ -195,6 +204,7 @@
                          + (* 10) (max 400) (list #f))
           (single-monster-picker
             info-db
+            initial-level
             ;; valid because inside a dialog: @monster-names won't update until
             ;; the dialog is closed
             #:unavailable (@! @monster-names)
@@ -275,7 +285,7 @@
   (void
     (render
       (window
-        (multi-monster-picker info-db #:on-change println)))))
+        (multi-monster-picker info-db 3 #:on-change println)))))
 
 (module+ test
   (require rackunit)
