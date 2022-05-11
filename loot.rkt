@@ -67,11 +67,12 @@
               (match-lambda
                 [#t (on-card `(add ,(list random-item)))]
                 [#f (on-card `(remove ,random-item?))])))
-  (apply vpanel
-         #:stretch '(#f #f)
-         random-item-view
-         money-view
-         (append material-views herb-views)))
+  (vpanel
+    #:stretch '(#f #f)
+    random-item-view
+    money-view
+    (apply group "Materials" material-views)
+    (apply group "Herbs" herb-views)))
 
 (define ((loot-picker-updater @loot-deck) evt)
   (define (update-old-deck old-loot-deck)
