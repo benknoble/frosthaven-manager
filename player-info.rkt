@@ -68,10 +68,11 @@
   (define xp-panel
     (counter (@~> @player (~>> player-xp (~a "XP: "))) add-xp subtract-xp))
   (define hp-xp
-    (vpanel #:alignment '(center center)
-            #:stretch '(#f #t)
-            hp-panel
-            xp-panel))
+    (group "Stats"
+           #:alignment '(center center)
+           #:stretch '(#f #t)
+           hp-panel
+           xp-panel))
   (define @init (@> @player player-initiative))
   (define @init-label (@~> @player (~>> player-name (~a "Initiative for "))))
   (define (show-initiative-slider)
@@ -85,21 +86,23 @@
           #:max-value 99
           #:label @init-label))))
   (define name-initiative-panel
-    (vpanel #:style '(border)
-            #:stretch '(#f #t)
-            (text (@> @player player-name))
-            (text (@> @init ~a))
-            (button "Initiative" show-initiative-slider)))
+    (group
+      "Initiative"
+      #:stretch '(#f #t)
+      (text (@> @player player-name))
+      (text (@> @init ~a))
+      (button "Edit Initiative" show-initiative-slider)))
   (define (show-conditions)
     (render
       (apply dialog
              #:title (@~> @player (~>> player-name (~a "Conditions for ")))
              (map make-condition-checkbox conditions))))
   (define conditions-panel
-    (vpanel (text (@~> @player (~> player-conditions
-                                   (sep ~a) collect
-                                   (string-join ", " #:before-last " and "))))
-            (button "Conditions" show-conditions)))
+    (group "Conditions"
+           (text (@~> @player (~> player-conditions
+                                  (sep ~a) collect
+                                  (string-join ", " #:before-last " and "))))
+           (button "Edit Conditions" show-conditions)))
   (define (make-loot-list p)
     (for/list ([(loot i) (in-indexed (player-loot p))])
       (cons i loot)))
@@ -119,15 +122,16 @@
   (define loot-panel
     (button "Show Loot" show-loot))
   ;; final view
-  (hpanel #:alignment '(center center)
-          #:style '(border)
-          #:stretch '(#t #f)
-          #:margin '(20 0)
-          name-initiative-panel
-          hp-xp
-          (vpanel
-            conditions-panel
-            loot-panel)))
+  (group
+    "Player"
+    #:stretch '(#t #f)
+    (hpanel #:alignment '(center center)
+            #:margin '(20 0)
+            name-initiative-panel
+            hp-xp
+            (vpanel
+              conditions-panel
+              loot-panel))))
 
 (define (player-input-view
           #:on-name [on-name void]
