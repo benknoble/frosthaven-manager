@@ -97,9 +97,10 @@
                                #f)))
     (define @valid-monsters (@> @name->info hash-keys))
     (define (choose-monster monster-name)
-      (define new-info (hash-ref (@! @name->info) monster-name))
-      (on-change `(monster from ,(@! @info) to ,new-info))
-      (:= @info new-info))
+      (when monster-name
+        (define new-info (hash-ref (@! @name->info) monster-name))
+        (on-change `(monster from ,(@! @info) to ,new-info))
+        (:= @info new-info)))
     (define monster-picker
       (choice #:label "Monster" @valid-monsters choose-monster
               #:min-size (list (max (* 10 (+ (longest-name-length info-db)
