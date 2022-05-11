@@ -122,10 +122,12 @@
                    elements-view)
            (spacer)
            ;; main
-           (list-view @players
-             #:min-size (@~> @players (~>> length (* 100) (list #f)))
-             #:key car
-             make-player-view)
+           (group
+             "Creatures"
+             (list-view @players
+               #:min-size (@~> @players (~>> length (* 100) (list #f)))
+               #:key car
+               make-player-view))
            (spacer)
            ;; bottom (1)
            (hpanel #:stretch '(#t #f)
