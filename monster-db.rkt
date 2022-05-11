@@ -94,10 +94,9 @@
       (:= @set set))
     (define set-picker
       (choice #:label "Set" sets choose-set
-              #:min-size (list (max (* 10 (+ (string-length "Set")
-                                             (longest-set-length info-db)))
-                                    50)
-                               #f)))
+              #:min-size (~> (info-db "Set")
+                             (== longest-set-length string-length)
+                             + (* 10) (max 50) (list #f))))
     (define @valid-monsters (@~> @name->info (~> hash-keys (set-subtract unavailable))))
     (define (choose-monster monster-name)
       (when monster-name
@@ -110,10 +109,9 @@
     (choose-monster (@! (@~> @valid-monsters (and (not empty?) first))))
     (define monster-picker
       (choice #:label "Monster" @valid-monsters choose-monster
-              #:min-size (list (max (* 10 (+ (longest-name-length info-db)
-                                             (string-length "Monster")))
-                                    50)
-                               #f)))
+              #:min-size (~> (info-db "Monster")
+                             (== longest-name-length string-length)
+                             + (* 10) (max 50) (list #f))))
     (define (make-monster-selector num)
       (define/obs @included? #f)
       (define (set-included included?)
@@ -176,10 +174,9 @@
         (dialog
           #:mixin (make-on-close-mixin finish)
           #:title "Pick a Monster"
-          #:min-size (list (max (* 10 (+ (longest-name-length info-db)
-                                         (longest-set-length info-db)))
-                                400)
-                           #f)
+          #:min-size (~> (info-db)
+                         (-< longest-name-length longest-set-length)
+                         + (* 10) (max 400) (list #f))
           (single-monster-picker
             info-db
             ;; valid because inside a dialog: @monster-names won't update until
