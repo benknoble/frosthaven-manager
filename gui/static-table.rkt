@@ -22,7 +22,7 @@
                         #:index->value (-> natural-number/c any/c))
                        (is-a?/c view<%>))]))
 
-(require racket/gui
+(require (only-in racket/gui label-string? dimension-integer?)
          racket/gui/easy
          racket/gui/easy/contract
          "../qi.rkt")
