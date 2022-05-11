@@ -128,9 +128,11 @@
     (define (action)
       (<@ @element-state transition-element-state))
     (define cycler-view
-      (vpanel #:stretch '(#f #f)
-              pict-view
-              (button (@> @element-state state->text) action)))
+      (group
+        (element-pics-name e)
+        #:stretch '(#f #f)
+        pict-view
+        (button (@> @element-state state->text) action)))
     (values @element-state cycler-view))
 
   (define (state->pict e)
