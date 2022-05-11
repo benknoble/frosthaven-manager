@@ -128,6 +128,9 @@
 
   (define (multi-monster-picker info-db #:on-change [on-change void])
     (define/obs @monster-groups empty)
+    (define @monster-names
+      (@~> @monster-groups
+           (~> sep (>< (~> cdr monster-group-name)) collect)))
     (define/obs @next-id
       (@~> @monster-groups
            (~> sep (>< car) (rectify -1) max add1)))
@@ -150,13 +153,17 @@
       (define new-group (vector set info (hash)))
       (define (finish)
         (match-define (vector set info num->elite) new-group)
-        (define the-group
-          (make-monster-group
-            ;; TODO level
-            info 3
-            (hash->list num->elite #t)))
-        (on-change `(add ,the-group))
-        (<~@ @monster-groups (append (list (cons (@! @next-id) the-group)))))
+        (when (not (or (hash-empty? num->elite)
+                       ;; valid because inside a dialog-closer: @monster-names won't
+                       ;; update until the end of this form
+                       (set-member? (@! @monster-names) (monster-info-name info))))
+          (define the-group
+            (make-monster-group
+              ;; TODO level
+              info 3
+              (hash->list num->elite #t)))
+          (on-change `(add ,the-group))
+          (<~@ @monster-groups (append (list (cons (@! @next-id) the-group))))))
       (render
         (dialog
           #:mixin (make-on-close-mixin finish)
