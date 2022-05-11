@@ -170,6 +170,22 @@
               (hash->list num->elite #t)))
           (on-change `(add ,the-group))
           (<~@ @monster-groups (append (list (cons (@! @next-id) the-group))))))
+      (define (on-single-change e)
+        ;; TODO is this forwarding needed?
+        ;; forward events upstream
+        (on-change e)
+        ;; update internal state
+        (match e
+          [`(set from ,old to ,new) (vector-set! new-group 0 new)]
+          [`(monster from ,old to ,new) (vector-set! new-group 1 new)]
+          [`(include? ,n to #t)
+            (vector-update! new-group 2 (flow (hash-update n values #f)))]
+          [`(include? ,n to #f)
+            (vector-update! new-group 2 (flow (hash-remove n)))]
+          [`(elite? ,n to ,elite?)
+            ;; looks like hash-set, but I want the missing-key semantics of
+            ;; hash-update with no failure-result as a guard against bugs
+            (vector-update! new-group 2 (flow (hash-update n (const elite?))))]))
       (render
         (dialog
           #:mixin (make-on-close-mixin finish)
@@ -182,23 +198,7 @@
             ;; valid because inside a dialog: @monster-names won't update until
             ;; the dialog is closed
             #:unavailable (@! @monster-names)
-            #:on-change
-            (λ (e)
-              ;; TODO is this forwarding needed?
-              ;; forward events upstream
-              (on-change e)
-              ;; update internal state
-              (match e
-                [`(set from ,old to ,new) (vector-set! new-group 0 new)]
-                [`(monster from ,old to ,new) (vector-set! new-group 1 new)]
-                [`(include? ,n to #t)
-                  (vector-update! new-group 2 (flow (hash-update n values #f)))]
-                [`(include? ,n to #f)
-                  (vector-update! new-group 2 (flow (hash-remove n)))]
-                [`(elite? ,n to ,elite?)
-                  ;; looks like hash-set, but I want the missing-key semantics of
-                  ;; hash-update with no failure-result as a guard against bugs
-                  (vector-update! new-group 2 (flow (hash-update n (const elite?))))]))))))
+            #:on-change on-single-change))))
     (vpanel
       (list-view @monster-groups
         #:key car
