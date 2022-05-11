@@ -177,6 +177,7 @@
             info-db
             #:on-change
             (λ (e)
+              ;; TODO is this forwarding needed?
               ;; forward events upstream
               (on-change e)
               ;; update internal state
