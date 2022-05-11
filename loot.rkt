@@ -1,24 +1,25 @@
 #lang racket
 
-(provide (contract-out
-           [loot-picker (->* ()
-                             (#:on-card (-> (or/c (list/c 'add (listof (or/c money? material? herb? random-item?)))
-                                                  (list/c 'remove predicate/c))
-                                            any))
-                             (is-a?/c view<%>))]
-           [loot-picker-updater
-             (-> (obs/c (listof (or/c money? material? herb? random-item?)))
-                 (-> (or/c (list/c 'add (listof (or/c money? material? herb? random-item?)))
-                           (list/c 'remove predicate/c))
-                     any))]
-           [loot-button
-             (->* ((obs/c (listof loot-card?))
-                   (obs/c natural-number/c)
-                   (obs/c natural-number/c)
-                   (obs/c (listof (cons/c any/c player?))))
-                  (#:on-close (-> any)
-                   #:on-player (-> any/c any))
-                  (is-a?/c view<%>))]))
+(provide
+  (contract-out
+    [loot-picker (->* ()
+                      (#:on-card (-> (or/c (list/c 'add (listof (or/c money? material? herb? random-item?)))
+                                           (list/c 'remove predicate/c))
+                                     any))
+                      (is-a?/c view<%>))]
+    [loot-picker-updater
+      (-> (obs/c (listof (or/c money? material? herb? random-item?)))
+          (-> (or/c (list/c 'add (listof (or/c money? material? herb? random-item?)))
+                    (list/c 'remove predicate/c))
+              any))]
+    [loot-button
+      (->* ((obs/c (listof loot-card?))
+            (obs/c natural-number/c)
+            (obs/c natural-number/c)
+            (obs/c (listof (cons/c any/c player?))))
+           (#:on-close (-> any)
+            #:on-player (-> any/c any))
+           (is-a?/c view<%>))]))
 
 (require racket/gui/easy
          "observable-operator.rkt"

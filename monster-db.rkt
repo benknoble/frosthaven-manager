@@ -1,10 +1,11 @@
 #lang racket
 
-(provide (contract-out
-           [info-db/c contract?]
-           [action-db/c contract?]
-           [get-dbs (-> path-string? (values info-db/c action-db/c))]
-           [default-monster-db path-string?]))
+(provide
+  (contract-out
+    [info-db/c contract?]
+    [action-db/c contract?]
+    [get-dbs (-> path-string? (values info-db/c action-db/c))]
+    [default-monster-db path-string?]))
 
 (require racket/runtime-path
          "qi.rkt"
@@ -46,21 +47,22 @@
            (string-length monster-name))))
 
 (module+ gui
-  (provide (contract-out
-             [single-monster-event/c contract?]
-             [add-monster-event/c contract?]
-             [remove-monster-event/c contract?]
-             [single-monster-picker (->* (info-db/c (integer-in 0 max-level))
-                                         (#:on-change (-> single-monster-event/c any)
-                                          #:unavailable (set/c string?))
-                                         (is-a?/c view<%>))]
-             [simple-monster-group-view (-> (obs/c monster-group?)
-                                            (is-a?/c view<%>))]
-             [multi-monster-picker (->* (info-db/c (integer-in 0 max-level))
-                                        (#:on-change (-> (or/c add-monster-event/c
-                                                               remove-monster-event/c)
-                                                         any))
-                                        (is-a?/c view<%>))]))
+  (provide
+    (contract-out
+      [single-monster-event/c contract?]
+      [add-monster-event/c contract?]
+      [remove-monster-event/c contract?]
+      [single-monster-picker (->* (info-db/c (integer-in 0 max-level))
+                                  (#:on-change (-> single-monster-event/c any)
+                                   #:unavailable (set/c string?))
+                                  (is-a?/c view<%>))]
+      [simple-monster-group-view (-> (obs/c monster-group?)
+                                     (is-a?/c view<%>))]
+      [multi-monster-picker (->* (info-db/c (integer-in 0 max-level))
+                                 (#:on-change (-> (or/c add-monster-event/c
+                                                        remove-monster-event/c)
+                                                  any))
+                                 (is-a?/c view<%>))]))
 
   (require racket/gui/easy
            racket/gui/easy/contract

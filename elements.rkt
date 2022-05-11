@@ -1,16 +1,17 @@
 #lang racket
 
-(provide (contract-out
-           [struct element-pics ([infused pict?]
-                                 [waning pict?]
-                                 [unfused pict?])]
-           [fire element-pics?]
-           [ice element-pics?]
-           [air element-pics?]
-           [earth element-pics?]
-           [light element-pics?]
-           [dark element-pics?]
-           [elements (listof element-pics?)]))
+(provide
+  (contract-out
+    [struct element-pics ([infused pict?]
+                          [waning pict?]
+                          [unfused pict?])]
+    [fire element-pics?]
+    [ice element-pics?]
+    [air element-pics?]
+    [earth element-pics?]
+    [light element-pics?]
+    [dark element-pics?]
+    [elements (listof element-pics?)]))
 
 (require pict
          (rename-in pict/color
@@ -99,12 +100,13 @@
 (module+ gui
   (define element-state/c (or/c 'unfused 'infused 'waning))
 
-  (provide (contract-out
-             [element-state/c contract?]
-             [elements-cycler (-> (listof element-pics?)
-                                  (values (listof (obs/c element-state/c))
-                                          (is-a?/c view<%>)))]
-             [wane-element (-> element-state/c element-state/c)]))
+  (provide
+    (contract-out
+      [element-state/c contract?]
+      [elements-cycler (-> (listof element-pics?)
+                           (values (listof (obs/c element-state/c))
+                                   (is-a?/c view<%>)))]
+      [wane-element (-> element-state/c element-state/c)]))
 
   (require racket/gui/easy
            "observable-operator.rkt"

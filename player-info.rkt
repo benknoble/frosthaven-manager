@@ -1,21 +1,22 @@
 #lang racket
 
-(provide (contract-out
-           [player-input-views (->* ((obs/c natural-number/c))
-                                    (#:on-name (-> natural-number/c string? any)
-                                     #:on-hp (-> natural-number/c
-                                                 (-> number? number?)
-                                                 any)
-                                     #:names (listof string?)
-                                     #:hps (listof positive-integer?))
-                                    (is-a?/c view<%>))]
-           [player-view (->* ((obs/c player?)
-                              (obs/c (integer-in 1 max-players)))
-                             (#:on-condition (-> (list/c condition? boolean?) any)
-                              #:on-hp (-> (-> number? number?) any)
-                              #:on-xp (-> (-> number? number?) any)
-                              #:on-initiative (-> number? any))
-                             (is-a?/c view<%>))]))
+(provide
+  (contract-out
+    [player-input-views (->* ((obs/c natural-number/c))
+                             (#:on-name (-> natural-number/c string? any)
+                              #:on-hp (-> natural-number/c
+                                          (-> number? number?)
+                                          any)
+                              #:names (listof string?)
+                              #:hps (listof positive-integer?))
+                             (is-a?/c view<%>))]
+    [player-view (->* ((obs/c player?)
+                       (obs/c (integer-in 1 max-players)))
+                      (#:on-condition (-> (list/c condition? boolean?) any)
+                       #:on-hp (-> (-> number? number?) any)
+                       #:on-xp (-> (-> number? number?) any)
+                       #:on-initiative (-> number? any))
+                      (is-a?/c view<%>))]))
 
 (require racket/gui/easy
          "observable-operator.rkt"

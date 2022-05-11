@@ -1,10 +1,11 @@
 #lang racket
 
-(provide (contract-out
-           [start-view (->* ()
-                            (#:on-level (-> natural-number/c any)
-                             #:on-player (-> positive-integer? any))
-                            (is-a?/c view<%>))]))
+(provide
+  (contract-out
+    [start-view (->* ()
+                     (#:on-level (-> natural-number/c any)
+                      #:on-player (-> positive-integer? any))
+                     (is-a?/c view<%>))]))
 
 (require racket/gui/easy
          "defns.rkt")
