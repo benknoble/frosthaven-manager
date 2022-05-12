@@ -120,7 +120,18 @@
     [make-monster-group (-> monster-info? (integer-in 0 max-level)
                             (and/c (listof (cons/c (integer-in 1 10) boolean?))
                                    (unique-with/c car any/c))
-                            monster-group?)]))
+                            monster-group?)]
+    [get-monster-stats (-> monster-group? monster? monster-stats?)]
+    [monster-at-max-health? (-> monster? monster-stats? boolean?)]
+    [monster-dead? (-> monster? boolean?)]
+    [monster-group-update-num
+      (-> (integer-in 1 10)
+          (-> monster? monster?)
+          (-> monster-group? monster-group?))]
+    [monster-update-condition (-> condition? boolean?
+                                  (-> monster? monster?))]
+    [monster-update-hp (-> (-> number? number?)
+                           (-> monster? monster?))]))
 
 (require
   rebellion/type/enum
@@ -358,3 +369,44 @@
            [(cons num elite?)
             (make-monster* (if elite? elite normal) num elite?)])
          num+elite?s)))
+
+(define-switch (get-monster-stats mg m)
+  (% 2> 1>)
+  [monster-elite? monster-group-elite-stats]
+  [else monster-group-normal-stats])
+
+(define-flow (monster-at-max-health? m stats)
+  (~> (== monster-current-hp monster-stats-max-hp) >=))
+
+(define-flow (monster-dead? m)
+  (~> monster-current-hp zero?))
+
+(define ((monster-group-update-num num f) group)
+  ;; TODO: lenses?
+  ;; TODO: should monster-group-monsters be a hash?
+  ;; current contract doesn't even have uniqueness
+  (define (is-num? m) (= num (monster-number m)))
+  (define old-monsters (monster-group-monsters group))
+  (define the-monster (findf is-num? old-monsters))
+  (define new-monster (f the-monster))
+  (define new-monsters
+    ;; TODO: sort first by elite, then by number
+    (sort #:key monster-number
+          (cons new-monster (remove the-monster old-monsters))
+          <))
+  (struct-copy monster-group group [monsters new-monsters]))
+
+(define ((monster-update-condition c on?) m)
+  (define old-conditions (monster-conditions m))
+  (define new-conditions
+    (if on?
+      (cons c (remove* (list c) old-conditions))
+      (remove* (list c) old-conditions)))
+  (struct-copy monster m [conditions new-conditions]))
+
+(define ((monster-update-hp proc) m)
+  (define old-hp (monster-current-hp m))
+  (define new-hp (proc old-hp))
+  (if (positive? new-hp)
+    (struct-copy monster m [current-hp new-hp])
+    m))
