@@ -33,23 +33,23 @@
                     [initiative initiative?]
                     [loot (listof loot-card?)])]
     [make-player (-> string? positive-integer? player?)]
-    [update-name (-> string? (-> player? player?))]
-    [act-on-hp (-> (-> natural-number/c number?)
-                   (-> player? player?))]
-    [act-on-max-hp (-> (-> natural-number/c number?)
-                       (-> player? player?))]
-    [act-on-xp (-> (-> natural-number/c natural-number/c)
-                   (-> player? player?))]
-    [remove-condition (-> condition? (-> player? player?))]
-    [add-condition (-> condition? (-> player? player?))]
-    [condition-handler (-> (list/c condition? boolean?)
-                           (-> player? player?))]
-    [afflicted-by? (-> condition? (-> player? boolean?))]
-    [dead? (-> player? boolean?)]
-    [at-max-health? (-> player? boolean?)]
-    [set-initiative (-> player? initiative? player?)]
-    [clear-initiative (-> player? player?)]
-    [add-loot (-> loot-card? (-> player? player?))]
+    [player-update-name (-> string? (-> player? player?))]
+    [player-act-on-hp (-> (-> natural-number/c number?)
+                          (-> player? player?))]
+    [player-act-on-max-hp (-> (-> natural-number/c number?)
+                              (-> player? player?))]
+    [player-act-on-xp (-> (-> natural-number/c natural-number/c)
+                          (-> player? player?))]
+    [player-remove-condition (-> condition? (-> player? player?))]
+    [player-add-condition (-> condition? (-> player? player?))]
+    [player-condition-handler (-> (list/c condition? boolean?)
+                                  (-> player? player?))]
+    [player-afflicted-by? (-> condition? (-> player? boolean?))]
+    [player-dead? (-> player? boolean?)]
+    [player-at-max-health? (-> player? boolean?)]
+    [player-set-initiative (-> player? initiative? player?)]
+    [player-clear-initiative (-> player? player?)]
+    [player-add-loot (-> loot-card? (-> player? player?))]
     [player->hp-text (-> player? string?)])
 
   ;; loot deck
@@ -175,56 +175,56 @@
 (define (make-player name max-hp)
   (player name max-hp max-hp 0 empty 0 empty))
 
-(define ((update-name name) p)
+(define ((player-update-name name) p)
   (struct-copy player p [name name]))
 
-(define ((act-on-hp proc) p)
+(define ((player-act-on-hp proc) p)
   (define new-hp (proc (player-current-hp p)))
   (if (not (positive? new-hp))
     p
     (struct-copy player p [current-hp new-hp])))
 
-(define ((act-on-max-hp proc) p)
+(define ((player-act-on-max-hp proc) p)
   (define new-max-hp (proc (player-max-hp p)))
   (if (not (positive? new-max-hp))
     p
     (struct-copy player p [max-hp new-max-hp])))
 
-(define ((act-on-xp proc) p)
+(define ((player-act-on-xp proc) p)
   (define new-xp (proc (player-xp p)))
   (if (not (>= new-xp 0))
     p
     (struct-copy player p [xp new-xp])))
 
-(define ((remove-condition c) p)
+(define ((player-remove-condition c) p)
   (define new-conditions (remove* (list c) (player-conditions p)))
   (struct-copy player p [conditions new-conditions]))
 
-(define ((add-condition c) p)
+(define ((player-add-condition c) p)
   (define new-conditions (cons c (remove* (list c) (player-conditions p))))
   (struct-copy player p [conditions new-conditions]))
 
-(define condition-handler
+(define player-condition-handler
   (match-lambda
-    [`(,c #f) (remove-condition c)]
-    [`(,c #t) (add-condition c)]))
+    [`(,c #f) (player-remove-condition c)]
+    [`(,c #t) (player-add-condition c)]))
 
-(define ((afflicted-by? c) p)
+(define ((player-afflicted-by? c) p)
   (and (member c (player-conditions p)) #t))
 
-(define (dead? p)
+(define (player-dead? p)
   (zero? (player-current-hp p)))
 
-(define (at-max-health? p)
+(define (player-at-max-health? p)
   (>= (player-current-hp p) (player-max-hp p)))
 
-(define (set-initiative p init)
+(define (player-set-initiative p init)
   (struct-copy player p [initiative init]))
 
-(define (clear-initiative p)
+(define (player-clear-initiative p)
   (struct-copy player p [initiative 0]))
 
-(define ((add-loot card) p)
+(define ((player-add-loot card) p)
   (define loot (player-loot p))
   (struct-copy player p [loot (cons card loot)]))
 

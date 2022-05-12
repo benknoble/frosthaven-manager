@@ -45,14 +45,14 @@
       (:= @players (build-list (@! @num-players) make-player-entry)))
     (:= @mode 'input-player-info))
   (define (update-player-name k name)
-    (<~@ @players (update-players k (update-name name))))
+    (<~@ @players (update-players k (player-update-name name))))
   (define (update-player-max-hp k f)
-    (<~@ @players (update-players k (act-on-max-hp f))))
+    (<~@ @players (update-players k (player-act-on-max-hp f))))
   (define (to-build-loot-deck)
     ;; give each player max-hp
     (<~@ @players
          (update-all-players
-           (flow (~> (-< (~> player-max-hp const act-on-hp)
+           (flow (~> (-< (~> player-max-hp const player-act-on-hp)
                          _)
                      apply))))
     (:= @mode 'build-loot-deck))
@@ -65,10 +65,10 @@
   (define (make-player-view k @e)
     (define (update proc)
       (<~@ @players (update-players k proc)))
-    (define-flow update-condition (~> condition-handler update))
-    (define-flow update-hp (~> act-on-hp update))
-    (define-flow update-xp (~> act-on-xp update))
-    (define (update-initiative i) (update (flow (set-initiative i))))
+    (define-flow update-condition (~> player-condition-handler update))
+    (define-flow update-hp (~> player-act-on-hp update))
+    (define-flow update-xp (~> player-act-on-xp update))
+    (define (update-initiative i) (update (flow (player-set-initiative i))))
     (player-view
       (@> @e cdr)
       @num-players
@@ -80,14 +80,14 @@
     ;; wane elements
     (for-each (flow (<@ wane-element)) @elements)
     ;; reset player initiative
-    (<~@ @players (update-all-players clear-initiative)))
+    (<~@ @players (update-all-players player-clear-initiative)))
   (define (take-loot)
     (<@ @loot-deck rest))
   (define (give-player-loot* p)
     (define card
       (@! (@~> @loot-deck (if (not empty?) first #f))))
     (if card
-      ((add-loot card) p)
+      ((player-add-loot card) p)
       p))
   (define (give-player-loot k)
     (<~@ @players (update-players k give-player-loot*)))
