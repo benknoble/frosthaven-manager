@@ -439,6 +439,7 @@
               (render
                 (window
                   (monster-group-view
+                    ;; TODO simulate actions as PoC for gui.rkt
                     @mg (@ #f)
                     #:on-condition
                     (match-lambda
