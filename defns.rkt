@@ -131,7 +131,9 @@
     [monster-update-condition (-> condition? boolean?
                                   (-> monster? monster?))]
     [monster-update-hp (-> (-> number? number?)
-                           (-> monster? monster?))]))
+                           (-> monster? monster?))]
+    [monster-group-remove (-> (integer-in 1 10)
+                              (-> monster-group? monster-group?))]))
 
 (require
   rebellion/type/enum
@@ -393,6 +395,17 @@
     ;; TODO: sort first by elite, then by number
     (sort #:key monster-number
           (cons new-monster (remove the-monster old-monsters))
+          <))
+  (struct-copy monster-group group [monsters new-monsters]))
+
+(define ((monster-group-remove num) group)
+  (define (is-num? m) (= num (monster-number m)))
+  (define old-monsters (monster-group-monsters group))
+  (define the-monster (findf is-num? old-monsters))
+  (define new-monsters
+    ;; TODO: sort first by elite, then by number
+    (sort #:key monster-number
+          (remove the-monster old-monsters)
           <))
   (struct-copy monster-group group [monsters new-monsters]))
 
