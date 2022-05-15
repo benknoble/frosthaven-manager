@@ -197,7 +197,6 @@
           (case e
             ;; no close: cannot close
             ;; no reorder: cannot reorder
-            ;; TODO: re-ordering
             [(select) (:= @monster-num (monster-number m))]))
         ;; TODO: "Kill button": call-back
         (if-view @monster
