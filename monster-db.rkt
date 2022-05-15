@@ -62,12 +62,21 @@
                                  (#:on-change (-> (or/c add-monster-event/c
                                                         remove-monster-event/c)
                                                   any))
-                                 (is-a?/c view<%>))]))
+                                 (is-a?/c view<%>))]
+      [monster-group-view
+        (->* ((obs/c monster-group?)
+              (obs/c (or/c #f monster-action?)))
+             (#:on-condition (-> (list/c (integer-in 1 10) condition? boolean?)
+                                 any)
+              #:on-hp (-> (list/c (integer-in 1 10) (-> number? number?))
+                          any))
+             (is-a?/c view<%>))]))
 
   (require racket/gui/easy
            racket/gui/easy/contract
            "observable-operator.rkt"
-           "gui/mixins.rkt")
+           "gui/mixins.rkt"
+           "gui/counter.rkt")
 
   (define single-monster-event/c
     (or/c
@@ -77,9 +86,139 @@
       (list/c 'elite? (integer-in 1 10) 'to boolean?)
       (list/c 'level (integer-in 0 max-level))))
 
-  ;; TODO: monster-view
-  ;; some similarities to player-view, but need room for actions and overall
-  ;; stats, the monster numbers + elite? status, ability to "hide" action, etc.
+  (define (stats-view @stats)
+    (vpanel
+      (text (@~> @stats (~> monster-stats-move ~a)))
+      (text (@~> @stats (~> monster-stats-attack ~a)))
+      (text (@~> @stats (~> monster-stats-bonuses (string-join ", "))))
+      (text (@~> @stats (~> monster-stats-effects (string-join ", "))))
+      (text (@~> @stats (~> monster-stats-immunities (string-join ", "))))
+      (text (@~> @stats (~> monster-stats-max-hp ~a)))))
+
+  (define (monster-view @mg @monster
+                        #:on-condition [on-condition void]
+                        #:on-hp [on-hp void])
+    (define @monster-stats (obs-combine get-monster-stats @mg @monster))
+    (define (make-condition-checkbox c)
+      (checkbox #:label (~a c)
+                #:checked? (@~> @monster (~>> monster-conditions (member c)))
+                (flow (~>> (list c) on-condition))))
+    (define (show-conditions)
+      (render
+        (apply dialog
+               #:title (obs-combine
+                         (flow (~>> (== monster-group-name monster-number)
+                                    (format "Conditions for ~a (~a)")))
+                         @mg @monster)
+               (map make-condition-checkbox conditions))))
+    (define (add-hp)
+      (unless (@! (obs-combine monster-at-max-health? @monster @monster-stats))
+        (on-hp add1)))
+    (define (subtract-hp)
+      (unless (@! (@> @monster monster-dead?))
+        (on-hp sub1)))
+    (hpanel
+      (group
+        "Stats"
+        #:stretch '(#f #t)
+        (text (@~> @monster (~>> monster-number (format "# ~a"))))
+        (text (@~> @monster (if monster-elite? "Elite" "Normal")))
+        (counter
+          (obs-combine
+            (flow (~>> (== monster-current-hp monster-stats-max-hp) (format "HP: ~a/~a")))
+            @monster @monster-stats)
+          add-hp
+          subtract-hp))
+      (group
+        "Conditions"
+        (text (@~> @monster (~> monster-conditions
+                                (sep ~a) collect
+                                (string-join ", " #:before-last " and "))))
+        (button "Edit Conditions" show-conditions))))
+
+  (define (monster-group-view @mg @action
+                              #:on-condition [on-condition void]
+                              #:on-hp [on-hp void])
+    (define name-initiative-panel
+      (group
+        "Initiative"
+        (text (@> @mg monster-group-name))
+        (text (@~> @action (if monster-action?
+                             (~> monster-action-initiative ~a)
+                             "??")))))
+    (define action-panel
+      (group
+        "Action"
+        #:min-size (list 200 #f)
+        (if-view @action
+          (list-view (@~> @action (if _
+                                    monster-action-abilities
+                                    (gen empty)))
+            (λ (k @e) (text @e)))
+          (spacer))))
+    ;; TODO: new button, callback
+    (define stats-panel
+      (hpanel
+        (group "Normal" (stats-view (@> @mg monster-group-normal-stats))
+               #:min-size (list (* 10 (string-length "Normal")) #f))
+        (group "Stats"
+               (text "Move")
+               (text "Attack")
+               (text "Bonuses")
+               (text "Effects")
+               (text "Immunities")
+               (text "Max HP"))
+        (group "Elite" (stats-view (@> @mg monster-group-elite-stats))
+               #:min-size (list (* 10 (string-length "Elite")) #f))))
+    ;; TODO: choice "hide"/"collapse" ?
+    (define @monsters (@> @mg monster-group-monsters))
+    (define/obs @monster-num
+      (and (not (empty? (@! @monsters)))
+           (monster-number (first (@! @monsters)))))
+    (define @monster
+      (obs-combine
+        (λ (ms n) (findf (flow (~> monster-number (= n))) ms))
+        @monsters @monster-num))
+    (define-flow make-label-stats
+      (-< (if monster-elite? " (E)" "")
+          " (HP: " monster-current-hp ")"
+          (if (~> monster-conditions empty?) "" "*")))
+    (define (forward-condition e)
+      (on-condition (cons (@! (@> @monster monster-number)) e)))
+    (define (forward-hp proc)
+      (on-hp (list (@! (@> @monster monster-number)) proc)))
+    (define monsters
+      (tabs
+        @monsters
+        #:selection @monster
+        #:choice=? (flow (~> (>< monster-number) =))
+        #:choice->label (flow (~> (-< monster-number make-label-stats) ~a))
+        (λ (e ms m)
+          (case e
+            ;; no close: cannot close
+            ;; no reorder: cannot reorder
+            ;; TODO: re-ordering
+            [(select) (:= @monster-num (monster-number m))]))
+        ;; TODO: "Kill button": call-back
+        (if-view @monster
+          (monster-view
+            @mg
+            (@~> @monster (or _
+                              ;; use a fill-in monster if none
+                              (gen (monster 1 #f 0 empty))))
+            #:on-condition forward-condition
+            #:on-hp forward-hp)
+          (spacer))))
+    (group
+      "Monster"
+      #:stretch '(#t #f)
+      (hpanel
+        #:alignment '(center center)
+        #:margin '(20 0)
+        name-initiative-panel
+        action-panel
+        stats-panel)
+      monsters))
 
   ;; TODO: should be able to manipulate individual HP (? dialog with counter)
   (define (single-monster-picker info-db
@@ -283,7 +422,25 @@
   (void
     (render
       (window
-        (multi-monster-picker info-db 3 #:on-change println)))))
+        (multi-monster-picker
+          info-db 3
+          #:on-change
+          (match-lambda
+            [`(add ,mg)
+              (define/obs @mg mg)
+              (render
+                (window
+                  (monster-group-view
+                    @mg (@ #f)
+                    #:on-condition
+                    (match-lambda
+                      [`(,num ,c ,on?)
+                        (<@ @mg (monster-group-update-num num (monster-update-condition c on?)))])
+                    #:on-hp
+                    (match-lambda
+                      [`(,num ,proc)
+                        (<@ @mg (monster-group-update-num num (monster-update-hp proc)))]))))]
+            [_ (void)]))))))
 
 (module+ test
   (require rackunit)
