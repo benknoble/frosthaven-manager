@@ -69,7 +69,8 @@
              (#:on-condition (-> (list/c (integer-in 1 10) condition? boolean?)
                                  any)
               #:on-hp (-> (list/c (integer-in 1 10) (-> number? number?))
-                          any))
+                          any)
+              #:on-kill (-> (integer-in 1 10) any))
              (is-a?/c view<%>))]))
 
   (require racket/gui/easy
@@ -97,7 +98,8 @@
 
   (define (monster-view @mg @monster
                         #:on-condition [on-condition void]
-                        #:on-hp [on-hp void])
+                        #:on-hp [on-hp void]
+                        #:on-kill [on-kill void])
     (define @monster-stats (obs-combine get-monster-stats @mg @monster))
     (define (make-condition-checkbox c)
       (checkbox #:label (~a c)
@@ -128,7 +130,8 @@
             (flow (~>> (== monster-current-hp monster-stats-max-hp) (format "HP: ~a/~a")))
             @monster @monster-stats)
           add-hp
-          subtract-hp))
+          subtract-hp)
+        (button "💀Kill💀" on-kill))
       (group
         "Conditions"
         (text (@~> @monster (~> monster-conditions
@@ -138,7 +141,8 @@
 
   (define (monster-group-view @mg @action
                               #:on-condition [on-condition void]
-                              #:on-hp [on-hp void])
+                              #:on-hp [on-hp void]
+                              #:on-kill [on-kill void])
     (define name-initiative-panel
       (group
         "Initiative"
@@ -172,9 +176,10 @@
                #:min-size (list (* 10 (string-length "Elite")) #f))))
     ;; TODO: choice "hide"/"collapse" ?
     (define @monsters (@> @mg monster-group-monsters))
-    (define/obs @monster-num
+    (define (get-first-monster)
       (and (not (empty? (@! @monsters)))
            (monster-number (first (@! @monsters)))))
+    (define/obs @monster-num (get-first-monster))
     (define @monster
       (obs-combine
         (λ (ms n) (findf (flow (~> monster-number (= n))) ms))
@@ -187,6 +192,10 @@
       (on-condition (cons (@! @monster-num) e)))
     (define (forward-hp proc)
       (on-hp (list (@! @monster-num) proc)))
+    (define (forward-kill)
+      (on-kill (@! @monster-num))
+      (unless (member (@! @monster-num) (map monster-number (@! @monsters)))
+        (:= @monster-num (get-first-monster))))
     (define monsters
       (tabs
         @monsters
@@ -198,7 +207,6 @@
             ;; no close: cannot close
             ;; no reorder: cannot reorder
             [(select) (:= @monster-num (monster-number m))]))
-        ;; TODO: "Kill button": call-back
         (if-view @monster
           (monster-view
             @mg
@@ -206,7 +214,8 @@
                               ;; use a fill-in monster if none
                               (gen (monster 1 #f 0 empty))))
             #:on-condition forward-condition
-            #:on-hp forward-hp)
+            #:on-hp forward-hp
+            #:on-kill forward-kill)
           (spacer))))
     (group
       "Monster"
@@ -438,7 +447,9 @@
                     #:on-hp
                     (match-lambda
                       [`(,num ,proc)
-                        (<@ @mg (monster-group-update-num num (monster-update-hp proc)))]))))]
+                        (<@ @mg (monster-group-update-num num (monster-update-hp proc)))])
+                    #:on-kill
+                    (λ (n) (<@ @mg (monster-group-remove n))))))]
             [_ (void)]))))))
 
 (module+ test
