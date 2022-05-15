@@ -184,9 +184,9 @@
           " (HP: " monster-current-hp ")"
           (if (~> monster-conditions empty?) "" "*")))
     (define (forward-condition e)
-      (on-condition (cons (@! (@> @monster monster-number)) e)))
+      (on-condition (cons (@! @monster-num) e)))
     (define (forward-hp proc)
-      (on-hp (list (@! (@> @monster monster-number)) proc)))
+      (on-hp (list (@! @monster-num) proc)))
     (define monsters
       (tabs
         @monsters
