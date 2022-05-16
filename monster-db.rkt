@@ -104,7 +104,7 @@
     (define @monster-stats (obs-combine get-monster-stats @mg @monster))
     (define (make-condition-checkbox c)
       (checkbox #:label (~a c)
-                #:checked? (@~> @monster (~>> monster-conditions (member c)))
+                #:checked? (@~> @monster (~>> monster-conditions (member c) (not false?)))
                 (flow (~>> (list c) on-condition))))
     (define (show-conditions)
       (render
