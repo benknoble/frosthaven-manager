@@ -66,9 +66,9 @@
       [monster-group-view
         (->* ((obs/c monster-group?)
               (obs/c (or/c #f monster-action?)))
-             (#:on-condition (-> (list/c (integer-in 1 10) condition? boolean?)
+             (#:on-condition (-> (integer-in 1 10) condition? boolean?
                                  any)
-              #:on-hp (-> (list/c (integer-in 1 10) (-> number? number?))
+              #:on-hp (-> (integer-in 1 10) (-> number? number?)
                           any)
               #:on-kill (-> (integer-in 1 10) any)
               #:on-new (-> (integer-in 1 10) boolean? any))
@@ -105,7 +105,7 @@
     (define (make-condition-checkbox c)
       (checkbox #:label (~a c)
                 #:checked? (@~> @monster (~>> monster-conditions (member c) (not false?)))
-                (flow (~>> (list c) on-condition))))
+                (flow (on-condition c _))))
     (define (show-conditions)
       (render
         (apply dialog
@@ -216,10 +216,10 @@
       (-< (if monster-elite? " (E)" "")
           " (HP: " monster-current-hp ")"
           (if (~> monster-conditions empty?) "" "*")))
-    (define (forward-condition e)
-      (on-condition (cons (@! @monster-num) e)))
+    (define (forward-condition c on?)
+      (on-condition (@! @monster-num) c on?))
     (define (forward-hp proc)
-      (on-hp (list (@! @monster-num) proc)))
+      (on-hp (@! @monster-num) proc))
     (define (forward-kill)
       (on-kill (@! @monster-num))
       (unless (member (@! @monster-num) (map monster-number (@! @monsters)))
@@ -470,13 +470,11 @@
                     ;; TODO simulate actions as PoC for gui.rkt
                     @mg (@ #f)
                     #:on-condition
-                    (match-lambda
-                      [`(,num ,c ,on?)
-                        (<@ @mg (monster-group-update-num num (monster-update-condition c on?)))])
+                    (λ (num c on?)
+                      (<@ @mg (monster-group-update-num num (monster-update-condition c on?))))
                     #:on-hp
-                    (match-lambda
-                      [`(,num ,proc)
-                        (<@ @mg (monster-group-update-num num (monster-update-hp proc)))])
+                    (λ (num proc)
+                      (<@ @mg (monster-group-update-num num (monster-update-hp proc))))
                     #:on-kill
                     (λ (n) (<@ @mg (monster-group-remove n)))
                     #:on-new
