@@ -133,7 +133,9 @@
     [monster-update-hp (-> (-> number? number?)
                            (-> monster? monster?))]
     [monster-group-remove (-> (integer-in 1 10)
-                              (-> monster-group? monster-group?))]))
+                              (-> monster-group? monster-group?))]
+    [monster-group-add (-> (integer-in 1 10) boolean?
+                           (-> monster-group? monster-group?))]))
 
 (require
   rebellion/type/enum
@@ -406,6 +408,24 @@
     ;; TODO: sort first by elite, then by number
     (sort #:key monster-number
           (remove the-monster old-monsters)
+          <))
+  (struct-copy monster-group group [monsters new-monsters]))
+
+(define ((monster-group-add num elite?) group)
+  (when (~>> (group) monster-group-monsters (map monster-number) (member num))
+    (raise-arguments-error 'monster-group-add
+                           (format "Monster ~a already exists in group" num)
+                           "num" num
+                           "group" group))
+  (define new-monster
+    (make-monster* (if elite?
+                     (monster-group-elite-stats group)
+                     (monster-group-normal-stats group))
+                   num
+                   elite?))
+  (define new-monsters
+    (sort #:key monster-number
+          (cons new-monster (monster-group-monsters group))
           <))
   (struct-copy monster-group group [monsters new-monsters]))
 
