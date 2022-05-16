@@ -70,7 +70,8 @@
                                  any)
               #:on-hp (-> (list/c (integer-in 1 10) (-> number? number?))
                           any)
-              #:on-kill (-> (integer-in 1 10) any))
+              #:on-kill (-> (integer-in 1 10) any)
+              #:on-new (-> (integer-in 1 10) boolean? any))
              (is-a?/c view<%>))]))
 
   (require racket/gui/easy
@@ -142,14 +143,42 @@
   (define (monster-group-view @mg @action
                               #:on-condition [on-condition void]
                               #:on-hp [on-hp void]
-                              #:on-kill [on-kill void])
+                              #:on-kill [on-kill void]
+                              #:on-new [on-new void])
+    (define (do-new)
+      (define @available-numbers
+        (@~> @mg (~>> monster-group-monsters
+                      (map monster-number)
+                      (set-subtract (inclusive-range 1 10))
+                      (sort _ <))))
+      (define/obs @choice (~> (@available-numbers) @! (and (not empty?) first)))
+      (define/obs @elite? #f)
+      (define close! #f)
+      (define (set-close! p) (set! close! p))
+      (define (on-close)
+        ;; valid because called when the dialog that changes @choice is closed
+        (on-new (@! @choice) (@! @elite?)))
+      (define-flow mixin (~> (make-closing-proc-mixin set-close!)
+                             (make-on-close-mixin on-close)))
+      (render
+        (dialog
+          #:mixin mixin
+          #:title "Add Monster"
+          (hpanel
+            (choice @available-numbers #:choice->label ~a (λ:= @choice))
+            (checkbox #:label "Elite?" (λ:= @elite?))
+            ;; On η-expansion of close!: close! can be #f until it is set, so
+            ;; expand the call to close! (by the time it is called it should
+            ;; have the correct value, a procedure).
+            (button "Save" (λ () (close!)))))))
     (define name-initiative-panel
       (group
         "Initiative"
         (text (@> @mg monster-group-name))
         (text (@~> @action (if monster-action?
                              (~> monster-action-initiative ~a)
-                             "??")))))
+                             "??")))
+        (button "Add Monster" do-new)))
     (define action-panel
       (group
         "Action"
@@ -160,7 +189,6 @@
                                     (gen empty)))
             (λ (k @e) (text @e)))
           (spacer))))
-    ;; TODO: new button, callback
     (define stats-panel
       (hpanel
         (group "Normal" (stats-view (@> @mg monster-group-normal-stats))
@@ -450,7 +478,9 @@
                       [`(,num ,proc)
                         (<@ @mg (monster-group-update-num num (monster-update-hp proc)))])
                     #:on-kill
-                    (λ (n) (<@ @mg (monster-group-remove n))))))]
+                    (λ (n) (<@ @mg (monster-group-remove n)))
+                    #:on-new
+                    (λ (n elite?) (<@ @mg (monster-group-add n elite?))))))]
             [_ (void)]))))))
 
 (module+ test
