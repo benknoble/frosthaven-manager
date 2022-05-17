@@ -184,10 +184,20 @@
         "Action"
         #:min-size (list 200 #f)
         (if-view @action
-          (list-view (@~> @action (if _
-                                    monster-action-abilities
-                                    (gen empty)))
-            (λ (k @e) (text @e)))
+          (vpanel
+            (text
+              (@~> @action
+                   (if monster-action?
+                     (~>> (-< monster-action-name
+                              (~> (if monster-action-shuffle?
+                                    " 🔀"
+                                    "")))
+                          (format "~a~a"))
+                     "")))
+            (list-view (@~> @action (if _
+                                      monster-action-abilities
+                                      (gen empty)))
+              (λ (k @e) (text (@~> @e (format "· ~a" _))))))
           (spacer))))
     (define stats-panel
       (hpanel
