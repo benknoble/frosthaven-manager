@@ -364,7 +364,7 @@
           (define the-group
             (make-monster-group
               info level
-              (hash->list num->elite #t)))
+              (hash->list num->elite)))
           (on-change `(add ,the-group))
           (<~@ @monster-groups (append (list (cons (@! @next-id) the-group))))))
       (define (on-single-change e)
@@ -466,7 +466,7 @@
   ;;               [(list set info num->elite?)
   ;;                (make-monster-group
   ;;                  info 3
-  ;;                  (hash->list num->elite? #t))]))))))
+  ;;                  (hash->list num->elite?))]))))))
 
   (void
     (render

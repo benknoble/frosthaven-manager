@@ -369,10 +369,11 @@
     (monster-info-name info)
     level
     normal elite
-    (map (match-lambda
-           [(cons num elite?)
-            (make-monster* (if elite? elite normal) num elite?)])
-         num+elite?s)))
+    (sort-monsters
+      (map (match-lambda
+             [(cons num elite?)
+              (make-monster* (if elite? elite normal) num elite?)])
+           num+elite?s))))
 
 (define-switch (get-monster-stats mg m)
   (% 2> 1>)
@@ -385,6 +386,45 @@
 (define-flow (monster-dead? m)
   (~> monster-current-hp zero?))
 
+(define-flow (sort-monsters monsters)
+  ;; two passes less efficient, but easier to reason about AND we expect most
+  ;; monsters lists to be "short" (10 or less).
+  (~> (sort #:key monster-number <)
+      ;; Notation: use t and f for #true and #false.
+      ;; truth-table for strict sort-by-monster-elite?
+      ;; a | b | a is first?
+      ;; --+---+------------
+      ;; t | t | equal ∴ f
+      ;; t | f | t
+      ;; f | t | f
+      ;; f | f | equal ∴ f
+      ;; On xor: (xor a b) is true ⇔ a and b are different. By itself, this already
+      ;; covers the first and last rows of the table. The second row is also
+      ;; correct, but the third is wrong. Notice that and'ing the result with a will
+      ;; produce the final truth-table (since ∀ x boolean, (and x #f) = #f and also
+      ;; (and x #t) = x).
+      (sort #:key monster-elite? (λ (a b) (and (xor a b) a)))))
+
+(module+ test
+  (require rackunit)
+  (test-case
+    "sort-monsters groups by elite? and sorts by number"
+    (check-equal? (sort-monsters (list (monster 1 #f 0 empty)
+                                       (monster 2 #t 0 empty)))
+                  (list (monster 2 #t 0 empty) (monster 1 #f 0 empty)))
+    (check-equal?
+      (sort-monsters
+        (list
+          (monster 4 #f 0 empty)
+          (monster 2 #t 0 empty)
+          (monster 3 #f 0 empty)
+          (monster 1 #t 0 empty)))
+      (list
+        (monster 1 #t 0 empty)
+        (monster 2 #t 0 empty)
+        (monster 3 #f 0 empty)
+        (monster 4 #f 0 empty)))))
+
 (define ((monster-group-update-num num f) group)
   ;; TODO: lenses?
   ;; TODO: should monster-group-monsters be a hash?
@@ -394,10 +434,7 @@
   (define the-monster (findf is-num? old-monsters))
   (define new-monster (f the-monster))
   (define new-monsters
-    ;; TODO: sort first by elite, then by number
-    (sort #:key monster-number
-          (cons new-monster (remove the-monster old-monsters))
-          <))
+    (sort-monsters (cons new-monster (remove the-monster old-monsters))))
   (struct-copy monster-group group [monsters new-monsters]))
 
 (define ((monster-group-remove num) group)
@@ -405,10 +442,7 @@
   (define old-monsters (monster-group-monsters group))
   (define the-monster (findf is-num? old-monsters))
   (define new-monsters
-    ;; TODO: sort first by elite, then by number
-    (sort #:key monster-number
-          (remove the-monster old-monsters)
-          <))
+    (sort-monsters (remove the-monster old-monsters)))
   (struct-copy monster-group group [monsters new-monsters]))
 
 (define ((monster-group-add num elite?) group)
@@ -424,9 +458,7 @@
                    num
                    elite?))
   (define new-monsters
-    (sort #:key monster-number
-          (cons new-monster (monster-group-monsters group))
-          <))
+    (sort-monsters (cons new-monster (monster-group-monsters group))))
   (struct-copy monster-group group [monsters new-monsters]))
 
 (define ((monster-update-condition c on?) m)
