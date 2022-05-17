@@ -151,7 +151,6 @@
            (hpanel #:stretch '(#t #f)
                    (spacer)
                    elements-view)
-           (spacer)
            ;; main
            (group
              "Creatures"
@@ -159,7 +158,6 @@
                #:min-size (@~> @players (~>> length (* 100) (list #f)))
                #:key car
                make-player-view))
-           (spacer)
            ;; bottom (1)
            (hpanel #:stretch '(#t #f)
                    (button "Next Round" next-round #:enabled? @in-draw?)
