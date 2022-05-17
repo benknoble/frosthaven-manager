@@ -474,11 +474,19 @@
           (match-lambda
             [`(add ,mg)
               (define/obs @mg mg)
+              ;; actually, each same-set group across the whole scenario uses
+              ;; the same deck (?), so it may be better to use state that looks
+              ;; like actions-db + discarded-actions (same structure), or a
+              ;; single state structured like actions-db but with deck + discard
+              (define actions-for-group
+                (hash-ref actions-db (monster-group-set-name mg) empty))
+              (define/obs @deck (shuffle actions-for-group))
+              (define/obs @discard empty)
+              (define/obs @action #f)
               (render
                 (window
                   (monster-group-view
-                    ;; TODO simulate actions as PoC for gui.rkt
-                    @mg (@ #f)
+                    @mg @action
                     #:on-condition
                     (λ (num c on?)
                       (<@ @mg (monster-group-update-num num (monster-update-condition c on?))))
@@ -488,7 +496,36 @@
                     #:on-kill
                     (λ (n) (<@ @mg (monster-group-remove n)))
                     #:on-new
-                    (λ (n elite?) (<@ @mg (monster-group-add n elite?))))))]
+                    (λ (n elite?) (<@ @mg (monster-group-add n elite?))))
+                  (hpanel
+                    (button
+                      "Draw"
+                      (thunk
+                        ;; draw a card
+                        (:= @action
+                            ;; empty, so no cards at all, giving #f
+                            ;; or there _must_ be cards to draw from
+                            (~> (@deck) @! (and (not empty?) first)))
+                        ;; update the deck
+                        (<~@ @deck (switch [(not empty?) rest]))))
+                    (button
+                      "Next Round"
+                      (thunk
+                        ;; discard current card if it's a card
+                        (when (monster-action? (@! @action))
+                          (<~@ @discard (cons (@! @action) _)))
+                        ;; time to shuffle
+                        (when (or (empty? (@! @deck))
+                                  (and (monster-action? (@! @action))
+                                       (monster-action-shuffle? (@! @action))))
+                          (:= @deck
+                              (shuffle
+                                ;; @deck ++ @discard because @deck may not have
+                                ;; been empty
+                                (append (@! @deck) (@! @discard))))
+                          (:= @discard empty))
+                        ;; hide current action
+                        (:= @action #f))))))]
             [_ (void)]))))))
 
 (module+ test
