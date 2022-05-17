@@ -113,6 +113,8 @@
                          (flow (~>> (== monster-group-name monster-number)
                                     (format "Conditions for ~a (~a)")))
                          @mg @monster)
+               #:size '(400 #f)
+               #:style '(close-button resize-border)
                (map make-condition-checkbox conditions))))
     (define (add-hp)
       (unless (@! (obs-combine monster-at-max-health? @monster @monster-stats))
@@ -164,6 +166,7 @@
         (dialog
           #:mixin mixin
           #:title "Add Monster"
+          #:style '(close-button resize-border)
           (hpanel
             (choice @available-numbers #:choice->label ~a (λ:= @choice))
             (checkbox #:label "Elite?" (λ:= @elite?))

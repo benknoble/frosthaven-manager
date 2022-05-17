@@ -96,6 +96,8 @@
     (render
       (apply dialog
              #:title (@~> @player (~>> player-name (~a "Conditions for ")))
+             #:size '(200 #f)
+             #:style '(close-button resize-border)
              (map make-condition-checkbox conditions))))
   (define conditions-panel
     (group "Conditions"
