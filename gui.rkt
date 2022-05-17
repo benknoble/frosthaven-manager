@@ -76,11 +76,6 @@
       #:on-hp update-hp
       #:on-xp update-xp
       #:on-initiative update-initiative))
-  (define (next-round)
-    ;; wane elements
-    (for-each (flow (<@ wane-element)) @elements)
-    ;; reset player initiative
-    (<~@ @players (update-all-players player-clear-initiative)))
   (define (take-loot)
     (<@ @loot-deck rest))
   (define (give-player-loot* p)
@@ -91,10 +86,20 @@
       p))
   (define (give-player-loot k)
     (<~@ @players (update-players k give-player-loot*)))
+  (define/obs @in-draw? #f)
+  (define (next-round)
+    ;; wane elements
+    (for-each (flow (<@ wane-element)) @elements)
+    ;; reset player initiative
+    (<~@ @players (update-all-players player-clear-initiative))
+    ;; toggle state
+    (<@ @in-draw? not))
   (define (draw)
     ;; order players
     (<~@ @players
-         (sort < #:key (flow (~> cdr player-initiative)))))
+         (sort < #:key (flow (~> cdr player-initiative))))
+    ;; toggle state
+    (<@ @in-draw? not))
   ;; gui
   (render
     (window
@@ -131,7 +136,7 @@
            (spacer)
            ;; bottom (1)
            (hpanel #:stretch '(#t #f)
-                   (button "Next Round" next-round)
+                   (button "Next Round" next-round #:enabled? @in-draw?)
                    (spacer)
                    (loot-button
                      @loot-deck @num-loot-cards @num-players @players
@@ -140,7 +145,7 @@
                      #:on-close take-loot
                      #:on-player give-player-loot)
                    (spacer)
-                   (button "Draw!" draw))
+                   (button "Draw!" draw #:enabled? (@> @in-draw? not)))
            ;; bottom (2)
            (hpanel #:stretch '(#f #f)
                    (level-stats @level @num-players)
