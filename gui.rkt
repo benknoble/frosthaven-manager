@@ -92,6 +92,9 @@
     (for-each (flow (<@ wane-element)) @elements)
     ;; reset player initiative
     (<~@ @players (update-all-players player-clear-initiative))
+    ;; shuffle modifiers if required
+    (when (shuffle-modifier-deck? (@! @monster-discard))
+      (reshuffle-modifiers))
     ;; toggle state
     (<@ @in-draw? not))
   (define (draw)
@@ -100,6 +103,29 @@
          (sort < #:key (flow (~> cdr player-initiative))))
     ;; toggle state
     (<@ @in-draw? not))
+  (define/obs @monster-deck (shuffle monster-deck))
+  (define/obs @monster-discard empty)
+  (define/obs @curses monster-curse-deck)
+  (define/obs @modifier #f)
+  (define (reshuffle-modifiers)
+    (:= @monster-deck (shuffle (append (@! @monster-deck)
+                                       (@! @monster-discard))))
+    (:= @monster-discard empty))
+  (define (draw-modifier)
+    ;; better not be empty after this…
+    (when (empty? (@! @monster-deck)) (reshuffle-modifiers))
+    (define card (first (@! @monster-deck)))
+    (:= @modifier card)
+    (<@ @monster-deck rest)
+    (cond
+      [(equal? card curse) (<~@ @curses (cons card _))]
+      [else (<~@ @monster-discard (cons card _))]))
+  (define (do-curse)
+    (unless (empty? (@! @curses))
+      (define card (first (@! @curses)))
+      (<@ @curses rest)
+      (<~@ @monster-deck (cons card _))
+      (reshuffle-modifiers)))
   ;; gui
   (render
     (window
@@ -144,6 +170,18 @@
                      ;; closing if loot assigned
                      #:on-close take-loot
                      #:on-player give-player-loot)
+                   (spacer)
+                   (button
+                     #:enabled? (@~> @curses (not empty?))
+                     (@~> @curses
+                          (~> length
+                              (format "Curse (~a/~a)" _ (length monster-curse-deck))))
+                     do-curse)
+                   (vpanel
+                     (button
+                       (@~> @monster-deck (~>> length (format "Draw Modifier (~a)")))
+                       draw-modifier)
+                     (text (@~> @modifier (~>> (or _ "") (~a "Most Recent Modifier: ")))))
                    (spacer)
                    (button "Draw!" draw #:enabled? (@> @in-draw? not)))
            ;; bottom (2)
