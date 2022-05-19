@@ -142,6 +142,8 @@
                                 (string-join ", " #:before-last " and "))))
         (button "Edit Conditions" show-conditions))))
 
+  ;; TODO externalize selection (@monster-num)
+  ;; for use in dyn-view
   (define (monster-group-view @mg @action
                               #:on-condition [on-condition void]
                               #:on-hp [on-hp void]

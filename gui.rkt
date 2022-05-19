@@ -107,8 +107,16 @@
       #:on-xp update-player-xp
       #:on-initiative update-player-initiative))
   (define (make-monster-group-view k @e)
-    ;; TODO
-    (text (@~> @e (~> cdr monster-group-name))))
+    (define (update proc)
+      (<~@ @creatures (update-monster-groups k proc)))
+    (define @mg (@> @e cdr))
+    (monster-group-view
+      @mg (@ #f) ;; TODO
+      #:on-condition
+      (λ (num c on?) (update (monster-group-update-num num (monster-update-condition c on?))))
+      #:on-hp (λ (num proc) (update (monster-group-update-num num (monster-update-hp proc))))
+      #:on-kill (λ (n) (update (monster-group-remove n)))
+      #:on-new (λ (n elite?) (update (monster-group-add n elite?)))))
   (define (take-loot)
     (<@ @loot-deck rest))
   (define (give-player-loot* p)
