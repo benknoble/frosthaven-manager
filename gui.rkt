@@ -11,7 +11,9 @@
          "level-info.rkt"
          "loot.rkt"
          (only-in "elements.rkt" elements)
-         (submod "elements.rkt" gui))
+         (submod "elements.rkt" gui)
+         "monster-db.rkt"
+         (submod "monster-db.rkt" gui))
 
 (define (render-manager)
   ;; gui state
@@ -28,6 +30,8 @@
   (define/obs @monster-discard empty)
   (define/obs @curses monster-curse-deck)
   (define/obs @modifier #f)
+  (define-values (info-db action-db)
+    (get-dbs "sample-db.rktd"))
   ;; functions
   (define (make-player-entry i)
     (cons i (make-player "" 1)))
@@ -63,6 +67,8 @@
     (:= @mode 'build-loot-deck))
   (define (to-play)
     (:= @mode 'play))
+  (define (to-choose-monsters)
+    (:= @mode 'choose-monsters))
   (define-flow (update-deck-and-num-loot-cards loot-event)
     (-< (loot-picker-updater @loot-deck)
         ;; order important
@@ -126,6 +132,8 @@
       (<@ @curses rest)
       (<~@ @monster-deck (cons card _))
       (reshuffle-modifiers)))
+  (define (add-or-remove-monster-group event)
+    (void))
   ;; gui
   (render
     (window
@@ -144,7 +152,13 @@
         [(build-loot-deck)
          (vpanel (loot-picker #:on-card update-deck-and-num-loot-cards)
                  (spacer)
-                 (button "Next" to-play))]
+                 (button "Next" to-choose-monsters))]
+        [(choose-monsters)
+         (vpanel
+           (multi-monster-picker
+             info-db @level
+             #:on-change add-or-remove-monster-group)
+           (button "Next" to-play))]
         [(play)
          (vpanel
            ;; top
