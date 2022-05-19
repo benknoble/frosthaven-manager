@@ -69,7 +69,9 @@
                      apply))))
     (:= @mode 'build-loot-deck))
   (define (to-play)
-    (:= @mode 'play))
+    (:= @mode 'play)
+    ;; HACK: trigger updates in @creatures to re-render list-view (?)
+    (:= @creatures (@! @creatures)))
   (define (to-choose-monsters)
     (:= @mode 'choose-monsters))
   (define-flow (update-deck-and-num-loot-cards loot-event)
@@ -91,7 +93,8 @@
       #:on-xp update-player-xp
       #:on-initiative update-player-initiative))
   (define (make-monster-group-view k @e)
-    (hpanel))
+    ;; TODO
+    (text (@~> @e (~> cdr monster-group-name))))
   (define (take-loot)
     (<@ @loot-deck rest))
   (define (give-player-loot* p)
@@ -113,6 +116,7 @@
     ;; toggle state
     (<@ @in-draw? not))
   (define (get-monster-group-initiative mg)
+    ;; TODO
     +inf.0)
   (define (draw)
     ;; order players
@@ -143,8 +147,19 @@
       (<@ @curses rest)
       (<~@ @monster-deck (cons card _))
       (reshuffle-modifiers)))
-  (define (add-or-remove-monster-group event)
-    (void))
+  (define add-or-remove-monster-group
+    (match-lambda
+      [`(add ,mg)
+        (define next-id (add1 (apply max (map car (@! @creatures)))))
+        (<~@ @creatures (append (list (cons next-id mg))))]
+      [`(remove ,mg)
+        (<~@ @creatures (remf (flow (~> cdr (equal? mg))) _))]))
+  (define (make-creature-view k @e)
+    (define make-player-or-monster-group-view
+      (match-lambda
+        [(cons _ (? player?)) (make-player-view k @e)]
+        [(cons _ (? monster-group?)) (make-monster-group-view k @e)]))
+    (dyn-view @e make-player-or-monster-group-view))
   ;; gui
   (render
     (window
@@ -182,10 +197,7 @@
              (list-view @creatures
                #:min-size (@~> @creatures (~>> length (* 100) (list #f)))
                #:key car
-               (flow
-                 (switch (% (~> 2> @! cdr) _)
-                   [player? make-player-view]
-                   [monster-group? make-monster-group-view]))))
+               make-creature-view))
            ;; bottom (1)
            (hpanel #:stretch '(#t #f)
                    (button "Next Round" next-round #:enabled? @in-draw?)
