@@ -42,12 +42,24 @@
         (cons k (f (cdr e)))
         e))
     (map maybe-update-player creatures))
+  (define (update-monster-groups creatures k f)
+    (define (maybe-update-monster-group e)
+      (if (~> (e) (-< car cdr) (and% (eq? k) monster-group?))
+        (cons k (f (cdr e)))
+        e))
+    (map maybe-update-monster-group creatures))
   (define (update-all-players creatures f)
     (define update-only-player
       (match-lambda
         [(cons id (? player? p)) (cons id (f p))]
         [c c]))
     (map update-only-player creatures))
+  (define (update-all-monster-groups creatures f)
+    (define update-only-monster-group
+      (match-lambda
+        [(cons id (? monster-group? p)) (cons id (f p))]
+        [c c]))
+    (map update-only-monster-group creatures))
   (define (set-level level)
     (:= @level level))
   (define (set-num-players num-players)
