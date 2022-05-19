@@ -21,7 +21,7 @@
   ;; game state
   (define/obs @level 0)
   (define/obs @num-players 1)
-  ;; list of (cons/c id? (or/c player? monster-group?))
+  ;; list of (cons/c id? (or/c player? (cons/c monster-num? monster-group?)))
   (define/obs @creatures empty)
   (define/obs @loot-deck empty)
   (define/obs @num-loot-cards 0)
@@ -44,10 +44,13 @@
         (cons k (f (cdr e)))
         e))
     (map maybe-update-player creatures))
-  (define (update-monster-groups creatures k f)
+  (define (update-monster-groups creatures k f [fn (flow 1>)])
     (define (maybe-update-monster-group e)
-      (if (~> (e) (-< car cdr) (and% (eq? k) monster-group?))
-        (cons k (f (cdr e)))
+      (if (~> (e)
+              (-< car (and (~> cdr pair?) cddr))
+              (and% (eq? k) monster-group?))
+        (let ([new-mg (f (cddr e))])
+          (list* k (fn (cadr e) new-mg) new-mg))
         e))
     (map maybe-update-monster-group creatures))
   (define (update-all-players creatures f)
@@ -59,7 +62,7 @@
   (define (update-all-monster-groups creatures f)
     (define update-only-monster-group
       (match-lambda
-        [(cons id (? monster-group? p)) (cons id (f p))]
+        [(list* id n (? monster-group? p)) (list* id n (f p))]
         [c c]))
     (map update-only-monster-group creatures))
   (define (set-level level)
@@ -107,21 +110,27 @@
       #:on-xp update-player-xp
       #:on-initiative update-player-initiative))
   (define (make-monster-group-view k @e)
-    (define (update proc)
-      (<~@ @creatures (update-monster-groups k proc)))
-    (define @mg (@> @e cdr))
+    (define (update proc [procn (flow 1>)])
+      (<~@ @creatures (update-monster-groups k proc procn)))
+    (define @mg (@> @e cddr))
+    (define @ms (@> @mg monster-group-monsters))
+    (define @n (@> @e cadr))
     (define (update-condition num c on?)
       (update (monster-group-update-num num (monster-update-condition c on?))))
     (define (update-hp num proc)
       (update (monster-group-update-num num (monster-update-hp proc))))
-    (define (kill num) (update (monster-group-remove num)))
-    (define (new num elite?) (update (monster-group-add num elite?)))
+    (define (kill num)
+      (update (monster-group-remove num) (flow (~> 2> monster-group-first-monster))))
+    (define (new num elite?) (update (monster-group-add num elite?) (const num)))
+    (define (select num) (update values (const num)))
     (monster-group-view
       @mg (@ #f) ;; TODO
+      @n
       #:on-condition update-condition
       #:on-hp update-hp
       #:on-kill kill
-      #:on-new new))
+      #:on-new new
+      #:on-select select))
   (define (take-loot)
     (<@ @loot-deck rest))
   (define (give-player-loot* p)
@@ -152,7 +161,8 @@
                          (~> cdr
                              (switch
                                [player? player-initiative]
-                               [monster-group? get-monster-group-initiative])))))
+                               [(~> cdr monster-group?)
+                                (~> cdr get-monster-group-initiative)])))))
     ;; toggle state
     (<@ @in-draw? not))
   (define (reshuffle-modifiers)
@@ -186,14 +196,18 @@
     (match-lambda
       [`(add ,mg)
         (define next-id (add1 (apply max (map car (@! @creatures)))))
-        (<~@ @creatures (append (list (cons next-id mg))))]
+        (define selection
+          (~> (mg) monster-group-monsters
+              (and (not empty?) (~> first monster-number))))
+        (<~@ @creatures (append (list (cons next-id (cons selection mg)))))]
       [`(remove ,mg)
-        (<~@ @creatures (remf (flow (~> cdr (equal? mg))) _))]))
+        (<~@ @creatures (remf (flow (~> (and (~> cdr pair?)
+                                             (~> cddr (equal? mg))))) _))]))
   (define (make-creature-view k @e)
     (define make-player-or-monster-group-view
       (match-lambda
         [(cons _ (? player?)) (make-player-view k @e)]
-        [(cons _ (? monster-group?)) (make-monster-group-view k @e)]))
+        [(cons _ (cons _ (? monster-group?))) (make-monster-group-view k @e)]))
     (dyn-view @e make-player-or-monster-group-view))
   ;; gui
   (render
