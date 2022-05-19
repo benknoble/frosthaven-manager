@@ -52,13 +52,13 @@
       [single-monster-event/c contract?]
       [add-monster-event/c contract?]
       [remove-monster-event/c contract?]
-      [single-monster-picker (->* (info-db/c (integer-in 0 max-level))
+      [single-monster-picker (->* (info-db/c (obs/c (integer-in 0 max-level)))
                                   (#:on-change (-> single-monster-event/c any)
                                    #:unavailable (set/c string?))
                                   (is-a?/c view<%>))]
       [simple-monster-group-view (-> (obs/c monster-group?)
                                      (is-a?/c view<%>))]
-      [multi-monster-picker (->* (info-db/c (integer-in 0 max-level))
+      [multi-monster-picker (->* (info-db/c (obs/c (integer-in 0 max-level)))
                                  (#:on-change (-> (or/c add-monster-event/c
                                                         remove-monster-event/c)
                                                   any))
@@ -271,7 +271,7 @@
 
   ;; TODO: should be able to manipulate individual HP (? dialog with counter)
   (define (single-monster-picker info-db
-                                 initial-level
+                                 @initial-level
                                  #:on-change [on-change void]
                                  #:unavailable [unavailable empty])
     (define sets (hash-keys info-db))
@@ -311,11 +311,11 @@
         (on-change `(elite? ,num to ,elite?)))
       (hpanel (checkbox set-included #:label (~a num))
               (checkbox set-elite #:label "Elite?" #:enabled? @included?)))
-    (define/obs @level initial-level)
     (vpanel (hpanel set-picker monster-picker
                     #:alignment '(center top)
                     #:stretch '(#f #f))
-            (slider @level (λ (level) (on-change `(level ,level)))
+            (slider @initial-level
+                    (λ (level) (on-change `(level ,level)))
                     #:label "Level"
                     #:min-value 0
                     #:max-value max-level)
@@ -328,7 +328,7 @@
     (list/c 'remove monster-group?))
 
   (define (multi-monster-picker info-db
-                                initial-level
+                                @initial-level
                                 #:on-change [on-change void])
     (define/obs @monster-groups empty)
     (define @monster-names
@@ -354,7 +354,9 @@
       ;; 1: info
       ;; 2: hash number -> elite
       ;; 3: level
-      (define new-group (vector set info (hash) initial-level))
+      ;; Peeking @initial-level is valid because inside a dialog-closer: the
+      ;; value isn't accessed until after it is correctly set.
+      (define new-group (vector set info (hash) (@! @initial-level)))
       (define (finish)
         (match-define (vector set info num->elite level) new-group)
         (when (not (or (hash-empty? num->elite)
@@ -390,7 +392,7 @@
                          + (* 10) (max 400) (list #f))
           (single-monster-picker
             info-db
-            initial-level
+            @initial-level
             ;; valid because inside a dialog: @monster-names won't update until
             ;; the dialog is closed
             #:unavailable (@! @monster-names)
@@ -472,7 +474,7 @@
     (render
       (window
         (multi-monster-picker
-          info-db 3
+          info-db (@ 3)
           #:on-change
           (match-lambda
             [`(add ,mg)
