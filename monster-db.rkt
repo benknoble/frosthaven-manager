@@ -223,7 +223,7 @@
     (define/obs @monster-num (get-first-monster))
     (define @monster
       (obs-combine
-        (λ (ms n) (findf (flow (~> monster-number (= n))) ms))
+        (λ (ms n) (and n (findf (flow (~> monster-number (= n))) ms)))
         @monsters @monster-num))
     (define-flow make-label-stats
       (-< (if monster-elite? " (E)" "")
