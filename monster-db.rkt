@@ -65,13 +65,15 @@
                                  (is-a?/c view<%>))]
       [monster-group-view
         (->* ((obs/c monster-group?)
-              (obs/c (or/c #f monster-action?)))
+              (obs/c (or/c #f monster-action?))
+              (obs/c (or/c #f (integer-in 1 10))))
              (#:on-condition (-> (integer-in 1 10) condition? boolean?
                                  any)
               #:on-hp (-> (integer-in 1 10) (-> number? number?)
                           any)
               #:on-kill (-> (integer-in 1 10) any)
-              #:on-new (-> (integer-in 1 10) boolean? any))
+              #:on-new (-> (integer-in 1 10) boolean? any)
+              #:on-select (-> (or/c #f (integer-in 1 10)) any))
              (is-a?/c view<%>))]))
 
   (require racket/gui/easy
@@ -144,7 +146,8 @@
 
   ;; TODO externalize selection (@monster-num)
   ;; for use in dyn-view
-  (define (monster-group-view @mg @action
+  (define (monster-group-view @mg @action @monster-num
+                              #:on-select [on-select void]
                               #:on-condition [on-condition void]
                               #:on-hp [on-hp void]
                               #:on-kill [on-kill void]
@@ -219,10 +222,6 @@
                #:min-size (list (* 10 (string-length "Elite")) #f))))
     ;; TODO: choice "hide"/"collapse" ?
     (define @monsters (@> @mg monster-group-monsters))
-    (define (get-first-monster)
-      (and (not (empty? (@! @monsters)))
-           (monster-number (first (@! @monsters)))))
-    (define/obs @monster-num (get-first-monster))
     (define @monster
       (obs-combine
         (λ (ms n) (and n (findf (flow (~> monster-number (= n))) ms)))
@@ -236,9 +235,7 @@
     (define (forward-hp proc)
       (on-hp (@! @monster-num) proc))
     (define (forward-kill)
-      (on-kill (@! @monster-num))
-      (unless (member (@! @monster-num) (map monster-number (@! @monsters)))
-        (:= @monster-num (get-first-monster))))
+      (on-kill (@! @monster-num)))
     (define monsters
       (tabs
         @monsters
@@ -249,7 +246,7 @@
           (case e
             ;; no close: cannot close
             ;; no reorder: cannot reorder
-            [(select) (:= @monster-num (monster-number m))]))
+            [(select) (on-select (monster-number m))]))
         (if-view @monster
           (monster-view
             @mg
@@ -481,6 +478,11 @@
           (match-lambda
             [`(add ,mg)
               (define/obs @mg mg)
+              (define @ms (@> @mg monster-group-monsters))
+              (define (get-first-monster)
+                (and (not (empty? (@! @ms)))
+                     (monster-number (first (@! @ms)))))
+              (define/obs @n (get-first-monster))
               ;; actually, each same-set group across the whole scenario uses
               ;; the same deck (?), so it may be better to use state that looks
               ;; like actions-db + discarded-actions (same structure), or a
@@ -493,7 +495,7 @@
               (render
                 (window
                   (monster-group-view
-                    @mg @action
+                    @mg @action @n
                     #:on-condition
                     (λ (num c on?)
                       (<@ @mg (monster-group-update-num num (monster-update-condition c on?))))
@@ -501,9 +503,14 @@
                     (λ (num proc)
                       (<@ @mg (monster-group-update-num num (monster-update-hp proc))))
                     #:on-kill
-                    (λ (n) (<@ @mg (monster-group-remove n)))
+                    (λ (n)
+                      (<@ @mg (monster-group-remove n))
+                      (:= @n (get-first-monster)))
                     #:on-new
-                    (λ (n elite?) (<@ @mg (monster-group-add n elite?))))
+                    (λ (n elite?)
+                      (<@ @mg (monster-group-add n elite?))
+                      (:= @n n))
+                    #:on-select (λ:= @n))
                   (hpanel
                     (button
                       "Draw"
