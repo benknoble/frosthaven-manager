@@ -136,7 +136,8 @@
     [monster-group-remove (-> (integer-in 1 10)
                               (-> monster-group? monster-group?))]
     [monster-group-add (-> (integer-in 1 10) boolean?
-                           (-> monster-group? monster-group?))]))
+                           (-> monster-group? monster-group?))]
+    [monster-group-first-monster (-> monster-group? (or/c #f (integer-in 1 10)))]))
 
 (require
   rebellion/type/enum
@@ -464,6 +465,10 @@
   (define new-monsters
     (sort-monsters (cons new-monster (monster-group-monsters group))))
   (struct-copy monster-group group [monsters new-monsters]))
+
+(define-flow (monster-group-first-monster mg)
+  (~> monster-group-monsters
+      (and (not empty?) (~> first monster-number))))
 
 (define ((monster-update-condition c on?) m)
   (define old-conditions (monster-conditions m))
