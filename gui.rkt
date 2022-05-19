@@ -181,7 +181,7 @@
                        draw-modifier)
                      (text (@~> @modifier (~>> (or _ "") (~a "Most Recent Modifier: ")))))
                    (spacer)
-                   (button "Draw!" draw #:enabled? (@> @in-draw? not)))
+                   (button "Draw Action(s)" draw #:enabled? (@> @in-draw? not)))
            ;; bottom (2)
            (hpanel #:stretch '(#f #f)
                    (level-stats @level @num-players)
