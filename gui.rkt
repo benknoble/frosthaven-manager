@@ -21,7 +21,8 @@
   ;; game state
   (define/obs @level 0)
   (define/obs @num-players 1)
-  (define/obs @players empty)
+  ;; list of (cons/c id? (or/c player? monster-group?))
+  (define/obs @creatures empty)
   (define/obs @loot-deck empty)
   (define/obs @num-loot-cards 0)
   (define-values (@elements elements-view) (elements-cycler elements))
@@ -35,31 +36,33 @@
   ;; functions
   (define (make-player-entry i)
     (cons i (make-player "" 1)))
-  (define (update-players players k f)
+  (define (update-players creatures k f)
     (define (maybe-update-player e)
-      (if (eq? (car e) k)
+      (if (~> (e) (-< car cdr) (and% (eq? k) player?))
         (cons k (f (cdr e)))
         e))
-    (map maybe-update-player players))
-  (define (update-all-players players f)
-    (define update-player
-      (match-lambda [(cons id p) (cons id (f p))]))
-    (map update-player players))
+    (map maybe-update-player creatures))
+  (define (update-all-players creatures f)
+    (define update-only-player
+      (match-lambda
+        [(cons id (? player? p)) (cons id (f p))]
+        [c c]))
+    (map update-only-player creatures))
   (define (set-level level)
     (:= @level level))
   (define (set-num-players num-players)
     (:= @num-players num-players))
   (define (to-input-player-info)
-    (when (empty? (@! @players))
-      (:= @players (build-list (@! @num-players) make-player-entry)))
+    (when (empty? (@! @creatures))
+      (:= @creatures (build-list (@! @num-players) make-player-entry)))
     (:= @mode 'input-player-info))
   (define (update-player-name k name)
-    (<~@ @players (update-players k (player-update-name name))))
+    (<~@ @creatures (update-players k (player-update-name name))))
   (define (update-player-max-hp k f)
-    (<~@ @players (update-players k (player-act-on-max-hp f))))
+    (<~@ @creatures (update-players k (player-act-on-max-hp f))))
   (define (to-build-loot-deck)
     ;; give each player max-hp
-    (<~@ @players
+    (<~@ @creatures
          (update-all-players
            (flow (~> (-< (~> player-max-hp const player-act-on-hp)
                          _)
@@ -75,18 +78,20 @@
         (gen (:= @num-loot-cards (length (@! @loot-deck))))))
   (define (make-player-view k @e)
     (define (update proc)
-      (<~@ @players (update-players k proc)))
-    (define-flow update-condition (~> player-condition-handler update))
-    (define-flow update-hp (~> player-act-on-hp update))
-    (define-flow update-xp (~> player-act-on-xp update))
-    (define (update-initiative i) (update (flow (player-set-initiative i))))
+      (<~@ @creatures (update-players k proc)))
+    (define-flow update-player-condition (~> player-condition-handler update))
+    (define-flow update-player-hp (~> player-act-on-hp update))
+    (define-flow update-player-xp (~> player-act-on-xp update))
+    (define (update-player-initiative i) (update (flow (player-set-initiative i))))
     (player-view
       (@> @e cdr)
       @num-players
-      #:on-condition update-condition
-      #:on-hp update-hp
-      #:on-xp update-xp
-      #:on-initiative update-initiative))
+      #:on-condition update-player-condition
+      #:on-hp update-player-hp
+      #:on-xp update-player-xp
+      #:on-initiative update-player-initiative))
+  (define (make-monster-group-view k @e)
+    (hpanel))
   (define (take-loot)
     (<@ @loot-deck rest))
   (define (give-player-loot* p)
@@ -96,21 +101,27 @@
       ((player-add-loot card) p)
       p))
   (define (give-player-loot k)
-    (<~@ @players (update-players k give-player-loot*)))
+    (<~@ @creatures (update-players k give-player-loot*)))
   (define (next-round)
     ;; wane elements
     (for-each (flow (<@ wane-element)) @elements)
     ;; reset player initiative
-    (<~@ @players (update-all-players player-clear-initiative))
+    (<~@ @creatures (update-all-players player-clear-initiative))
     ;; shuffle modifiers if required
     (when (shuffle-modifier-deck? (@! @monster-discard))
       (reshuffle-modifiers))
     ;; toggle state
     (<@ @in-draw? not))
+  (define (get-monster-group-initiative mg)
+    +inf.0)
   (define (draw)
     ;; order players
-    (<~@ @players
-         (sort < #:key (flow (~> cdr player-initiative))))
+    (<~@ @creatures
+         (sort < #:key (flow
+                         (~> cdr
+                             (switch
+                               [player? player-initiative]
+                               [monster-group? get-monster-group-initiative])))))
     ;; toggle state
     (<@ @in-draw? not))
   (define (reshuffle-modifiers)
@@ -168,16 +179,20 @@
            ;; main
            (group
              "Creatures"
-             (list-view @players
-               #:min-size (@~> @players (~>> length (* 100) (list #f)))
+             (list-view @creatures
+               #:min-size (@~> @creatures (~>> length (* 100) (list #f)))
                #:key car
-               make-player-view))
+               (flow
+                 (switch (% (~> 2> @! cdr) _)
+                   [player? make-player-view]
+                   [monster-group? make-monster-group-view]))))
            ;; bottom (1)
            (hpanel #:stretch '(#t #f)
                    (button "Next Round" next-round #:enabled? @in-draw?)
                    (spacer)
                    (loot-button
-                     @loot-deck @num-loot-cards @num-players @players
+                     @loot-deck @num-loot-cards @num-players
+                     (@~> @creatures (filter (flow (~> cdr player?)) _))
                      ;; valid because only enabled if loot-deck non-empty, and only
                      ;; closing if loot assigned
                      #:on-close take-loot
