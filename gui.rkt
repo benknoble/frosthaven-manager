@@ -110,13 +110,18 @@
     (define (update proc)
       (<~@ @creatures (update-monster-groups k proc)))
     (define @mg (@> @e cdr))
+    (define (update-condition num c on?)
+      (update (monster-group-update-num num (monster-update-condition c on?))))
+    (define (update-hp num proc)
+      (update (monster-group-update-num num (monster-update-hp proc))))
+    (define (kill num) (update (monster-group-remove num)))
+    (define (new num elite?) (update (monster-group-add num elite?)))
     (monster-group-view
       @mg (@ #f) ;; TODO
-      #:on-condition
-      (λ (num c on?) (update (monster-group-update-num num (monster-update-condition c on?))))
-      #:on-hp (λ (num proc) (update (monster-group-update-num num (monster-update-hp proc))))
-      #:on-kill (λ (n) (update (monster-group-remove n)))
-      #:on-new (λ (n elite?) (update (monster-group-add n elite?)))))
+      #:on-condition update-condition
+      #:on-hp update-hp
+      #:on-kill kill
+      #:on-new new))
   (define (take-loot)
     (<@ @loot-deck rest))
   (define (give-player-loot* p)
