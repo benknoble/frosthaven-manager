@@ -23,6 +23,11 @@
   (define/obs @loot-deck empty)
   (define/obs @num-loot-cards 0)
   (define-values (@elements elements-view) (elements-cycler elements))
+  (define/obs @in-draw? #f)
+  (define/obs @monster-deck (shuffle monster-deck))
+  (define/obs @monster-discard empty)
+  (define/obs @curses monster-curse-deck)
+  (define/obs @modifier #f)
   ;; functions
   (define (make-player-entry i)
     (cons i (make-player "" 1)))
@@ -86,7 +91,6 @@
       p))
   (define (give-player-loot k)
     (<~@ @players (update-players k give-player-loot*)))
-  (define/obs @in-draw? #f)
   (define (next-round)
     ;; wane elements
     (for-each (flow (<@ wane-element)) @elements)
@@ -103,10 +107,6 @@
          (sort < #:key (flow (~> cdr player-initiative))))
     ;; toggle state
     (<@ @in-draw? not))
-  (define/obs @monster-deck (shuffle monster-deck))
-  (define/obs @monster-discard empty)
-  (define/obs @curses monster-curse-deck)
-  (define/obs @modifier #f)
   (define (reshuffle-modifiers)
     (:= @monster-deck (shuffle (append (@! @monster-deck)
                                        (@! @monster-discard))))
