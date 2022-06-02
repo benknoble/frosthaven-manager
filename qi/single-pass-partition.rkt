@@ -40,7 +40,7 @@
   [(_) #'ground]
   [(_ [cond? body]) #'(~> (pass cond?) body)]
   [(_ [cond? body] ...+)
-   #:with c+bs #'(list (cons cond? (flow body)) ...)
+   #:with c+bs #'(list (cons (flow cond?) (flow body)) ...)
    #'(~>> (partition-values c+bs))])
 
 (module+ test
@@ -102,4 +102,24 @@
                                [zero? (-< count (gen "zero"))]
                                [negative? *])
                     collect)
-                (list 6 0 "zero" 2)))
+                (list 6 0 "zero" 2))
+  ;; flow in the cond?
+  (check-equal? (~> (-1 2 1 1 -2 2)
+                    (partition-inefficient [(and positive? (> 1)) +]
+                                           [_ list])
+                    collect)
+                (list 4 (list -1 1 1 -2)))
+  (check-equal?
+    (call-with-values
+      (thunk
+        (partition-values
+          (list (cons (flow (and positive? (> 1))) +)
+                [cons (flow _) list])
+          -1 2 1 1 -2 2))
+      list)
+    (list 4 (list -1 1 1 -2)))
+  (check-equal? (~> (-1 2 1 1 -2 2)
+                    (partition [(and positive? (> 1)) +]
+                               [_ list])
+                    collect)
+                (list 4 (list -1 1 1 -2))))
