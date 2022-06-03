@@ -30,6 +30,8 @@
   (define/obs @monster-deck (shuffle monster-deck))
   (define/obs @monster-discard empty)
   (define/obs @curses monster-curse-deck)
+  (define/obs @blesses monster-bless-deck)
+  (define/obs @player-blesses empty)
   (define/obs @modifier #f)
   (define-values (info-db action-db)
     (get-dbs "sample-db.rktd"))
@@ -152,13 +154,21 @@
     (<@ @monster-deck rest)
     (cond
       [(equal? card curse) (<~@ @curses (cons card _))]
+      [(equal? card bless) (<~@ @blesses (cons card _))]
       [else (<~@ @monster-discard (cons card _))]))
-  (define (do-curse)
-    (unless (empty? (@! @curses))
-      (define card (first (@! @curses)))
-      (<@ @curses rest)
-      (<~@ @monster-deck (cons card _))
-      (reshuffle-modifiers)))
+  (define (make-modifier-deck-adder @cards @deck #:shuffle? [shuffle #t])
+    (thunk
+      (unless (empty? (@! @cards))
+        (define card (first (@! @cards)))
+        (<@ @cards rest)
+        (<~@ @deck (cons card _))
+        (when shuffle
+          (reshuffle-modifiers)))))
+  (define do-curse-monster (make-modifier-deck-adder @curses @monster-deck))
+  (define do-bless-monster (make-modifier-deck-adder @blesses @monster-deck))
+  (define do-bless-player (make-modifier-deck-adder @blesses @player-blesses))
+  (define do-unbless-player (make-modifier-deck-adder @player-blesses @blesses
+                                                      #:shuffle? #f))
   (define add-or-remove-monster-group
     (match-lambda
       [`(add ,mg)
@@ -222,12 +232,25 @@
                      #:on-close take-loot
                      #:on-player give-player-loot)
                    (spacer)
-                   (button
-                     #:enabled? (@~> @curses (not empty?))
-                     (@~> @curses
-                          (~> length
-                              (format "Curse (~a/~a)" _ (length monster-curse-deck))))
-                     do-curse)
+                   (let ([make-modifier-deck-adder-button
+                           (λ (@cards do-adder text original-deck)
+                             (button
+                               #:enabled? (@~> @cards (not empty?))
+                               (@~> @cards
+                                    (~> length
+                                        (format "~a (~a/~a)" text _ (length original-deck))))
+                               do-adder))])
+                     (hpanel
+                       (vpanel
+                         (make-modifier-deck-adder-button
+                           @curses do-curse-monster "Curse Monster" monster-curse-deck)
+                         (make-modifier-deck-adder-button
+                           @blesses do-bless-monster "Bless Monster" monster-bless-deck))
+                       (vpanel
+                         (make-modifier-deck-adder-button
+                           @blesses do-bless-player "Bless Player" monster-bless-deck)
+                         (make-modifier-deck-adder-button
+                           @player-blesses do-unbless-player "Unbless Player" monster-bless-deck))))
                    (vpanel
                      (button
                        (@~> @monster-deck (~>> length (format "Draw Modifier (~a)")))
