@@ -326,6 +326,7 @@
         plus1
         plus2
         crit))
+;; TODO: draw modifier with advantage, disadvantage
 (define-flow (modifier-ranking mod)
   (~>> (index-of modifier-rankings)))
 (define-flow (better-modifier x y)
