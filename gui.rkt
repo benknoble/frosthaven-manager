@@ -21,8 +21,9 @@
   ;; game state
   (define/obs @level 0)
   (define/obs @num-players 1)
-  ;; list of (cons/c id? (or/c player? (cons/c monster-num? monster-group?)))
-  (define/obs @creatures empty)
+  (define/obs @creatures
+    ;; list of (cons/c id? (or/c player? (cons/c monster-num? monster-group?)))
+    empty)
   (define/obs @loot-deck empty)
   (define/obs @num-loot-cards 0)
   (define-values (@elements elements-view) (elements-cycler elements))
