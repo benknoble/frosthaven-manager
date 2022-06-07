@@ -191,22 +191,20 @@
       (group
         "Action"
         #:min-size (list 200 #f)
-        (if-view @action
-          (vpanel
-            (text
-              (@~> @action
-                   (if monster-action?
-                     (~>> (-< monster-action-name
-                              (~> (if monster-action-shuffle?
-                                    " 🔀"
-                                    "")))
-                          (format "~a~a"))
-                     "")))
-            (list-view (@~> @action (if _
-                                      monster-action-abilities
-                                      (gen empty)))
-              (λ (k @e) (text (@~> @e (format "· ~a" _))))))
-          (spacer))))
+        (vpanel
+          (text
+            (@~> @action
+                 (if monster-action?
+                   (~>> (-< monster-action-name
+                            (~> (if monster-action-shuffle?
+                                  " 🔀"
+                                  "")))
+                        (format "~a~a"))
+                   "")))
+          (list-view (@~> @action (if _
+                                    monster-action-abilities
+                                    (gen empty)))
+            (λ (k @e) (text (@~> @e (format "· ~a" _))))))))
     (define stats-panel
       (hpanel
         (group "Normal" (stats-view (@> @mg monster-group-normal-stats))
