@@ -81,7 +81,7 @@
     [initiative? predicate/c]
     [action? predicate/c]
     [conditions (listof condition?)]
-    [monster-deck (listof monster-modifier?)]
+    [monster-modifier-deck (listof monster-modifier?)]
     [shuffle-modifier-deck? (-> (listof monster-modifier?) boolean?)]
     [better-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
     [worse-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
@@ -309,7 +309,7 @@
 (define-enum-type monster-modifier
   (zero minus1 plus1 minus2 plus2 null crit curse bless)
   #:property-maker make-property-maker-that-displays-as-constant-names)
-(define monster-deck
+(define monster-modifier-deck
   (append (build-list 6 (const zero))
           (build-list 5 (const minus1))
           (build-list 5 (const plus1))

@@ -28,7 +28,7 @@
   (define/obs @num-loot-cards 0)
   (define-values (@elements elements-view) (elements-cycler elements))
   (define/obs @in-draw? #f)
-  (define/obs @monster-deck (shuffle monster-deck))
+  (define/obs @monster-modifier-deck (shuffle monster-modifier-deck))
   (define/obs @monster-discard empty)
   (define/obs @curses monster-curse-deck)
   (define/obs @blesses monster-bless-deck)
@@ -167,15 +167,15 @@
     ;; toggle state
     (<@ @in-draw? not))
   (define (reshuffle-modifiers)
-    (:= @monster-deck (shuffle (append (@! @monster-deck)
-                                       (@! @monster-discard))))
+    (:= @monster-modifier-deck (shuffle (append (@! @monster-modifier-deck)
+                                                (@! @monster-discard))))
     (:= @monster-discard empty))
   (define (draw-modifier)
     ;; better not be empty after this…
-    (when (empty? (@! @monster-deck)) (reshuffle-modifiers))
-    (define card (first (@! @monster-deck)))
+    (when (empty? (@! @monster-modifier-deck)) (reshuffle-modifiers))
+    (define card (first (@! @monster-modifier-deck)))
     (:= @modifier card)
-    (<@ @monster-deck rest)
+    (<@ @monster-modifier-deck rest)
     (cond
       [(equal? card curse) (<~@ @curses (cons card _))]
       [(equal? card bless) (<~@ @blesses (cons card _))]
@@ -188,8 +188,8 @@
         (<~@ @deck (cons card _))
         (when shuffle
           (reshuffle-modifiers)))))
-  (define do-curse-monster (make-modifier-deck-adder @curses @monster-deck))
-  (define do-bless-monster (make-modifier-deck-adder @blesses @monster-deck))
+  (define do-curse-monster (make-modifier-deck-adder @curses @monster-modifier-deck))
+  (define do-bless-monster (make-modifier-deck-adder @blesses @monster-modifier-deck))
   (define do-bless-player (make-modifier-deck-adder @blesses @player-blesses))
   (define do-unbless-player (make-modifier-deck-adder @player-blesses @blesses
                                                       #:shuffle? #f))
@@ -281,7 +281,7 @@
                            @player-blesses do-unbless-player "Unbless Player" monster-bless-deck))))
                    (vpanel
                      (button
-                       (@~> @monster-deck (~>> length (format "Draw Modifier (~a)")))
+                       (@~> @monster-modifier-deck (~>> length (format "Draw Modifier (~a)")))
                        draw-modifier)
                      (text (@~> @modifier (~>> (or _ "") (~a "Most Recent Modifier: ")))))
                    (spacer)
