@@ -142,11 +142,19 @@
       p))
   (define (give-player-loot k)
     (<~@ @creatures (update-players k give-player-loot*)))
+  (define-flow creature-initiative
+    (~> cdr
+        (switch
+          [player? player-initiative]
+          [(~> cdr monster-group?)
+           (~> cdr get-monster-group-initiative)])))
   (define (next-round)
     ;; wane elements
     (for-each (flow (<@ wane-element)) @elements)
     ;; reset player initiative
     (<~@ @creatures (update-all-players player-clear-initiative))
+    ;; order creatures
+    (<~@ @creatures (sort < #:key creature-initiative))
     ;; shuffle modifiers if required
     (when (shuffle-modifier-deck? (@! @monster-discard))
       (reshuffle-modifiers))
@@ -156,14 +164,8 @@
     ;; TODO
     +inf.0)
   (define (draw)
-    ;; order players
-    (<~@ @creatures
-         (sort < #:key (flow
-                         (~> cdr
-                             (switch
-                               [player? player-initiative]
-                               [(~> cdr monster-group?)
-                                (~> cdr get-monster-group-initiative)])))))
+    ;; order creatures
+    (<~@ @creatures (sort < #:key creature-initiative))
     ;; toggle state
     (<@ @in-draw? not))
   (define (reshuffle-modifiers)
