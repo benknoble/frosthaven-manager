@@ -15,6 +15,28 @@
          "monster-db.rkt"
          (submod "monster-db.rkt" gui))
 
+(struct ability-decks [current draw discard] #:transparent)
+(define-flow (ability-decks-draw-next ad)
+  (~> (-< (~> ability-decks-draw (and (not empty?) first))
+          (~> ability-decks-draw (switch [(not empty?) rest]))
+          ability-decks-discard)
+      ability-decks))
+(define (ability-decks-discard-and-maybe-shuffle ad)
+  (match-define (ability-decks current draw discard) ad)
+  (define discard-with-current
+    (if (monster-action? current)
+      (cons current discard)
+      discard))
+  (define shuffle?
+    (or (empty? draw)
+        (on (current)
+          (and monster-action? monster-action-shuffle?))))
+  (define-values (draw* discard*)
+    (if shuffle?
+      (values (shuffle (append draw discard-with-current)) empty)
+      (values draw discard-with-current)))
+  (ability-decks #f draw* discard*))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -36,7 +58,13 @@
   (define/obs @modifier #f)
   (define-values (info-db action-db)
     (get-dbs "sample-db.rktd"))
+  (define/obs @ability-decks
+    (for/hash ([(set actions) (in-hash action-db)])
+      (values set (ability-decks #f (shuffle actions) empty))))
   ;; functions
+  (define ((update-ability-decks f) ads)
+    (for/hash ([(set ad) (in-hash ads)])
+      (values set (f ad))))
   (define (make-player-entry i)
     (cons i (make-player "" 1)))
   (define (update-players creatures k f)
@@ -124,8 +152,15 @@
       (update (monster-group-remove num) (flow (~> 2> monster-group-first-monster))))
     (define (new num elite?) (update (monster-group-add num elite?) (const num)))
     (define (select num) (update values (const num)))
+    (define/obs @action
+      (obs-combine
+        (λ (mg ads)
+          (ability-decks-current
+            (hash-ref ads (monster-group-set-name mg))))
+        @mg @ability-decks))
     (monster-group-view
-      @mg (@ #f) ;; TODO
+      @mg
+      @action
       @n
       #:on-condition update-condition
       #:on-hp update-hp
@@ -142,6 +177,14 @@
       p))
   (define (give-player-loot k)
     (<~@ @creatures (update-players k give-player-loot*)))
+  (define (get-monster-group-initiative mg)
+    (~> (@ability-decks mg)
+        (== @! monster-group-set-name)
+        hash-ref
+        ability-decks-current
+        (switch
+          [monster-action? monster-action-initiative]
+          [else +inf.0])))
   (define-flow creature-initiative
     (~> cdr
         (switch
@@ -153,6 +196,8 @@
     (for-each (flow (<@ wane-element)) @elements)
     ;; reset player initiative
     (<~@ @creatures (update-all-players player-clear-initiative))
+    ;; discard monster cards
+    (<@ @ability-decks (update-ability-decks ability-decks-discard-and-maybe-shuffle))
     ;; order creatures
     (<~@ @creatures (sort < #:key creature-initiative))
     ;; shuffle modifiers if required
@@ -160,10 +205,9 @@
       (reshuffle-modifiers))
     ;; toggle state
     (<@ @in-draw? not))
-  (define (get-monster-group-initiative mg)
-    ;; TODO
-    +inf.0)
   (define (draw)
+    ;; draw new monster cards
+    (<@ @ability-decks (update-ability-decks ability-decks-draw-next))
     ;; order creatures
     (<~@ @creatures (sort < #:key creature-initiative))
     ;; toggle state
@@ -209,9 +253,18 @@
   (define (make-creature-view k @e)
     (define make-player-or-monster-group-view
       (match-lambda
-        [(cons _ (? player?)) (make-player-view k @e)]
-        [(cons _ (cons _ (? monster-group?))) (make-monster-group-view k @e)]))
-    (dyn-view @e make-player-or-monster-group-view))
+        [(cons _ (cons _ (? player?))) (make-player-view k @e)]
+        [(cons _ (cons _ (cons _ (? monster-group?)))) (make-monster-group-view k @e)]))
+    (dyn-view
+      ;; HACK: Combine @e with @ability-decks to register dyn-view dependency on
+      ;; @ability-decks; but, the actual observable we care about is still just
+      ;; @e. (You can see that we ignore the car of the resulting pair in the
+      ;; match patterns above.) This is because make-monster-group-view creates
+      ;; a view that depends on @ability-decks, but dyn-view isn't aware of this
+      ;; dependency.
+      ;; https://github.com/Bogdanp/racket-gui-easy/issues/23
+      (obs-combine cons @ability-decks @e)
+      make-player-or-monster-group-view))
   ;; gui
   (render
     (window
