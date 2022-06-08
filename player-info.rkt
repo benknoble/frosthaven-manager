@@ -11,7 +11,7 @@
                               #:hps (listof positive-integer?))
                              (is-a?/c view<%>))]
     [player-view (->* ((obs/c player?)
-                       (obs/c (integer-in 1 max-players)))
+                       (obs/c num-players/c))
                       (#:on-condition (-> (list/c condition? boolean?) any)
                        #:on-hp (-> (-> number? number?) any)
                        #:on-xp (-> (-> number? number?) any)

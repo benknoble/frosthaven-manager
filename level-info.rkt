@@ -7,7 +7,7 @@
                      (is-a?/c view<%>))]
     [level-table (-> (obs/c level/c)
                      (is-a?/c view<%>))]
-    [inspiration-table (-> (obs/c (integer-in 1 max-players))
+    [inspiration-table (-> (obs/c num-players/c)
                            (is-a?/c view<%>))]))
 
 (require racket/gui/easy

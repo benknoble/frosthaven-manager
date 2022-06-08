@@ -28,8 +28,9 @@
     [max-level natural-number/c]
     [level/c contract?]
     [max-players natural-number/c]
+    [num-players/c contract?]
     [get-level-info (-> level/c level-info?)]
-    [inspiration-reward (-> (integer-in 1 max-players) natural-number/c)])
+    [inspiration-reward (-> num-players/c natural-number/c)])
 
   ;; players
   (contract-out
@@ -70,7 +71,7 @@
                       [amount (apply list/c (build-list max-players (const natural-number/c)))])]
     [struct herb ([name herb-kind?])]
     [loot-card? predicate/c]
-    [format-loot-card (-> (integer-in 1 max-players) (-> loot-card? string?))]
+    [format-loot-card (-> num-players/c (-> loot-card? string?))]
     [max-money-cards natural-number/c]
     [max-material-cards natural-number/c]
     [max-herb-cards natural-number/c]
@@ -172,6 +173,7 @@
   (vector-set! v pos (f (vector-ref v pos))))
 
 (define max-players 4)
+(define num-players/c (integer-in 1 max-players))
 
 ;; GUI
 
