@@ -176,7 +176,7 @@
             ;; On η-expansion of close!: close! can be #f until it is set, so
             ;; expand the call to close! (by the time it is called it should
             ;; have the correct value, a procedure).
-            (button "Save" (λ () (close!)))))))
+            (button "Add" (λ () (close!)))))))
     (define name-initiative-panel
       (group
         "Initiative"
