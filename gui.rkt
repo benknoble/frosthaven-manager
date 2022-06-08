@@ -46,7 +46,7 @@
   (define/obs @creatures empty)
   (define/obs @loot-deck empty)
   (define/obs @num-loot-cards 0)
-  (define-values (@elements elements-view) (elements-cycler elements))
+  (define-values (@elements elements-view) (elements-cycler elements vpanel))
   (define/obs @in-draw? #f)
   (define/obs @monster-modifier-deck (shuffle monster-modifier-deck))
   (define/obs @monster-discard empty)
@@ -295,21 +295,47 @@
            (button "Next" to-play))]
         [(play)
          (vpanel
-           ;; top
-           (hpanel #:stretch '(#t #f)
-                   (spacer)
-                   elements-view)
-           ;; main
-           (group
-             "Creatures"
-             (list-view @creatures
-               #:min-size (@~> @creatures (~>> length (* 100) (list #f)))
-               #:key creature-id
-               make-creature-view))
-           ;; bottom (1)
-           (hpanel #:stretch '(#t #f)
-                   (button "Next Round" next-round #:enabled? @in-draw?)
-                   (spacer)
+           (hpanel
+             ;; left
+             elements-view
+             ;; main
+             (group
+               "Creatures"
+               (list-view @creatures
+                 #:min-size (@~> @creatures (~>> length (* 100) (list #f)))
+                 #:key creature-id
+                 make-creature-view))
+             ;; right
+             (vpanel #:stretch '(#f #t)
+                     (let ([make-modifier-deck-adder-button
+                             (λ (@cards do-adder text original-deck)
+                               (button
+                                 #:enabled? (@~> @cards (not empty?))
+                                 (@~> @cards
+                                      (~> length
+                                          (format "~a (~a/~a)" text _ (length original-deck))))
+                                 do-adder))])
+                       (vpanel
+                         (make-modifier-deck-adder-button
+                           @curses do-curse-monster "Curse Monster" monster-curse-deck)
+                         (make-modifier-deck-adder-button
+                           @blesses do-bless-monster "Bless Monster" monster-bless-deck)
+                         (make-modifier-deck-adder-button
+                           @blesses do-bless-player "Bless Player" monster-bless-deck)
+                         (make-modifier-deck-adder-button
+                           @player-blesses do-unbless-player "Unbless Player" monster-bless-deck)))
+                     (spacer)
+                     (button (@~> @monster-modifier-deck (~>> length (format "Draw Modifier (~a)"))) draw-modifier)
+                     (button "Adv." void)
+                     (button "Disadv." void)
+                     (text (@~> @modifier (~>> (or _ "") (~a "Most Recent Modifier: "))))
+                     (text (@~> @monster-discard (~>> (or (and (~> length (> 1)) second) "") (~a "Previous Modifier: "))))
+                     (button "Show Discard" void)
+                     (spacer)
+                     (button "Next Round" next-round #:enabled? @in-draw?)
+                     (button "Draw Action(s)" draw #:enabled? (@> @in-draw? not))))
+           ;; bottom
+           (hpanel #:stretch '(#f #f)
                    (loot-button
                      @loot-deck @num-loot-cards @num-players
                      (@~> @creatures (filter (flow (~> creature-v player?)) _))
@@ -317,37 +343,7 @@
                      ;; closing if loot assigned
                      #:on-close take-loot
                      #:on-player give-player-loot)
-                   (spacer)
-                   (let ([make-modifier-deck-adder-button
-                           (λ (@cards do-adder text original-deck)
-                             (button
-                               #:enabled? (@~> @cards (not empty?))
-                               (@~> @cards
-                                    (~> length
-                                        (format "~a (~a/~a)" text _ (length original-deck))))
-                               do-adder))])
-                     (hpanel
-                       (vpanel
-                         (make-modifier-deck-adder-button
-                           @curses do-curse-monster "Curse Monster" monster-curse-deck)
-                         (make-modifier-deck-adder-button
-                           @blesses do-bless-monster "Bless Monster" monster-bless-deck))
-                       (vpanel
-                         (make-modifier-deck-adder-button
-                           @blesses do-bless-player "Bless Player" monster-bless-deck)
-                         (make-modifier-deck-adder-button
-                           @player-blesses do-unbless-player "Unbless Player" monster-bless-deck))))
-                   (vpanel
-                     (button
-                       (@~> @monster-modifier-deck (~>> length (format "Draw Modifier (~a)")))
-                       draw-modifier)
-                     (text (@~> @modifier (~>> (or _ "") (~a "Most Recent Modifier: ")))))
-                   (spacer)
-                   (button "Draw Action(s)" draw #:enabled? (@> @in-draw? not)))
-           ;; bottom (2)
-           (hpanel #:stretch '(#f #f)
                    (level-stats @level @num-players)
-                   (vpanel
-                     (level-table @level)
-                     (inspiration-table @num-players))))]
+                   (level-table @level)
+                   (inspiration-table @num-players)))]
         [else (text "Broken")]))))

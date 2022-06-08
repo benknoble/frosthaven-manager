@@ -104,18 +104,19 @@
   (provide
     (contract-out
       [element-state/c contract?]
-      [elements-cycler (-> (listof element-pics?)
-                           (values (listof (obs/c element-state/c))
-                                   (is-a?/c view<%>)))]
+      [elements-cycler (->* ((listof element-pics?))
+                            ((unconstrained-domain-> (is-a?/c view<%>)))
+                            (values (listof (obs/c element-state/c))
+                                    (is-a?/c view<%>)))]
       [wane-element (-> element-state/c element-state/c)]))
 
   (require racket/gui/easy
            "observable-operator.rkt"
            racket/gui/easy/contract)
 
-  (define (elements-cycler es)
+  (define (elements-cycler es [panel hpanel])
     (define-values (states views) (element-cyclers es))
-    (values states (apply hpanel #:stretch '(#f #f) views)))
+    (values states (apply panel #:stretch '(#f #f) views)))
 
   (define (element-cycler e)
     (define/obs @element-state 'unfused)
