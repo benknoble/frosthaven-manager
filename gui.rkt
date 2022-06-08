@@ -234,6 +234,7 @@
         (<@ @cards rest)
         (<~@ @deck (cons card _))
         (when shuffle
+          ;; TODO: adding curse/bless doesn't reshuffle discard, too
           (reshuffle-modifiers)))))
   (define do-curse-monster (make-modifier-deck-adder @curses @monster-modifier-deck))
   (define do-bless-monster (make-modifier-deck-adder @blesses @monster-modifier-deck))
