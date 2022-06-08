@@ -217,16 +217,18 @@
     (:= @monster-modifier-deck (shuffle (append (@! @monster-modifier-deck)
                                                 (@! @monster-discard))))
     (:= @monster-discard empty))
+  (define (discard card)
+    (cond
+      [(equal? card curse) (<~@ @curses (cons card _))]
+      [(equal? card bless) (<~@ @blesses (cons card _))]
+      [else (<~@ @monster-discard (cons card _))]))
   (define (draw-modifier)
     ;; better not be empty after this…
     (when (empty? (@! @monster-modifier-deck)) (reshuffle-modifiers))
     (define card (first (@! @monster-modifier-deck)))
     (:= @modifier card)
     (<@ @monster-modifier-deck rest)
-    (cond
-      [(equal? card curse) (<~@ @curses (cons card _))]
-      [(equal? card bless) (<~@ @blesses (cons card _))]
-      [else (<~@ @monster-discard (cons card _))]))
+    (discard card))
   (define (shuffle-draw-pile)
     (:= @monster-modifier-deck (shuffle (@! @monster-modifier-deck))))
   (define (make-modifier-deck-adder @cards @deck #:shuffle? [shuffle #t])
