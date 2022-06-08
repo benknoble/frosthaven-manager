@@ -227,6 +227,8 @@
       [(equal? card curse) (<~@ @curses (cons card _))]
       [(equal? card bless) (<~@ @blesses (cons card _))]
       [else (<~@ @monster-discard (cons card _))]))
+  (define (shuffle-draw-pile)
+    (:= @monster-modifier-deck (shuffle (@! @monster-modifier-deck))))
   (define (make-modifier-deck-adder @cards @deck #:shuffle? [shuffle #t])
     (thunk
       (unless (empty? (@! @cards))
@@ -234,8 +236,7 @@
         (<@ @cards rest)
         (<~@ @deck (cons card _))
         (when shuffle
-          ;; TODO: adding curse/bless doesn't reshuffle discard, too
-          (reshuffle-modifiers)))))
+          (shuffle-draw-pile)))))
   (define do-curse-monster (make-modifier-deck-adder @curses @monster-modifier-deck))
   (define do-bless-monster (make-modifier-deck-adder @blesses @monster-modifier-deck))
   (define do-bless-player (make-modifier-deck-adder @blesses @player-blesses
