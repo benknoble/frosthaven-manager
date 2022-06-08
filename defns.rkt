@@ -10,6 +10,11 @@
                         (-> any/c any/c)
                         void?)])
 
+  ;; GUI
+  (contract-out
+    [struct creature ([id any/c]
+                      [v (or/c player? (cons/c (integer-in 1 10) monster-group?))])])
+
   ;; level info
   (contract-out
     [struct level-info ([monster-level natural-number/c]
@@ -164,6 +169,10 @@
   (vector-set! v pos (f (vector-ref v pos))))
 
 (define max-players 4)
+
+;; GUI
+
+(struct creature [id v] #:transparent)
 
 ;; level info
 

@@ -43,9 +43,7 @@
   ;; game state
   (define/obs @level 0)
   (define/obs @num-players 1)
-  (define/obs @creatures
-    ;; list of (cons/c id? (or/c player? (cons/c monster-num? monster-group?)))
-    empty)
+  (define/obs @creatures empty)
   (define/obs @loot-deck empty)
   (define/obs @num-loot-cards 0)
   (define-values (@elements elements-view) (elements-cycler elements))
@@ -66,32 +64,36 @@
     (for/hash ([(set ad) (in-hash ads)])
       (values set (f ad))))
   (define (make-player-entry i)
-    (cons i (make-player "" 1)))
+    (creature i (make-player "" 1)))
   (define (update-players creatures k f)
     (define (maybe-update-player e)
-      (if (~> (e) (-< car cdr) (and% (eq? k) player?))
-        (cons k (f (cdr e)))
+      (if (~> (e) (-< creature-id creature-v) (and% (eq? k) player?))
+        (creature k (f (creature-v e)))
         e))
     (map maybe-update-player creatures))
   (define (update-monster-groups creatures k f [fn (flow 1>)])
     (define (maybe-update-monster-group e)
       (if (~> (e)
-              (-< car (and (~> cdr pair?) cddr))
+              (-< creature-id (~> creature-v (and pair? cdr)))
               (and% (eq? k) monster-group?))
-        (let ([new-mg (f (cddr e))])
-          (list* k (fn (cadr e) new-mg) new-mg))
+        (let* ([n-mg (creature-v e)]
+               [n (car n-mg)]
+               [mg (cdr n-mg)]
+               [new-mg (f mg)]
+               [new-n (fn n new-mg)])
+          (creature k (cons new-n new-mg)))
         e))
     (map maybe-update-monster-group creatures))
   (define (update-all-players creatures f)
     (define update-only-player
       (match-lambda
-        [(cons id (? player? p)) (cons id (f p))]
+        [(creature id (? player? p)) (creature id (f p))]
         [c c]))
     (map update-only-player creatures))
   (define (update-all-monster-groups creatures f)
     (define update-only-monster-group
       (match-lambda
-        [(list* id n (? monster-group? p)) (list* id n (f p))]
+        [(creature id (cons n (? monster-group? p))) (creature id (cons n (f p)))]
         [c c]))
     (map update-only-monster-group creatures))
   (define (set-level level)
@@ -132,7 +134,7 @@
     (define-flow update-player-xp (~> player-act-on-xp update))
     (define (update-player-initiative i) (update (flow (player-set-initiative i))))
     (player-view
-      (@> @e cdr)
+      (@> @e creature-v)
       @num-players
       #:on-condition update-player-condition
       #:on-hp update-player-hp
@@ -141,9 +143,10 @@
   (define (make-monster-group-view k @e ads)
     (define (update proc [procn (flow 1>)])
       (<~@ @creatures (update-monster-groups k proc procn)))
-    (define @mg (@> @e cddr))
+    (define @n-mg (@> @e creature-v))
+    (define @mg (@> @n-mg cdr))
+    (define @n (@> @n-mg car))
     (define @ms (@> @mg monster-group-monsters))
-    (define @n (@> @e cadr))
     (define (update-condition num c on?)
       (update (monster-group-update-num num (monster-update-condition c on?))))
     (define (update-hp num proc)
@@ -183,7 +186,7 @@
           [monster-action? monster-action-initiative]
           [else +inf.0])))
   (define-flow creature-initiative
-    (~> cdr
+    (~> creature-v
         (switch
           [player? player-initiative]
           [(~> cdr monster-group?)
@@ -240,19 +243,18 @@
   (define add-or-remove-monster-group
     (match-lambda
       [`(add ,mg)
-        (define next-id (add1 (apply max (map car (@! @creatures)))))
+        (define next-id (add1 (apply max (map creature-id (@! @creatures)))))
         (define selection
           (~> (mg) monster-group-monsters
               (and (not empty?) (~> first monster-number))))
-        (<~@ @creatures (append (list (cons next-id (cons selection mg)))))]
+        (<~@ @creatures (append (list (creature next-id (cons selection mg)))))]
       [`(remove ,mg)
-        (<~@ @creatures (remf (flow (~> (and (~> cdr pair?)
-                                             (~> cddr (equal? mg))))) _))]))
+        (<~@ @creatures (remf (flow (~> creature-v (and pair? (~> cdr (equal? mg))))) _))]))
   (define (make-creature-view k @e)
     (define make-player-or-monster-group-view
       (match-lambda
-        [(cons ads (cons _ (? player?))) (make-player-view k @e)]
-        [(cons ads (cons _ (cons _ (? monster-group?)))) (make-monster-group-view k @e ads)]))
+        [(cons ads (creature _ (? player?))) (make-player-view k @e)]
+        [(cons ads (creature _ (cons _ (? monster-group?)))) (make-monster-group-view k @e ads)]))
     (dyn-view
       ;; HACK: Combine @e with @ability-decks to register dyn-view dependency on
       ;; @ability-decks; but, the actual observable we care about is still just
@@ -299,7 +301,7 @@
              "Creatures"
              (list-view @creatures
                #:min-size (@~> @creatures (~>> length (* 100) (list #f)))
-               #:key car
+               #:key creature-id
                make-creature-view))
            ;; bottom (1)
            (hpanel #:stretch '(#t #f)
@@ -307,7 +309,7 @@
                    (spacer)
                    (loot-button
                      @loot-deck @num-loot-cards @num-players
-                     (@~> @creatures (filter (flow (~> cdr player?)) _))
+                     (@~> @creatures (filter (flow (~> creature-v player?)) _))
                      ;; valid because only enabled if loot-deck non-empty, and only
                      ;; closing if loot assigned
                      #:on-close take-loot
