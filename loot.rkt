@@ -3,13 +3,13 @@
 (provide
   (contract-out
     [loot-picker (->* ()
-                      (#:on-card (-> (or/c (list/c 'add (listof (or/c money? material? herb? random-item?)))
+                      (#:on-card (-> (or/c (list/c 'add (listof loot-card?))
                                            (list/c 'remove predicate/c))
                                      any))
                       (is-a?/c view<%>))]
     [loot-picker-updater
-      (-> (obs/c (listof (or/c money? material? herb? random-item?)))
-          (-> (or/c (list/c 'add (listof (or/c money? material? herb? random-item?)))
+      (-> (obs/c (listof loot-card?))
+          (-> (or/c (list/c 'add (listof loot-card?))
                     (list/c 'remove predicate/c))
               any))]
     [loot-button
