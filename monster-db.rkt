@@ -378,9 +378,14 @@
             ;; hash-update with no failure-result as a guard against bugs
             (vector-update! new-group 2 (flow (hash-update n (const elite?))))]
           [`(level ,level) (vector-set! new-group 3 level)]))
+      (define close! #f)
+      (define (set-close! c) (set! close! c))
+      (define-flow mixin
+        (~> (make-closing-proc-mixin set-close!)
+            (make-on-close-mixin finish)))
       (render
         (dialog
-          #:mixin (make-on-close-mixin finish)
+          #:mixin mixin
           #:title "Pick a Monster"
           #:min-size (~> (info-db)
                          (-< longest-name-length longest-set-length)
@@ -391,7 +396,11 @@
             ;; valid because inside a dialog: @monster-names won't update until
             ;; the dialog is closed
             #:unavailable (@! @monster-names)
-            #:on-change on-single-change))))
+            #:on-change on-single-change)
+          ;; On η-expansion of close!: close! can be #f until it is set, so
+          ;; expand the call to close! (by the time it is called it should
+          ;; have the correct value, a procedure).
+          (button "Add" (λ () (close!))))))
     (vpanel
       (list-view @monster-groups
         #:key car
