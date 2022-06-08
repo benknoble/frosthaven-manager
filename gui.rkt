@@ -138,7 +138,7 @@
       #:on-hp update-player-hp
       #:on-xp update-player-xp
       #:on-initiative update-player-initiative))
-  (define (make-monster-group-view k @e)
+  (define (make-monster-group-view k @e ads)
     (define (update proc [procn (flow 1>)])
       (<~@ @creatures (update-monster-groups k proc procn)))
     (define @mg (@> @e cddr))
@@ -152,12 +152,9 @@
       (update (monster-group-remove num) (flow (~> 2> monster-group-first-monster))))
     (define (new num elite?) (update (monster-group-add num elite?) (const num)))
     (define (select num) (update values (const num)))
-    (define/obs @action
-      (obs-combine
-        (λ (mg ads)
-          (ability-decks-current
-            (hash-ref ads (monster-group-set-name mg))))
-        @mg @ability-decks))
+    (define @action (@~> @mg (~>> monster-group-set-name
+                                  (hash-ref ads)
+                                  ability-decks-current)))
     (monster-group-view
       @mg
       @action
@@ -253,15 +250,15 @@
   (define (make-creature-view k @e)
     (define make-player-or-monster-group-view
       (match-lambda
-        [(cons _ (cons _ (? player?))) (make-player-view k @e)]
-        [(cons _ (cons _ (cons _ (? monster-group?)))) (make-monster-group-view k @e)]))
+        [(cons ads (cons _ (? player?))) (make-player-view k @e)]
+        [(cons ads (cons _ (cons _ (? monster-group?)))) (make-monster-group-view k @e ads)]))
     (dyn-view
       ;; HACK: Combine @e with @ability-decks to register dyn-view dependency on
       ;; @ability-decks; but, the actual observable we care about is still just
-      ;; @e. (You can see that we ignore the car of the resulting pair in the
-      ;; match patterns above.) This is because make-monster-group-view creates
-      ;; a view that depends on @ability-decks, but dyn-view isn't aware of this
-      ;; dependency.
+      ;; @e. (We would ignore the car of the resulting pair in the match
+      ;; patterns above, but we actually rely on its value to avoid a race.)
+      ;; This is because make-monster-group-view creates a view that depends on
+      ;; @ability-decks, but dyn-view isn't aware of this dependency.
       ;; https://github.com/Bogdanp/racket-gui-easy/issues/23
       (obs-combine cons @ability-decks @e)
       make-player-or-monster-group-view))
