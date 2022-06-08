@@ -14,7 +14,7 @@
   (contract-out
     [struct creature ([id any/c]
                       [v (or/c player? monster-group*?)])]
-    [struct monster-group* ([active (integer-in 1 10)]
+    [struct monster-group* ([active monster-number/c]
                             [mg monster-group?])])
 
   ;; level info
@@ -114,7 +114,8 @@
                             [initiative initiative?]
                             [abilities (listof string?)]
                             [shuffle? boolean?])]
-    [struct monster ([number (integer-in 1 10)]
+    [monster-number/c contract?]
+    [struct monster ([number monster-number/c]
                      [elite? boolean?]
                      [current-hp natural-number/c]
                      [conditions (listof condition?)])]
@@ -125,28 +126,28 @@
                            [elite-stats monster-stats?]
                            [monsters (listof monster?)])]
     [make-monster (-> monster-info? level/c
-                      (integer-in 1 10) boolean?
+                      monster-number/c boolean?
                       monster?)]
     [make-monster-group (-> monster-info? level/c
-                            (and/c (listof (cons/c (integer-in 1 10) boolean?))
+                            (and/c (listof (cons/c monster-number/c boolean?))
                                    (unique-with/c car any/c))
                             monster-group?)]
     [get-monster-stats (-> monster-group? monster? monster-stats?)]
     [monster-at-max-health? (-> monster? monster-stats? boolean?)]
     [monster-dead? (-> monster? boolean?)]
     [monster-group-update-num
-      (-> (integer-in 1 10)
+      (-> monster-number/c
           (-> monster? monster?)
           (-> monster-group? monster-group?))]
     [monster-update-condition (-> condition? boolean?
                                   (-> monster? monster?))]
     [monster-update-hp (-> (-> number? number?)
                            (-> monster? monster?))]
-    [monster-group-remove (-> (integer-in 1 10)
+    [monster-group-remove (-> monster-number/c
                               (-> monster-group? monster-group?))]
-    [monster-group-add (-> (integer-in 1 10) boolean?
+    [monster-group-add (-> monster-number/c boolean?
                            (-> monster-group? monster-group?))]
-    [monster-group-first-monster (-> monster-group? (or/c #f (integer-in 1 10)))]))
+    [monster-group-first-monster (-> monster-group? (or/c #f monster-number/c))]))
 
 (require
   rebellion/type/enum
@@ -365,6 +366,7 @@
 (struct monster-stats [max-hp move attack bonuses effects immunities] #:prefab)
 (struct monster-info [set-name name normal-stats elite-stats] #:prefab)
 (struct monster-action [set-name name initiative abilities shuffle?] #:prefab)
+(define monster-number/c (integer-in 1 10))
 (struct monster [number elite? current-hp conditions] #:transparent)
 (struct monster-group [set-name name level normal-stats elite-stats monsters] #:transparent)
 

@@ -66,14 +66,14 @@
       [monster-group-view
         (->* ((obs/c monster-group?)
               (obs/c (or/c #f monster-action?))
-              (obs/c (or/c #f (integer-in 1 10))))
-             (#:on-condition (-> (integer-in 1 10) condition? boolean?
+              (obs/c (or/c #f monster-number/c)))
+             (#:on-condition (-> monster-number/c condition? boolean?
                                  any)
-              #:on-hp (-> (integer-in 1 10) (-> number? number?)
+              #:on-hp (-> monster-number/c (-> number? number?)
                           any)
-              #:on-kill (-> (integer-in 1 10) any)
-              #:on-new (-> (integer-in 1 10) boolean? any)
-              #:on-select (-> (or/c #f (integer-in 1 10)) any))
+              #:on-kill (-> monster-number/c any)
+              #:on-new (-> monster-number/c boolean? any)
+              #:on-select (-> (or/c #f monster-number/c) any))
              (is-a?/c view<%>))]))
 
   (require racket/gui/easy
@@ -86,8 +86,8 @@
     (or/c
       (list/c 'set 'from string? 'to string?)
       (list/c 'monster 'from monster-info? 'to monster-info?)
-      (list/c 'include? (integer-in 1 10) 'to boolean?)
-      (list/c 'elite? (integer-in 1 10) 'to boolean?)
+      (list/c 'include? monster-number/c 'to boolean?)
+      (list/c 'elite? monster-number/c 'to boolean?)
       (list/c 'level level/c)))
 
   (define (stats-view @stats)
