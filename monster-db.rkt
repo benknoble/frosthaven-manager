@@ -16,7 +16,7 @@
 (define action-db/c
   (hash/c string? (listof monster-action?)))
 
-(define-runtime-path default-monster-db "monster-db.rktd")
+(define-runtime-path default-monster-db "sample-db.rktd")
 
 (define (get-dbs db-file)
   (~> (db-file)

@@ -57,7 +57,7 @@
   (define/obs @player-blesses empty)
   (define/obs @modifier #f)
   (define-values (info-db action-db)
-    (get-dbs "sample-db.rktd"))
+    (get-dbs default-monster-db))
   (define/obs @ability-decks
     (for/hash ([(set actions) (in-hash action-db)])
       (values set (ability-decks #f (shuffle actions) empty))))
