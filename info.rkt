@@ -19,4 +19,4 @@
 (define pkg-desc "Frosthaven Scenario Manager")
 (define version "0.0")
 (define pkg-authors '(benknoble))
-(define license '(MIT))
+(define license 'MIT)
