@@ -233,7 +233,8 @@
           (reshuffle-modifiers)))))
   (define do-curse-monster (make-modifier-deck-adder @curses @monster-modifier-deck))
   (define do-bless-monster (make-modifier-deck-adder @blesses @monster-modifier-deck))
-  (define do-bless-player (make-modifier-deck-adder @blesses @player-blesses))
+  (define do-bless-player (make-modifier-deck-adder @blesses @player-blesses
+                                                    #:shuffle? #f))
   (define do-unbless-player (make-modifier-deck-adder @player-blesses @blesses
                                                       #:shuffle? #f))
   (define add-or-remove-monster-group
