@@ -52,13 +52,13 @@
       [single-monster-event/c contract?]
       [add-monster-event/c contract?]
       [remove-monster-event/c contract?]
-      [single-monster-picker (->* (info-db/c (obs/c (integer-in 0 max-level)))
+      [single-monster-picker (->* (info-db/c (obs/c level/c))
                                   (#:on-change (-> single-monster-event/c any)
                                    #:unavailable (set/c string?))
                                   (is-a?/c view<%>))]
       [simple-monster-group-view (-> (obs/c monster-group?)
                                      (is-a?/c view<%>))]
-      [multi-monster-picker (->* (info-db/c (obs/c (integer-in 0 max-level)))
+      [multi-monster-picker (->* (info-db/c (obs/c level/c))
                                  (#:on-change (-> (or/c add-monster-event/c
                                                         remove-monster-event/c)
                                                   any))
@@ -88,7 +88,7 @@
       (list/c 'monster 'from monster-info? 'to monster-info?)
       (list/c 'include? (integer-in 1 10) 'to boolean?)
       (list/c 'elite? (integer-in 1 10) 'to boolean?)
-      (list/c 'level (integer-in 0 max-level))))
+      (list/c 'level level/c)))
 
   (define (stats-view @stats)
     (vpanel

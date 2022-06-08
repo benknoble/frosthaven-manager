@@ -26,8 +26,9 @@
                         [exp natural-number/c])]
     [number-of-levels natural-number/c]
     [max-level natural-number/c]
+    [level/c contract?]
     [max-players natural-number/c]
-    [get-level-info (-> (integer-in 0 max-level) level-info?)]
+    [get-level-info (-> level/c level-info?)]
     [inspiration-reward (-> (integer-in 1 max-players) natural-number/c)])
 
   ;; players
@@ -118,14 +119,14 @@
                      [conditions (listof condition?)])]
     [struct monster-group ([set-name string?]
                            [name string?]
-                           [level (integer-in 0 max-level)]
+                           [level level/c]
                            [normal-stats monster-stats?]
                            [elite-stats monster-stats?]
                            [monsters (listof monster?)])]
-    [make-monster (-> monster-info? (integer-in 0 max-level)
+    [make-monster (-> monster-info? level/c
                       (integer-in 1 10) boolean?
                       monster?)]
-    [make-monster-group (-> monster-info? (integer-in 0 max-level)
+    [make-monster-group (-> monster-info? level/c
                             (and/c (listof (cons/c (integer-in 1 10) boolean?))
                                    (unique-with/c car any/c))
                             monster-group?)]
@@ -192,6 +193,7 @@
         (level-info 7 6 9 4 18)))
 (define number-of-levels (length level-table))
 (define max-level (sub1 number-of-levels))
+(define level/c (integer-in 0 max-level))
 (define (get-level-info level)
   (list-ref level-table level))
 
