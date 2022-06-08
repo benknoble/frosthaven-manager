@@ -14,7 +14,7 @@
   (contract-out
     [struct creature ([id any/c]
                       [v (or/c player? monster-group*?)])]
-    [struct monster-group* ([active monster-number/c]
+    [struct monster-group* ([active (or/c #f monster-number/c)]
                             [mg monster-group?])])
 
   ;; level info
