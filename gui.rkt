@@ -74,14 +74,14 @@
   (define (update-monster-groups creatures k f [fn (flow 1>)])
     (define (maybe-update-monster-group e)
       (if (~> (e)
-              (-< creature-id (~> creature-v (and pair? cdr)))
-              (and% (eq? k) monster-group?))
-        (let* ([n-mg (creature-v e)]
-               [n (car n-mg)]
-               [mg (cdr n-mg)]
+              (-< creature-id creature-v)
+              (and% (eq? k) monster-group*?))
+        (let* ([mg* (creature-v e)]
+               [n (monster-group*-active mg*)]
+               [mg (monster-group*-mg mg*)]
                [new-mg (f mg)]
                [new-n (fn n new-mg)])
-          (creature k (cons new-n new-mg)))
+          (creature k (monster-group* new-n new-mg)))
         e))
     (map maybe-update-monster-group creatures))
   (define (update-all-players creatures f)
@@ -93,7 +93,7 @@
   (define (update-all-monster-groups creatures f)
     (define update-only-monster-group
       (match-lambda
-        [(creature id (cons n (? monster-group? p))) (creature id (cons n (f p)))]
+        [(creature id (monster-group* n mg)) (creature id (monster-group* n (f mg)))]
         [c c]))
     (map update-only-monster-group creatures))
   (define (set-level level)
@@ -143,9 +143,9 @@
   (define (make-monster-group-view k @e ads)
     (define (update proc [procn (flow 1>)])
       (<~@ @creatures (update-monster-groups k proc procn)))
-    (define @n-mg (@> @e creature-v))
-    (define @mg (@> @n-mg cdr))
-    (define @n (@> @n-mg car))
+    (define @mg* (@> @e creature-v))
+    (define @mg (@> @mg* monster-group*-mg))
+    (define @n (@> @mg* monster-group*-active))
     (define @ms (@> @mg monster-group-monsters))
     (define (update-condition num c on?)
       (update (monster-group-update-num num (monster-update-condition c on?))))
@@ -185,12 +185,13 @@
         (switch
           [monster-action? monster-action-initiative]
           [else +inf.0])))
+  (define-flow (get-monster-group*-initiative mg*)
+    (~> monster-group*-mg get-monster-group-initiative))
   (define-flow creature-initiative
     (~> creature-v
         (switch
           [player? player-initiative]
-          [(~> cdr monster-group?)
-           (~> cdr get-monster-group-initiative)])))
+          [monster-group*? get-monster-group*-initiative])))
   (define (next-round)
     ;; wane elements
     (for-each (flow (<@ wane-element)) @elements)
@@ -247,14 +248,16 @@
         (define selection
           (~> (mg) monster-group-monsters
               (and (not empty?) (~> first monster-number))))
-        (<~@ @creatures (append (list (creature next-id (cons selection mg)))))]
+        (<~@ @creatures (append (list (creature next-id (monster-group* selection mg)))))]
       [`(remove ,mg)
-        (<~@ @creatures (remf (flow (~> creature-v (and pair? (~> cdr (equal? mg))))) _))]))
+        (<~@ @creatures (remf (flow (~> creature-v
+                                        (and monster-group*?
+                                             (~> monster-group*-mg (equal? mg))))) _))]))
   (define (make-creature-view k @e)
     (define make-player-or-monster-group-view
       (match-lambda
         [(cons ads (creature _ (? player?))) (make-player-view k @e)]
-        [(cons ads (creature _ (cons _ (? monster-group?)))) (make-monster-group-view k @e ads)]))
+        [(cons ads (creature _ (? monster-group*?))) (make-monster-group-view k @e ads)]))
     (dyn-view
       ;; HACK: Combine @e with @ability-decks to register dyn-view dependency on
       ;; @ability-decks; but, the actual observable we care about is still just

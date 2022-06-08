@@ -13,7 +13,9 @@
   ;; GUI
   (contract-out
     [struct creature ([id any/c]
-                      [v (or/c player? (cons/c (integer-in 1 10) monster-group?))])])
+                      [v (or/c player? monster-group*?)])]
+    [struct monster-group* ([active (integer-in 1 10)]
+                            [mg monster-group?])])
 
   ;; level info
   (contract-out
@@ -173,6 +175,7 @@
 ;; GUI
 
 (struct creature [id v] #:transparent)
+(struct monster-group* [active mg] #:transparent)
 
 ;; level info
 
