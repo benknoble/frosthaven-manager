@@ -3,6 +3,7 @@
 (provide render-manager)
 
 (require racket/gui/easy
+         (only-in racket/gui get-file)
          "observable-operator.rkt"
          "qi.rkt"
          "defns.rkt"
@@ -55,12 +56,15 @@
   (define/obs @player-blesses empty)
   (define/obs @modifier #f)
   (define/obs @monster-prev-discard #f)
-  (define-values (info-db action-db)
-    (get-dbs default-monster-db))
-  (define/obs @ability-decks
-    (for/hash ([(set actions) (in-hash action-db)])
-      (values set (ability-decks #f (shuffle actions) empty))))
+  (define/obs @info-db (hash))
+  (define/obs @ability-decks (hash))
   ;; functions
+  (define (init-dbs db)
+    (define-values (info-db action-db) (get-dbs db))
+    (:= @info-db info-db)
+    (:= @ability-decks
+        (for/hash ([(set actions) (in-hash action-db)])
+          (values set (ability-decks #f (shuffle actions) empty)))))
   (define ((update-ability-decks f) ads)
     (for/hash ([(set ad) (in-hash ads)])
       (values set (f ad))))
@@ -121,6 +125,8 @@
     (:= @mode 'play)
     ;; HACK: trigger updates in @creatures to re-render list-view (?)
     (:= @creatures (@! @creatures)))
+  (define (to-choose-monster-db)
+    (:= @mode 'choose-monster-db))
   (define (to-choose-monsters)
     (:= @mode 'choose-monsters))
   (define-flow (update-deck-and-num-loot-cards loot-event)
@@ -305,11 +311,21 @@
         [(build-loot-deck)
          (vpanel (loot-picker #:on-card update-deck-and-num-loot-cards)
                  (spacer)
-                 (button "Next" to-choose-monsters))]
+                 (button "Next" to-choose-monster-db))]
+        [(choose-monster-db)
+         (vpanel
+           ;; TODO: "Monster DB View"
+           (hpanel
+             (button "Open Monster DB"
+                     (thunk (init-dbs (or (get-file "Monster DB") default-monster-db))))
+             (button "Use Default Monster DB"
+                     (thunk (init-dbs default-monster-db))))
+           (button "Next" to-choose-monsters
+                   #:enabled? (@~> @info-db (not hash-empty?))))]
         [(choose-monsters)
          (vpanel
            (multi-monster-picker
-             info-db @level
+             @info-db @level
              #:on-change add-or-remove-monster-group)
            (button "Next" to-play))]
         [(play)

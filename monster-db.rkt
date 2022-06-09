@@ -58,7 +58,7 @@
                                   (is-a?/c view<%>))]
       [simple-monster-group-view (-> (obs/c monster-group?)
                                      (is-a?/c view<%>))]
-      [multi-monster-picker (->* (info-db/c (obs/c level/c))
+      [multi-monster-picker (->* ((obs/c info-db/c) (obs/c level/c))
                                  (#:on-change (-> (or/c add-monster-event/c
                                                         remove-monster-event/c)
                                                   any))
@@ -265,6 +265,8 @@
       monsters))
 
   ;; TODO: should be able to manipulate individual HP (? dialog with counter)
+  ;; Takes a non-observable info-db b/c instantiated by a thunk in
+  ;; multi-monster-picker, at which point we _want_ a fixed info-db.
   (define (single-monster-picker info-db
                                  @initial-level
                                  #:on-change [on-change void]
@@ -322,7 +324,7 @@
   (define remove-monster-event/c
     (list/c 'remove monster-group?))
 
-  (define (multi-monster-picker info-db
+  (define (multi-monster-picker @info-db
                                 @initial-level
                                 #:on-change [on-change void])
     (define/obs @monster-groups empty)
@@ -343,7 +345,6 @@
                 (button (@~> @name (~a "Remove " _)) remove-group)
                 (spacer))
         (simple-monster-group-view @m)))
-    (define-values (set info) (initial-set+info info-db))
     (define (add-monster-group)
       ;; 0: set
       ;; 1: info
@@ -351,13 +352,14 @@
       ;; 3: level
       ;; Peeking @initial-level is valid because inside a dialog-closer: the
       ;; value isn't accessed until after it is correctly set.
-      (define new-group (vector set info (hash) (@! @initial-level)))
+      (define new-group (vector #f #f (hash) (@! @initial-level)))
       (define (finish)
         (match-define (vector set info num->elite level) new-group)
-        (when (not (or (hash-empty? num->elite)
-                       ;; valid because inside a dialog-closer: @monster-names won't
-                       ;; update until the end of this form
-                       (set-member? (@! @monster-names) (monster-info-name info))))
+        (when (and set info
+                   (not (or (hash-empty? num->elite)
+                            ;; valid because inside a dialog-closer: @monster-names won't
+                            ;; update until the end of this form
+                            (set-member? (@! @monster-names) (monster-info-name info)))))
           (define the-group
             (make-monster-group
               info level
@@ -387,11 +389,13 @@
         (dialog
           #:mixin mixin
           #:title "Pick a Monster"
-          #:min-size (~> (info-db)
+          ;; valid because inside a thunk: need to fix value
+          #:min-size (~> (@info-db) @!
                          (-< longest-name-length longest-set-length)
                          + (* 10) (max 400) (list #f))
           (single-monster-picker
-            info-db
+            ;; valid because inside a thunk: need to fix value
+            (@! @info-db)
             @initial-level
             ;; valid because inside a dialog: @monster-names won't update until
             ;; the dialog is closed
@@ -478,7 +482,7 @@
     (render
       (window
         (multi-monster-picker
-          info-db (@ 3)
+          (@ info-db) (@ 3)
           #:on-change
           (match-lambda
             [`(add ,mg)
