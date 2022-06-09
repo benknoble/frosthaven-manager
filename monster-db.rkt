@@ -437,7 +437,7 @@
            racket/gui/easy
            "observable-operator.rkt")
   (define-values (info-db actions-db)
-    (get-dbs "sample-db.rktd"))
+    (get-dbs default-monster-db))
   (define-values (set info) (initial-set+info info-db))
   (define/obs @state
     ;; 0: set
