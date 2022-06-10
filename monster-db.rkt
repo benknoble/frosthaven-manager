@@ -20,7 +20,7 @@
 
 (define (get-dbs db-file)
   (~> (db-file)
-      file->list sep
+      (try file->list [exn:fail? '()]) sep
       (partition
         ;; info db
         [monster-info? (~>> collect (group-by monster-info-set-name)
