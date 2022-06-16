@@ -57,11 +57,13 @@
   (define/obs @modifier #f)
   (define/obs @monster-prev-discard #f)
   (define/obs @info-db (hash))
+  (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
   (define (init-dbs db)
     (define-values (info-db action-db) (get-dbs db))
     (:= @info-db info-db)
+    (:= @action-db action-db)
     (:= @ability-decks
         (for/hash ([(set actions) (in-hash action-db)])
           (values set (ability-decks #f (shuffle actions) empty)))))
@@ -314,12 +316,13 @@
                  (button "Next" to-choose-monster-db))]
         [(choose-monster-db)
          (vpanel
-           ;; TODO: "Monster DB View"
            (hpanel
+             #:stretch '(#t #f)
              (button "Open Monster DB"
                      (thunk (init-dbs (or (get-file "Monster DB") default-monster-db))))
              (button "Use Default Monster DB"
                      (thunk (init-dbs default-monster-db))))
+           (db-view @info-db @action-db)
            (button "Next" to-choose-monsters
                    #:enabled? (@~> @info-db (not hash-empty?))))]
         [(choose-monsters)
