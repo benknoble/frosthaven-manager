@@ -74,13 +74,15 @@
               #:on-kill (-> monster-number/c any)
               #:on-new (-> monster-number/c boolean? any)
               #:on-select (-> (or/c #f monster-number/c) any))
-             (is-a?/c view<%>))]))
+             (is-a?/c view<%>))]
+      [db-view (-> (obs/c info-db/c) (obs/c action-db/c) (is-a?/c view<%>)) ]))
 
   (require racket/gui/easy
            racket/gui/easy/contract
            "observable-operator.rkt"
            "gui/mixins.rkt"
-           "gui/counter.rkt")
+           "gui/counter.rkt"
+           "gui/hierlist.rkt")
 
   (define single-monster-event/c
     (or/c
@@ -434,7 +436,91 @@
       (if (monster-elite? monster)
         "Elite"
         "Normal")
-      (~a (monster-current-hp monster)))))
+      (~a (monster-current-hp monster))))
+
+  (define (db-view @info-db @action-db)
+    (define/obs @tab "Stats")
+    (group
+      "Monster DB"
+      (text "If the Monster DB appears empty, then the provided file probably failed to load.")
+      (tabs
+        '("Stats" "Actions")
+        #:selection @tab
+        (λ (e choices current)
+          (case e
+            [(select) (:= @tab current)]))
+        (case-view @tab
+          [("Stats") (info-view @info-db)]
+          [("Actions") (action-view @action-db)]
+          [else (spacer)]))))
+
+  (define stats-table
+    `([,monster-stats-max-hp "Max HP"]
+      [,monster-stats-move "Move"]
+      [,monster-stats-attack "Attack"]
+      [,monster-stats-bonuses "Bonuses"]
+      [,monster-stats-effects "Effects"]
+      [,monster-stats-immunities "Immunities"]))
+  (define (fmt-stat s)
+    (match s
+      ['() "none"]
+      [(list ss ...)
+       (~> (ss)
+           (map fmt-stat _)
+           (string-join "; "))]
+      [else (~a s)]))
+  (define (stats->hierlist* stats)
+    (for/list ([func+label (in-list stats-table)])
+      (match-define (list func label) func+label)
+      (~a label ": " (fmt-stat (func stats)))))
+
+  (define (info->hierlist* info get-stats)
+    (for/list ([(stats i) (in-indexed (in-list (get-stats info)))])
+      `(item-list
+         ,(~a "Level " i)
+         ,(stats->hierlist* stats))))
+
+  (define (info-db->hierlist info-db)
+    `(item-list
+       "Stats"
+       ,(for/list ([(set set-db) (in-hash info-db)])
+          `(item-list
+             ,set
+             ,(for/list ([(group info) (in-hash set-db)])
+                `(item-list
+                   ,group
+                   ((item-list
+                      "Normal Stats"
+                      ,(info->hierlist* info monster-info-normal-stats))
+                    (item-list
+                      "Elite Stats"
+                      ,(info->hierlist* info monster-info-elite-stats)))))))))
+
+  (define (action->hier-list action)
+    `(item-list
+       ,(monster-action-name action)
+       ,(list
+          (~a "Initiative: " (monster-action-initiative action))
+          (~a "Shuffle? " (if (monster-action-shuffle? action) "Yes" "No"))
+          `(item-list
+             "Abilities"
+             ,(map ~a (monster-action-abilities action))))))
+
+  (define (action-db->hierlist action-db)
+    `(item-list
+       "Actions"
+       ,(for/list ([(set actions) (in-hash action-db)])
+          `(item-list
+             ,set
+             ,(map action->hier-list actions)))))
+
+  (define (info-view @info-db)
+    (hierlist
+      (@> @info-db info-db->hierlist)))
+
+  (define (action-view @action-db)
+    (hierlist
+      (@> @action-db action-db->hierlist))))
 
 (module+ main
   (require (submod ".." gui)
@@ -442,6 +528,7 @@
            "observable-operator.rkt")
   (define-values (info-db actions-db)
     (get-dbs default-monster-db))
+  (void (render (window (db-view (@ info-db) (@ actions-db)))))
   (define-values (set info) (initial-set+info info-db))
   (define/obs @state
     ;; 0: set
