@@ -12,8 +12,10 @@
          "defns.rkt")
 
 (define info-db/c
+  ;; Monster Set -> Monster Name -> Monster Info
   (hash/c string? (hash/c string? monster-info?)))
 (define action-db/c
+  ;; Monster Set -> Monster Deck
   (hash/c string? (listof monster-action?)))
 
 (define-runtime-path default-monster-db "sample-db.rktd")
