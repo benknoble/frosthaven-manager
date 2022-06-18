@@ -354,9 +354,11 @@
       ;; 1: info
       ;; 2: hash number -> elite
       ;; 3: level
-      ;; Peeking @initial-level is valid because inside a dialog-closer: the
+      ;; Peeking @initial-level is valid because inside a button handler: the
       ;; value isn't accessed until after it is correctly set.
-      (define new-group (vector #f #f (hash) (@! @initial-level)))
+      ;; Peeking @info-db is valid because it is inside a button handler.
+      (define-values (set info) (initial-set+info (@! @info-db)))
+      (define new-group (vector set info (hash) (@! @initial-level)))
       (define (finish)
         (match-define (vector set info num->elite level) new-group)
         (when (and set info
