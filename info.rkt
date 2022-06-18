@@ -5,7 +5,10 @@
 (define racket-launcher-libraries '("main"))
 (define gracket-launcher-names '("FrosthavenManager"))
 (define gracket-launcher-libraries '("main"))
-(define deps '("gui-lib"
+(define deps '("markdown"
+               "net-lib"
+               "txexpr"
+               "gui-lib"
                "htdp-lib"
                "pict-lib"
                "qi-lib"
