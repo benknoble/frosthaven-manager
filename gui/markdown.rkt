@@ -218,49 +218,47 @@
   (render
     (window
       (markdown-text
-        #<<EOF
-This is a text which contains a **bold section**, an *italic section* and a
-`monospaced section`.
-
-# Header 1 **some bold text**
-## Header 2 *some italic text*
-### Header 3 `some monospaced text`
-#### Header 4
-##### Header 5
-###### Header 6
-
-This is a [link](https://example.com).
-
-Here is a block quote:
-
-> this the block quote, and below we have a nested quote
-
->> this is a nested quote
-
-This text is back at toplevel.
-
-Ordered and unordered list demo
-
-1. first item
-1. second item
-    * first sub item
-        1. first sub-sub item
-        1. second sub-sub item
-    * second sub item
-1. third item
-
-# Overview
-
-This document showcases the **Markdown View** and it is available as a
-[blog post](https://alex-hhh.github.io/2020/05/markdown-view.html)
-
-# Implementation details
-
-1. first step
-2. second step
-    - substep one
-    - substep two
-3. third step
-
-EOF
-  ))))
+        (string-join
+          '("This is a text which contains a **bold section**, an *italic section* and a"
+            "`monospaced section`."
+            ""
+            "# Header 1 **some bold text**"
+            "## Header 2 *some italic text*"
+            "### Header 3 `some monospaced text`"
+            "#### Header 4"
+            "##### Header 5"
+            "###### Header 6"
+            ""
+            "This is a [link](https://example.com)."
+            ""
+            "Here is a block quote:"
+            ""
+            "> this the block quote, and below we have a nested quote"
+            ""
+            ">> this is a nested quote"
+            ""
+            "This text is back at toplevel."
+            ""
+            "Ordered and unordered list demo"
+            ""
+            "1. first item"
+            "1. second item"
+            "* first sub item"
+            "1. first sub-sub item"
+            "1. second sub-sub item"
+            "* second sub item"
+            "1. third item"
+            ""
+            "# Overview"
+            ""
+            "This document showcases the **Markdown View** and it is available as a"
+            "[blog post](https://alex-hhh.github.io/2020/05/markdown-view.html)"
+            ""
+            "# Implementation details"
+            ""
+            "1. first step"
+            "2. second step"
+            "- substep one"
+            "- substep two"
+            "3. third step")
+          "\n")))))
