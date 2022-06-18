@@ -1,8 +1,19 @@
 #lang racket
 
 (provide
-  ;; TODO contracts
-  markdown-text)
+  (contract-out
+    [markdown-text
+      (->* ((maybe-obs/c (or/c string? path?)))
+           (#:min-size (maybe-obs/c size/c)
+            #:stretch (maybe-obs/c stretch/c)
+            #:margin (maybe-obs/c margin/c)
+            #:inset (maybe-obs/c margin/c)
+            #:style (listof (one-of/c 'no-border 'control-border 'combo
+                                      'no-hscroll 'no-vscroll
+                                      'hide-hscroll 'hide-vscroll
+                                      'auto-vscroll 'auto-hscroll
+                                      'resize-corner 'deleted 'transparent)))
+           (is-a?/c view<%>))]))
 
 ;; Much of the following code is adapted from Alex Harsányi's blog post
 ;; "Markdown View using the Racket editor%"
@@ -176,17 +187,29 @@
 
 (define markdown-text%
   (class* object% (view<%>)
-    (init-field @content)
+    (init-field @content @min-size @margin @inset @stretch style)
     (super-new)
 
     (define/public (dependencies)
-      (filter obs? (list @content)))
+      (filter obs? (list @content @min-size @margin @inset @stretch)))
 
     (define/public (create parent)
+      (match-define (list min-w min-h) (peek @min-size))
+      (match-define (list w-s? h-s?) (peek @stretch))
+      (match-define (list h-m v-m) (peek @margin))
+      (match-define (list h-i v-i) (peek @inset))
       (define canvas
         (new editor-canvas%
-             ;; TODO other fields
-             [parent parent]))
+             [parent parent]
+             [style style]
+             [horizontal-inset h-i]
+             [vertical-inset v-i]
+             [horiz-margin h-m]
+             [vert-margin v-m]
+             [min-width min-w]
+             [min-height min-h]
+             [stretchable-width w-s?]
+             [stretchable-height h-s?]))
       (define editor (new text%))
       (send canvas set-editor editor)
       (send* editor
@@ -203,14 +226,44 @@
           (send editor lock #f)
           (send editor erase)
           (draw-markdown editor val)
-          (send editor lock #t)]))
+          (send editor lock #t)]
+        [@min-size
+          (match-define (list min-w min-h) val)
+          (send* v
+                 (min-width min-w)
+                 (min-height min-h))]
+        [@stretch
+          (match-define (list w-s? h-s?) val)
+          (send* v
+                 (stretchable-width w-s?)
+                 (stretchable-height h-s?))]
+        [@margin
+          (match-define (list h-m v-m) val)
+          (send* v
+                 (horiz-margin h-m)
+                 (vert-margin v-m))]
+        [@inset
+          (match-define (list h-i v-i) val)
+          (send* v
+                 (horizontal-inset h-i)
+                 (vertical-inset v-i))]))
 
     (define/public (destroy v)
       (void))))
 
-(define (markdown-text @content)
+(define (markdown-text @content
+                       #:min-size [@min-size '(#f #f)]
+                       #:stretch [@stretch '(#t #t)]
+                       #:margin [@margin '(0 0)]
+                       #:inset [@inset '(5 5)]
+                       #:style [style '(no-hscroll)])
   (new markdown-text%
-       [@content @content]))
+       [@content @content]
+       [@min-size @min-size]
+       [@stretch @stretch]
+       [@margin @margin]
+       [@inset @inset]
+       [style style]))
 
 (module* main racket
   (require racket/gui/easy
