@@ -299,7 +299,7 @@
   (render
     (window
       #:title "Frosthaven Manager"
-      #:size '(700 300)
+      #:size '(800 600)
       (case-view @mode
         [(start)
          (vpanel (start-view #:on-level set-level
