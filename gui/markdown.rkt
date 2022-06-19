@@ -122,14 +122,10 @@
      (parameterize ([paragraph-indent (+ 20 (paragraph-indent))])
        (insert-md-items editor body (cons bq-s styles)))]
     [(list* (and name (or 'ul 'ol)) _ body)
-     (when (zero? (list-nesting))
-       (insert-newline editor))
      (parameterize ([list-type name]
                     [list-number 1]
                     [list-nesting (add1 (list-nesting))])
-       (insert-md-items editor body styles))
-     (when (zero? (list-nesting))
-       (insert-newline editor))]
+       (insert-md-items editor body styles))]
     [(list* 'li _ body) (insert-list-item editor body styles)]
     [(list* name _ body)
      (insert-md-items
