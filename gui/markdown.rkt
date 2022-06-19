@@ -208,7 +208,9 @@
              (auto-wrap #t)
              (hide-caret #t))
       (draw-markdown editor (peek @content))
-      (send editor lock #t)
+      (send* editor
+             (scroll-to-position 0)
+             (lock #t))
       canvas)
 
     (define/public (update v what val)
