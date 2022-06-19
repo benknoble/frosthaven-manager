@@ -54,7 +54,6 @@
   (define/obs @monster-discard empty)
   (define/obs @curses monster-curse-deck)
   (define/obs @blesses monster-bless-deck)
-  (define/obs @player-blesses empty)
   (define/obs @modifier #f)
   (define/obs @monster-prev-discard #f)
   (define/obs @info-db (hash))
@@ -255,20 +254,15 @@
     (discard best))
   (define (shuffle-draw-pile)
     (:= @monster-modifier-deck (shuffle (@! @monster-modifier-deck))))
-  (define (make-modifier-deck-adder @cards @deck #:shuffle? [shuffle #t])
+  (define (make-modifier-deck-adder @cards @deck)
     (thunk
       (unless (empty? (@! @cards))
         (define card (first (@! @cards)))
         (<@ @cards rest)
         (<~@ @deck (cons card _))
-        (when shuffle
-          (shuffle-draw-pile)))))
+        (shuffle-draw-pile))))
   (define do-curse-monster (make-modifier-deck-adder @curses @monster-modifier-deck))
   (define do-bless-monster (make-modifier-deck-adder @blesses @monster-modifier-deck))
-  (define do-bless-player (make-modifier-deck-adder @blesses @player-blesses
-                                                    #:shuffle? #f))
-  (define do-unbless-player (make-modifier-deck-adder @player-blesses @blesses
-                                                      #:shuffle? #f))
   (define add-or-remove-monster-group
     (match-lambda
       [`(add ,mg)
@@ -364,11 +358,7 @@
                          (make-modifier-deck-adder-button
                            @curses do-curse-monster "Curse Monster" monster-curse-deck)
                          (make-modifier-deck-adder-button
-                           @blesses do-bless-monster "Bless Monster" monster-bless-deck)
-                         (make-modifier-deck-adder-button
-                           @blesses do-bless-player "Bless Player" monster-bless-deck)
-                         (make-modifier-deck-adder-button
-                           @player-blesses do-unbless-player "Unbless Player" monster-bless-deck)))
+                           @blesses do-bless-monster "Bless Monster" monster-bless-deck)))
                      (spacer)
                      (button (@~> @monster-modifier-deck (~>> length (format "Draw Modifier (~a)"))) draw-modifier)
                      (button "Advantage" draw-modifier*)
