@@ -3,8 +3,8 @@
 (provide
   (contract-out
     [start-view (->* ()
-                     (#:on-level (-> natural-number/c any)
-                      #:on-player (-> positive-integer? any))
+                     (#:on-level (-> level/c any)
+                      #:on-player (-> num-players/c any))
                      (is-a?/c view<%>))]))
 
 (require racket/gui/easy
