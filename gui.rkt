@@ -298,7 +298,7 @@
   ;; gui
   (render
     (window
-      #:title "FROSTHAVEN Manager"
+      #:title "Frosthaven Manager"
       #:size '(700 300)
       (case-view @mode
         [(start)

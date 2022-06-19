@@ -13,7 +13,7 @@
 (define (start-view #:on-level [on-level void] #:on-player [on-player void])
   (vpanel
     (spacer)
-    (text "FROSTHAVEN")
+    (text "Frosthaven Manager")
     (spacer)
     (group
       "Party Information"

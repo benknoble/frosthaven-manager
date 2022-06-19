@@ -1,3 +1,3 @@
-# frosthaven-manager
+# Frosthaven Manger
 
-WIP GUI for Frosthaven scenarios
+WIP GUI for running Frosthaven scenarios
