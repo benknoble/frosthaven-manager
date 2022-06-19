@@ -114,11 +114,6 @@
 (define (insert-md-item editor item styles)
   (match item
     [(? string? s) (insert-and-apply-styles editor s styles)]
-    [(list* (or 'div 'img) _)
-     (raise-arguments-error
-       'insert-md-item
-       "div and img not supported"
-       "item" item)]
     [(list* 'a attrs body)
      (define target (attr-ref attrs 'href #f))
      (insert-hyperlink editor body styles target)]
