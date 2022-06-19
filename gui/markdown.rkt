@@ -114,6 +114,7 @@
 (define (insert-md-item editor item styles)
   (match item
     [(? string? s) (insert-and-apply-styles editor s styles)]
+    [(list* '!HTML-COMMENT _) (void)]
     [(list* 'a attrs body)
      (define target (attr-ref attrs 'href #f))
      (insert-hyperlink editor body styles target)]
