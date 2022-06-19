@@ -7,6 +7,7 @@
          "observable-operator.rkt"
          "qi.rkt"
          "defns.rkt"
+         "menu.rkt"
          "start.rkt"
          "player-info.rkt"
          "level-info.rkt"
@@ -300,6 +301,12 @@
     (window
       #:title "Frosthaven Manager"
       #:size '(800 600)
+      (menu-bar
+        (menu "Info"
+              about-menu-item
+              issue-menu-item
+              feature-menu-item
+              contribute-menu-item))
       (case-view @mode
         [(start)
          (vpanel (start-view #:on-level set-level
