@@ -52,6 +52,12 @@
                                               (@! @monster-discard))))
   (:= @monster-discard empty))
 
+(define ((discard @monster-discard @curses @blesses) card)
+  (cond
+    [(equal? card curse) (<~@ @curses (cons card _))]
+    [(equal? card bless) (<~@ @blesses (cons card _))]
+    [else (<~@ @monster-discard (cons card _))]))
+
 ;; DBs
 (define (init-dbs db @info-db @action-db @ability-decks)
   (define-values (info-db action-db) (get-dbs db))
@@ -254,11 +260,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (discard card)
-    (cond
-      [(equal? card curse) (<~@ @curses (cons card _))]
-      [(equal? card bless) (<~@ @blesses (cons card _))]
-      [else (<~@ @monster-discard (cons card _))]))
   (define (draw-modifier)
     ;; better not be empty after this…
     (when (empty? (@! @monster-modifier-deck))
@@ -267,7 +268,7 @@
     (:= @monster-prev-discard (@! @modifier))
     (:= @modifier card)
     (<@ @monster-modifier-deck rest)
-    (discard card))
+    ((discard @monster-discard @curses @blesses) card))
   (define (draw-modifier* [better better-modifier])
     ;; better not be empty after this…
     (when (~> (@monster-modifier-deck) @! length (< 2))
@@ -280,8 +281,8 @@
     (:= @monster-prev-discard worst)
     (:= @modifier best)
     (<~@ @monster-modifier-deck (drop 2))
-    (discard worst)
-    (discard best))
+    ((discard @monster-discard @curses @blesses) worst)
+    ((discard @monster-discard @curses @blesses) best))
   (define (shuffle-draw-pile)
     (:= @monster-modifier-deck (shuffle (@! @monster-modifier-deck))))
   (define (make-modifier-deck-adder @cards @deck)
