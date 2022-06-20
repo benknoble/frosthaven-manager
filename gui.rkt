@@ -46,6 +46,12 @@
   (for/hash ([(set ad) (in-hash ads)])
     (values set (f ad))))
 
+;; Modifier decks
+(define (reshuffle-modifiers @monster-modifier-deck @monster-discard)
+  (:= @monster-modifier-deck (shuffle (append (@! @monster-modifier-deck)
+                                              (@! @monster-discard))))
+  (:= @monster-discard empty))
+
 ;; DBs
 (define (init-dbs db @info-db @action-db @ability-decks)
   (define-values (info-db action-db) (get-dbs db))
@@ -204,6 +210,21 @@
 (define ((to-choose-monsters @mode))
   (:= @mode 'choose-monsters))
 
+(define ((next-round @creatures @ability-decks @monster-modifier-deck @monster-discard @in-draw? @elements))
+  ;; wane elements
+  (for-each (flow (<@ wane-element)) @elements)
+  ;; reset player initiative
+  (<~@ @creatures (update-all-players player-clear-initiative))
+  ;; discard monster cards
+  (<@ @ability-decks (update-ability-decks ability-decks-discard-and-maybe-shuffle))
+  ;; order creatures
+  (<~@ @creatures (sort < #:key (creature-initiative @ability-decks)))
+  ;; shuffle modifiers if required
+  (when (shuffle-modifier-deck? (@! @monster-discard))
+    (reshuffle-modifiers @monster-modifier-deck @monster-discard))
+  ;; toggle state
+  (<@ @in-draw? not))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -225,20 +246,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (next-round)
-    ;; wane elements
-    (for-each (flow (<@ wane-element)) @elements)
-    ;; reset player initiative
-    (<~@ @creatures (update-all-players player-clear-initiative))
-    ;; discard monster cards
-    (<@ @ability-decks (update-ability-decks ability-decks-discard-and-maybe-shuffle))
-    ;; order creatures
-    (<~@ @creatures (sort < #:key (creature-initiative @ability-decks)))
-    ;; shuffle modifiers if required
-    (when (shuffle-modifier-deck? (@! @monster-discard))
-      (reshuffle-modifiers))
-    ;; toggle state
-    (<@ @in-draw? not))
   (define (draw)
     ;; draw new monster cards
     (<@ @ability-decks (update-ability-decks ability-decks-draw-next))
@@ -246,10 +253,6 @@
     (<~@ @creatures (sort < #:key creature-initiative))
     ;; toggle state
     (<@ @in-draw? not))
-  (define (reshuffle-modifiers)
-    (:= @monster-modifier-deck (shuffle (append (@! @monster-modifier-deck)
-                                                (@! @monster-discard))))
-    (:= @monster-discard empty))
   (define (discard card)
     (cond
       [(equal? card curse) (<~@ @curses (cons card _))]
@@ -257,7 +260,8 @@
       [else (<~@ @monster-discard (cons card _))]))
   (define (draw-modifier)
     ;; better not be empty after this…
-    (when (empty? (@! @monster-modifier-deck)) (reshuffle-modifiers))
+    (when (empty? (@! @monster-modifier-deck))
+      (reshuffle-modifiers @monster-modifier-deck @monster-discard))
     (define card (first (@! @monster-modifier-deck)))
     (:= @monster-prev-discard (@! @modifier))
     (:= @modifier card)
@@ -265,7 +269,8 @@
     (discard card))
   (define (draw-modifier* [better better-modifier])
     ;; better not be empty after this…
-    (when (~> (@monster-modifier-deck) @! length (< 2)) (reshuffle-modifiers))
+    (when (~> (@monster-modifier-deck) @! length (< 2))
+      (reshuffle-modifiers @monster-modifier-deck @monster-discard))
     (define cards (~> (@monster-modifier-deck) @! (take 2)))
     (define best (~> (cards) sep better))
     (define worst (cond
@@ -392,7 +397,12 @@
                      (text (@~> @modifier (~>> (or _ "") (~a "Most Recent Modifier: "))))
                      (text (@~> @monster-prev-discard (~>> (or _ "") (~a "Previous Modifier: "))))
                      (spacer)
-                     (button "Next Round" next-round #:enabled? @in-draw?)
+                     (button "Next Round"
+                             #:enabled? @in-draw?
+                             (next-round @creatures @ability-decks
+                                         @monster-modifier-deck @monster-discard
+                                         @in-draw?
+                                         @elements))
                      (button "Draw Action(s)" draw #:enabled? (@> @in-draw? not))))
            ;; bottom
            (hpanel #:stretch '(#f #f)
