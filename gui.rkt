@@ -59,6 +59,13 @@
 (define (make-player-entry i)
   (creature i (make-player "" 1)))
 
+(define (update-players creatures k f)
+  (define (maybe-update-player e)
+    (if (~> (e) (-< creature-id creature-v) (and% (eq? k) player?))
+      (creature k (f (creature-v e)))
+      e))
+  (map maybe-update-player creatures))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -80,12 +87,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (update-players creatures k f)
-    (define (maybe-update-player e)
-      (if (~> (e) (-< creature-id creature-v) (and% (eq? k) player?))
-        (creature k (f (creature-v e)))
-        e))
-    (map maybe-update-player creatures))
   (define (update-monster-groups creatures k f [fn (flow 1>)])
     (define (maybe-update-monster-group e)
       (if (~> (e)
