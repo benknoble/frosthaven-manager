@@ -87,15 +87,15 @@
   ((discard @monster-discard @curses @blesses) worst)
   ((discard @monster-discard @curses @blesses) best))
 
-(define (shuffle-draw-pile @monster-modifier-deck)
-  (:= @monster-modifier-deck (shuffle (@! @monster-modifier-deck))))
+(define (shuffle-deck @deck)
+  (:= @deck (shuffle (@! @deck))))
 
 (define ((make-modifier-deck-adder @cards @deck))
   (unless (empty? (@! @cards))
     (define card (first (@! @cards)))
     (<@ @cards rest)
     (<~@ @deck (cons card _))
-    (shuffle-draw-pile @deck)))
+    (shuffle-deck @deck)))
 
 ;; DBs
 (define (init-dbs db @info-db @action-db @ability-decks)
