@@ -42,6 +42,10 @@
       (values draw discard-with-current)))
   (ability-decks #f draw* discard*))
 
+(define ((update-ability-decks f) ads)
+  (for/hash ([(set ad) (in-hash ads)])
+    (values set (f ad))))
+
 ;; DBs
 (define (init-dbs db @info-db @action-db @ability-decks)
   (define-values (info-db action-db) (get-dbs db))
@@ -72,9 +76,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define ((update-ability-decks f) ads)
-    (for/hash ([(set ad) (in-hash ads)])
-      (values set (f ad))))
   (define (make-player-entry i)
     (creature i (make-player "" 1)))
   (define (update-players creatures k f)
