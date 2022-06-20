@@ -115,10 +115,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (set-level level)
-    (:= @level level))
-  (define (set-num-players num-players)
-    (:= @num-players num-players))
   (define (to-input-player-info)
     (when (empty? (@! @creatures))
       (:= @creatures (build-list (@! @num-players) make-player-entry)))
@@ -315,8 +311,8 @@
               contribute-menu-item))
       (case-view @mode
         [(start)
-         (vpanel (start-view #:on-level set-level
-                             #:on-player set-num-players)
+         (vpanel (start-view #:on-level (λ:= @level)
+                             #:on-player (λ:= @num-players))
                  (button "Play" to-input-player-info))]
         [(input-player-info)
          (vpanel (player-input-views @num-players
