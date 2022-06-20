@@ -39,6 +39,15 @@
       (values draw discard-with-current)))
   (ability-decks #f draw* discard*))
 
+;; DBs
+(define (init-dbs db @info-db @action-db @ability-decks)
+  (define-values (info-db action-db) (get-dbs db))
+  (:= @info-db info-db)
+  (:= @action-db action-db)
+  (:= @ability-decks
+      (for/hash ([(set actions) (in-hash action-db)])
+        (values set (ability-decks #f (shuffle actions) empty)))))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -60,13 +69,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (init-dbs db)
-    (define-values (info-db action-db) (get-dbs db))
-    (:= @info-db info-db)
-    (:= @action-db action-db)
-    (:= @ability-decks
-        (for/hash ([(set actions) (in-hash action-db)])
-          (values set (ability-decks #f (shuffle actions) empty)))))
   (define ((update-ability-decks f) ads)
     (for/hash ([(set ad) (in-hash ads)])
       (values set (f ad))))
@@ -320,9 +322,11 @@
            (hpanel
              #:stretch '(#t #f)
              (button "Open Monster DB"
-                     (thunk (init-dbs (or (get-file "Monster DB") default-monster-db))))
+                     (thunk (init-dbs (or (get-file "Monster DB") default-monster-db)
+                                      @info-db @action-db @ability-decks)))
              (button "Use Default Monster DB"
-                     (thunk (init-dbs default-monster-db))))
+                     (thunk (init-dbs default-monster-db
+                                      @info-db @action-db @ability-decks))))
            (db-view @info-db @action-db)
            (button "Next" to-choose-monsters
                    #:enabled? (@~> @info-db (not hash-empty?))))]
