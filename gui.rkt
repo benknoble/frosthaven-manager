@@ -88,6 +88,9 @@
   ((discard @monster-discard @curses @blesses) worst)
   ((discard @monster-discard @curses @blesses) best))
 
+(define (shuffle-draw-pile @monster-modifier-deck)
+  (:= @monster-modifier-deck (shuffle (@! @monster-modifier-deck))))
+
 ;; DBs
 (define (init-dbs db @info-db @action-db @ability-decks)
   (define-values (info-db action-db) (get-dbs db))
@@ -290,15 +293,13 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (shuffle-draw-pile)
-    (:= @monster-modifier-deck (shuffle (@! @monster-modifier-deck))))
   (define (make-modifier-deck-adder @cards @deck)
     (thunk
       (unless (empty? (@! @cards))
         (define card (first (@! @cards)))
         (<@ @cards rest)
         (<~@ @deck (cons card _))
-        (shuffle-draw-pile))))
+        (shuffle-draw-pile @monster-modifier-deck))))
   (define do-curse-monster (make-modifier-deck-adder @curses @monster-modifier-deck))
   (define do-bless-monster (make-modifier-deck-adder @blesses @monster-modifier-deck))
   (define add-or-remove-monster-group
