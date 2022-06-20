@@ -48,8 +48,9 @@
 
 ;; Modifier decks
 (define (reshuffle-modifiers @monster-modifier-deck @monster-discard)
-  (:= @monster-modifier-deck (shuffle (append (@! @monster-modifier-deck)
-                                              (@! @monster-discard))))
+  (:= @monster-modifier-deck
+      (shuffle (append (@! @monster-modifier-deck)
+                       (@! @monster-discard))))
   (:= @monster-discard empty))
 
 (define ((discard @monster-discard @curses @blesses) card)
@@ -160,7 +161,8 @@
 (define (update-all-monster-groups creatures f)
   (define (update-only-monster-group c)
     (match c
-      [(creature id (monster-group* n mg)) (creature id (monster-group* n (f mg)))]
+      [(creature id (monster-group* n mg))
+       (creature id (monster-group* n (f mg)))]
       [c c]))
   (map update-only-monster-group creatures))
 
@@ -176,7 +178,8 @@
   (define-flow update-player-condition (~> player-condition-handler update))
   (define-flow update-player-hp (~> player-act-on-hp update))
   (define-flow update-player-xp (~> player-act-on-xp update))
-  (define (update-player-initiative i) (update (flow (player-set-initiative i))))
+  (define (update-player-initiative i)
+    (update (flow (player-set-initiative i))))
   (player-view
     (@> @e creature-v)
     @num-players
@@ -188,21 +191,27 @@
 (define ((make-monster-group-view @creatures) k @e ads)
   (define (update proc [procn (flow 1>)])
     (<~@ @creatures (update-monster-groups k proc procn)))
+  (define (update-by-num num proc)
+    (update (monster-group-update-num num proc)))
   (define @mg* (@> @e creature-v))
   (define @mg (@> @mg* monster-group*-mg))
   (define @n (@> @mg* monster-group*-active))
   (define @ms (@> @mg monster-group-monsters))
   (define (update-condition num c on?)
-    (update (monster-group-update-num num (monster-update-condition c on?))))
+    (update-by-num num (monster-update-condition c on?)))
   (define (update-hp num proc)
-    (update (monster-group-update-num num (monster-update-hp proc))))
+    (update-by-num num (monster-update-hp proc)))
   (define (kill num)
-    (update (monster-group-remove num) (flow (~> 2> monster-group-first-monster))))
-  (define (new num elite?) (update (monster-group-add num elite?) (const num)))
+    (update (monster-group-remove num)
+            (flow (~> 2> monster-group-first-monster))))
+  (define (new num elite?)
+    (update (monster-group-add num elite?)
+            (const num)))
   (define (select num) (update values (const num)))
-  (define @action (@~> @mg (~>> monster-group-set-name
-                                (hash-ref ads)
-                                ability-decks-current)))
+  (define @action
+    (@~> @mg (~>> monster-group-set-name
+                  (hash-ref ads)
+                  ability-decks-current)))
   (monster-group-view
     @mg
     @action
@@ -223,7 +232,8 @@
         [else +inf.0])))
 
 (define (monster-group*-initiative @ability-decks)
-  (flow (~> monster-group*-mg (monster-group-initiative @ability-decks))))
+  (flow (~> monster-group*-mg
+            (monster-group-initiative @ability-decks))))
 
 (define (creature-initiative @ability-decks)
   (flow (~> creature-v
@@ -240,18 +250,22 @@
 (define ((add-or-remove-monster-group @creatures) evt)
   (match evt
     [`(add ,mg)
-      (define next-id (add1 (apply max (map creature-id (@! @creatures)))))
+      (define next-id (~> (@creatures) @! sep (>< creature-id) max add1))
       (define selection
         (~> (mg) monster-group-monsters
             (and (not empty?) (~> first monster-number))))
-      (<~@ @creatures (append (list (creature next-id (monster-group* selection mg)))))]
+      (<~@ @creatures
+           (append
+             (list (creature next-id (monster-group* selection mg)))))]
     [`(remove ,mg) (<~@ @creatures (remf (creature-is-mg~? mg) _))]))
 
 (define ((make-creature-view @creatures @ability-decks @num-players) k @e)
   (define (make-player-or-monster-group-view c+ads)
     (match c+ads
-      [(cons ads (creature _ (? player?))) ((make-player-view @creatures @num-players) k @e)]
-      [(cons ads (creature _ (? monster-group*?))) ((make-monster-group-view @creatures) k @e ads)]))
+      [(cons ads (creature _ (? player?)))
+       ((make-player-view @creatures @num-players) k @e)]
+      [(cons ads (creature _ (? monster-group*?)))
+       ((make-monster-group-view @creatures) k @e ads)]))
   (dyn-view
     ;; HACK: Combine @e with @ability-decks to register dyn-view dependency on
     ;; @ability-decks; but, the actual observable we care about is still just
@@ -288,13 +302,17 @@
 (define ((to-choose-monsters @mode))
   (:= @mode 'choose-monsters))
 
-(define ((next-round @creatures @ability-decks @monster-modifier-deck @monster-discard @in-draw? @elements))
+(define ((next-round @creatures @ability-decks
+                     @monster-modifier-deck @monster-discard
+                     @in-draw?
+                     @elements))
   ;; wane elements
   (for-each (flow (<@ wane-element)) @elements)
   ;; reset player initiative
   (<~@ @creatures (update-all-players player-clear-initiative))
   ;; discard monster cards
-  (<@ @ability-decks (update-ability-decks ability-decks-discard-and-maybe-shuffle))
+  (<@ @ability-decks
+      (update-ability-decks ability-decks-discard-and-maybe-shuffle))
   ;; order creatures
   (<~@ @creatures (sort < #:key (creature-initiative @ability-decks)))
   ;; shuffle modifiers if required
@@ -341,8 +359,10 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define do-curse-monster (make-modifier-deck-adder @curses @monster-modifier-deck))
-  (define do-bless-monster (make-modifier-deck-adder @blesses @monster-modifier-deck))
+  (define do-curse-monster
+    (make-modifier-deck-adder @curses @monster-modifier-deck))
+  (define do-bless-monster
+    (make-modifier-deck-adder @blesses @monster-modifier-deck))
   ;; gui
   (render
     (window
@@ -356,28 +376,38 @@
               contribute-menu-item))
       (case-view @mode
         [(start)
-         (vpanel (start-view #:on-level (λ:= @level)
-                             #:on-player (λ:= @num-players))
-                 (button "Play" (to-input-player-info @mode @creatures @num-players)))]
+         (vpanel
+           (start-view #:on-level (λ:= @level)
+                       #:on-player (λ:= @num-players))
+           (button "Play"
+                   (to-input-player-info @mode @creatures @num-players)))]
         [(input-player-info)
-         (vpanel (player-input-views @num-players
-                                     #:on-name (update-player-name @creatures)
-                                     #:on-hp (update-player-max-hp @creatures))
-                 (button "Next" (to-build-loot-deck @mode @creatures)))]
+         (vpanel
+           (player-input-views @num-players
+                               #:on-name (update-player-name @creatures)
+                               #:on-hp (update-player-max-hp @creatures))
+           (button "Next" (to-build-loot-deck @mode @creatures)))]
         [(build-loot-deck)
-         (vpanel (loot-picker #:on-card (update-deck-and-num-loot-cards @loot-deck @num-loot-cards))
-                 (spacer)
-                 (button "Next" (to-choose-monster-db @mode)))]
+         (vpanel
+           (loot-picker
+             #:on-card
+             (update-deck-and-num-loot-cards @loot-deck @num-loot-cards))
+           (spacer)
+           (button "Next" (to-choose-monster-db @mode)))]
         [(choose-monster-db)
          (vpanel
            (hpanel
              #:stretch '(#t #f)
              (button "Open Monster DB"
-                     (thunk (init-dbs (or (get-file "Monster DB") default-monster-db)
-                                      @info-db @action-db @ability-decks)))
+                     (thunk
+                       (init-dbs
+                         (or (get-file "Monster DB") default-monster-db)
+                         @info-db @action-db @ability-decks)))
              (button "Use Default Monster DB"
-                     (thunk (init-dbs default-monster-db
-                                      @info-db @action-db @ability-decks))))
+                     (thunk
+                       (init-dbs
+                         default-monster-db
+                         @info-db @action-db @ability-decks))))
            (db-view @info-db @action-db)
            (button "Next" (to-choose-monsters @mode)
                    #:enabled? (@~> @info-db (not hash-empty?))))]
@@ -407,10 +437,12 @@
                (make-modifier-deck-adder-button
                  @blesses do-bless-monster "Bless Monster" monster-bless-deck)
                (spacer)
-               (button (@~> @monster-modifier-deck (~>> length (format "Draw Modifier (~a)")))
-                       (draw-modifier @monster-modifier-deck @modifier
-                                      @monster-discard @monster-prev-discard
-                                      @curses @blesses))
+               (button
+                 (@~> @monster-modifier-deck
+                      (~>> length (format "Draw Modifier (~a)")))
+                 (draw-modifier @monster-modifier-deck @modifier
+                                @monster-discard @monster-prev-discard
+                                @curses @blesses))
                (button "Advantage"
                        (draw-modifier* @monster-modifier-deck @modifier
                                        @monster-discard @monster-prev-discard
@@ -420,8 +452,10 @@
                                        @monster-discard @monster-prev-discard
                                        @curses @blesses
                                        worse-modifier))
-               (text (@~> @modifier (~>> (or _ "") (~a "Most Recent Modifier: "))))
-               (text (@~> @monster-prev-discard (~>> (or _ "") (~a "Previous Modifier: "))))
+               (text (@~> @modifier
+                          (~>> (or _ "") (~a "Most Recent Modifier: "))))
+               (text (@~> @monster-prev-discard
+                          (~>> (or _ "") (~a "Previous Modifier: "))))
                (spacer)
                (button "Next Round"
                        #:enabled? @in-draw?
