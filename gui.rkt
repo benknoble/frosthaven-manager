@@ -46,7 +46,7 @@
   (for/hash ([(set ad) (in-hash ads)])
     (values set (f ad))))
 
-(define ((get-monster-group-initiative @ability-decks) mg)
+(define ((monster-group-initiative @ability-decks) mg)
   (~> (@ability-decks mg)
       (== @! monster-group-set-name)
       hash-ref
@@ -55,8 +55,8 @@
         [monster-action? monster-action-initiative]
         [else +inf.0])))
 
-(define (get-monster-group*-initiative @ability-decks)
-  (flow (~> monster-group*-mg (get-monster-group-initiative @ability-decks))))
+(define (monster-group*-initiative @ability-decks)
+  (flow (~> monster-group*-mg (monster-group-initiative @ability-decks))))
 
 ;; DBs
 (define (init-dbs db @info-db @action-db @ability-decks)
@@ -223,7 +223,7 @@
     (~> creature-v
         (switch
           [player? player-initiative]
-          [monster-group*? (get-monster-group*-initiative @ability-decks)])))
+          [monster-group*? (monster-group*-initiative @ability-decks)])))
   (define (next-round)
     ;; wane elements
     (for-each (flow (<@ wane-element)) @elements)
