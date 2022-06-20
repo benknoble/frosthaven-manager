@@ -106,6 +106,21 @@
 (define ((update-player-max-hp @creatures) k f)
   (<~@ @creatures (update-players k (player-act-on-max-hp f))))
 
+(define ((make-player-view @creatures @num-players) k @e)
+  (define (update proc)
+    (<~@ @creatures (update-players k proc)))
+  (define-flow update-player-condition (~> player-condition-handler update))
+  (define-flow update-player-hp (~> player-act-on-hp update))
+  (define-flow update-player-xp (~> player-act-on-xp update))
+  (define (update-player-initiative i) (update (flow (player-set-initiative i))))
+  (player-view
+    (@> @e creature-v)
+    @num-players
+    #:on-condition update-player-condition
+    #:on-hp update-player-hp
+    #:on-xp update-player-xp
+    #:on-initiative update-player-initiative))
+
 ;; Transition functions
 (define ((to-input-player-info @mode @creatures @num-players))
   (when (empty? (@! @creatures))
@@ -152,20 +167,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (make-player-view k @e)
-    (define (update proc)
-      (<~@ @creatures (update-players k proc)))
-    (define-flow update-player-condition (~> player-condition-handler update))
-    (define-flow update-player-hp (~> player-act-on-hp update))
-    (define-flow update-player-xp (~> player-act-on-xp update))
-    (define (update-player-initiative i) (update (flow (player-set-initiative i))))
-    (player-view
-      (@> @e creature-v)
-      @num-players
-      #:on-condition update-player-condition
-      #:on-hp update-player-hp
-      #:on-xp update-player-xp
-      #:on-initiative update-player-initiative))
   (define (make-monster-group-view k @e ads)
     (define (update proc [procn (flow 1>)])
       (<~@ @creatures (update-monster-groups k proc procn)))
@@ -295,7 +296,7 @@
   (define (make-creature-view k @e)
     (define make-player-or-monster-group-view
       (match-lambda
-        [(cons ads (creature _ (? player?))) (make-player-view k @e)]
+        [(cons ads (creature _ (? player?))) ((make-player-view @creatures) k @e)]
         [(cons ads (creature _ (? monster-group*?))) (make-monster-group-view k @e ads)]))
     (dyn-view
       ;; HACK: Combine @e with @ability-decks to register dyn-view dependency on
