@@ -225,7 +225,7 @@
   ;; toggle state
   (<@ @in-draw? not))
 
-(define ((draw @creatures @ability-decks @in-draw?))
+(define ((draw-actions @creatures @ability-decks @in-draw?))
   ;; draw new monster cards
   (<@ @ability-decks (update-ability-decks ability-decks-draw-next))
   ;; order creatures
@@ -406,7 +406,7 @@
                                          @elements))
                      (button "Draw Action(s)"
                              #:enabled? (@> @in-draw? not)
-                             (draw @creatures @ability-decks @in-draw?))))
+                             (draw-actions @creatures @ability-decks @in-draw?))))
            ;; bottom
            (hpanel #:stretch '(#f #f)
                    (loot-button
