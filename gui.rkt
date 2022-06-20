@@ -81,15 +81,15 @@
   (map maybe-update-monster-group creatures))
 
 (define (update-all-players creatures f)
-  (define update-only-player
-    (match-lambda
+  (define (update-only-player c)
+    (match c
       [(creature id (? player? p)) (creature id (f p))]
       [c c]))
   (map update-only-player creatures))
 
 (define (update-all-monster-groups creatures f)
-  (define update-only-monster-group
-    (match-lambda
+  (define (update-only-monster-group c)
+    (match c
       [(creature id (monster-group* n mg)) (creature id (monster-group* n (f mg)))]
       [c c]))
   (map update-only-monster-group creatures))
