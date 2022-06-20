@@ -173,6 +173,12 @@
     #:on-new new
     #:on-select select))
 
+(define (creature-initiative @ability-decks)
+  (flow (~> creature-v
+            (switch
+              [player? player-initiative]
+              [monster-group*? (monster-group*-initiative @ability-decks)]))))
+
 ;; Transition functions
 (define ((to-input-player-info @mode @creatures @num-players))
   (when (empty? (@! @creatures))
@@ -219,11 +225,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define-flow creature-initiative
-    (~> creature-v
-        (switch
-          [player? player-initiative]
-          [monster-group*? (monster-group*-initiative @ability-decks)])))
   (define (next-round)
     ;; wane elements
     (for-each (flow (<@ wane-element)) @elements)
@@ -232,7 +233,7 @@
     ;; discard monster cards
     (<@ @ability-decks (update-ability-decks ability-decks-discard-and-maybe-shuffle))
     ;; order creatures
-    (<~@ @creatures (sort < #:key creature-initiative))
+    (<~@ @creatures (sort < #:key (creature-initiative @ability-decks)))
     ;; shuffle modifiers if required
     (when (shuffle-modifier-deck? (@! @monster-discard))
       (reshuffle-modifiers))
