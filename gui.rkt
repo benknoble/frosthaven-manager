@@ -55,6 +55,12 @@
       (for/hash ([(set actions) (in-hash action-db)])
         (values set (ability-decks #f (shuffle actions) empty)))))
 
+;; Loot
+(define (update-deck-and-num-loot-cards @loot-deck @num-loot-cards)
+  (flow (-< (loot-picker-updater @loot-deck)
+            ;; order important
+            (gen (:= @num-loot-cards (length (@! @loot-deck)))))))
+
 ;; Creatures
 (define (make-player-creature i)
   (creature i (make-player "" 1)))
@@ -146,10 +152,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define-flow (update-deck-and-num-loot-cards loot-event)
-    (-< (loot-picker-updater @loot-deck)
-        ;; order important
-        (gen (:= @num-loot-cards (length (@! @loot-deck))))))
   (define (make-player-view k @e)
     (define (update proc)
       (<~@ @creatures (update-players k proc)))
@@ -327,7 +329,7 @@
                                      #:on-hp (update-player-max-hp @creatures))
                  (button "Next" (to-build-loot-deck @mode @creatures)))]
         [(build-loot-deck)
-         (vpanel (loot-picker #:on-card update-deck-and-num-loot-cards)
+         (vpanel (loot-picker #:on-card (update-deck-and-num-loot-cards @loot-deck @num-loot-cards))
                  (spacer)
                  (button "Next" (to-choose-monster-db @mode)))]
         [(choose-monster-db)
