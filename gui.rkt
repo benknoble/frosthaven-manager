@@ -107,7 +107,7 @@
         (values set (ability-decks #f (shuffle actions) empty)))))
 
 ;; Loot
-(define (update-deck-and-num-loot-cards @loot-deck @num-loot-cards)
+(define (update-loot-deck-and-num-loot-cards @loot-deck @num-loot-cards)
   (flow (-< (loot-picker-updater @loot-deck)
             ;; order important
             (gen (:= @num-loot-cards (length (@! @loot-deck)))))))
@@ -389,7 +389,7 @@
          (vpanel
            (loot-picker
              #:on-card
-             (update-deck-and-num-loot-cards @loot-deck @num-loot-cards))
+             (update-loot-deck-and-num-loot-cards @loot-deck @num-loot-cards))
            (spacer)
            (button "Next" (to-choose-monster-db @mode)))]
         [(choose-monster-db)
