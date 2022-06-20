@@ -120,6 +120,11 @@
   ;; HACK: trigger updates in @creatures to re-render list-view (?)
   (:= @creatures (@! @creatures)))
 
+(define ((to-choose-monster-db @mode))
+  (:= @mode 'choose-monster-db))
+(define ((to-choose-monsters @mode))
+  (:= @mode 'choose-monsters))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -141,10 +146,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (to-choose-monster-db)
-    (:= @mode 'choose-monster-db))
-  (define (to-choose-monsters)
-    (:= @mode 'choose-monsters))
   (define-flow (update-deck-and-num-loot-cards loot-event)
     (-< (loot-picker-updater @loot-deck)
         ;; order important
@@ -328,7 +329,7 @@
         [(build-loot-deck)
          (vpanel (loot-picker #:on-card update-deck-and-num-loot-cards)
                  (spacer)
-                 (button "Next" to-choose-monster-db))]
+                 (button "Next" (to-choose-monster-db @mode)))]
         [(choose-monster-db)
          (vpanel
            (hpanel
@@ -340,7 +341,7 @@
                      (thunk (init-dbs default-monster-db
                                       @info-db @action-db @ability-decks))))
            (db-view @info-db @action-db)
-           (button "Next" to-choose-monsters
+           (button "Next" (to-choose-monsters @mode)
                    #:enabled? (@~> @info-db (not hash-empty?))))]
         [(choose-monsters)
          (vpanel
