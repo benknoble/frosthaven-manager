@@ -231,6 +231,20 @@
               [player? player-initiative]
               [monster-group*? (monster-group*-initiative @ability-decks)]))))
 
+(define ((add-or-remove-monster-group @creatures) evt)
+  (match evt
+    [`(add ,mg)
+      (define next-id (add1 (apply max (map creature-id (@! @creatures)))))
+      (define selection
+        (~> (mg) monster-group-monsters
+            (and (not empty?) (~> first monster-number))))
+      (<~@ @creatures (append (list (creature next-id (monster-group* selection mg)))))]
+    [`(remove ,mg)
+      (<~@ @creatures
+           (remf (flow (~> creature-v
+                           (and monster-group*?
+                                (~> monster-group*-mg (equal? mg))))) _))]))
+
 ;; Transition functions
 (define ((to-input-player-info @mode @creatures @num-players))
   (when (empty? (@! @creatures))
@@ -302,18 +316,6 @@
   ;; functions
   (define do-curse-monster (make-modifier-deck-adder @curses @monster-modifier-deck))
   (define do-bless-monster (make-modifier-deck-adder @blesses @monster-modifier-deck))
-  (define add-or-remove-monster-group
-    (match-lambda
-      [`(add ,mg)
-        (define next-id (add1 (apply max (map creature-id (@! @creatures)))))
-        (define selection
-          (~> (mg) monster-group-monsters
-              (and (not empty?) (~> first monster-number))))
-        (<~@ @creatures (append (list (creature next-id (monster-group* selection mg)))))]
-      [`(remove ,mg)
-        (<~@ @creatures (remf (flow (~> creature-v
-                                        (and monster-group*?
-                                             (~> monster-group*-mg (equal? mg))))) _))]))
   (define (make-creature-view k @e)
     (define make-player-or-monster-group-view
       (match-lambda
@@ -371,7 +373,7 @@
          (vpanel
            (multi-monster-picker
              @info-db @level
-             #:on-change add-or-remove-monster-group)
+             #:on-change (add-or-remove-monster-group @creatures))
            (button "Next" (to-play @mode @creatures)))]
         [(play)
          (vpanel
