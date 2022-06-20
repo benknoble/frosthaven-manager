@@ -94,6 +94,9 @@
       [c c]))
   (map update-only-monster-group creatures))
 
+(define ((update-player-name @creatures) k name)
+  (<~@ @creatures (update-players k (player-update-name name))))
+
 ;; Transition functions
 (define ((to-input-player-info @mode @creatures @num-players))
   (when (empty? (@! @creatures))
@@ -121,8 +124,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (update-player-name k name)
-    (<~@ @creatures (update-players k (player-update-name name))))
   (define (update-player-max-hp k f)
     (<~@ @creatures (update-players k (player-act-on-max-hp f))))
   (define (to-build-loot-deck)
@@ -318,7 +319,7 @@
                  (button "Play" (to-input-player-info @mode @creatures @num-players)))]
         [(input-player-info)
          (vpanel (player-input-views @num-players
-                                     #:on-name update-player-name
+                                     #:on-name (update-player-name @creatures)
                                      #:on-hp update-player-max-hp)
                  (button "Next" to-build-loot-deck))]
         [(build-loot-deck)
