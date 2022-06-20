@@ -106,6 +106,15 @@
     (:= @creatures (build-list (@! @num-players) make-player-creature)))
   (:= @mode 'input-player-info))
 
+(define ((to-build-loot-deck @mode @creatures))
+  ;; give each player max-hp
+  (<~@ @creatures
+        (update-all-players
+          (flow (~> (-< (~> player-max-hp const player-act-on-hp)
+                        _)
+                    apply))))
+  (:= @mode 'build-loot-deck))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -127,14 +136,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (to-build-loot-deck)
-    ;; give each player max-hp
-    (<~@ @creatures
-         (update-all-players
-           (flow (~> (-< (~> player-max-hp const player-act-on-hp)
-                         _)
-                     apply))))
-    (:= @mode 'build-loot-deck))
   (define (to-play)
     (:= @mode 'play)
     ;; HACK: trigger updates in @creatures to re-render list-view (?)
@@ -322,7 +323,7 @@
          (vpanel (player-input-views @num-players
                                      #:on-name (update-player-name @creatures)
                                      #:on-hp (update-player-max-hp @creatures))
-                 (button "Next" to-build-loot-deck))]
+                 (button "Next" (to-build-loot-deck @mode @creatures)))]
         [(build-loot-deck)
          (vpanel (loot-picker #:on-card update-deck-and-num-loot-cards)
                  (spacer)
