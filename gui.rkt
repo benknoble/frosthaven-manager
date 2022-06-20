@@ -90,7 +90,7 @@
 (define (shuffle-deck @deck)
   (:= @deck (shuffle (@! @deck))))
 
-(define ((make-modifier-deck-adder @cards @deck))
+(define ((deck-adder @cards @deck))
   (unless (empty? (@! @cards))
     (define card (first (@! @cards)))
     (<@ @cards rest)
@@ -328,7 +328,7 @@
   (<@ @in-draw? not))
 
 ;; GUI
-(define (make-modifier-deck-adder-button @cards do-adder text original-deck)
+(define (deck-adder-button @cards do-adder text original-deck)
   (button
     #:enabled? (@~> @cards (not empty?))
     (@~> @cards
@@ -358,9 +358,9 @@
   (define/obs @ability-decks (hash))
   ;; functions
   (define do-curse-monster
-    (make-modifier-deck-adder @curses @monster-modifier-deck))
+    (deck-adder @curses @monster-modifier-deck))
   (define do-bless-monster
-    (make-modifier-deck-adder @blesses @monster-modifier-deck))
+    (deck-adder @blesses @monster-modifier-deck))
   ;; gui
   (render
     (window
@@ -430,9 +430,9 @@
              ;; right
              (vpanel
                #:stretch '(#f #t)
-               (make-modifier-deck-adder-button
+               (deck-adder-button
                  @curses do-curse-monster "Curse Monster" monster-curse-deck)
-               (make-modifier-deck-adder-button
+               (deck-adder-button
                  @blesses do-bless-monster "Bless Monster" monster-bless-deck)
                (spacer)
                (button
