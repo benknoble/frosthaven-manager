@@ -63,6 +63,16 @@
 
 (define ((take-loot @loot-deck)) (<@ @loot-deck rest))
 
+(define ((give-player-loot* @loot-deck) p)
+  (define card
+    (@! (@~> @loot-deck (if (not empty?) first #f))))
+  (if card
+    ((player-add-loot card) p)
+    p))
+
+(define ((give-player-loot @creatures @loot-deck) k)
+  (<~@ @creatures (update-players k (give-player-loot* @loot-deck))))
+
 ;; Creatures
 (define (make-player-creature i)
   (creature i (make-player "" 1)))
@@ -197,14 +207,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (give-player-loot* p)
-    (define card
-      (@! (@~> @loot-deck (if (not empty?) first #f))))
-    (if card
-      ((player-add-loot card) p)
-      p))
-  (define (give-player-loot k)
-    (<~@ @creatures (update-players k give-player-loot*)))
   (define (get-monster-group-initiative mg)
     (~> (@ability-decks mg)
         (== @! monster-group-set-name)
@@ -397,7 +399,7 @@
                      ;; valid because only enabled if loot-deck non-empty, and only
                      ;; closing if loot assigned
                      #:on-close (take-loot @loot-deck)
-                     #:on-player give-player-loot)
+                     #:on-player (give-player-loot @creatures @loot-deck))
                    (level-stats @level @num-players)
                    (level-table @level)
                    (inspiration-table @num-players)))]
