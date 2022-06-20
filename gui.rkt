@@ -121,6 +121,34 @@
     #:on-xp update-player-xp
     #:on-initiative update-player-initiative))
 
+(define ((make-monster-group-view @creatures) k @e ads)
+  (define (update proc [procn (flow 1>)])
+    (<~@ @creatures (update-monster-groups k proc procn)))
+  (define @mg* (@> @e creature-v))
+  (define @mg (@> @mg* monster-group*-mg))
+  (define @n (@> @mg* monster-group*-active))
+  (define @ms (@> @mg monster-group-monsters))
+  (define (update-condition num c on?)
+    (update (monster-group-update-num num (monster-update-condition c on?))))
+  (define (update-hp num proc)
+    (update (monster-group-update-num num (monster-update-hp proc))))
+  (define (kill num)
+    (update (monster-group-remove num) (flow (~> 2> monster-group-first-monster))))
+  (define (new num elite?) (update (monster-group-add num elite?) (const num)))
+  (define (select num) (update values (const num)))
+  (define @action (@~> @mg (~>> monster-group-set-name
+                                (hash-ref ads)
+                                ability-decks-current)))
+  (monster-group-view
+    @mg
+    @action
+    @n
+    #:on-condition update-condition
+    #:on-hp update-hp
+    #:on-kill kill
+    #:on-new new
+    #:on-select select))
+
 ;; Transition functions
 (define ((to-input-player-info @mode @creatures @num-players))
   (when (empty? (@! @creatures))
@@ -167,33 +195,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (make-monster-group-view k @e ads)
-    (define (update proc [procn (flow 1>)])
-      (<~@ @creatures (update-monster-groups k proc procn)))
-    (define @mg* (@> @e creature-v))
-    (define @mg (@> @mg* monster-group*-mg))
-    (define @n (@> @mg* monster-group*-active))
-    (define @ms (@> @mg monster-group-monsters))
-    (define (update-condition num c on?)
-      (update (monster-group-update-num num (monster-update-condition c on?))))
-    (define (update-hp num proc)
-      (update (monster-group-update-num num (monster-update-hp proc))))
-    (define (kill num)
-      (update (monster-group-remove num) (flow (~> 2> monster-group-first-monster))))
-    (define (new num elite?) (update (monster-group-add num elite?) (const num)))
-    (define (select num) (update values (const num)))
-    (define @action (@~> @mg (~>> monster-group-set-name
-                                  (hash-ref ads)
-                                  ability-decks-current)))
-    (monster-group-view
-      @mg
-      @action
-      @n
-      #:on-condition update-condition
-      #:on-hp update-hp
-      #:on-kill kill
-      #:on-new new
-      #:on-select select))
   (define (take-loot)
     (<@ @loot-deck rest))
   (define (give-player-loot* p)
@@ -297,7 +298,7 @@
     (define make-player-or-monster-group-view
       (match-lambda
         [(cons ads (creature _ (? player?))) ((make-player-view @creatures) k @e)]
-        [(cons ads (creature _ (? monster-group*?))) (make-monster-group-view k @e ads)]))
+        [(cons ads (creature _ (? monster-group*?))) ((make-monster-group-view @creatures) k @e ads)]))
     (dyn-view
       ;; HACK: Combine @e with @ability-decks to register dyn-view dependency on
       ;; @ability-decks; but, the actual observable we care about is still just
