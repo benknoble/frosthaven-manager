@@ -231,6 +231,11 @@
               [player? player-initiative]
               [monster-group*? (monster-group*-initiative @ability-decks)]))))
 
+(define (creature-is-mg~? mg)
+  (flow (~> creature-v
+            (and monster-group*?
+                 (~> monster-group*-mg (equal? mg))))))
+
 (define ((add-or-remove-monster-group @creatures) evt)
   (match evt
     [`(add ,mg)
@@ -239,11 +244,7 @@
         (~> (mg) monster-group-monsters
             (and (not empty?) (~> first monster-number))))
       (<~@ @creatures (append (list (creature next-id (monster-group* selection mg)))))]
-    [`(remove ,mg)
-      (<~@ @creatures
-           (remf (flow (~> creature-v
-                           (and monster-group*?
-                                (~> monster-group*-mg (equal? mg))))) _))]))
+    [`(remove ,mg) (<~@ @creatures (remf (creature-is-mg~? mg) _))]))
 
 ;; Transition functions
 (define ((to-input-player-info @mode @creatures @num-players))
