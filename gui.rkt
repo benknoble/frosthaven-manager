@@ -55,6 +55,10 @@
       (for/hash ([(set actions) (in-hash action-db)])
         (values set (ability-decks #f (shuffle actions) empty)))))
 
+;; Creatures
+(define (make-player-entry i)
+  (creature i (make-player "" 1)))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -76,8 +80,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (make-player-entry i)
-    (creature i (make-player "" 1)))
   (define (update-players creatures k f)
     (define (maybe-update-player e)
       (if (~> (e) (-< creature-id creature-v) (and% (eq? k) player?))
