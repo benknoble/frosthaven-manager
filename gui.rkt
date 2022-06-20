@@ -311,6 +311,15 @@
   ;; toggle state
   (<@ @in-draw? not))
 
+;; GUI
+(define (make-modifier-deck-adder-button @cards do-adder text original-deck)
+  (button
+    #:enabled? (@~> @cards (not empty?))
+    (@~> @cards
+         (~> length
+             (format "~a (~a/~a)" text _ (length original-deck))))
+    do-adder))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -392,19 +401,10 @@
                  (make-creature-view @creatures @ability-decks @num-players)))
              ;; right
              (vpanel #:stretch '(#f #t)
-                     (let ([make-modifier-deck-adder-button
-                             (λ (@cards do-adder text original-deck)
-                               (button
-                                 #:enabled? (@~> @cards (not empty?))
-                                 (@~> @cards
-                                      (~> length
-                                          (format "~a (~a/~a)" text _ (length original-deck))))
-                                 do-adder))])
-                       (vpanel
-                         (make-modifier-deck-adder-button
-                           @curses do-curse-monster "Curse Monster" monster-curse-deck)
-                         (make-modifier-deck-adder-button
-                           @blesses do-bless-monster "Bless Monster" monster-bless-deck)))
+                     (make-modifier-deck-adder-button
+                       @curses do-curse-monster "Curse Monster" monster-curse-deck)
+                     (make-modifier-deck-adder-button
+                       @blesses do-bless-monster "Bless Monster" monster-bless-deck)
                      (spacer)
                      (button (@~> @monster-modifier-deck (~>> length (format "Draw Modifier (~a)")))
                              (draw-modifier @monster-modifier-deck @modifier
