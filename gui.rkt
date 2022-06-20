@@ -65,7 +65,7 @@
 
 (define ((give-player-loot* @loot-deck) p)
   (define card
-    (@! (@~> @loot-deck (if (not empty?) first #f))))
+    (@! (@~> @loot-deck (and (not empty?) first))))
   (if card
     ((player-add-loot card) p)
     p))
