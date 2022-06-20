@@ -61,6 +61,8 @@
             ;; order important
             (gen (:= @num-loot-cards (length (@! @loot-deck)))))))
 
+(define ((take-loot @loot-deck)) (<@ @loot-deck rest))
+
 ;; Creatures
 (define (make-player-creature i)
   (creature i (make-player "" 1)))
@@ -195,8 +197,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (take-loot)
-    (<@ @loot-deck rest))
   (define (give-player-loot* p)
     (define card
       (@! (@~> @loot-deck (if (not empty?) first #f))))
@@ -396,7 +396,7 @@
                      (@~> @creatures (filter (flow (~> creature-v player?)) _))
                      ;; valid because only enabled if loot-deck non-empty, and only
                      ;; closing if loot assigned
-                     #:on-close take-loot
+                     #:on-close (take-loot @loot-deck)
                      #:on-player give-player-loot)
                    (level-stats @level @num-players)
                    (level-table @level)
