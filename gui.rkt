@@ -17,12 +17,15 @@
          "monster-db.rkt"
          (submod "monster-db.rkt" gui))
 
+;; Ability Decks
 (struct ability-decks [current draw discard] #:transparent)
+
 (define-flow (ability-decks-draw-next ad)
   (~> (-< (~> ability-decks-draw (and (not empty?) first))
           (~> ability-decks-draw (switch [(not empty?) rest]))
           ability-decks-discard)
       ability-decks))
+
 (define (ability-decks-discard-and-maybe-shuffle ad)
   (match-define (ability-decks current draw discard) ad)
   (define discard-with-current
