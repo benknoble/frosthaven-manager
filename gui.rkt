@@ -46,6 +46,18 @@
   (for/hash ([(set ad) (in-hash ads)])
     (values set (f ad))))
 
+(define ((get-monster-group-initiative @ability-decks) mg)
+  (~> (@ability-decks mg)
+      (== @! monster-group-set-name)
+      hash-ref
+      ability-decks-current
+      (switch
+        [monster-action? monster-action-initiative]
+        [else +inf.0])))
+
+(define (get-monster-group*-initiative @ability-decks)
+  (flow (~> monster-group*-mg (get-monster-group-initiative @ability-decks))))
+
 ;; DBs
 (define (init-dbs db @info-db @action-db @ability-decks)
   (define-values (info-db action-db) (get-dbs db))
@@ -207,21 +219,11 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (get-monster-group-initiative mg)
-    (~> (@ability-decks mg)
-        (== @! monster-group-set-name)
-        hash-ref
-        ability-decks-current
-        (switch
-          [monster-action? monster-action-initiative]
-          [else +inf.0])))
-  (define-flow (get-monster-group*-initiative mg*)
-    (~> monster-group*-mg get-monster-group-initiative))
   (define-flow creature-initiative
     (~> creature-v
         (switch
           [player? player-initiative]
-          [monster-group*? get-monster-group*-initiative])))
+          [monster-group*? (get-monster-group*-initiative @ability-decks)])))
   (define (next-round)
     ;; wane elements
     (for-each (flow (<@ wane-element)) @elements)
