@@ -115,6 +115,11 @@
                     apply))))
   (:= @mode 'build-loot-deck))
 
+(define ((to-play @mode @creatures))
+  (:= @mode 'play)
+  ;; HACK: trigger updates in @creatures to re-render list-view (?)
+  (:= @creatures (@! @creatures)))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -136,10 +141,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (to-play)
-    (:= @mode 'play)
-    ;; HACK: trigger updates in @creatures to re-render list-view (?)
-    (:= @creatures (@! @creatures)))
   (define (to-choose-monster-db)
     (:= @mode 'choose-monster-db))
   (define (to-choose-monsters)
@@ -346,7 +347,7 @@
            (multi-monster-picker
              @info-db @level
              #:on-change add-or-remove-monster-group)
-           (button "Next" to-play))]
+           (button "Next" (to-play @mode @creatures)))]
         [(play)
          (vpanel
            (hpanel
