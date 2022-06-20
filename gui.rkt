@@ -231,10 +231,11 @@
               [player? player-initiative]
               [monster-group*? (monster-group*-initiative @ability-decks)]))))
 
-(define (creature-is-mg~? mg)
-  (flow (~> creature-v
-            (and monster-group*?
-                 (~> monster-group*-mg (equal? mg))))))
+;; (-> mg (-> creature bool))
+(define-flow creature-is-mg~?
+  (clos (~>
+          (== _ (~> creature-v (and monster-group*? monster-group*-mg)))
+          equal?)))
 
 (define ((add-or-remove-monster-group @creatures) evt)
   (match evt
