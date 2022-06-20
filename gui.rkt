@@ -87,6 +87,13 @@
       [c c]))
   (map update-only-player creatures))
 
+(define (update-all-monster-groups creatures f)
+  (define update-only-monster-group
+    (match-lambda
+      [(creature id (monster-group* n mg)) (creature id (monster-group* n (f mg)))]
+      [c c]))
+  (map update-only-monster-group creatures))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -108,12 +115,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (update-all-monster-groups creatures f)
-    (define update-only-monster-group
-      (match-lambda
-        [(creature id (monster-group* n mg)) (creature id (monster-group* n (f mg)))]
-        [c c]))
-    (map update-only-monster-group creatures))
   (define (set-level level)
     (:= @level level))
   (define (set-num-players num-players)
