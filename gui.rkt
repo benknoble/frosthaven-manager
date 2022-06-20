@@ -66,6 +66,20 @@
       e))
   (map maybe-update-player creatures))
 
+(define (update-monster-groups creatures k f [fn (flow 1>)])
+  (define (maybe-update-monster-group e)
+    (if (~> (e)
+            (-< creature-id creature-v)
+            (and% (eq? k) monster-group*?))
+      (let* ([mg* (creature-v e)]
+             [n (monster-group*-active mg*)]
+             [mg (monster-group*-mg mg*)]
+             [new-mg (f mg)]
+             [new-n (fn n new-mg)])
+        (creature k (monster-group* new-n new-mg)))
+      e))
+  (map maybe-update-monster-group creatures))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -87,19 +101,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (update-monster-groups creatures k f [fn (flow 1>)])
-    (define (maybe-update-monster-group e)
-      (if (~> (e)
-              (-< creature-id creature-v)
-              (and% (eq? k) monster-group*?))
-        (let* ([mg* (creature-v e)]
-               [n (monster-group*-active mg*)]
-               [mg (monster-group*-mg mg*)]
-               [new-mg (f mg)]
-               [new-n (fn n new-mg)])
-          (creature k (monster-group* new-n new-mg)))
-        e))
-    (map maybe-update-monster-group creatures))
   (define (update-all-players creatures f)
     (define update-only-player
       (match-lambda
