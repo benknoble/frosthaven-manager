@@ -247,6 +247,22 @@
       (<~@ @creatures (append (list (creature next-id (monster-group* selection mg)))))]
     [`(remove ,mg) (<~@ @creatures (remf (creature-is-mg~? mg) _))]))
 
+(define ((make-creature-view @creatures @ability-decks @num-players) k @e)
+  (define (make-player-or-monster-group-view c+ads)
+    (match c+ads
+      [(cons ads (creature _ (? player?))) ((make-player-view @creatures @num-players) k @e)]
+      [(cons ads (creature _ (? monster-group*?))) ((make-monster-group-view @creatures) k @e ads)]))
+  (dyn-view
+    ;; HACK: Combine @e with @ability-decks to register dyn-view dependency on
+    ;; @ability-decks; but, the actual observable we care about is still just
+    ;; @e. (We would ignore the car of the resulting pair in the match patterns
+    ;; above, but we actually rely on its value to avoid a race.) This is
+    ;; because make-monster-group-view creates a view that depends on
+    ;; @ability-decks, but dyn-view isn't aware of this dependency.
+    ;; https://github.com/Bogdanp/racket-gui-easy/issues/23
+    (obs-combine cons @ability-decks @e)
+    make-player-or-monster-group-view))
+
 ;; Transition functions
 (define ((to-input-player-info @mode @creatures @num-players))
   (when (empty? (@! @creatures))
@@ -318,21 +334,6 @@
   ;; functions
   (define do-curse-monster (make-modifier-deck-adder @curses @monster-modifier-deck))
   (define do-bless-monster (make-modifier-deck-adder @blesses @monster-modifier-deck))
-  (define (make-creature-view k @e)
-    (define make-player-or-monster-group-view
-      (match-lambda
-        [(cons ads (creature _ (? player?))) ((make-player-view @creatures) k @e)]
-        [(cons ads (creature _ (? monster-group*?))) ((make-monster-group-view @creatures) k @e ads)]))
-    (dyn-view
-      ;; HACK: Combine @e with @ability-decks to register dyn-view dependency on
-      ;; @ability-decks; but, the actual observable we care about is still just
-      ;; @e. (We would ignore the car of the resulting pair in the match
-      ;; patterns above, but we actually rely on its value to avoid a race.)
-      ;; This is because make-monster-group-view creates a view that depends on
-      ;; @ability-decks, but dyn-view isn't aware of this dependency.
-      ;; https://github.com/Bogdanp/racket-gui-easy/issues/23
-      (obs-combine cons @ability-decks @e)
-      make-player-or-monster-group-view))
   ;; gui
   (render
     (window
@@ -388,7 +389,7 @@
                (list-view @creatures
                  #:min-size (@~> @creatures (~>> length (* 100) (list #f)))
                  #:key creature-id
-                 make-creature-view))
+                 (make-creature-view @creatures @ability-decks @num-players)))
              ;; right
              (vpanel #:stretch '(#f #t)
                      (let ([make-modifier-deck-adder-button
