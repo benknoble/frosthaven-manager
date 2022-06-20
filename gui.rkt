@@ -56,7 +56,7 @@
         (values set (ability-decks #f (shuffle actions) empty)))))
 
 ;; Creatures
-(define (make-player-entry i)
+(define (make-player-creature i)
   (creature i (make-player "" 1)))
 
 (define (update-players creatures k f)
@@ -94,6 +94,12 @@
       [c c]))
   (map update-only-monster-group creatures))
 
+;; Transition functions
+(define ((to-input-player-info @mode @creatures @num-players))
+  (when (empty? (@! @creatures))
+    (:= @creatures (build-list (@! @num-players) make-player-creature)))
+  (:= @mode 'input-player-info))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -115,10 +121,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (to-input-player-info)
-    (when (empty? (@! @creatures))
-      (:= @creatures (build-list (@! @num-players) make-player-entry)))
-    (:= @mode 'input-player-info))
   (define (update-player-name k name)
     (<~@ @creatures (update-players k (player-update-name name))))
   (define (update-player-max-hp k f)
@@ -313,7 +315,7 @@
         [(start)
          (vpanel (start-view #:on-level (λ:= @level)
                              #:on-player (λ:= @num-players))
-                 (button "Play" to-input-player-info))]
+                 (button "Play" (to-input-player-info @mode @creatures @num-players)))]
         [(input-player-info)
          (vpanel (player-input-views @num-players
                                      #:on-name update-player-name
