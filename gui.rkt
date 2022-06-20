@@ -47,11 +47,9 @@
     (values set (f ad))))
 
 ;; Modifier decks
-(define (reshuffle-modifiers @monster-modifier-deck @monster-discard)
-  (:= @monster-modifier-deck
-      (shuffle (append (@! @monster-modifier-deck)
-                       (@! @monster-discard))))
-  (:= @monster-discard empty))
+(define (reshuffle-deck @deck @discard)
+  (:= @deck (shuffle (append (@! @deck) (@! @discard))))
+  (:= @discard empty))
 
 (define ((discard @monster-discard @curses @blesses) card)
   (cond
@@ -64,7 +62,7 @@
                         @curses @blesses))
   ;; better not be empty after this…
   (when (empty? (@! @monster-modifier-deck))
-    (reshuffle-modifiers @monster-modifier-deck @monster-discard))
+    (reshuffle-deck @monster-modifier-deck @monster-discard))
   (define card (first (@! @monster-modifier-deck)))
   (:= @monster-prev-discard (@! @modifier))
   (:= @modifier card)
@@ -77,7 +75,7 @@
                          [better better-modifier]))
   ;; better not be empty after this…
   (when (~> (@monster-modifier-deck) @! length (< 2))
-    (reshuffle-modifiers @monster-modifier-deck @monster-discard))
+    (reshuffle-deck @monster-modifier-deck @monster-discard))
   (define cards (~> (@monster-modifier-deck) @! (take 2)))
   (define best (~> (cards) sep better))
   (define worst (cond
@@ -317,7 +315,7 @@
   (<~@ @creatures (sort < #:key (creature-initiative @ability-decks)))
   ;; shuffle modifiers if required
   (when (shuffle-modifier-deck? (@! @monster-discard))
-    (reshuffle-modifiers @monster-modifier-deck @monster-discard))
+    (reshuffle-deck @monster-modifier-deck @monster-discard))
   ;; toggle state
   (<@ @in-draw? not))
 
