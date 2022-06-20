@@ -225,6 +225,14 @@
   ;; toggle state
   (<@ @in-draw? not))
 
+(define ((draw @creatures @ability-decks @in-draw?))
+  ;; draw new monster cards
+  (<@ @ability-decks (update-ability-decks ability-decks-draw-next))
+  ;; order creatures
+  (<~@ @creatures (sort < #:key (creature-initiative @ability-decks)))
+  ;; toggle state
+  (<@ @in-draw? not))
+
 (define (render-manager)
   ;; gui state
   (define/obs @mode 'start)
@@ -246,13 +254,6 @@
   (define/obs @action-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
-  (define (draw)
-    ;; draw new monster cards
-    (<@ @ability-decks (update-ability-decks ability-decks-draw-next))
-    ;; order creatures
-    (<~@ @creatures (sort < #:key creature-initiative))
-    ;; toggle state
-    (<@ @in-draw? not))
   (define (discard card)
     (cond
       [(equal? card curse) (<~@ @curses (cons card _))]
@@ -403,7 +404,9 @@
                                          @monster-modifier-deck @monster-discard
                                          @in-draw?
                                          @elements))
-                     (button "Draw Action(s)" draw #:enabled? (@> @in-draw? not))))
+                     (button "Draw Action(s)"
+                             #:enabled? (@> @in-draw? not)
+                             (draw @creatures @ability-decks @in-draw?))))
            ;; bottom
            (hpanel #:stretch '(#f #f)
                    (loot-button
