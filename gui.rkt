@@ -10,7 +10,7 @@
          "menu.rkt"
          "gui/start.rkt"
          "player-info.rkt"
-         "level-info.rkt"
+         "gui/level-info.rkt"
          "loot.rkt"
          (only-in "elements.rkt" elements)
          "gui/elements.rkt"

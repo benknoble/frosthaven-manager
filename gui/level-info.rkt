@@ -12,9 +12,9 @@
 
 (require racket/gui/easy
          racket/gui/easy/contract
-         "observable-operator.rkt"
-         "defns.rkt"
-         "gui/static-table.rkt")
+         "../observable-operator.rkt"
+         "../defns.rkt"
+         "static-table.rkt")
 
 (define (level-stats @level @num-players)
   (define @level-info (@> @level get-level-info))
