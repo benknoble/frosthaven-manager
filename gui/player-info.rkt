@@ -19,11 +19,11 @@
                       (is-a?/c view<%>))]))
 
 (require racket/gui/easy
-         "observable-operator.rkt"
-         "qi.rkt"
+         "../observable-operator.rkt"
+         "../qi.rkt"
          racket/gui/easy/contract
-         "defns.rkt"
-         "gui/counter.rkt")
+         "../defns.rkt"
+         "counter.rkt")
 
 (define (player-input-views @num-players
                             #:on-name [on-name void]

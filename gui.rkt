@@ -9,7 +9,7 @@
          "defns.rkt"
          "gui/common-menu.rkt"
          "gui/start.rkt"
-         "player-info.rkt"
+         "gui/player-info.rkt"
          "gui/level-info.rkt"
          "gui/loot-picker.rkt"
          (only-in "elements.rkt" elements)
