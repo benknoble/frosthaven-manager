@@ -13,7 +13,7 @@
          "level-info.rkt"
          "loot.rkt"
          (only-in "elements.rkt" elements)
-         (submod "elements.rkt" gui)
+         "gui/elements.rkt"
          "monster-db.rkt"
          (submod "monster-db.rkt" gui))
 
