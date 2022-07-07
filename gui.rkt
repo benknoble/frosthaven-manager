@@ -8,7 +8,7 @@
          "qi.rkt"
          "defns.rkt"
          "menu.rkt"
-         "start.rkt"
+         "gui/start.rkt"
          "player-info.rkt"
          "level-info.rkt"
          "loot.rkt"

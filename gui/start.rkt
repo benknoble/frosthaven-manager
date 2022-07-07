@@ -8,7 +8,7 @@
                      (is-a?/c view<%>))]))
 
 (require racket/gui/easy
-         "defns.rkt")
+         "../defns.rkt")
 
 (define (start-view #:on-level [on-level void] #:on-player [on-player void])
   (vpanel
