@@ -15,7 +15,7 @@
          (only-in "elements.rkt" elements)
          "gui/elements.rkt"
          "monster-db.rkt"
-         (submod "monster-db.rkt" gui))
+         "gui/monsters.rkt")
 
 
 ;; TODO these functions need a home :(
