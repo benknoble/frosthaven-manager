@@ -10,9 +10,9 @@
 (require racket/runtime-path
          net/sendurl
          racket/gui/easy
-         "gui/markdown.rkt")
+         "markdown.rkt")
 
-(define-runtime-path about.md "ABOUT.md")
+(define-runtime-path about.md "../ABOUT.md")
 
 (define about-menu-item
   (menu-item

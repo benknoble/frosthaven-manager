@@ -7,7 +7,7 @@
          "observable-operator.rkt"
          "qi.rkt"
          "defns.rkt"
-         "menu.rkt"
+         "gui/common-menu.rkt"
          "gui/start.rkt"
          "player-info.rkt"
          "gui/level-info.rkt"
