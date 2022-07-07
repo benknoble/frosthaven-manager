@@ -2,9 +2,9 @@
 
 (define collection "frosthaven-manager")
 (define racket-launcher-names '("frosthaven-manager"))
-(define racket-launcher-libraries '("main"))
+(define racket-launcher-libraries '("manager"))
 (define gracket-launcher-names '("FrosthavenManager"))
-(define gracket-launcher-libraries '("main"))
+(define gracket-launcher-libraries '("manager"))
 (define deps '("markdown"
                "net-lib"
                "txexpr"

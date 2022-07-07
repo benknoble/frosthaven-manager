@@ -1,5 +1,10 @@
 #lang racket
 
+(module+ main
+  ;; (require racket/gui/easy/debugger)
+  ;; (start-debugger)
+  (void (render-manager)))
+
 (provide render-manager)
 
 (require racket/gui/easy
