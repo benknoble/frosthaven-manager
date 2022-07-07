@@ -22,12 +22,12 @@
            (is-a?/c view<%>))]))
 
 (require racket/gui/easy
-         "observable-operator.rkt"
-         "qi.rkt"
+         "../observable-operator.rkt"
+         "../qi.rkt"
          racket/gui/easy/contract
-         "defns.rkt"
-         "gui/mixins.rkt"
-         "gui/counter.rkt")
+         "../defns.rkt"
+         "mixins.rkt"
+         "counter.rkt")
 
 (define (loot-picker #:on-card [on-card void])
   (define (make-cards-picker! label max-cards deck in-deck?)

@@ -11,7 +11,7 @@
          "gui/start.rkt"
          "player-info.rkt"
          "gui/level-info.rkt"
-         "loot.rkt"
+         "gui/loot-picker.rkt"
          (only-in "elements.rkt" elements)
          "gui/elements.rkt"
          "monster-db.rkt"
