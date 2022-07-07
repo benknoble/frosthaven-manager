@@ -17,6 +17,9 @@
          "monster-db.rkt"
          (submod "monster-db.rkt" gui))
 
+
+;; TODO these functions need a home :(
+
 ;; Ability Decks
 (struct ability-decks [current draw discard] #:transparent)
 
