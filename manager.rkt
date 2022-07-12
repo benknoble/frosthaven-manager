@@ -377,6 +377,7 @@
       (menu-bar
         (menu "Info"
               about-menu-item
+              send-feedback-menu-item
               issue-menu-item
               feature-menu-item
               contribute-menu-item))

@@ -5,7 +5,8 @@
     [about-menu-item (is-a?/c view<%>)]
     [issue-menu-item (is-a?/c view<%>)]
     [feature-menu-item (is-a?/c view<%>)]
-    [contribute-menu-item (is-a?/c view<%>)]))
+    [contribute-menu-item (is-a?/c view<%>)]
+    [send-feedback-menu-item (is-a?/c view<%>)]))
 
 (require racket/runtime-path
          net/sendurl
@@ -38,3 +39,8 @@
   (menu-item
     "Contribute to development"
     (thunk (send-url "https://github.com/benknoble/frosthaven-manager"))))
+
+(define send-feedback-menu-item
+  (menu-item
+    "Send Feedback"
+    (thunk (send-url "mailto:ben.knoble+frosthaven@gmail.com"))))

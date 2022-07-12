@@ -23,5 +23,6 @@ Get involved by:
 - [Reporting an Issue](https://github.com/benknoble/frosthaven-manager/issues/new/choose)
 - [Requesting a Feature](https://github.com/benknoble/frosthaven-manager/issues/new/choose)
 - [Opening a Pull Request](https://github.com/benknoble/frosthaven-manager/compare)
+- [Sending Feedback of any kind](mailto:ben.knoble+frosthaven@gmail.com)
 
 <!-- Sponsor… -->
