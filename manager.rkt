@@ -376,11 +376,11 @@
       #:size '(800 600)
       (menu-bar
         (menu "Info"
-              about-menu-item
-              send-feedback-menu-item
-              issue-menu-item
-              feature-menu-item
-              contribute-menu-item))
+              (about-menu-item)
+              (send-feedback-menu-item)
+              (issue-menu-item)
+              (feature-menu-item)
+              (contribute-menu-item)))
       (case-view @mode
         [(start)
          (vpanel
