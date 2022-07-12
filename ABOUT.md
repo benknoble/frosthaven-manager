@@ -17,7 +17,7 @@ game to play.
 
 ## Get Involved
 
-Development happens [on GitHub under benknoble/frosthaven-manager](https://github.com/benknoble/frosthaven-manager).
+Development happens [on GitHub under `benknoble/frosthaven-manager`](https://github.com/benknoble/frosthaven-manager).
 Get involved by:
 
 - [Reporting an Issue](https://github.com/benknoble/frosthaven-manager/issues/new/choose)
