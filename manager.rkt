@@ -194,7 +194,7 @@
     #:on-xp update-player-xp
     #:on-initiative update-player-initiative))
 
-(define ((make-monster-group-view @creatures) k @e ads)
+(define ((make-monster-group-view @creatures) k @e @ability-decks)
   (define (update proc [procn (flow 1>)])
     (<~@ @creatures (update-monster-groups k proc procn)))
   (define (update-by-num num proc)
@@ -215,9 +215,9 @@
             (const num)))
   (define (select num) (update values (const num)))
   (define @action
-    (@~> @mg (~>> monster-group-set-name
-                  (hash-ref ads)
-                  ability-decks-current)))
+    (obs-combine
+      (flow (~> (== _ monster-group-set-name) hash-ref ability-decks-current))
+      @ability-decks @mg))
   (monster-group-view
     @mg
     @action
@@ -266,22 +266,12 @@
     [`(remove ,mg) (<~@ @creatures (remf (creature-is-mg~? mg) _))]))
 
 (define ((make-creature-view @creatures @ability-decks @num-players) k @e)
-  (define (make-player-or-monster-group-view c+ads)
-    (match c+ads
-      [(cons ads (creature _ (? player?)))
-       ((make-player-view @creatures @num-players) k @e)]
-      [(cons ads (creature _ (? monster-group*?)))
-       ((make-monster-group-view @creatures) k @e ads)]))
-  (dyn-view
-    ;; HACK: Combine @e with @ability-decks to register dyn-view dependency on
-    ;; @ability-decks; but, the actual observable we care about is still just
-    ;; @e. (We would ignore the car of the resulting pair in the match patterns
-    ;; above, but we actually rely on its value to avoid a race.) This is
-    ;; because make-monster-group-view creates a view that depends on
-    ;; @ability-decks, but dyn-view isn't aware of this dependency.
-    ;; https://github.com/Bogdanp/racket-gui-easy/issues/23
-    (obs-combine cons @ability-decks @e)
-    make-player-or-monster-group-view))
+  (cond-view
+    [(@~> @e (~> creature-v player?))
+     ((make-player-view @creatures @num-players) k @e)]
+    [(@~> @e (~> creature-v monster-group*?))
+     ((make-monster-group-view @creatures) k @e @ability-decks)]
+    [else (text "creature is neither player or monster-group*")]))
 
 ;; Transition functions
 (define ((to-input-player-info @mode @creatures @num-players))

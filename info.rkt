@@ -12,7 +12,7 @@
                "htdp-lib"
                "pict-lib"
                "qi-lib"
-               "gui-easy-lib"
+               ("gui-easy-lib" #:version "0.5")
                "rebellion"
                "base"))
 (define build-deps '("rackunit-lib"
