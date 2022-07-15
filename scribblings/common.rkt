@@ -2,10 +2,13 @@
 
 (provide markdown-inline
          markdown-part
-         ABOUT.md)
+         ABOUT.md
+
+         terminal)
 
 (require racket/match
          racket/runtime-path
+         scribble/base
          scribble/decode
          markdown
          markdown/scrib)
@@ -31,3 +34,7 @@
             (map strip-html-comments x))]
     [(list tag x ...) (list* tag (map strip-html-comments x))]
     [else xexpr]))
+
+(define (terminal . args)
+  (nested #:style 'code-inset
+          (apply verbatim args)))
