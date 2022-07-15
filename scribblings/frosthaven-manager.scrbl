@@ -1,10 +1,19 @@
 #lang scribble/manual
-@require[@for-label[frosthaven-manager/manager
-                    racket/base]]
 
-@title{frosthaven-manager}
+@(require "common.rkt")
+
+@title{Frosthaven Manager}
 @author{D. Ben Knoble}
 
-@defmodule[frosthaven-manager/manager]
+@(table-of-contents)
 
-WIP
+@markdown-inline[ABOUT.md]
+
+@include-section{installation.scrbl}
+@include-section{how-to-play.scrbl}
+@include-section{troubleshooting.scrbl}
+@include-section{monster-db.scrbl}
+@include-section{contributing.scrbl}
+@include-section{reference.scrbl}
+
+@(index-section)
