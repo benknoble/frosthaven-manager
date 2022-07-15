@@ -1,0 +1,32 @@
+---
+name: Deploy documentation to GH Pages
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scribblings/**'
+      - '.github/workflows/docs.yml'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Racket
+        uses: Bogdanp/setup-racket@v1.8
+        with:
+          architecture: 'x64'
+          distribution: 'full'
+          variant: 'CS'
+          version: 'stable'
+      - name: Install Package
+        run: raco pkg install --batch --auto --name frosthaven-manager
+      - name: Build docs
+        run: scribble +m --redirect-main http://pkg-build.racket-lang.org/doc/ --htmls --dest ./docs ./scribblings/frosthaven-manager.scrbl
+      - name: Push to GH Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          folder: docs/frosthaven-manager
+          branch: gh-pages
