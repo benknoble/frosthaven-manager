@@ -2,4 +2,4 @@
 
 @(require "common.rkt")
 
-@title{Monster DB Format}
+@title{Editing Monster Information}
