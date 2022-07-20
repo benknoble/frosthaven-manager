@@ -4,7 +4,9 @@
          markdown-part
          ABOUT.md
 
-         terminal)
+         terminal
+
+         select-monster-db-tag)
 
 (require racket/match
          racket/runtime-path
@@ -38,3 +40,5 @@
 (define (terminal . args)
   (nested #:style 'code-inset
           (apply verbatim args)))
+
+(define select-monster-db-tag "select-monster-db")

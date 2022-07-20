@@ -8,9 +8,11 @@
 
 @(define step
    (let ([n 1])
-     (λ (name)
+     (λ (name #:tag [tag #f])
        (begin0
-         (section (format "Step ~a: ~a" n name))
+         (if tag
+           (section #:tag tag (format "Step ~a: ~a" n name))
+           (section (format "Step ~a: ~a" n name)))
          (set! n (add1 n))))))
 
 @define[next]{Then click "Next."}
@@ -43,7 +45,7 @@ On the next screen, build the loot deck:
 ]
 @next
 
-@step{Select a Monster Database}
+@step[#:tag select-monster-db-tag]{Select a Monster Database}
 
 Click either the "Open Monster DB" button or the "Use Default Monster DB"
 button. Then use the viewer below to explore and confirm the monster
