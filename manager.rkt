@@ -37,13 +37,13 @@
 (define (ability-decks-discard-and-maybe-shuffle ad)
   (match-define (ability-decks current draw discard) ad)
   (define discard-with-current
-    (if (monster-action? current)
+    (if (monster-ability? current)
       (cons current discard)
       discard))
   (define shuffle?
     (or (empty? draw)
         (on (current)
-          (and monster-action? monster-action-shuffle?))))
+          (and monster-ability? monster-ability-shuffle?))))
   (define-values (draw* discard*)
     (if shuffle?
       (values (shuffle (append draw discard-with-current)) empty)
@@ -106,13 +106,13 @@
     (shuffle-deck @deck)))
 
 ;; DBs
-(define (init-dbs db @info-db @action-db @ability-decks)
-  (define-values (info-db action-db) (get-dbs db))
+(define (init-dbs db @info-db @ability-db @ability-decks)
+  (define-values (info-db ability-db) (get-dbs db))
   (:= @info-db info-db)
-  (:= @action-db action-db)
+  (:= @ability-db ability-db)
   (:= @ability-decks
-      (for/hash ([(set actions) (in-hash action-db)])
-        (values set (ability-decks #f (shuffle actions) empty)))))
+      (for/hash ([(set abilities) (in-hash ability-db)])
+        (values set (ability-decks #f (shuffle abilities) empty)))))
 
 ;; Loot
 (define (update-loot-deck-and-num-loot-cards @loot-deck @num-loot-cards)
@@ -214,13 +214,13 @@
     (update (monster-group-add num elite?)
             (const num)))
   (define (select num) (update values (const num)))
-  (define @action
+  (define @ability
     (obs-combine
       (flow (~> (== _ monster-group-set-name) hash-ref ability-decks-current))
       @ability-decks @mg))
   (monster-group-view
     @mg
-    @action
+    @ability
     @n
     #:on-condition update-condition
     #:on-hp update-hp
@@ -234,7 +234,7 @@
       hash-ref
       ability-decks-current
       (switch
-        [monster-action? monster-action-initiative]
+        [monster-ability? monster-ability-initiative]
         [else +inf.0])))
 
 (define (monster-group*-initiative @ability-decks)
@@ -317,7 +317,7 @@
   ;; toggle state
   (<@ @in-draw? not))
 
-(define ((draw-actions @creatures @ability-decks @in-draw?))
+(define ((draw-abilities @creatures @ability-decks @in-draw?))
   ;; draw new monster cards
   (<@ @ability-decks (update-ability-decks ability-decks-draw-next))
   ;; order creatures
@@ -352,7 +352,7 @@
   (define/obs @modifier #f)
   (define/obs @monster-prev-discard #f)
   (define/obs @info-db (hash))
-  (define/obs @action-db (hash))
+  (define/obs @ability-db (hash))
   (define/obs @ability-decks (hash))
   ;; functions
   (define do-curse-monster
@@ -399,13 +399,13 @@
                      (thunk
                        (init-dbs
                          (or (get-file "Monster DB") default-monster-db)
-                         @info-db @action-db @ability-decks)))
+                         @info-db @ability-db @ability-decks)))
              (button "Use Default Monster DB"
                      (thunk
                        (init-dbs
                          default-monster-db
-                         @info-db @action-db @ability-decks))))
-           (db-view @info-db @action-db)
+                         @info-db @ability-db @ability-decks))))
+           (db-view @info-db @ability-db)
            (button "Next" (to-choose-monsters @mode)
                    #:enabled? (@~> @info-db (not hash-empty?))))]
         [(choose-monsters)
@@ -460,9 +460,9 @@
                                    @monster-modifier-deck @monster-discard
                                    @in-draw?
                                    @elements))
-               (button "Draw Action(s)"
+               (button "Draw Abilities"
                        #:enabled? (@> @in-draw? not)
-                       (draw-actions @creatures @ability-decks @in-draw?))))
+                       (draw-abilities @creatures @ability-decks @in-draw?))))
            ;; bottom
            (hpanel #:stretch '(#f #f)
                    (loot-button

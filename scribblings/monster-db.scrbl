@@ -7,9 +7,9 @@
 
 @title{Editing Monster Information}
 
-Monster information, including statistics and actions, is stored in a "monster
-database." See @secref[select-monster-db-tag] for how the database is loaded into
-the game.
+Monster information, including statistics and abilities is stored in a "monster
+database." See @secref[select-monster-db-tag] for how the database is loaded
+into the game.
 
 @margin-note{Interested in contributing to Frosthaven Manager? Help me build a
 monster database editor to make creating custom monster databases easier!}
@@ -45,7 +45,7 @@ This is a bit long, but we can already identify several distinct components:
 @itemlist[#:style 'ordered
           @item{Lines 2, 35, and 57 start definitions for "Monster Info."}
           @item{"Monster Info" contains many "Monster Stats," like on lines 5--12.}
-          @item{Lines 23, 28, 78, and 83 start definitions for a "Monster Action."}
+          @item{Lines 23, 28, 78, and 83 start definitions for a "Monster Ability"}
 ]
 
 You might also notice a few other things: lots of parentheses, for one. These
@@ -182,32 +182,32 @@ Warriors. But right now it doesn't have any ability cards!
 
 Let's write an ability card. As usual, we start with a @tech{definition}:
 
-@codeblock|{#s(monster-action )}|
+@codeblock|{#s(monster-ability )}|
 
 Next we have the Set name to which the ability card belongs. Recall that, for
 example, archers all use the same deck. Here we want to use the "Warrior" set.
 
-@codeblock|{#s(monster-action "Warrior")}|
+@codeblock|{#s(monster-ability "Warrior")}|
 
 Now we need a name for our card. Let's go with "Crushing Blow."
 
-@codeblock|{#s(monster-action "Warrior" "Crushing Blow")}|
+@codeblock|{#s(monster-ability "Warrior" "Crushing Blow")}|
 
 All ability cards have an initiative, so let's fill that in next. I think this
 is a slow ability, so let's go with 65:
 
-@codeblock|{#s(monster-action "Warrior" "Crushing Blow" 65)}|
+@codeblock|{#s(monster-ability "Warrior" "Crushing Blow" 65)}|
 
 All ability cards have a @tech{group} of abilities, which are @tech{game text}.
 I think Crushing Blow should have a short move and a big attack, so lets add two
 abilities for that:
 
-@codeblock|{#s(monster-action "Warrior" "Crushing Blow" 65
-                              ;; actions on the card:
-                              ;; - move
-                              ;; - attack with muddle (to crush their spirits)
-                              ("Move 2"
-                               "Attack +4, Muddle"))}|
+@codeblock|{#s(monster-ability "Warrior" "Crushing Blow" 65
+                               ;; abilities on the card:
+                               ;; - move
+                               ;; - attack with muddle (to crush their spirits)
+                               ("Move 2"
+                                "Attack +4, Muddle"))}|
 
 The last thing we need is to indicate whether this is a "shuffle" card or
 not---recall that some ability cards trigger a re-shuffle of the ability deck
@@ -216,14 +216,14 @@ Crushing Blow doesn't seem like the kind of ability that needs to shuffle the
 ability deck, so we'll indicate the @racket[#false] @tech{game switch}, or no
 shuffle:
 
-@codeblock|{#s(monster-action "Warrior" "Crushing Blow" 65
-                              ;; actions on the card:
-                              ;; - move
-                              ;; - attack with muddle (to crush their spirits)
-                              ("Move 2"
-                               "Attack +4, Muddle")
-                              ;; no shuffle
-                              #false)}|
+@codeblock|{#s(monster-ability "Warrior" "Crushing Blow" 65
+                               ;; abilities on the card:
+                               ;; - move
+                               ;; - attack with muddle (to crush their spirits)
+                               ("Move 2"
+                                "Attack +4, Muddle")
+                               ;; no shuffle
+                               #false)}|
 
 If we wanted this card to trigger a shuffle, we would use @racket[#true]
 instead.
@@ -235,7 +235,7 @@ you'll find a succint reference for the format.
 
 @margin-note{The @secref{Developer_Reference} for monster information documents the
 underlying data structures, like @racket[monster-info], @racket[monster-stats],
-and @racket[monster-action].}
+and @racket[monster-ability].}
 
 In the reference format below, names in @code{<angle-brackets>} refer to other
 rules in the reference, or to the following terms:
@@ -292,8 +292,8 @@ The use of ellipses @code{...} indicate 0 or more of the preceding item.
     ;; Condition Immunities
     (<game text> ...))
 
-;; Monster Action
-#s(monster-action
+;; Monster Ability
+#s(monster-ability
     ;; Set Name
     <game text>
     ;; Card Name

@@ -18,7 +18,7 @@
                                (is-a?/c view<%>))]
     [monster-group-view
       (->* ((obs/c monster-group?)
-            (obs/c (or/c #f monster-action?))
+            (obs/c (or/c #f monster-ability?))
             (obs/c (or/c #f monster-number/c)))
            (#:on-condition (-> monster-number/c condition? boolean?
                                any)
@@ -28,7 +28,7 @@
             #:on-new (-> monster-number/c boolean? any)
             #:on-select (-> (or/c #f monster-number/c) any))
            (is-a?/c view<%>))]
-    [db-view (-> (obs/c info-db/c) (obs/c action-db/c) (is-a?/c view<%>)) ]))
+    [db-view (-> (obs/c info-db/c) (obs/c ability-db/c) (is-a?/c view<%>)) ]))
 
 (require racket/gui/easy
          racket/gui/easy/contract
@@ -103,7 +103,7 @@
                               (string-join ", " #:before-last " and "))))
       (button "Edit Conditions" show-conditions))))
 
-(define (monster-group-view @mg @action @monster-num
+(define (monster-group-view @mg @ability @monster-num
                             #:on-select [on-select void]
                             #:on-condition [on-condition void]
                             #:on-hp [on-hp void]
@@ -140,27 +140,27 @@
     (group
       "Initiative"
       (text (@> @mg monster-group-name))
-      (text (@~> @action (if monster-action?
-                           (~> monster-action-initiative ~a)
-                           "??")))
+      (text (@~> @ability (if monster-ability?
+                            (~> monster-ability-initiative ~a)
+                            "??")))
       (button "Add Monster" do-new)))
-  (define action-panel
+  (define ability-panel
     (group
-      "Action"
+      "Ability"
       #:min-size (list 200 #f)
       (vpanel
         (text
-          (@~> @action
-               (if monster-action?
-                 (~>> (-< monster-action-name
-                          (~> (if monster-action-shuffle?
+          (@~> @ability
+               (if monster-ability?
+                 (~>> (-< monster-ability-name
+                          (~> (if monster-ability-shuffle?
                                 " 🔀"
                                 "")))
                       (format "~a~a"))
                  "")))
-        (list-view (@~> @action (if _
-                                  monster-action-abilities
-                                  (gen empty)))
+        (list-view (@~> @ability (if _
+                                   monster-ability-abilities
+                                   (gen empty)))
           (λ (k @e) (text (@~> @e (format "· ~a" _))))))))
   (define stats-panel
     (hpanel
@@ -219,7 +219,7 @@
       #:alignment '(center center)
       #:margin '(20 0)
       name-initiative-panel
-      action-panel
+      ability-panel
       stats-panel)
     monsters))
 
@@ -397,20 +397,20 @@
       "Normal")
     (~a (monster-current-hp monster))))
 
-(define (db-view @info-db @action-db)
+(define (db-view @info-db @ability-db)
   (define/obs @tab "Stats")
   (group
     "Monster DB"
     (text "If the Monster DB appears empty, then the provided file probably failed to load.")
     (tabs
-      '("Stats" "Actions")
+      '("Stats" "Abilities")
       #:selection @tab
       (λ (e choices current)
         (case e
           [(select) (:= @tab current)]))
       (case-view @tab
         [("Stats") (info-view @info-db)]
-        [("Actions") (action-view @action-db)]
+        [("Abilities") (ability-view @ability-db)]
         [else (spacer)]))))
 
 (define stats-table
@@ -455,31 +455,31 @@
                     "Elite Stats"
                     ,(info->hierlist* info monster-info-elite-stats)))))))))
 
-(define (action->hier-list action)
+(define (ability->hier-list ability)
   `(item-list
-     ,(monster-action-name action)
+     ,(monster-ability-name ability)
      ,(list
-        (~a "Initiative: " (monster-action-initiative action))
-        (~a "Shuffle? " (if (monster-action-shuffle? action) "Yes" "No"))
+        (~a "Initiative: " (monster-ability-initiative ability))
+        (~a "Shuffle? " (if (monster-ability-shuffle? ability) "Yes" "No"))
         `(item-list
            "Abilities"
-           ,(map ~a (monster-action-abilities action))))))
+           ,(map ~a (monster-ability-abilities ability))))))
 
-(define (action-db->hierlist action-db)
+(define (ability-db->hierlist ability-db)
   `(item-list
-     "Actions"
-     ,(for/list ([(set actions) (in-hash action-db)])
+     "Abilities"
+     ,(for/list ([(set abilities) (in-hash ability-db)])
         `(item-list
            ,set
-           ,(map action->hier-list actions)))))
+           ,(map ability->hier-list abilities)))))
 
 (define (info-view @info-db)
   (hierlist
     (@> @info-db info-db->hierlist)))
 
-(define (action-view @action-db)
+(define (ability-view @ability-db)
   (hierlist
-    (@> @action-db action-db->hierlist)))
+    (@> @ability-db ability-db->hierlist)))
 
 (define-flow take-first (~> hash-keys car))
 (define (initial-set+info info-db)
@@ -498,9 +498,9 @@
            (string-length monster-name))))
 
 (module+ main
-  (define-values (info-db actions-db)
+  (define-values (info-db ability-db)
     (get-dbs default-monster-db))
-  (void (render (window (db-view (@ info-db) (@ actions-db)))))
+  (void (render (window (db-view (@ info-db) (@ ability-db)))))
   (define-values (set info) (initial-set+info info-db))
   (define/obs @state
     ;; 0: set
@@ -553,17 +553,17 @@
               (define/obs @n (get-first-monster))
               ;; actually, each same-set group across the whole scenario uses
               ;; the same deck (?), so it may be better to use state that looks
-              ;; like actions-db + discarded-actions (same structure), or a
+              ;; like ability-db + discarded-actions (same structure), or a
               ;; single state structured like actions-db but with deck + discard
-              (define actions-for-group
-                (hash-ref actions-db (monster-group-set-name mg) empty))
-              (define/obs @deck (shuffle actions-for-group))
+              (define abilities-for-group
+                (hash-ref ability-db (monster-group-set-name mg) empty))
+              (define/obs @deck (shuffle abilities-for-group))
               (define/obs @discard empty)
-              (define/obs @action #f)
+              (define/obs @ability #f)
               (render
                 (window
                   (monster-group-view
-                    @mg @action @n
+                    @mg @ability @n
                     #:on-condition
                     (λ (num c on?)
                       (<@ @mg (monster-group-update-num num (monster-update-condition c on?))))
@@ -584,7 +584,7 @@
                       "Draw"
                       (thunk
                         ;; draw a card
-                        (:= @action
+                        (:= @ability
                             ;; empty, so no cards at all, giving #f
                             ;; or there _must_ be cards to draw from
                             (~> (@deck) @! (and (not empty?) first)))
@@ -594,18 +594,18 @@
                       "Next Round"
                       (thunk
                         ;; discard current card if it's a card
-                        (when (monster-action? (@! @action))
-                          (<~@ @discard (cons (@! @action) _)))
+                        (when (monster-ability? (@! @ability))
+                          (<~@ @discard (cons (@! @ability) _)))
                         ;; time to shuffle
                         (when (or (empty? (@! @deck))
-                                  (and (monster-action? (@! @action))
-                                       (monster-action-shuffle? (@! @action))))
+                                  (and (monster-ability? (@! @ability))
+                                       (monster-ability-shuffle? (@! @ability))))
                           (:= @deck
                               (shuffle
                                 ;; @deck ++ @discard because @deck may not have
                                 ;; been empty
                                 (append (@! @deck) (@! @discard))))
                           (:= @discard empty))
-                        ;; hide current action
-                        (:= @action #f))))))]
+                        ;; hide current ability
+                        (:= @ability #f))))))]
             [_ (void)]))))))

@@ -88,7 +88,7 @@
   (enum-out condition)
   (contract-out
     [initiative? predicate/c]
-    [action? predicate/c]
+    [ability? predicate/c]
     [conditions (listof condition?)]
     [monster-modifier-deck (listof monster-modifier?)]
     [shuffle-modifier-deck? (-> (listof monster-modifier?) boolean?)]
@@ -109,11 +109,11 @@
                           [name string?]
                           [normal-stats (apply list/c (build-list number-of-levels (const monster-stats?)))]
                           [elite-stats (apply list/c (build-list number-of-levels (const monster-stats?)))])]
-    [struct monster-action ([set-name string?]
-                            [name string?]
-                            [initiative initiative?]
-                            [abilities (listof string?)]
-                            [shuffle? boolean?])]
+    [struct monster-ability ([set-name string?]
+                             [name string?]
+                             [initiative initiative?]
+                             [abilities (listof string?)]
+                             [shuffle? boolean?])]
     [monster-number/c contract?]
     [struct monster ([number monster-number/c]
                      [elite? boolean?]
@@ -319,7 +319,7 @@
 ;; scenario
 
 (define initiative? (integer-in 0 99))
-(define action? string?)
+(define ability? string?)
 (define-enum-type element
   (fire ice air earth light dark)
   #:property-maker make-property-maker-that-displays-as-constant-names)
@@ -364,7 +364,7 @@
 
 (struct monster-stats [max-hp move attack bonuses effects immunities] #:prefab)
 (struct monster-info [set-name name normal-stats elite-stats] #:prefab)
-(struct monster-action [set-name name initiative abilities shuffle?] #:prefab)
+(struct monster-ability [set-name name initiative abilities shuffle?] #:prefab)
 (define monster-number/c (integer-in 1 10))
 (struct monster [number elite? current-hp conditions] #:transparent)
 (struct monster-group [set-name name level normal-stats elite-stats monsters] #:transparent)

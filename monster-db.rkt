@@ -3,8 +3,8 @@
 (provide
   (contract-out
     [info-db/c contract?]
-    [action-db/c contract?]
-    [get-dbs (-> path-string? (values info-db/c action-db/c))]
+    [ability-db/c contract?]
+    [get-dbs (-> path-string? (values info-db/c ability-db/c))]
     [default-monster-db path-string?]))
 
 (require racket/runtime-path
@@ -14,9 +14,9 @@
 (define info-db/c
   ;; Monster Set -> Monster Name -> Monster Info
   (hash/c string? (hash/c string? monster-info?)))
-(define action-db/c
+(define ability-db/c
   ;; Monster Set -> Monster Deck
-  (hash/c string? (listof monster-action?)))
+  (hash/c string? (listof monster-ability?)))
 
 (define-runtime-path default-monster-db "sample-db.rktd")
 
@@ -28,13 +28,13 @@
         [monster-info? (~>> collect (group-by monster-info-set-name)
                             (list~>hash #:->key (~> car monster-info-set-name)
                                         #:->value (list~>hash #:->key monster-info-name)))]
-        ;; actions deck
-        [monster-action? (~>> collect (group-by monster-action-set-name)
-                              (list~>hash #:->key (~> car monster-action-set-name)))])))
+        ;; ability deck
+        [monster-ability? (~>> collect (group-by monster-ability-set-name)
+                               (list~>hash #:->key (~> car monster-ability-set-name)))])))
 
 (module+ test
   (require rackunit)
-  (define-values (info actions)
+  (define-values (info abilities)
     (get-dbs "sample-db.rktd"))
   (check-equal? info
                 #hash(("archer"
@@ -104,10 +104,10 @@
                                    #s(monster-stats 9 7 8 ("shield 2") () ())
                                    #s(monster-stats 10 8 9 ("shield 3") () ())
                                    #s(monster-stats 11 9 10 ("shield 3") () ()))))))))
-  (check-equal? actions
+  (check-equal? abilities
                 #hash(("archer"
                        .
-                       (#s(monster-action
+                       (#s(monster-ability
                             "archer"
                             "double-shot"
                             25
@@ -115,7 +115,7 @@
                              "attack +2, range 5"
                              "attack +2, range 5, +1 if same target")
                             #f)
-                        #s(monster-action
+                        #s(monster-ability
                             "archer"
                             "take aim"
                             80
@@ -123,10 +123,10 @@
                             #t)))
                       ("guard"
                        .
-                       (#s(monster-action
+                       (#s(monster-ability
                             "guard"
                             "rushing charge"
                             25
                             ("move +3" "attack +2 + number of spaces moved towards target")
                             #f)
-                        #s(monster-action "guard" "stand tall" 80 ("shield 3") #t))))))
+                        #s(monster-ability "guard" "stand tall" 80 ("shield 3") #t))))))

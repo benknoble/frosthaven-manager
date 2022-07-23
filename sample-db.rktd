@@ -20,16 +20,16 @@
                  #s(monster-stats 10 8 9 ("shield 3") () ())
                  #s(monster-stats 11 9 10 ("shield 3") () ())))
 
-#s(monster-action "archer"
-                  "double-shot"
-                  25
-                  ("move +1" "attack +2, range 5" "attack +2, range 5, +1 if same target")
-                  #f)
-#s(monster-action "archer"
-                  "take aim"
-                  80
-                  ("move +2" "strengthen self")
-                  #t)
+#s(monster-ability "archer"
+                   "double-shot"
+                   25
+                   ("move +1" "attack +2, range 5" "attack +2, range 5, +1 if same target")
+                   #f)
+#s(monster-ability "archer"
+                   "take aim"
+                   80
+                   ("move +2" "strengthen self")
+                   #t)
 
 ;; same type, different
 #s(monster-info "archer"
@@ -75,13 +75,13 @@
                  #s(monster-stats 10 8 9 ("shield 3") () ())
                  #s(monster-stats 11 9 10 ("shield 3") () ())))
 
-#s(monster-action "guard"
-                  "rushing charge"
-                  25
-                  ("move +3" "attack +2 + number of spaces moved towards target")
-                  #f)
-#s(monster-action "guard"
-                  "stand tall"
-                  80
-                  ("shield 3")
-                  #t)
+#s(monster-ability "guard"
+                   "rushing charge"
+                   25
+                   ("move +3" "attack +2 + number of spaces moved towards target")
+                   #f)
+#s(monster-ability "guard"
+                   "stand tall"
+                   80
+                   ("shield 3")
+                   #t)

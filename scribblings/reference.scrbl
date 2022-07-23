@@ -71,13 +71,13 @@ The monster information representation, often for reading pre-fab structs.
 The monster statistic representation, usually used with pre-fabs.
 }
 
-@defstruct*[monster-action
+@defstruct*[monster-ability
              ([set-name string?]
               [name string?]
               [initiative initiative?]
               [abilities (listof string?)]
               [shuffle? boolean?])]{
-The monster action representation, often for reading pre-fab structs.
+The monster ability representation, often for reading pre-fab structs.
 }
 
 @section{@tt{elements}}

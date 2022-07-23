@@ -143,8 +143,8 @@ button to move to the next round. At this point, you would begin entering player
 initiatives to prepare for the new round (see @secref{Player_Controls}). This
 button also automatically wanes or unfuses active elements.
 
-The second button is "Draw Action(s)." Use this button once all player
-initiatives are entered to draw an action card for each monster group and
+The second button is "Draw Abilities." Use this button once all player
+initiatives are entered to draw an ability card for each monster group and
 re-order the creature list by initiative.
 
 @subsection{Creature List}
@@ -176,8 +176,8 @@ panel.
 
 @subsubsub*section{Monster Group Statistics}
 
-The monster group statistics panel contains the current initiative and action if
-any as well as the Move, Attack, Bonuses, Effects, Immunities, and Max HP
+The monster group statistics panel contains the current initiative and ability
+if any as well as the Move, Attack, Bonuses, Effects, Immunities, and Max HP
 statistics for both normal and elite monsters of that group. Additionally, the
 "Add Monster" button can be used to add a new individual monster to the group.
 At time of writing, closing the new monster window will add it; to cancel a new
