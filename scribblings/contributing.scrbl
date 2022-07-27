@@ -59,3 +59,22 @@ raco docs creature
 
 You'll want to make sure you select the search entry related to the Frosthaven
 Manager.
+
+@section{Contributing guidelines}
+
+All contributors are expected to behave like polite, respectful adults. Anything
+less will not be tolerated. This project is committed to maintaining respect and
+equality for all people.
+
+Many forms of contributing are accepted, including helping with social
+processes, maintaining text such as documentation, and writing code. If you
+don't want to contribute code, you can still contribute to Frosthaven Manager.
+
+Contributions to code should come with @emph{best effort} documentation. If you
+aren't used to Scribble yet, write some Markdown or plain text and let us help
+you convert it to Scribble. If you aren't sure what to write, make an attempt
+and let us help you improve it.
+
+Contributions to code may also come with tests. This is preferred but not
+required. It should be possible to somehow demonstrate that the contribution
+works correctly.
