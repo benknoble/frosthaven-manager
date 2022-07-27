@@ -30,7 +30,8 @@ raco test -xp frosthaven-manager
 }|
 
 Manual GUI tests can be run by running the program or application, @italic{e.g.},
-with @tt|{racket manager.rkt}| for the Frosthaven Manager.
+with @tt|{racket manager.rkt}| for the Frosthaven Manager. Many GUI modules come
+with manual demos of the components they provide.
 
 @subsection{Rebuild the package}
 
