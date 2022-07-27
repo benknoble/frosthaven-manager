@@ -222,40 +222,44 @@ the @racket[monster-group].
 @section{@tt{enum-helpers}}
 @defmodule[frosthaven-manager/enum-helpers]
 
-@section{@tt{gui/common-menu}}
+@section[#:tag "frosthaven-manager/gui"]{@tt{gui}}
+
+The following sections describe modules under @tt{frosthaven-manager/gui}.
+
+@subsection{@tt{gui/common-menu}}
 @defmodule[frosthaven-manager/gui/common-menu]
 
-@section{@tt{gui/counter}}
+@subsection{@tt{gui/counter}}
 @defmodule[frosthaven-manager/gui/counter]
 
-@section{@tt{gui/elements}}
+@subsection{@tt{gui/elements}}
 @defmodule[frosthaven-manager/gui/elements]
 
-@section{@tt{gui/hierlist}}
+@subsection{@tt{gui/hierlist}}
 @defmodule[frosthaven-manager/gui/hierlist]
 
-@section{@tt{gui/level-info}}
+@subsection{@tt{gui/level-info}}
 @defmodule[frosthaven-manager/gui/level-info]
 
-@section{@tt{gui/loot-picker}}
+@subsection{@tt{gui/loot-picker}}
 @defmodule[frosthaven-manager/gui/loot-picker]
 
-@section{@tt{gui/markdown}}
+@subsection{@tt{gui/markdown}}
 @defmodule[frosthaven-manager/gui/markdown]
 
-@section{@tt{gui/mixins}}
+@subsection{@tt{gui/mixins}}
 @defmodule[frosthaven-manager/gui/mixins]
 
-@section{@tt{gui/monsters}}
+@subsection{@tt{gui/monsters}}
 @defmodule[frosthaven-manager/gui/monsters]
 
-@section{@tt{gui/player-info}}
+@subsection{@tt{gui/player-info}}
 @defmodule[frosthaven-manager/gui/player-info]
 
-@section{@tt{gui/start}}
+@subsection{@tt{gui/start}}
 @defmodule[frosthaven-manager/gui/start]
 
-@section{@tt{gui/static-table}}
+@subsection{@tt{gui/static-table}}
 @defmodule[frosthaven-manager/gui/static-table]
 
 @section{@tt{manager}}

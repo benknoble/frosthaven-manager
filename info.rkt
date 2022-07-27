@@ -15,7 +15,9 @@
                ("gui-easy-lib" #:version "0.5")
                "rebellion"
                "base"))
-(define build-deps '("rackunit-lib"
+(define build-deps '("gui-easy"
+                     "qi-doc"
+                     "rackunit-lib"
                      "scribble-lib"
                      "racket-doc"))
 (define scribblings '(("scribblings/frosthaven-manager.scrbl" (multi-page))))
