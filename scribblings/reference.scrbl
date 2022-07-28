@@ -78,7 +78,8 @@ setting @racket[v]@subscript{@racket[pos]} to @racket[f] of
 
 @defstruct*[creature
              ([id any/c]
-              [v (or/c player? monster-group*?)])]{
+              [v (or/c player? monster-group*?)])
+             #:transparent]{
 A @racket[creature] is displayed in the central area of the Frosthaven Manager
 GUI, as described in @secref{Creature_List}. Therefore a @racket[creature-v] can
 be either a @racket[player] or a @racket[monster-group*].
@@ -88,7 +89,8 @@ A @racket[creature] is identified by its unique @racket[creature-id].
 
 @defstruct*[monster-group*
              ([active (or/c #f monster-number/c)]
-              [mg monster-group?])]{
+              [mg monster-group?])
+             #:transparent]{
 A @racket[monster-group*] wraps a @racket[monster-group] with a possibly active
 @racket[monster-number/c], which identifies the monster currently displayed in
 @secref{Monster_Group_Controls}.
@@ -96,12 +98,13 @@ A @racket[monster-group*] wraps a @racket[monster-group] with a possibly active
 
 @subsection{Level Info}
 
-@defstruct[level-info
-            ([monster-level natural-number/c]
-             [gold natural-number/c]
-             [trap-damage natural-number/c]
-             [hazardous-terrain natural-number/c]
-             [exp natural-number/c])]{
+@defstruct*[level-info
+             ([monster-level natural-number/c]
+              [gold natural-number/c]
+              [trap-damage natural-number/c]
+              [hazardous-terrain natural-number/c]
+              [exp natural-number/c])
+             #:transparent]{
 An instance of @racket[level-info] exposes characteristics of the level, such as
 the monster level, value of gold, damage caused by traps and hazardous terrain,
 and end-of-scenario experience.
@@ -147,7 +150,8 @@ how many players participated in the scenario.
               [xp natural-number/c]
               [conditions (listof condition?)]
               [initiative initiative?]
-              [loot (listof loot-card?)])]{
+              [loot (listof loot-card?)])
+             #:transparent]{
 A @racket[player] captures everything about a player that Frosthaven Manager
 needs.
 
@@ -273,17 +277,20 @@ Represents herbs for loot cards.
 Represents the random-item loot card.
 }
 
-@defstruct[money ([amount (integer-in 1 3)])]{
+@defstruct*[money ([amount (integer-in 1 3)])
+                  #:transparent]{
 Represents a loot card worth 1 to 3 gold.
 }
 
-@defstruct[material
-            ([name material-kind?]
-             [amount (apply list/c (build-list max-players (const natural-number/c)))])]{
+@defstruct*[material
+             ([name material-kind?]
+              [amount (apply list/c (build-list max-players (const natural-number/c)))])
+             #:transparent]{
 Represents a loot card for a material; the amount varies by number of players.
 }
 
-@defstruct[herb ([name herb-kind?])]{
+@defstruct*[herb ([name herb-kind?])
+                 #:transparent]{
 Represents a loot card for an herb.
 }
 
@@ -412,7 +419,8 @@ Returns the better or worse of the two modifier cards.
               [attack natural-number/c]
               [bonuses (listof string?)]
               [effects (listof string?)]
-              [immunities (listof string?)])]{
+              [immunities (listof string?)])
+             #:prefab]{
 The monster statistic representation, usually used with pre-fabs.
 }
 
@@ -420,7 +428,8 @@ The monster statistic representation, usually used with pre-fabs.
              ([set-name string?]
               [name string?]
               [normal-stats (apply list/c (build-list number-of-levels (const monster-stats?)))]
-              [elite-stats (apply list/c (build-list number-of-levels (const monster-stats?)))])]{
+              [elite-stats (apply list/c (build-list number-of-levels (const monster-stats?)))])
+             #:prefab]{
 The monster information representation, often for reading pre-fab structs.
 }
 
@@ -429,7 +438,8 @@ The monster information representation, often for reading pre-fab structs.
               [name string?]
               [initiative initiative?]
               [abilities (listof string?)]
-              [shuffle? boolean?])]{
+              [shuffle? boolean?])
+             #:prefab]{
 The monster ability representation, often for reading pre-fab structs.
 }
 
@@ -441,7 +451,8 @@ A contract that recognizes valid monster numbers.
              ([number monster-number/c]
               [elite? boolean?]
               [current-hp natural-number/c]
-              [conditions (listof condition?)])]{
+              [conditions (listof condition?)])
+             #:transparent]{
 A @racket[monster] captures the individual status of a monster, but not its
 game statistics. Those are listed in its parent @racket[monster-group].
 
@@ -454,7 +465,8 @@ Prefer the smart constructor @racket[make-monster].
               [level level/c]
               [normal-stats monster-stats?]
               [elite-stats monster-stats?]
-              [monsters (listof monster?)])]{
+              [monsters (listof monster?)])
+             #:transparent]{
 A @racket[monster-group] describes a group of @racket[monster]s and their stats.
 
 Prefer the smart constructor @racket[make-monster-group] and the update
@@ -549,11 +561,12 @@ The number of the first monster in the monster group @racket[mg], or
 The size of the element pictures.
 }
 
-@defstruct[element-pics
-            ([name string?]
-             [infused pict?]
-             [waning pict?]
-             [unfused pict?])]{
+@defstruct*[element-pics
+             ([name string?]
+              [infused pict?]
+              [waning pict?]
+              [unfused pict?])
+             #:transparent]{
 A container for a named set of element pictures.
 }
 
