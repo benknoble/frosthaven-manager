@@ -16,7 +16,7 @@ package name. I have used a package name of @tt{frosthaven-manager} everywhere,
 so I recommend cloning the code into a directory with that name.}
 
 @itemlist[#:style 'ordered
-          @item{Install @link[racket-lang.org]{Racket}. For example, on macOS with homebrew you might run @tt|{brew install --cask racket}|.}
+          @item{Install @link[racket-lang.org]{Racket}. For example, on macOS with homebrew you might run @terminal|{brew install --cask racket}|}
           @item{Clone the @link[benknoble/frosthaven-manager]{benknoble/frosthaven-manager repository}.}
           @item{Install the package as a link by running @tt|{raco pkg install}| from the cloned directory.}
 ]
