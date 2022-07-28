@@ -90,18 +90,18 @@ A full reference is provided at @secref{Developer_Reference}.
 
 Frosthaven Manager makes extensive use of
 @other-doc['(lib "qi/scribblings/qi.scrbl")]. Local customizations can be found
-in @racketmodlink[frosthaven-manager/qi].
+in @racketmodname[frosthaven-manager/qi].
 
 Frosthaven Manager uses
 @other-doc['(lib "racket/gui/easy/scribblings/gui-easy.scrbl")] to build
 declarative GUIs. Local customizations to the observable operators can be found
-in @racketmodlink[frosthaven-manager/observable-operator].
+in @racketmodname[frosthaven-manager/observable-operator].
 
 Most of the game-related definitions are in
 @racketmodname[frosthaven-manager/defns]. Support for elements and their images
 is in @racketmodname[frosthaven-manager/elements]. Most GUI components are in
 modules under @seclink["frosthaven-manager/gui"]{@tt{frosthaven-manager/gui}}.
-The Frosthaven Manger application is @racketmodname[frosthaven-manager/manager].
+The Frosthaven Manager application is @racketmodname[frosthaven-manager/manager].
 The monster database is manipulated by
 @racketmodname[frosthaven-manager/monster-db].
 
