@@ -37,7 +37,7 @@
             level-info-exp
             level-info-trap-damage
             level-info-hazardous-terrain)
-      #:index->value get-level-info
+      #:entry->value get-level-info
       #:selection @level))
   (define (action)
     (render

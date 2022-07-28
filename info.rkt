@@ -15,7 +15,8 @@
                ("gui-easy-lib" #:version "0.5")
                "rebellion"
                "base"))
-(define build-deps '("gui-easy"
+(define build-deps '("gui-doc"
+                     "gui-easy"
                      "qi-doc"
                      "rackunit-lib"
                      "scribble-lib"

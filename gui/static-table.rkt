@@ -19,7 +19,7 @@
                                                          dimension-integer?
                                                          dimension-integer?)))))
                         #:index->entry (-> natural-number/c natural-number/c)
-                        #:index->value (-> natural-number/c any/c))
+                        #:entry->value (-> natural-number/c any/c))
                        (is-a?/c view<%>))]))
 
 (require (only-in racket/gui label-string? dimension-integer?)
@@ -28,7 +28,7 @@
          "../qi.rkt")
 
 ;; index->entry computes the "row index", which is always the first column
-;; index->value computes the value that each function in entry->columns will be
+;; entry->value computes the value that each function in entry->columns will be
 ;; given; the result of each function is stringified by ~a.
 (define (static-table columns
                       num-rows
@@ -36,12 +36,12 @@
                       #:selection [selection #f]
                       #:widths [widths #f]
                       #:index->entry [index->entry values]
-                      #:index->value [index->value values])
+                      #:entry->value [entry->value values])
   (define column-widths (or widths
                             (for/list ([(e i) (in-indexed columns)])
                               (list i (* 10 (string-length e))))))
   (define (make-row i)
-    (define v (index->value i))
+    (define v (entry->value i))
     (for/vector #:length (add1 (length entry->columns)) ([f (in-list (cons (const i) entry->columns))])
       (~a (f v))))
   (table
