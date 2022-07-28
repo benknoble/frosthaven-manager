@@ -54,7 +54,6 @@ whitespace to help provide a visual feel of the layout. You are encouraged to
 use whitespace for layout, but the Frosthaven Manager will ignore it in most
 cases.
 
-@(define ref-doc '(lib "scribblings/reference/reference.scrbl"))
 @margin-note{For the adventurous, @tech{game text} obeys all the rules of
 @seclink["parse-string" #:doc ref-doc]{Racket strings}. Similarly, numbers can
 technically be written in any @seclink["parse-number" #:doc ref-doc]{Racket

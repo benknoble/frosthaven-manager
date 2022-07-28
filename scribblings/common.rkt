@@ -6,7 +6,9 @@
 
          terminal
 
-         select-monster-db-tag)
+         select-monster-db-tag
+
+         ref-doc)
 
 (require racket/match
          racket/runtime-path
@@ -42,3 +44,5 @@
           (apply verbatim args)))
 
 (define select-monster-db-tag "select-monster-db")
+
+(define ref-doc '(lib "scribblings/reference/reference.scrbl"))
