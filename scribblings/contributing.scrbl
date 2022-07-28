@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require "common.rkt"
-          (for-label "../defns.rkt"))
+          (for-label frosthaven-manager/defns))
 
 @title{Contributor's Guide}
 

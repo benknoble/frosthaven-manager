@@ -3,7 +3,7 @@
 @(require "common.rkt"
           "../monster-db.rkt"
           racket/file
-          (for-label "../defns.rkt"))
+          (for-label frosthaven-manager/defns))
 
 @title{Editing Monster Information}
 

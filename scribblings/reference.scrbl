@@ -13,28 +13,30 @@
                        <~)
             racket/gui/easy/contract
             qi
-            "../defns.rkt"
-            (only-in "../elements.rkt"
+            frosthaven-manager/defns
+            (only-in frosthaven-manager/elements
                      size
                      element-pics
                      elements)
-            "../enum-helpers.rkt"
-            "../gui/common-menu.rkt"
-            "../gui/counter.rkt"
-            "../gui/elements.rkt"
-            "../gui/hierlist.rkt"
-            "../gui/level-info.rkt"
-            "../gui/loot-picker.rkt"
-            "../gui/markdown.rkt"
-            "../gui/mixins.rkt"
-            "../gui/monsters.rkt"
-            "../gui/player-info.rkt"
-            "../gui/start.rkt"
-            "../gui/static-table.rkt"
-            "../manager.rkt"
-            "../monster-db.rkt"
-            "../observable-operator.rkt"
-            "../qi.rkt"
+            frosthaven-manager/enum-helpers
+            frosthaven-manager/gui/common-menu
+            frosthaven-manager/gui/counter
+            frosthaven-manager/gui/elements
+            frosthaven-manager/gui/hierlist
+            frosthaven-manager/gui/level-info
+            frosthaven-manager/gui/loot-picker
+            frosthaven-manager/gui/markdown
+            frosthaven-manager/gui/mixins
+            frosthaven-manager/gui/monsters
+            frosthaven-manager/gui/player-info
+            frosthaven-manager/gui/start
+            frosthaven-manager/gui/static-table
+            frosthaven-manager/manager
+            frosthaven-manager/monster-db
+            frosthaven-manager/observable-operator
+            frosthaven-manager/qi
+            frosthaven-manager/qi/single-pass-partition
+            frosthaven-manager/qi/list2hash
             ))
 
 @title{Developer Reference}
@@ -1041,16 +1043,23 @@ An alias for @racket[obs-update!] that wraps @racket[flo] in @racket[flow].
 @section{@tt{qi}}
 @defmodule[frosthaven-manager/qi]
 
-This modules provides everything from @racket[qi] in addition to the following
-Qi forms.
+This modules provides everything from @racketmodname[qi] in addition to the
+bindings from @racketmodname[frosthaven-manager/qi/single-pass-partition] and
+@racketmodname[frosthaven-manager/qi/list2hash].
+
+@subsection{@tt{qi/single-pass-partition}}
+@defmodule[frosthaven-manager/qi/single-pass-partition]
 
 @defform[(partition [condition-flo body-flo] ...)]{
-A form of generalized @racket[sieve], passing all the inputs that satisfy each
-@racket[condition-flo] to the corresponding @racket[body-flo].
+Qi form. A form of generalized @racket[sieve], passing all the inputs that
+satisfy each @racket[condition-flo] to the corresponding @racket[body-flo].
 
 This was implemented originally for Frosthaven Manager but has since been ported
 to Qi. When Qi stabilizes a new version with this form, it will be removed here.
 }
+
+@subsection{@tt{qi/list2hash}}
+@defmodule[frosthaven-manager/qi/list2hash]
 
 @defform[(list~>hash maybe->key maybe->value)
           #:grammar
