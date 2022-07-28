@@ -200,7 +200,8 @@ Last but not least, at the bottom of the screen lie loot and information
 controls.
 
 Click the "Loot!" button to draw a loot card; in the window that appears, click
-the name of a player to assign that loot card to the selected player.
+the name of a player to assign that loot card to the selected player. Close the
+window to assign the card to no player.
 
 The "Level Stats" panel shows current Trap and Hazardous Terrain damage, the
 value of Gold, and XP and Inspiration bonuses for completing the scenario. The
