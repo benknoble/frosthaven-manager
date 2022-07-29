@@ -8,7 +8,7 @@ Frosthaven and all related properties, images and text are owned by [Cephalofair
 
 ## Thanks
 
-Thank you to Derrick Franklin, John Hines, Jake Hicks, and Savannah Newton for
+Thank you to Derrick Franklin, John Hines, Jake Hicks, and Savannah Knoble for
 initial play-testing. Try not to let John have all the loot.
 
 Thank you to [Isaac Childres](https://twitter.com/Cephalofair), [Cephalofair Games](https://cephalofair.com), and
