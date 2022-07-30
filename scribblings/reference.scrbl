@@ -35,7 +35,6 @@
             frosthaven-manager/monster-db
             frosthaven-manager/observable-operator
             frosthaven-manager/qi
-            frosthaven-manager/qi/single-pass-partition
             frosthaven-manager/qi/list2hash
             ))
 
@@ -1057,19 +1056,7 @@ An alias for @racket[obs-update!] that wraps @racket[flo] in @racket[flow].
 @defmodule[frosthaven-manager/qi]
 
 This modules provides everything from @racketmodname[qi] in addition to the
-bindings from @racketmodname[frosthaven-manager/qi/single-pass-partition] and
-@racketmodname[frosthaven-manager/qi/list2hash].
-
-@subsection{@tt{qi/single-pass-partition}}
-@defmodule[frosthaven-manager/qi/single-pass-partition]
-
-@defform[(partition [condition-flo body-flo] ...)]{
-Qi form. A form of generalized @racket[sieve], passing all the inputs that
-satisfy each @racket[condition-flo] to the corresponding @racket[body-flo].
-
-This was implemented originally for Frosthaven Manager but has since been ported
-to Qi. When Qi stabilizes a new version with this form, it will be removed here.
-}
+bindings from @racketmodname[frosthaven-manager/qi/list2hash].
 
 @subsection{@tt{qi/list2hash}}
 @defmodule[frosthaven-manager/qi/list2hash]

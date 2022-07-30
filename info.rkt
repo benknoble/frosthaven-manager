@@ -11,13 +11,13 @@
                "gui-lib"
                "htdp-lib"
                "pict-lib"
-               "qi-lib"
+               ("qi-lib" #:version "3.0")
                ("gui-easy-lib" #:version "0.5")
                "rebellion"
                "base"))
 (define build-deps '("gui-doc"
                      "gui-easy"
-                     "qi-doc"
+                     ("qi-doc" #:version "3.0")
                      "rackunit-lib"
                      "scribble-lib"
                      "racket-doc"))
