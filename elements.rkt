@@ -64,7 +64,39 @@
 (define unfused-air (cc-superimpose base air-overlay))
 (define air (element-pics "Air" infused-air waning-air unfused-air))
 
-(define earth-overlay (scale-to-fit (text "🌿") base))
+(define earth-overlay
+  (let* ([stem (white (filled-rectangle 2 (- size 5)))]
+         [large-branch (white (filled-rectangle 2 (- (/ (- size 5) 2) 3)))]
+         [med-branch (white (filled-rectangle 2 (/ (- size 5) 3)))]
+         [small-branch (white (filled-rectangle 2 (- (/ (- size 5) 5) 3)))]
+         [with-large-branch-l
+           (pin-over stem
+                     (- (/ (- (/ (- size 5) 2) 3) (sqrt 2)))
+                     (/ (- size 5) 2)
+                     (rotate large-branch (* pi 1/4)))]
+         [with-med-branch-l
+           (pin-over with-large-branch-l
+                     (- (/ (- size 5) 3 (sqrt 2)))
+                     (/ (- size 5) 3)
+                     (rotate med-branch (* pi 1/4)))]
+         [with-small-branch-l
+           (pin-over with-med-branch-l
+                     (- (/ (- (/ (- size 5) 5) 3) (sqrt 2)))
+                     (/ (- size 5) 8)
+                     (rotate small-branch (* pi 1/4)))]
+         [with-outline-l
+           (pin-line with-small-branch-l
+                     stem (lambda (p f)
+                            (define-values (x y) (cb-find p f))
+                            (values x (- y 2)))
+                     stem ct-find
+                     #:color "white"
+                     #:start-angle (* pi 7/8)
+                     #:end-angle (/ pi 3)
+                     #:start-pull 3/4
+                     #:end-pull 1/4)]
+         [vertical-leaf (hc-append with-outline-l (scale with-outline-l -1 1))])
+    (rotate (refocus vertical-leaf stem) (* pi -1/4))))
 (define infused-earth (cc-superimpose (colorize base "dark green") earth-overlay))
 (define waning-earth (cc-superimpose (wane "dark green") earth-overlay))
 (define unfused-earth (cc-superimpose base earth-overlay))
