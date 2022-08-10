@@ -24,6 +24,7 @@
 (struct element-pics [name infused waning unfused] #:transparent)
 
 (define size 50)
+(define trimmed-size (- size 5))
 
 (define base (disk size))
 
@@ -38,7 +39,7 @@
 (define fire (element-pics "Fire" infused-fire waning-fire unfused-fire))
 
 (define ice-overlay
-  (let* ([bar (inset (white (filled-rectangle 2 (- size 5))) 5 0)]
+  (let* ([bar (inset (white (filled-rectangle 2 trimmed-size)) 5 0)]
          [branch (white (filled-rectangle 2 5))]
          [fractal (pin-over (pin-over (pin-over (pin-over bar
                                                           1 5
@@ -65,24 +66,24 @@
 (define air (element-pics "Air" infused-air waning-air unfused-air))
 
 (define earth-overlay
-  (let* ([stem (white (filled-rectangle 2 (- size 5)))]
-         [large-branch (white (filled-rectangle 2 (- (/ (- size 5) 2) 3)))]
-         [med-branch (white (filled-rectangle 2 (/ (- size 5) 3)))]
-         [small-branch (white (filled-rectangle 2 (- (/ (- size 5) 5) 3)))]
+  (let* ([stem (white (filled-rectangle 2 trimmed-size))]
+         [large-branch (white (filled-rectangle 2 (- (/ trimmed-size 2) 3)))]
+         [med-branch (white (filled-rectangle 2 (/ trimmed-size 3)))]
+         [small-branch (white (filled-rectangle 2 (- (/ trimmed-size 5) 3)))]
          [with-large-branch-l
            (pin-over stem
-                     (- (/ (- (/ (- size 5) 2) 3) (sqrt 2)))
-                     (/ (- size 5) 2)
+                     (- (/ (- (/ trimmed-size 2) 3) (sqrt 2)))
+                     (/ trimmed-size 2)
                      (rotate large-branch (* pi 1/4)))]
          [with-med-branch-l
            (pin-over with-large-branch-l
-                     (- (/ (- size 5) 3 (sqrt 2)))
-                     (/ (- size 5) 3)
+                     (- (/ trimmed-size 3 (sqrt 2)))
+                     (/ trimmed-size 3)
                      (rotate med-branch (* pi 1/4)))]
          [with-small-branch-l
            (pin-over with-med-branch-l
-                     (- (/ (- (/ (- size 5) 5) 3) (sqrt 2)))
-                     (/ (- size 5) 8)
+                     (- (/ (- (/ trimmed-size 5) 3) (sqrt 2)))
+                     (/ trimmed-size 8)
                      (rotate small-branch (* pi 1/4)))]
          [with-outline-l
            (pin-line with-small-branch-l
@@ -102,7 +103,7 @@
 (define unfused-earth (cc-superimpose base earth-overlay))
 (define earth (element-pics "Earth" infused-earth waning-earth unfused-earth))
 
-(define light-overlay (cc-superimpose (white (outline-flash (- size 5) (- size 5) 8 .55))
+(define light-overlay (cc-superimpose (white (outline-flash trimmed-size trimmed-size 8 .55))
                                       (white (filled-flash (- size 25) (- size 25) 8 .55))))
 (define infused-light (cc-superimpose (colorize base "gold") light-overlay))
 (define waning-light (cc-superimpose (wane "gold") light-overlay))
