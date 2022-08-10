@@ -31,9 +31,14 @@
 
 (define base (disk size))
 
+(define (half-wedge size color)
+  (wedge size 180 "solid" color))
 (define (wane color)
-  (vc-append (wedge (half size) 180 "solid" "black")
-             (rotate (wedge (half size) 180 "solid" color) pi)))
+  (~> (size)
+      half
+      (-< (half-wedge "black")
+          (~> (half-wedge color) (rotate pi)))
+      vc-append))
 
 (define fire-overlay (scale-to-fit (text "🔥") base))
 (define infused-fire (cc-superimpose (red base) fire-overlay))
