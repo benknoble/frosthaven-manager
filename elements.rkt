@@ -47,21 +47,17 @@
 (define fire (element-pics "Fire" infused-fire waning-fire unfused-fire))
 
 (define ice-overlay
-  (let* ([bar (inset (white (filled-rectangle 2 trimmed-size)) 5 0)]
+  (let* ([bar (~> ((filled-rectangle 2 trimmed-size)) white (inset 5 0))]
          [branch (white (filled-rectangle 2 5))]
-         [fractal (pin-over (pin-over (pin-over (pin-over bar
-                                                          1 5
-                                                          (rotate branch (/ pi 3)))
-                                                6 5
-                                                (rotate branch (/ (- pi) 3)))
-                                      1 (- size 5 10)
-                                      (rotate branch (* 2 (/ pi 3))))
-                            6 (- size 5 10)
-                            (rotate branch (* (- 2) (/ pi 3))))])
-    (cc-superimpose fractal
-                    (rotate fractal (half pi))
-                    (rotate fractal (/ pi 4))
-                    (rotate fractal (/ (- pi) 4)))))
+         [fractal
+           (~> (bar)
+               (pin-over 1 5 (rotate branch (/ pi 3)))
+               (pin-over 6 5 (rotate branch (/ pi -3)))
+               (pin-over 1 (- size 5 10) (rotate branch (* pi 2/3)))
+               (pin-over 6 (- size 5 10) (rotate branch (* pi -2/3))))])
+    (~> (fractal)
+        (-< _ (rotate (half pi)) (rotate (/ pi 4)) (rotate (/ pi -4)))
+        cc-superimpose)))
 (define infused-ice (cc-superimpose (cyan base) ice-overlay))
 (define waning-ice (cc-superimpose (wane "cyan") ice-overlay))
 (define unfused-ice (cc-superimpose base ice-overlay))
