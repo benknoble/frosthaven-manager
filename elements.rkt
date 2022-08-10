@@ -19,18 +19,21 @@
          pict/color
          pict/flash
          (only-in 2htdp/image
-                  wedge))
+                  wedge)
+         "qi.rkt")
 
 (struct element-pics [name infused waning unfused] #:transparent)
 
 (define size 50)
 (define trimmed-size (- size 5))
 
+(define-flow half (* 1/2))
+
 (define base (disk size))
 
 (define (wane color)
-  (vc-append (wedge (/ size 2) 180 "solid" "black")
-             (rotate (wedge (/ size 2) 180 "solid" color) pi)))
+  (vc-append (wedge (half size) 180 "solid" "black")
+             (rotate (wedge (half size) 180 "solid" color) pi)))
 
 (define fire-overlay (scale-to-fit (text "🔥") base))
 (define infused-fire (cc-superimpose (red base) fire-overlay))
@@ -51,7 +54,7 @@
                             6 (- size 5 10)
                             (rotate branch (* (- 2) (/ pi 3))))])
     (cc-superimpose fractal
-                    (rotate fractal (/ pi 2))
+                    (rotate fractal (half pi))
                     (rotate fractal (/ pi 4))
                     (rotate fractal (/ (- pi) 4)))))
 (define infused-ice (cc-superimpose (cyan base) ice-overlay))
@@ -67,13 +70,13 @@
 
 (define earth-overlay
   (let* ([stem (white (filled-rectangle 2 trimmed-size))]
-         [large-branch (white (filled-rectangle 2 (- (/ trimmed-size 2) 3)))]
+         [large-branch (white (filled-rectangle 2 (- (half trimmed-size) 3)))]
          [med-branch (white (filled-rectangle 2 (/ trimmed-size 3)))]
          [small-branch (white (filled-rectangle 2 (- (/ trimmed-size 5) 3)))]
          [with-large-branch-l
            (pin-over stem
-                     (- (/ (- (/ trimmed-size 2) 3) (sqrt 2)))
-                     (/ trimmed-size 2)
+                     (- (/ (- (half trimmed-size) 3) (sqrt 2)))
+                     (half trimmed-size)
                      (rotate large-branch (* pi 1/4)))]
          [with-med-branch-l
            (pin-over with-large-branch-l
@@ -111,20 +114,20 @@
 (define light (element-pics "Light" infused-light waning-light unfused-light))
 
 (define infused-dark (pin-over (pin-over (colorize base "purple")
-                                         (- (/ size 2) 6) (/ size 4)
-                                         (disk (/ size 2) #:color "white" #:border-color "purple" #:border-width 1))
+                                         (- (half size) 6) (/ size 4)
+                                         (disk (half size) #:color "white" #:border-color "purple" #:border-width 1))
                                6 (/ size 4)
-                               (disk (/ size 2) #:color "purple" #:border-color "white" #:border-width 1)))
+                               (disk (half size) #:color "purple" #:border-color "white" #:border-width 1)))
 (define waning-dark (pin-over (pin-over (wane "purple")
-                                        (- (/ size 2) 6) (/ size 4)
-                                        (disk (/ size 2) #:color "white" #:border-color "purple" #:border-width 1))
+                                        (- (half size) 6) (/ size 4)
+                                        (disk (half size) #:color "white" #:border-color "purple" #:border-width 1))
                               6 (/ size 4)
-                              (disk (/ size 2) #:color "purple" #:border-color "white" #:border-width 1)))
+                              (disk (half size) #:color "purple" #:border-color "white" #:border-width 1)))
 (define unfused-dark (pin-over (pin-over base
-                                         (- (/ size 2) 6) (/ size 4)
-                                         (disk (/ size 2) #:color "white" #:border-color "black" #:border-width 1))
+                                         (- (half size) 6) (/ size 4)
+                                         (disk (half size) #:color "white" #:border-color "black" #:border-width 1))
                                6 (/ size 4)
-                               (disk (/ size 2) #:color "black" #:border-color "white" #:border-width 1)))
+                               (disk (half size) #:color "black" #:border-color "white" #:border-width 1)))
 (define dark (element-pics "Dark" infused-dark waning-dark unfused-dark))
 
 (define elements (list fire ice air earth light dark))
