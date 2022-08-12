@@ -69,39 +69,41 @@
 (define unfused-air (cc-superimpose base air-overlay))
 (define air (element-pics "Air" infused-air waning-air unfused-air))
 
+
+(define-flow right-isoceles-hypotenuse->leg
+  (/ (sqrt 2)))
+(define-flow size->dx
+  (~> right-isoceles-hypotenuse->leg -))
+
 (define earth-overlay
   (let* ([stem (white (filled-rectangle 2 trimmed-size))]
-         [large-branch (white (filled-rectangle 2 (- (half trimmed-size) 3)))]
-         [med-branch (white (filled-rectangle 2 (/ trimmed-size 3)))]
-         [small-branch (white (filled-rectangle 2 (- (/ trimmed-size 5) 3)))]
-         [with-large-branch-l
-           (pin-over stem
-                     (- (/ (- (half trimmed-size) 3) (sqrt 2)))
-                     (half trimmed-size)
-                     (rotate large-branch (* pi 1/4)))]
-         [with-med-branch-l
-           (pin-over with-large-branch-l
-                     (- (/ trimmed-size 3 (sqrt 2)))
-                     (/ trimmed-size 3)
-                     (rotate med-branch (* pi 1/4)))]
-         [with-small-branch-l
-           (pin-over with-med-branch-l
-                     (- (/ (- (/ trimmed-size 5) 3) (sqrt 2)))
-                     (/ trimmed-size 8)
-                     (rotate small-branch (* pi 1/4)))]
-         [with-outline-l
-           (pin-line with-small-branch-l
-                     stem (lambda (p f)
-                            (define-values (x y) (cb-find p f))
-                            (values x (- y 2)))
-                     stem ct-find
-                     #:color "white"
-                     #:start-angle (* pi 7/8)
-                     #:end-angle (/ pi 3)
-                     #:start-pull 3/4
-                     #:end-pull 1/4)]
-         [vertical-leaf (hc-append with-outline-l (scale with-outline-l -1 1))])
-    (rotate (refocus vertical-leaf stem) (* pi -1/4))))
+         [large-size (- (half trimmed-size) 3)]
+         [large-branch (white (filled-rectangle 2 large-size))]
+         [med-size (/ trimmed-size 3)]
+         [med-branch (white (filled-rectangle 2 med-size))]
+         [small-size (- (/ trimmed-size 5) 3)]
+         [small-branch (white (filled-rectangle 2 small-size))])
+    (~> (stem)
+        (pin-over (size->dx large-size)
+                  (half trimmed-size)
+                  (rotate large-branch (* pi 1/4)))
+        (pin-over (size->dx med-size)
+                  (/ trimmed-size 3)
+                  (rotate med-branch (* pi 1/4)))
+        (pin-over (size->dx small-size)
+                  (/ trimmed-size 8)
+                  (rotate small-branch (* pi 1/4)))
+        (pin-line stem (flow (~> cb-find (== _ (- 2))))
+                  stem ct-find
+                  #:color "white"
+                  #:start-angle (* pi 7/8)
+                  #:end-angle (/ pi 3)
+                  #:start-pull 3/4
+                  #:end-pull 1/4)
+        (-< _ (scale -1 1))
+        hc-append
+        (refocus stem)
+        (rotate (* pi -1/4)))))
 (define infused-earth (cc-superimpose (colorize base "dark green") earth-overlay))
 (define waning-earth (cc-superimpose (wane "dark green") earth-overlay))
 (define unfused-earth (cc-superimpose base earth-overlay))
