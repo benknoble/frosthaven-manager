@@ -20,6 +20,8 @@
          pict/flash
          (only-in 2htdp/image
                   wedge)
+         racket/draw
+         plot/pict
          "qi.rkt")
 
 (struct element-pics [name infused waning unfused] #:transparent)
@@ -63,12 +65,39 @@
 (define unfused-ice (cc-superimpose base ice-overlay))
 (define ice (element-pics "Ice" infused-ice waning-ice unfused-ice))
 
-(define air-overlay (scale-to-fit (text "💨") base))
+(define air-overlay
+  (let* ([spiral-plot
+           (parameterize ([plot-x-ticks no-ticks]
+                          [plot-y-ticks no-ticks]
+                          [plot-x-label #f]
+                          [plot-y-label #f]
+                          [line-width 3]
+                          [plot-width (half size)]
+                          [plot-height (half size)]
+                          [plot-background-alpha 0]
+                          [plot-foreground-alpha 0])
+             ;; https://en.wikipedia.org/wiki/Archimedean_spiral
+             (plot (polar (λ (θ) (* -3 θ))
+                          #:color "white")))]
+         [spiral (~> (spiral-plot)
+                     (scale 1/2 -1/2)
+                     (rotate (* pi 1/2)))]
+         [bar+spiral (~> (size) half (- 3)
+                         (filled-rounded-rectangle 0.5) white
+                         (translate 3 0)
+                         (hb-append -2 _ spiral))]
+         [middle (~> (size) (* 2/3) (- 5)
+                     (filled-rounded-rectangle 1) white)])
+    (~> (bar+spiral)
+        (pin-over 3 15 middle)
+        (pin-over 0 30 (scale bar+spiral 1 -1))
+        (refocus middle)
+        (translate -1 0)
+        (hc-append (cloud 15 (* 2/3 size) "white")))))
 (define infused-air (cc-superimpose (colorize base "light gray") air-overlay))
 (define waning-air (cc-superimpose (wane "light gray") air-overlay))
 (define unfused-air (cc-superimpose base air-overlay))
 (define air (element-pics "Air" infused-air waning-air unfused-air))
-
 
 (define-flow right-isoceles-hypotenuse->leg
   (/ (sqrt 2)))
