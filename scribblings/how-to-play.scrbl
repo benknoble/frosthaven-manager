@@ -95,7 +95,8 @@ represented by a labelled icon and a button. The button controls the state of
 the element: click to infuse an element, and notice that the background of the
 element fills up with color. Click again to manually wane the element; notice
 the background is only half full. Click a third time to completely unfuse the
-element---now, the background should be back to black.
+element---now, the background should be back to black. Alternately, you can
+click the element to transition to the state indicated by the button.
 
 Here are the elements in each of the unfused, infused, and waning states:
 

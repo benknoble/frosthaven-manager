@@ -14,6 +14,7 @@
 (require racket/gui/easy
          "../observable-operator.rkt"
          racket/gui/easy/contract
+         racket/gui
 
          "../elements.rkt"
          (only-in pict inset))
@@ -22,16 +23,24 @@
   (define-values (states views) (element-cyclers es))
   (values states (apply panel #:stretch '(#f #f) views)))
 
+(define (handle-element-clicks cycle-element)
+  (mixin (canvas<%>) ()
+    (super-new)
+    (define/override (on-event e)
+      (case (send e get-event-type)
+        [(left-down) (cycle-element)]))))
+
 (define (element-cycler e)
   (define/obs @element-state 'unfused)
   (define (make-pict-for-canvas s)
     (inset ((state->pict e) s) (+ 3 (/ size 3)) 3 0 0))
+  (define (action)
+    (<@ @element-state transition-element-state))
   (define pict-view
     (pict-canvas @element-state
                  make-pict-for-canvas
-                 #:min-size (list (+ 6 size) (+ 6 size))))
-  (define (action)
-    (<@ @element-state transition-element-state))
+                 #:min-size (list (+ 6 size) (+ 6 size))
+                 #:mixin (handle-element-clicks action)))
   (define cycler-view
     (group
       (element-pics-name e)
