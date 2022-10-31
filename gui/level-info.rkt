@@ -40,7 +40,7 @@
       #:entry->value get-level-info
       #:selection @level))
   (define (action)
-    (render
+    (render ;; not setting current renderer
       (window
         #:title "Level Information"
         #:stretch '(#f #f)
@@ -56,7 +56,7 @@
       #:index->entry add1
       #:selection (@> @num-players sub1)))
   (define (action)
-    (render
+    (render ;; not setting current renderer
       (window
         #:title "Inspiration"
         #:stretch '(#f #f)
@@ -66,6 +66,7 @@
 (module+ main
   (define/obs @level 3)
   (define/obs @num-players 2)
-  (render (window (vpanel (level-stats @level @num-players)
-                          (level-table @level)
-                          (inspiration-table @num-players)))))
+  (render ;; not setting current renderer
+    (window (vpanel (level-stats @level @num-players)
+                    (level-table @level)
+                    (inspiration-table @num-players)))))

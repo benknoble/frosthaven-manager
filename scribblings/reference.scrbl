@@ -29,6 +29,7 @@
             frosthaven-manager/gui/mixins
             frosthaven-manager/gui/monsters
             frosthaven-manager/gui/player-info
+            frosthaven-manager/gui/render
             frosthaven-manager/gui/start
             frosthaven-manager/gui/static-table
             frosthaven-manager/manager
@@ -930,6 +931,30 @@ The callbacks @racket[on-hp] and @racket[on-xp] are given procedures to modify
 @racket[player-current-hp] and @racket[player-xp], respectively. The callback
 @racket[on-initiative] is given a new initiative for @racket[player-initiative].
 The number of players is used to format the player's loot appropriately.
+}
+
+@subsection{@tt{gui/render}}
+@defmodule[frosthaven-manager/gui/render]
+
+@defparam[current-renderer
+           r (or/c #f renderer?)
+           #:value #f]{
+A parameter for the current renderer. This can be set so that sub-views can
+access the top-level renderer. Note that it is not re-entrant, in the sense that
+to make it effective one must render an application by
+@codeblock{
+(define root (render ...))
+(current-renderer r)
+}
+Any other application running in the same thread cannot use
+@racket[current-renderer] or it will interfere with the previous application.
+This also holds more generally of sub-views @racket[render]ed on-the-fly. In new
+threads, the parameter's thread-local state guarantees should help, but you
+should consider defensively re-setting the parameter to @racket[#f] at the
+start. Alternately, only start rendering in new threads.
+
+This will not affect multiple applications built and run separately that use
+this library, since they're in separate processes completely.
 }
 
 @subsection{@tt{gui/start}}

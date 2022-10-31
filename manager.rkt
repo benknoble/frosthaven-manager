@@ -3,12 +3,13 @@
 (module+ main
   ;; (require racket/gui/easy/debugger)
   ;; (start-debugger)
-  (void (render-manager)))
+  (void (current-renderer (render-manager))))
 
 (provide render-manager)
 
 (require racket/gui/easy
          (only-in racket/gui get-file)
+         "gui/render.rkt"
          "observable-operator.rkt"
          "qi.rkt"
          "defns.rkt"
@@ -360,7 +361,7 @@
   (define do-bless-monster
     (deck-adder @blesses @monster-modifier-deck))
   ;; gui
-  (render
+  (render ;; see module+ main
     (window
       #:title "Frosthaven Manager"
       #:size '(800 600)

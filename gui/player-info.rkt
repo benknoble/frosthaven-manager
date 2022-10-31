@@ -76,7 +76,7 @@
   (define @init (@> @player player-initiative))
   (define @init-label (@~> @player (~>> player-name (~a "Initiative for "))))
   (define (show-initiative-slider)
-    (render
+    (render ;; not setting current renderer
       (dialog
         #:title @init-label
         (slider
@@ -93,7 +93,7 @@
       (text (@> @init ~a))
       (button "Edit Initiative" show-initiative-slider)))
   (define (show-conditions)
-    (render
+    (render ;; not setting current renderer
       (apply dialog
              #:title (@~> @player (~>> player-name (~a "Conditions for ")))
              #:size '(200 #f)
@@ -111,7 +111,7 @@
   (define (make-loot-view k @e)
     (text (@~> @e (~> cdr (format-loot-card (@! @num-players))))))
   (define (show-loot)
-    (render
+    (render ;; not setting current renderer
       (window
         #:title (@~> @player (~> player-name (~a "'s Loot")))
         #:min-size (list 200 40)
@@ -180,8 +180,8 @@
       #:names (map (flow (~> cdr player-name)) (@! @players))
       #:hps (map (flow (~> cdr player-max-hp)) (@! @players))))
   (void
-    (render (window i-view))
-    (render
+    (render (window i-view)) ;; not setting current renderer
+    (render ;; not setting current renderer
       (window
         (list-view @players
           #:key car

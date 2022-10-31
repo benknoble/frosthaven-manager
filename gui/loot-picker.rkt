@@ -91,7 +91,7 @@
   (define-flow (loot-text deck num-cards)
     (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
   (define (show-assigner)
-    (render
+    (render ;; not setting current renderer
       (loot-assigner @loot-deck @num-players @players on-player on-close)))
   (button (obs-combine loot-text @loot-deck @num-loot-cards)
           #:enabled? (@~> @loot-deck (not empty?))
@@ -125,10 +125,12 @@
 
 (module+ main
   (define/obs @loot-deck empty)
-  (void (render (window
-                  (hpanel
-                    (loot-picker #:on-card (loot-picker-updater @loot-deck))
-                    (table '("Card")
-                           (@> @loot-deck list->vector)
-                           #:entry->row (compose1 vector ~a)
-                           #:min-size '(250 #f)))))))
+  (void
+    (render ;; not setting current renderer
+      (window
+        (hpanel
+          (loot-picker #:on-card (loot-picker-updater @loot-deck))
+          (table '("Card")
+                 (@> @loot-deck list->vector)
+                 #:entry->row (compose1 vector ~a)
+                 #:min-size '(250 #f)))))))

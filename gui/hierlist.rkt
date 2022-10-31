@@ -131,7 +131,7 @@
 (module* main racket
   (require racket/gui/easy
            (submod ".."))
-  (render
+  (render ;; not setting current renderer
     (window
       (hierlist
         `(item-list

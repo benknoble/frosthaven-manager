@@ -15,6 +15,7 @@
          "../observable-operator.rkt"
          racket/gui/easy/contract
          racket/gui
+         "render.rkt"
 
          "../elements.rkt"
          (only-in pict inset))
@@ -89,9 +90,9 @@
 (module+ main
   (define-values (@states view) (elements-cycler elements))
   ;; demo
-  (void (render (window (vpanel view
-                                (button "Next Round"
-                                        (thunk (for-each (curryr obs-update! wane-element)
-                                                         @states)))))))
+  (void (current-renderer (render (window (vpanel view
+                                                  (button "Next Round"
+                                                          (thunk (for-each (curryr obs-update! wane-element)
+                                                                           @states))))))))
   ;; testing errors
   #;(void (obs-update! (car @states) (thunk* 'gibberish))))

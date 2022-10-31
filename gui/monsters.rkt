@@ -68,7 +68,7 @@
               #:checked? (@~> @monster (~>> monster-conditions (member c) (not false?)))
               (flow (on-condition c _))))
   (define (show-conditions)
-    (render
+    (render ;; not setting current renderer
       (apply dialog
              #:title (obs-combine
                        (flow (~>> (== monster-group-name monster-number)
@@ -124,7 +124,7 @@
       (on-new (@! @choice) (@! @elite?)))
     (define-flow mixin (~> (make-closing-proc-mixin set-close!)
                            (make-on-close-mixin on-close)))
-    (render
+    (render ;; not setting current renderer
       (dialog
         #:mixin mixin
         #:title "Add Monster"
@@ -346,7 +346,7 @@
     (define-flow mixin
       (~> (make-closing-proc-mixin set-close!)
           (make-on-close-mixin finish)))
-    (render
+    (render ;; not setting current renderer
       (dialog
         #:mixin mixin
         #:title "Pick a Monster"
@@ -500,7 +500,9 @@
 (module+ main
   (define-values (info-db ability-db)
     (get-dbs default-monster-db))
-  (void (render (window (db-view (@ info-db) (@ ability-db)))))
+  (void
+    (render ;; not setting current renderer
+      (window (db-view (@ info-db) (@ ability-db)))))
   (define-values (set info) (initial-set+info info-db))
   (define/obs @state
     ;; 0: set
@@ -538,7 +540,7 @@
   ;;                  (hash->list num->elite?))]))))))
 
   (void
-    (render
+    (render ;; not setting current renderer
       (window
         (multi-monster-picker
           (@ info-db) (@ 3)
@@ -560,7 +562,7 @@
               (define/obs @deck (shuffle abilities-for-group))
               (define/obs @discard empty)
               (define/obs @ability #f)
-              (render
+              (render ;; not setting current renderer
                 (window
                   (monster-group-view
                     @mg @ability @n

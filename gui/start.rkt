@@ -29,5 +29,7 @@
     (spacer)))
 
 (module+ main
-  (void (render (window (start-view #:on-level displayln
-                                    #:on-player displayln)))))
+  (void
+    (render ;; not setting current renderer
+      (window (start-view #:on-level displayln
+                          #:on-player displayln)))))

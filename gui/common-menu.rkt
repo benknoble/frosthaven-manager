@@ -19,7 +19,7 @@
   (menu-item
     "About Frosthaven Manager"
     (thunk
-      (render
+      (render ;; not setting current renderer
         (window
           #:title "About Frosthaven Manager"
           #:size '(400 300)
