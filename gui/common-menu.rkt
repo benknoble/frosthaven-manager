@@ -11,7 +11,7 @@
 (require racket/runtime-path
          net/sendurl
          racket/gui/easy
-         "markdown.rkt")
+         frosthaven-manager/gui/markdown)
 
 (define-runtime-path about.md "../ABOUT.md")
 

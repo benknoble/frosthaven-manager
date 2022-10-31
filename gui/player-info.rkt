@@ -19,11 +19,11 @@
                       (is-a?/c view<%>))]))
 
 (require racket/gui/easy
-         "../observable-operator.rkt"
-         "../qi.rkt"
+         frosthaven-manager/observable-operator
+         frosthaven-manager/qi
          racket/gui/easy/contract
-         "../defns.rkt"
-         "counter.rkt")
+         frosthaven-manager/defns
+         frosthaven-manager/gui/counter)
 
 (define (player-input-views @num-players
                             #:on-name [on-name void]

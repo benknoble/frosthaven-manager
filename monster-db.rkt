@@ -8,8 +8,8 @@
     [default-monster-db path-string?]))
 
 (require racket/runtime-path
-         "qi.rkt"
-         "defns.rkt")
+         frosthaven-manager/qi
+         frosthaven-manager/defns)
 
 (define info-db/c
   ;; Monster Set -> Monster Name -> Monster Info

@@ -12,13 +12,13 @@
 (define element-state/c (or/c 'unfused 'infused 'waning))
 
 (require racket/gui/easy
-         "../observable-operator.rkt"
+         frosthaven-manager/observable-operator
          racket/gui/easy/contract
          racket/gui
-         "render.rkt"
-         "helpers.rkt"
+         frosthaven-manager/gui/render
+         frosthaven-manager/gui/helpers
 
-         "../elements.rkt"
+         frosthaven-manager/elements
          (only-in pict inset))
 
 (define (elements-cycler es [panel hpanel])

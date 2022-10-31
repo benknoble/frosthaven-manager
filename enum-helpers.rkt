@@ -9,7 +9,7 @@
 (require
   rebellion/type/enum
   rebellion/collection/keyset
-  "qi.rkt")
+  frosthaven-manager/qi)
 
 (define (make-property-maker-that-displays-as-constant-names desc)
   (define default-props-sans-custom-writer

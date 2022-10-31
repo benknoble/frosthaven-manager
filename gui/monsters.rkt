@@ -32,14 +32,14 @@
 
 (require racket/gui/easy
          racket/gui/easy/contract
-         "../observable-operator.rkt"
-         "mixins.rkt"
-         "counter.rkt"
-         "hierlist.rkt"
+         frosthaven-manager/observable-operator
+         frosthaven-manager/gui/mixins
+         frosthaven-manager/gui/counter
+         frosthaven-manager/gui/hierlist
 
-         "../qi.rkt"
-         "../defns.rkt"
-         "../monster-db.rkt")
+         frosthaven-manager/qi
+         frosthaven-manager/defns
+         frosthaven-manager/monster-db)
 
 (define single-monster-event/c
   (or/c

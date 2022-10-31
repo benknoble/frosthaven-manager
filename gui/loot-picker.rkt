@@ -22,12 +22,12 @@
            (is-a?/c view<%>))]))
 
 (require racket/gui/easy
-         "../observable-operator.rkt"
-         "../qi.rkt"
+         frosthaven-manager/observable-operator
+         frosthaven-manager/qi
          racket/gui/easy/contract
-         "../defns.rkt"
-         "mixins.rkt"
-         "counter.rkt")
+         frosthaven-manager/defns
+         frosthaven-manager/gui/mixins
+         frosthaven-manager/gui/counter)
 
 (define (loot-picker #:on-card [on-card void])
   (define (make-cards-picker! label max-cards deck in-deck?)

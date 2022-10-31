@@ -9,19 +9,19 @@
 
 (require racket/gui/easy
          (only-in racket/gui get-file)
-         "gui/render.rkt"
-         "observable-operator.rkt"
-         "qi.rkt"
-         "defns.rkt"
-         "gui/common-menu.rkt"
-         "gui/start.rkt"
-         "gui/player-info.rkt"
-         "gui/level-info.rkt"
-         "gui/loot-picker.rkt"
-         (only-in "elements.rkt" elements)
-         "gui/elements.rkt"
-         "monster-db.rkt"
-         "gui/monsters.rkt")
+         frosthaven-manager/gui/render
+         frosthaven-manager/observable-operator
+         frosthaven-manager/qi
+         frosthaven-manager/defns
+         frosthaven-manager/gui/common-menu
+         frosthaven-manager/gui/start
+         frosthaven-manager/gui/player-info
+         frosthaven-manager/gui/level-info
+         frosthaven-manager/gui/loot-picker
+         (only-in frosthaven-manager/elements elements)
+         frosthaven-manager/gui/elements
+         frosthaven-manager/monster-db
+         frosthaven-manager/gui/monsters)
 
 
 ;; TODO these functions need a home :(

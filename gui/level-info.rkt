@@ -12,9 +12,9 @@
 
 (require racket/gui/easy
          racket/gui/easy/contract
-         "../observable-operator.rkt"
-         "../defns.rkt"
-         "static-table.rkt")
+         frosthaven-manager/observable-operator
+         frosthaven-manager/defns
+         frosthaven-manager/gui/static-table)
 
 (define (level-stats @level @num-players)
   (define @level-info (@> @level get-level-info))

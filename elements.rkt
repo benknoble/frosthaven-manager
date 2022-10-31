@@ -22,7 +22,7 @@
                   wedge)
          racket/draw
          plot/pict
-         "qi.rkt")
+         frosthaven-manager/qi)
 
 (struct element-pics [name infused waning unfused] #:transparent)
 

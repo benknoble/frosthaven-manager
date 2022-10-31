@@ -152,8 +152,8 @@
 (require
   rebellion/type/enum
   rebellion/type/singleton
-  "qi.rkt"
-  "enum-helpers.rkt")
+  frosthaven-manager/qi
+  frosthaven-manager/enum-helpers)
 
 (define-flow no-duplicates?
   (not (and check-duplicates #t)))
