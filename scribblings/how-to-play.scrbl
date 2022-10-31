@@ -87,7 +87,6 @@ When you're finished adding monster groups, click "Next."
 After adding monster groups, you'll reach the main scenario screen. It features
 several elements, which we will examine in turn.
 
-
 @subsection{Elements Tracker}
 
 On the far left is the elements tracker. Each of the six (6) elements is
@@ -96,7 +95,11 @@ the element: click to infuse an element, and notice that the background of the
 element fills up with color. Click again to manually wane the element; notice
 the background is only half full. Click a third time to completely unfuse the
 element---now, the background should be back to black. Alternately, you can
-click the element to transition to the state indicated by the button.
+click the element to transition to the state indicated by the button. You can
+also right-click the element to transition to any state.
+
+Note that elements are advanced automatically by the "Next Round" button as in
+@secref{Advancing_the_Scenario}.
 
 Here are the elements in each of the unfused, infused, and waning states:
 
@@ -139,10 +142,11 @@ two is used, and the better is discarded. The used card will appear next to
 At the bottom of the right control group you will find two (2) buttons. Only
 one will be available to you at a time.
 
-The first button is "Next Round." After every group has taken their turn, use this
-button to move to the next round. At this point, you would begin entering player
-initiatives to prepare for the new round (see @secref{Player_Controls}). This
-button also automatically wanes or unfuses active elements.
+The first button is "Next Round." After every group has taken their turn, use
+this button to move to the next round. At this point, you would begin entering
+player initiatives to prepare for the new round as in @secref{Player_Controls}.
+This button also automatically wanes or unfuses active elements as in
+@secref{Elements_Tracker}.
 
 The second button is "Draw Abilities." Use this button once all player
 initiatives are entered to draw an ability card for each monster group and

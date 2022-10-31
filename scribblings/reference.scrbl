@@ -22,6 +22,7 @@
             frosthaven-manager/gui/common-menu
             frosthaven-manager/gui/counter
             frosthaven-manager/gui/elements
+            frosthaven-manager/gui/helpers
             frosthaven-manager/gui/hierlist
             frosthaven-manager/gui/level-info
             frosthaven-manager/gui/loot-picker
@@ -637,6 +638,20 @@ displaying the @racket[element-pics].
 @defproc[(wane-element [state element-state/c])
          element-state/c]{
 Returns the new element state after waning for one cycle.
+}
+
+@subsection{@tt{gui/helpers}}
+@defmodule[frosthaven-manager/gui/helpers]
+
+@defproc[(translate-to-top-coords
+           [this (is-a?/c area<%>)]
+           [top (is-a?/c area<%>)]
+           [x position-integer?]
+           [y position-integer?])
+         (values (or/c position-integer? #f) (or/c position-integer? #f))]{
+Returns translated @racket[x] and @racket[y] coordinates relative to
+@racket[top], which should contain @racket[this]. If it doesn't, the results
+will be @racket[#f].
 }
 
 @subsection{@tt{gui/hierlist}}

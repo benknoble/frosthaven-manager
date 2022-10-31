@@ -16,6 +16,7 @@
          racket/gui/easy/contract
          racket/gui
          "render.rkt"
+         "helpers.rkt"
 
          "../elements.rkt"
          (only-in pict inset))
@@ -24,30 +25,47 @@
   (define-values (states views) (element-cyclers es))
   (values states (apply panel #:stretch '(#f #f) views)))
 
-(define (handle-element-clicks cycle-element)
+(define (make-transition-element-state @state)
+  (λ ()
+    (<@ @state transition-element-state)))
+
+(define (handle-element-clicks @state)
+  (define cycle-element (make-transition-element-state @state))
   (mixin (canvas<%>) ()
     (super-new)
     (define/override (on-event e)
       (case (send e get-event-type)
-        [(left-down) (cycle-element)]))))
+        [(left-down) (cycle-element)]
+        [(right-down)
+         (define-values (x y)
+           (translate-to-top-coords this
+                                    (renderer-root (current-renderer))
+                                    (send e get-x)
+                                    (send e get-y)))
+         (when (and x y)
+           (define pum
+             (popup-menu (menu "Transition to…"
+                               (menu-item "Infused" (λ () (:= @state 'infused)))
+                               (menu-item "Waning" (λ () (:= @state 'waning)))
+                               (menu-item "Unfused" (λ () (:= @state 'unfused))))))
+           (render-popup-menu (current-renderer) pum x y))]))))
 
 (define (element-cycler e)
   (define/obs @element-state 'unfused)
   (define (make-pict-for-canvas s)
     (inset ((state->pict e) s) (+ 3 (/ size 3)) 3 0 0))
-  (define (action)
-    (<@ @element-state transition-element-state))
+  (define cycle-element (make-transition-element-state @element-state))
   (define pict-view
     (pict-canvas @element-state
                  make-pict-for-canvas
                  #:min-size (list (+ 6 size) (+ 6 size))
-                 #:mixin (handle-element-clicks action)))
+                 #:mixin (handle-element-clicks @element-state)))
   (define cycler-view
     (group
       (element-pics-name e)
       #:stretch '(#f #f)
       pict-view
-      (button (@> @element-state state->text) action)))
+      (button (@> @element-state state->text) cycle-element)))
   (values @element-state cycler-view))
 
 (define (state->pict e)
