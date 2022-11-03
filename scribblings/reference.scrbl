@@ -648,10 +648,9 @@ Returns the new element state after waning for one cycle.
            [top (is-a?/c area<%>)]
            [x position-integer?]
            [y position-integer?])
-         (values (or/c position-integer? #f) (or/c position-integer? #f))]{
+         (values position-integer? position-integer?)]{
 Returns translated @racket[x] and @racket[y] coordinates relative to
-@racket[top], which should contain @racket[this]. If it doesn't, the results
-will be @racket[#f].
+@racket[top], assuming they were originally relative to @racket[this].
 }
 
 @subsection{@tt{gui/hierlist}}
