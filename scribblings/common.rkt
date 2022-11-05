@@ -8,7 +8,8 @@
 
          select-monster-db-tag
 
-         ref-doc)
+         ref-doc
+         gui-doc)
 
 (require racket/match
          racket/runtime-path
@@ -46,3 +47,4 @@
 (define select-monster-db-tag "select-monster-db")
 
 (define ref-doc '(lib "scribblings/reference/reference.scrbl"))
+(define gui-doc '(lib "scribblings/gui/gui.scrbl"))
