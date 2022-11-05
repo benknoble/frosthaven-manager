@@ -15,8 +15,7 @@
                                       'resize-corner 'deleted 'transparent)))
            (is-a?/c view<%>))]))
 
-(require racket/gui
-         racket/gui/easy
+(require racket/gui/easy
          racket/gui/easy/contract
          racket/gui/easy/observable
          mrlib/hierlist)
