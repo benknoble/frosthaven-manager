@@ -7,13 +7,13 @@
 @title{How to Play}
 
 @(define step
-   (let ([n 1])
+   (let ([n (box 1)])
      (λ (name #:tag [tag #f])
        (begin0
          (if tag
-           (section #:tag tag (format "Step ~a: ~a" n name))
-           (section (format "Step ~a: ~a" n name)))
-         (set! n (add1 n))))))
+           (section #:tag tag (format "Step ~a: ~a" (unbox n) name))
+           (section (format "Step ~a: ~a" (unbox n) name)))
+         (set-box! n (add1 (unbox n)))))))
 
 @define[next]{Then click "Next."}
 

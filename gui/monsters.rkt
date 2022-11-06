@@ -118,8 +118,8 @@
                     (sort _ <))))
     (define/obs @choice (~> (@available-numbers) @! (and (not empty?) first)))
     (define/obs @elite? #f)
-    (define close! #f)
-    (define (set-close! p) (set! close! p))
+    (define close! (box #f))
+    (define (set-close! p) (set-box! close! p))
     (define (on-close)
       ;; valid because called when the dialog that changes @choice is closed
       (on-new (@! @choice) (@! @elite?)))
@@ -137,7 +137,7 @@
           ;; On η-expansion of close!: close! can be #f until it is set, so
           ;; expand the call to close! (by the time it is called it should
           ;; have the correct value, a procedure).
-          (button "Add" (λ () (close!)))))))
+          (button "Add" (λ () ((unbox close!))))))))
   (define name-initiative-panel
     (group
       "Initiative"
@@ -343,8 +343,8 @@
           ;; hash-update with no failure-result as a guard against bugs
           (vector-update! new-group 2 (flow (hash-update n (const elite?))))]
         [`(level ,level) (vector-set! new-group 3 level)]))
-    (define close! #f)
-    (define (set-close! c) (set! close! c))
+    (define close! (box #f))
+    (define (set-close! c) (set-box! close! c))
     (define-flow mixin
       (~> (make-closing-proc-mixin set-close!)
           (make-on-close-mixin finish)))
@@ -368,7 +368,7 @@
         ;; On η-expansion of close!: close! can be #f until it is set, so
         ;; expand the call to close! (by the time it is called it should
         ;; have the correct value, a procedure).
-        (button "Add" (λ () (close!))))))
+        (button "Add" (λ () ((unbox close!)))))))
   (vpanel
     (list-view @monster-groups
       #:key car
