@@ -607,6 +607,11 @@ The following sections describe modules under @tt{frosthaven-manager/gui}.
 Menu items for Frosthaven Manager.
 }
 
+@defproc[(do-about) renderer?]{
+Renders an About window, as in @racket[about-menu-item]. Useful with
+@racket[application-about-handler].
+}
+
 @subsection{@tt{gui/counter}}
 @defmodule[frosthaven-manager/gui/counter]
 

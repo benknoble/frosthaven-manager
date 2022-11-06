@@ -10,7 +10,9 @@
 (provide manager)
 
 (require racket/gui/easy
-         (only-in racket/gui get-file)
+         (only-in racket/gui
+                  get-file
+                  application-about-handler)
          frosthaven-manager/gui/render
          frosthaven-manager/observable-operator
          frosthaven-manager/qi
@@ -362,6 +364,7 @@
   (define do-bless-monster
     (deck-adder @blesses @monster-modifier-deck))
   ;; gui
+  (application-about-handler do-about)
   (window
     #:title "Frosthaven Manager"
     #:size '(800 600)

@@ -2,6 +2,7 @@
 
 (provide
   (contract-out
+    [do-about (-> renderer?)]
     [about-menu-item (-> (is-a?/c view<%>))]
     [issue-menu-item (-> (is-a?/c view<%>))]
     [feature-menu-item (-> (is-a?/c view<%>))]
@@ -16,18 +17,18 @@
 
 (define-runtime-path about.md "../ABOUT.md")
 
+(define (do-about)
+  (with-closing-custodian/eventspace
+    (render/eventspace
+      #:eventspace closing-eventspace
+      (window
+        #:mixin close-custodian-mixin
+        #:title "About Frosthaven Manager"
+        #:size '(400 300)
+        (markdown-text about.md)))))
+
 (define (about-menu-item)
-  (menu-item
-    "About Frosthaven Manager"
-    (thunk
-      (with-closing-custodian/eventspace
-        (render/eventspace
-          #:eventspace closing-eventspace
-          (window
-            #:mixin close-custodian-mixin
-            #:title "About Frosthaven Manager"
-            #:size '(400 300)
-            (markdown-text about.md)))))))
+  (menu-item "About Frosthaven Manager" do-about))
 
 (define (issue-menu-item)
   (menu-item
