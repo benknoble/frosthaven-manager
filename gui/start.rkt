@@ -29,7 +29,9 @@
     (spacer)))
 
 (module+ main
+  (require frosthaven-manager/gui/render)
   (void
-    (render ;; not setting current renderer
+    ;; no separate eventspace: block main until this window closed
+    (render/eventspace
       (window (start-view #:on-level displayln
                           #:on-player displayln)))))

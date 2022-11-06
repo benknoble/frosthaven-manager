@@ -1084,8 +1084,8 @@ provided as @racket[widths].
 This module's main function is to run the Frosthaven Manager. It provides only
 a single binding:
 
-@defproc[(render-manager) renderer?]{
-Renders the Frosthaven Manager and returns the @racket[renderer?].
+@defproc[(manager) (is-a?/c view<%>)]{
+A view for the Frosthaven Manager. Render with @racket[render/eventspace].
 }
 
 @section{@tt{monster-db}}

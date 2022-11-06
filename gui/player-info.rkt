@@ -23,7 +23,8 @@
          frosthaven-manager/qi
          racket/gui/easy/contract
          frosthaven-manager/defns
-         frosthaven-manager/gui/counter)
+         frosthaven-manager/gui/counter
+         frosthaven-manager/gui/render)
 
 (define (player-input-views @num-players
                             #:on-name [on-name void]
@@ -76,7 +77,8 @@
   (define @init (@> @player player-initiative))
   (define @init-label (@~> @player (~>> player-name (~a "Initiative for "))))
   (define (show-initiative-slider)
-    (render ;; not setting current renderer
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
       (dialog
         #:title @init-label
         (slider
@@ -93,7 +95,8 @@
       (text (@> @init ~a))
       (button "Edit Initiative" show-initiative-slider)))
   (define (show-conditions)
-    (render ;; not setting current renderer
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
       (apply dialog
              #:title (@~> @player (~>> player-name (~a "Conditions for ")))
              #:size '(200 #f)
@@ -111,16 +114,19 @@
   (define (make-loot-view k @e)
     (text (@~> @e (~> cdr (format-loot-card (@! @num-players))))))
   (define (show-loot)
-    (render ;; not setting current renderer
-      (window
-        #:title (@~> @player (~> player-name (~a "'s Loot")))
-        #:min-size (list 200 40)
-        (list-view (@> @player make-loot-list)
-          #:key car
-          make-loot-view
-          #:min-size (@~> @player
-                          (~> (-< #f (~> player-loot length (* 40)))
-                              list))))))
+    (with-closing-custodian/eventspace
+      (render/eventspace
+        #:eventspace closing-eventspace
+        (window
+          #:mixin close-custodian-mixin
+          #:title (@~> @player (~> player-name (~a "'s Loot")))
+          #:min-size (list 200 40)
+          (list-view (@> @player make-loot-list)
+            #:key car
+            make-loot-view
+            #:min-size (@~> @player
+                            (~> (-< #f (~> player-loot length (* 40)))
+                                list)))))))
   (define loot-panel
     (button "Show Loot" show-loot))
   ;; final view
@@ -180,8 +186,13 @@
       #:names (map (flow (~> cdr player-name)) (@! @players))
       #:hps (map (flow (~> cdr player-max-hp)) (@! @players))))
   (void
-    (render (window i-view)) ;; not setting current renderer
-    (render ;; not setting current renderer
+    (with-closing-custodian/eventspace
+      (render/eventspace
+        #:eventspace closing-eventspace
+        (window #:mixin close-custodian-mixin
+                i-view)))
+    ;; no separate eventspace: block main until this window closed
+    (render/eventspace
       (window
         (list-view @players
           #:key car

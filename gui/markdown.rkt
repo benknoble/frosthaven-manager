@@ -261,8 +261,10 @@
 
 (module* main racket
   (require racket/gui/easy
+           frosthaven-manager/gui/render
            (submod ".."))
-  (render ;; not setting current renderer
+  ;; no separate eventspace: block main until this window closed
+  (render/eventspace
     (window
       (markdown-text
         (string-join

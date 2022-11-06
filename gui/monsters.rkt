@@ -68,7 +68,8 @@
               #:checked? (@~> @monster (~>> monster-conditions (member c) (not false?)))
               (flow (on-condition c _))))
   (define (show-conditions)
-    (render ;; not setting current renderer
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
       (apply dialog
              #:title (obs-combine
                        (flow (~>> (== monster-group-name monster-number)
@@ -124,7 +125,8 @@
       (on-new (@! @choice) (@! @elite?)))
     (define-flow mixin (~> (make-closing-proc-mixin set-close!)
                            (make-on-close-mixin on-close)))
-    (render ;; not setting current renderer
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
       (dialog
         #:mixin mixin
         #:title "Add Monster"
@@ -346,7 +348,8 @@
     (define-flow mixin
       (~> (make-closing-proc-mixin set-close!)
           (make-on-close-mixin finish)))
-    (render ;; not setting current renderer
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
       (dialog
         #:mixin mixin
         #:title "Pick a Monster"
@@ -498,11 +501,15 @@
            (string-length monster-name))))
 
 (module+ main
+  (require frosthaven-manager/gui/render)
   (define-values (info-db ability-db)
     (get-dbs default-monster-db))
   (void
-    (render ;; not setting current renderer
-      (window (db-view (@ info-db) (@ ability-db)))))
+    (with-closing-custodian/eventspace
+      (render/eventspace
+        #:eventspace closing-eventspace
+        (window #:mixin close-custodian-mixin
+                (db-view (@ info-db) (@ ability-db))))))
   (define-values (set info) (initial-set+info info-db))
   (define/obs @state
     ;; 0: set
@@ -540,7 +547,8 @@
   ;;                  (hash->list num->elite?))]))))))
 
   (void
-    (render ;; not setting current renderer
+    ;; no separate eventspace: block main until this window closed
+    (render/eventspace
       (window
         (multi-monster-picker
           (@ info-db) (@ 3)
@@ -562,52 +570,55 @@
               (define/obs @deck (shuffle abilities-for-group))
               (define/obs @discard empty)
               (define/obs @ability #f)
-              (render ;; not setting current renderer
-                (window
-                  (monster-group-view
-                    @mg @ability @n
-                    #:on-condition
-                    (λ (num c on?)
-                      (<@ @mg (monster-group-update-num num (monster-update-condition c on?))))
-                    #:on-hp
-                    (λ (num proc)
-                      (<@ @mg (monster-group-update-num num (monster-update-hp proc))))
-                    #:on-kill
-                    (λ (n)
-                      (<@ @mg (monster-group-remove n))
-                      (:= @n (get-first-monster)))
-                    #:on-new
-                    (λ (n elite?)
-                      (<@ @mg (monster-group-add n elite?))
-                      (:= @n n))
-                    #:on-select (λ:= @n))
-                  (hpanel
-                    (button
-                      "Draw"
-                      (thunk
-                        ;; draw a card
-                        (:= @ability
-                            ;; empty, so no cards at all, giving #f
-                            ;; or there _must_ be cards to draw from
-                            (~> (@deck) @! (and (not empty?) first)))
-                        ;; update the deck
-                        (<~@ @deck (switch [(not empty?) rest]))))
-                    (button
-                      "Next Round"
-                      (thunk
-                        ;; discard current card if it's a card
-                        (when (monster-ability? (@! @ability))
-                          (<~@ @discard (cons (@! @ability) _)))
-                        ;; time to shuffle
-                        (when (or (empty? (@! @deck))
-                                  (and (monster-ability? (@! @ability))
-                                       (monster-ability-shuffle? (@! @ability))))
-                          (:= @deck
-                              (shuffle
-                                ;; @deck ++ @discard because @deck may not have
-                                ;; been empty
-                                (append (@! @deck) (@! @discard))))
-                          (:= @discard empty))
-                        ;; hide current ability
-                        (:= @ability #f))))))]
+              (with-closing-custodian/eventspace
+                (render/eventspace
+                  #:eventspace closing-eventspace
+                  (window
+                    #:mixin close-custodian-mixin
+                    (monster-group-view
+                      @mg @ability @n
+                      #:on-condition
+                      (λ (num c on?)
+                        (<@ @mg (monster-group-update-num num (monster-update-condition c on?))))
+                      #:on-hp
+                      (λ (num proc)
+                        (<@ @mg (monster-group-update-num num (monster-update-hp proc))))
+                      #:on-kill
+                      (λ (n)
+                        (<@ @mg (monster-group-remove n))
+                        (:= @n (get-first-monster)))
+                      #:on-new
+                      (λ (n elite?)
+                        (<@ @mg (monster-group-add n elite?))
+                        (:= @n n))
+                      #:on-select (λ:= @n))
+                    (hpanel
+                      (button
+                        "Draw"
+                        (thunk
+                          ;; draw a card
+                          (:= @ability
+                              ;; empty, so no cards at all, giving #f
+                              ;; or there _must_ be cards to draw from
+                              (~> (@deck) @! (and (not empty?) first)))
+                          ;; update the deck
+                          (<~@ @deck (switch [(not empty?) rest]))))
+                      (button
+                        "Next Round"
+                        (thunk
+                          ;; discard current card if it's a card
+                          (when (monster-ability? (@! @ability))
+                            (<~@ @discard (cons (@! @ability) _)))
+                          ;; time to shuffle
+                          (when (or (empty? (@! @deck))
+                                    (and (monster-ability? (@! @ability))
+                                         (monster-ability-shuffle? (@! @ability))))
+                            (:= @deck
+                                (shuffle
+                                  ;; @deck ++ @discard because @deck may not have
+                                  ;; been empty
+                                  (append (@! @deck) (@! @discard))))
+                            (:= @discard empty))
+                          ;; hide current ability
+                          (:= @ability #f)))))))]
             [_ (void)]))))))

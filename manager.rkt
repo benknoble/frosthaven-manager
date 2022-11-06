@@ -3,9 +3,11 @@
 (module+ main
   ;; (require racket/gui/easy/debugger)
   ;; (start-debugger)
-  (void (current-renderer (render-manager))))
+  (void (render/eventspace
+          ;; no separate eventspace: block main until this window closed
+          (manager))))
 
-(provide render-manager)
+(provide manager)
 
 (require racket/gui/easy
          (only-in racket/gui get-file)
@@ -22,7 +24,6 @@
          frosthaven-manager/gui/elements
          frosthaven-manager/monster-db
          frosthaven-manager/gui/monsters)
-
 
 ;; TODO these functions need a home :(
 
@@ -335,7 +336,7 @@
              (format "~a (~a/~a)" text _ (length original-deck))))
     do-adder))
 
-(define (render-manager)
+(define (manager)
   ;; gui state
   (define/obs @mode 'start)
   ;; game state
@@ -361,119 +362,118 @@
   (define do-bless-monster
     (deck-adder @blesses @monster-modifier-deck))
   ;; gui
-  (render ;; see module+ main
-    (window
-      #:title "Frosthaven Manager"
-      #:size '(800 600)
-      (menu-bar
-        (menu "Info"
-              (about-menu-item)
-              (send-feedback-menu-item)
-              (issue-menu-item)
-              (feature-menu-item)
-              (contribute-menu-item)))
-      (case-view @mode
-        [(start)
-         (vpanel
-           (start-view #:on-level (λ:= @level)
-                       #:on-player (λ:= @num-players))
-           (button "Play"
-                   (to-input-player-info @mode @creatures @num-players)))]
-        [(input-player-info)
-         (vpanel
-           (player-input-views @num-players
-                               #:on-name (update-player-name @creatures)
-                               #:on-hp (update-player-max-hp @creatures))
-           (button "Next" (to-build-loot-deck @mode @creatures)))]
-        [(build-loot-deck)
-         (vpanel
-           (loot-picker
-             #:on-card
-             (update-loot-deck-and-num-loot-cards @loot-deck @num-loot-cards))
-           (spacer)
-           (button "Next" (to-choose-monster-db @mode)))]
-        [(choose-monster-db)
-         (vpanel
-           (hpanel
-             #:stretch '(#t #f)
-             (button "Open Monster DB"
-                     (thunk
-                       (init-dbs
-                         (or (get-file "Monster DB") default-monster-db)
-                         @info-db @ability-db @ability-decks)))
-             (button "Use Default Monster DB"
-                     (thunk
-                       (init-dbs
-                         default-monster-db
-                         @info-db @ability-db @ability-decks))))
-           (db-view @info-db @ability-db)
-           (button "Next" (to-choose-monsters @mode)
-                   #:enabled? (@~> @info-db (not hash-empty?))))]
-        [(choose-monsters)
-         (vpanel
-           (multi-monster-picker
-             @info-db @level
-             #:on-change (add-or-remove-monster-group @creatures))
-           (button "Next" (to-play @mode @creatures)))]
-        [(play)
-         (vpanel
-           (hpanel
-             ;; left
-             elements-view
-             ;; main
-             (group
-               "Creatures"
-               (list-view @creatures
-                 #:min-size (@~> @creatures (~>> length (* 100) (list #f)))
-                 #:key creature-id
-                 (make-creature-view @creatures @ability-decks @num-players)))
-             ;; right
-             (vpanel
-               #:stretch '(#f #t)
-               (deck-adder-button
-                 @curses do-curse-monster "Curse Monster" monster-curse-deck)
-               (deck-adder-button
-                 @blesses do-bless-monster "Bless Monster" monster-bless-deck)
-               (spacer)
-               (button
-                 (@~> @monster-modifier-deck
-                      (~>> length (format "Draw Modifier (~a)")))
-                 (draw-modifier @monster-modifier-deck @modifier
-                                @monster-discard @monster-prev-discard
-                                @curses @blesses))
-               (button "Advantage"
-                       (draw-modifier* @monster-modifier-deck @modifier
-                                       @monster-discard @monster-prev-discard
-                                       @curses @blesses))
-               (button "Disadvantage"
-                       (draw-modifier* @monster-modifier-deck @modifier
-                                       @monster-discard @monster-prev-discard
-                                       @curses @blesses
-                                       worse-modifier))
-               (text (@~> @modifier
-                          (~>> (or _ "") (~a "Most Recent Modifier: "))))
-               (text (@~> @monster-prev-discard
-                          (~>> (or _ "") (~a "Previous Modifier: "))))
-               (spacer)
-               (button "Next Round"
-                       #:enabled? @in-draw?
-                       (next-round @creatures @ability-decks
-                                   @monster-modifier-deck @monster-discard
-                                   @in-draw?
-                                   @elements))
-               (button "Draw Abilities"
-                       #:enabled? (@> @in-draw? not)
-                       (draw-abilities @creatures @ability-decks @in-draw?))))
-           ;; bottom
-           (hpanel #:stretch '(#f #f)
-                   (loot-button
-                     @loot-deck @num-loot-cards @num-players
-                     (@~> @creatures (filter (flow (~> creature-v player?)) _))
-                     ;; valid because only enabled if loot-deck non-empty, and
-                     ;; only closing if loot assigned
-                     #:on-close (take-loot @loot-deck)
-                     #:on-player (give-player-loot @creatures @loot-deck))
-                   (level-stats @level @num-players)
-                   (level-table @level)
-                   (inspiration-table @num-players)))]
-        [else (text "Broken")]))))
+  (window
+    #:title "Frosthaven Manager"
+    #:size '(800 600)
+    (menu-bar
+      (menu "Info"
+            (about-menu-item)
+            (send-feedback-menu-item)
+            (issue-menu-item)
+            (feature-menu-item)
+            (contribute-menu-item)))
+    (case-view @mode
+      [(start)
+       (vpanel
+         (start-view #:on-level (λ:= @level)
+                     #:on-player (λ:= @num-players))
+         (button "Play"
+                 (to-input-player-info @mode @creatures @num-players)))]
+      [(input-player-info)
+       (vpanel
+         (player-input-views @num-players
+                             #:on-name (update-player-name @creatures)
+                             #:on-hp (update-player-max-hp @creatures))
+         (button "Next" (to-build-loot-deck @mode @creatures)))]
+      [(build-loot-deck)
+       (vpanel
+         (loot-picker
+           #:on-card
+           (update-loot-deck-and-num-loot-cards @loot-deck @num-loot-cards))
+         (spacer)
+         (button "Next" (to-choose-monster-db @mode)))]
+      [(choose-monster-db)
+       (vpanel
+         (hpanel
+           #:stretch '(#t #f)
+           (button "Open Monster DB"
+                   (thunk
+                     (init-dbs
+                       (or (get-file "Monster DB") default-monster-db)
+                       @info-db @ability-db @ability-decks)))
+           (button "Use Default Monster DB"
+                   (thunk
+                     (init-dbs
+                       default-monster-db
+                       @info-db @ability-db @ability-decks))))
+         (db-view @info-db @ability-db)
+         (button "Next" (to-choose-monsters @mode)
+                 #:enabled? (@~> @info-db (not hash-empty?))))]
+      [(choose-monsters)
+       (vpanel
+         (multi-monster-picker
+           @info-db @level
+           #:on-change (add-or-remove-monster-group @creatures))
+         (button "Next" (to-play @mode @creatures)))]
+      [(play)
+       (vpanel
+         (hpanel
+           ;; left
+           elements-view
+           ;; main
+           (group
+             "Creatures"
+             (list-view @creatures
+               #:min-size (@~> @creatures (~>> length (* 100) (list #f)))
+               #:key creature-id
+               (make-creature-view @creatures @ability-decks @num-players)))
+           ;; right
+           (vpanel
+             #:stretch '(#f #t)
+             (deck-adder-button
+               @curses do-curse-monster "Curse Monster" monster-curse-deck)
+             (deck-adder-button
+               @blesses do-bless-monster "Bless Monster" monster-bless-deck)
+             (spacer)
+             (button
+               (@~> @monster-modifier-deck
+                    (~>> length (format "Draw Modifier (~a)")))
+               (draw-modifier @monster-modifier-deck @modifier
+                              @monster-discard @monster-prev-discard
+                              @curses @blesses))
+             (button "Advantage"
+                     (draw-modifier* @monster-modifier-deck @modifier
+                                     @monster-discard @monster-prev-discard
+                                     @curses @blesses))
+             (button "Disadvantage"
+                     (draw-modifier* @monster-modifier-deck @modifier
+                                     @monster-discard @monster-prev-discard
+                                     @curses @blesses
+                                     worse-modifier))
+             (text (@~> @modifier
+                        (~>> (or _ "") (~a "Most Recent Modifier: "))))
+             (text (@~> @monster-prev-discard
+                        (~>> (or _ "") (~a "Previous Modifier: "))))
+             (spacer)
+             (button "Next Round"
+                     #:enabled? @in-draw?
+                     (next-round @creatures @ability-decks
+                                 @monster-modifier-deck @monster-discard
+                                 @in-draw?
+                                 @elements))
+             (button "Draw Abilities"
+                     #:enabled? (@> @in-draw? not)
+                     (draw-abilities @creatures @ability-decks @in-draw?))))
+         ;; bottom
+         (hpanel #:stretch '(#f #f)
+                 (loot-button
+                   @loot-deck @num-loot-cards @num-players
+                   (@~> @creatures (filter (flow (~> creature-v player?)) _))
+                   ;; valid because only enabled if loot-deck non-empty, and
+                   ;; only closing if loot assigned
+                   #:on-close (take-loot @loot-deck)
+                   #:on-player (give-player-loot @creatures @loot-deck))
+                 (level-stats @level @num-players)
+                 (level-table @level)
+                 (inspiration-table @num-players)))]
+      [else (text "Broken")])))

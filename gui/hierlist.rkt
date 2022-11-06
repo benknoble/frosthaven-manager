@@ -129,8 +129,10 @@
 
 (module* main racket
   (require racket/gui/easy
-           (submod ".."))
-  (render ;; not setting current renderer
+           (submod "..")
+           frosthaven-manager/gui/render)
+  ;; no separate eventspace: block main until this window closed
+  (render/eventspace
     (window
       (hierlist
         `(item-list

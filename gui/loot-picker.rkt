@@ -27,7 +27,8 @@
          racket/gui/easy/contract
          frosthaven-manager/defns
          frosthaven-manager/gui/mixins
-         frosthaven-manager/gui/counter)
+         frosthaven-manager/gui/counter
+         frosthaven-manager/gui/render)
 
 (define (loot-picker #:on-card [on-card void])
   (define (make-cards-picker! label max-cards deck in-deck?)
@@ -91,18 +92,22 @@
   (define-flow (loot-text deck num-cards)
     (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
   (define (show-assigner)
-    (render ;; not setting current renderer
-      (loot-assigner @loot-deck @num-players @players on-player on-close)))
+    (with-closing-custodian/eventspace
+      (render/eventspace #:eventspace closing-eventspace
+                         (loot-assigner @loot-deck @num-players @players on-player on-close
+                                        #:mixin close-custodian-mixin))))
   (button (obs-combine loot-text @loot-deck @num-loot-cards)
           #:enabled? (@~> @loot-deck (not empty?))
           show-assigner))
 
-(define (loot-assigner @loot-deck @num-players @players on-player on-close)
+(define (loot-assigner @loot-deck @num-players @players on-player on-close
+                       #:mixin [extra-mix values])
   (define close! #f)
   (define (set-close! c) (set! close! c))
   (define-flow mixin
     (~> (make-closing-proc-mixin set-close!)
-        (make-on-close-mixin on-close)))
+        (make-on-close-mixin on-close)
+        extra-mix))
   (define (make-player-button e)
     (define (action)
       (on-player (creature-id e))
@@ -125,12 +130,10 @@
 
 (module+ main
   (define/obs @loot-deck empty)
-  (void
-    (render ;; not setting current renderer
-      (window
-        (hpanel
-          (loot-picker #:on-card (loot-picker-updater @loot-deck))
-          (table '("Card")
-                 (@> @loot-deck list->vector)
-                 #:entry->row (compose1 vector ~a)
-                 #:min-size '(250 #f)))))))
+  (void (render/eventspace
+          ;; no separate eventspace: block main until this window closed
+          (window (hpanel (loot-picker #:on-card (loot-picker-updater @loot-deck))
+                          (table '("Card")
+                                 (@> @loot-deck list->vector)
+                                 #:entry->row (compose1 vector ~a)
+                                 #:min-size '(250 #f)))))))

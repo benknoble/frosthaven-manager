@@ -11,7 +11,8 @@
 (require racket/runtime-path
          net/sendurl
          racket/gui/easy
-         frosthaven-manager/gui/markdown)
+         frosthaven-manager/gui/markdown
+         frosthaven-manager/gui/render)
 
 (define-runtime-path about.md "../ABOUT.md")
 
@@ -19,11 +20,14 @@
   (menu-item
     "About Frosthaven Manager"
     (thunk
-      (render ;; not setting current renderer
-        (window
-          #:title "About Frosthaven Manager"
-          #:size '(400 300)
-          (markdown-text about.md))))))
+      (with-closing-custodian/eventspace
+        (render/eventspace
+          #:eventspace closing-eventspace
+          (window
+            #:mixin close-custodian-mixin
+            #:title "About Frosthaven Manager"
+            #:size '(400 300)
+            (markdown-text about.md)))))))
 
 (define (issue-menu-item)
   (menu-item

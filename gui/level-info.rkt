@@ -14,7 +14,8 @@
          racket/gui/easy/contract
          frosthaven-manager/observable-operator
          frosthaven-manager/defns
-         frosthaven-manager/gui/static-table)
+         frosthaven-manager/gui/static-table
+         frosthaven-manager/gui/render)
 
 (define (level-stats @level @num-players)
   (define @level-info (@> @level get-level-info))
@@ -40,11 +41,12 @@
       #:entry->value get-level-info
       #:selection @level))
   (define (action)
-    (render ;; not setting current renderer
-      (window
-        #:title "Level Information"
-        #:stretch '(#f #f)
-        table)))
+    (with-closing-custodian/eventspace
+      (render/eventspace #:eventspace closing-eventspace
+                         (window #:mixin close-custodian-mixin
+                                 #:title "Level Information"
+                                 #:stretch '(#f #f)
+                                 table))))
   (button "Level Table" action))
 
 (define (inspiration-table @num-players)
@@ -56,17 +58,19 @@
       #:index->entry add1
       #:selection (@> @num-players sub1)))
   (define (action)
-    (render ;; not setting current renderer
-      (window
-        #:title "Inspiration"
-        #:stretch '(#f #f)
-        table)))
+    (with-closing-custodian/eventspace
+      (render/eventspace #:eventspace closing-eventspace
+                         (window #:mixin close-custodian-mixin
+                                 #:title "Inspiration"
+                                 #:stretch '(#f #f)
+                                 table))))
   (button "Inspiration Table" action))
 
 (module+ main
   (define/obs @level 3)
   (define/obs @num-players 2)
-  (render ;; not setting current renderer
+  ;; no separate eventspace: block main until this window closed
+  (render/eventspace
     (window (vpanel (level-stats @level @num-players)
                     (level-table @level)
                     (inspiration-table @num-players)))))
