@@ -2,7 +2,16 @@
 
 (module+ main
   ;; (require racket/gui/easy/debugger)
-  ;; (start-debugger)
+  ;; (void (start-debugger))
+
+  ;; (require racket/gui)
+  ;; (define-namespace-anchor here)
+  ;; (define ns (namespace-anchor->namespace here))
+  ;; (let ([es (make-eventspace)])
+  ;;   (parameterize ([current-eventspace es])
+  ;;     (queue-callback (thunk (parameterize ([current-namespace ns])
+  ;;                              (graphical-read-eval-print-loop es 'redirect-ports))))))
+
   (void (render/eventspace
           ;; no separate eventspace: block main until this window closed
           (manager))))
