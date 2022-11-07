@@ -156,7 +156,7 @@
                (if monster-ability?
                  (~>> (-< monster-ability-name
                           (~> (if monster-ability-shuffle?
-                                " 🔀"
+                                " (shuffle)"
                                 "")))
                       (format "~a~a"))
                  "")))
