@@ -23,7 +23,7 @@
 #s(monster-ability "archer"
                    "double-shot"
                    25
-                   ("move +1" "attack +2, range 5" "attack +2, range 5, +1 if same target")
+                   ("attack +2, range 5" "attack +2, range 3, +1 if same target")
                    #f)
 #s(monster-ability "archer"
                    "take aim"

@@ -35,7 +35,7 @@ format in the next section, @secref{How_can_I_Edit_Monster_Information_}.
 @subsection{Monster Information Format By Example}
 
 Let's start with an example monster database. This is the one that comes with
-Frosthaven Manager for trying things out:
+Frosthaven Manager to try things out:
 
 @(typeset-code (file->string default-monster-db)
                #:context #'here
