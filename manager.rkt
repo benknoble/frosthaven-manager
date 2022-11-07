@@ -370,8 +370,10 @@
     #:title "Frosthaven Manager"
     #:size '(800 600)
     (menu-bar
-      (menu "Info"
+      (menu "Help"
             (about-menu-item)
+            (how-to-play-menu-item)
+            (menu-item-separator)
             (send-feedback-menu-item)
             (issue-menu-item)
             (feature-menu-item)

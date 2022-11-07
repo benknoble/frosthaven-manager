@@ -7,7 +7,8 @@
     [issue-menu-item (-> (is-a?/c view<%>))]
     [feature-menu-item (-> (is-a?/c view<%>))]
     [contribute-menu-item (-> (is-a?/c view<%>))]
-    [send-feedback-menu-item (-> (is-a?/c view<%>))]))
+    [send-feedback-menu-item (-> (is-a?/c view<%>))]
+    [how-to-play-menu-item (-> (is-a?/c view<%>))]))
 
 (require racket/runtime-path
          net/sendurl
@@ -49,3 +50,6 @@
   (menu-item
     "Send Feedback"
     (thunk (send-url "mailto:ben.knoble+frosthaven@gmail.com"))))
+
+(define (how-to-play-menu-item)
+  (menu-item "How to Play" (thunk (send-url "https://benknoble.github.io/frosthaven-manager/How_to_Play.html"))))

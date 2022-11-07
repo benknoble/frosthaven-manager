@@ -603,6 +603,7 @@ The following sections describe modules under @tt{frosthaven-manager/gui}.
     @defthing[feature-menu-item (-> (is-a?/c view<%>))]
     @defthing[contribute-menu-item (-> (is-a?/c view<%>))]
     @defthing[send-feedback-menu-item (-> (is-a?/c view<%>))]
+    @defthing[how-to-play-menu-item (-> (is-a?/c view<%>))]
 )]{
 Menu items for Frosthaven Manager.
 }
