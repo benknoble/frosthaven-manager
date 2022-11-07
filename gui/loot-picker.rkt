@@ -3,15 +3,13 @@
 (provide
   (contract-out
     [loot-picker (->* ()
-                      (#:on-card (-> (or/c (list/c 'add (listof loot-card?))
-                                           (list/c 'remove predicate/c))
-                                     any))
+                      (#:on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any))
                       (is-a?/c view<%>))]
-    [loot-picker-updater
-      (-> (obs/c (listof loot-card?))
-          (-> (or/c (list/c 'add (listof loot-card?))
-                    (list/c 'remove predicate/c))
-              any))]
+    [loot-picker-updater (-> (obs/c (hash/c (listof loot-card?) natural-number/c))
+                             (-> (list/c (or/c 'add 'remove) (listof loot-card?))
+                                 any))]
+    [build-loot-deck (-> (hash/c (listof loot-card?) natural-number/c)
+                         (listof loot-card?))]
     [loot-button
       (->* ((obs/c (listof loot-card?))
             (obs/c natural-number/c)
@@ -31,43 +29,31 @@
          frosthaven-manager/gui/render)
 
 (define (loot-picker #:on-card [on-card void])
-  (define (make-cards-picker! label max-cards deck in-deck?)
+  (define (make-cards-picker! label max-cards deck)
     (define/obs @n 0)
     (define (subtract-card)
       (unless (@! (@> @n zero?))
         (<@ @n sub1)
-        (on-card `(remove ,in-deck?))))
+        (on-card `(remove ,deck))))
     (define (add-card)
       (unless (>= (@! @n) max-cards)
         (<@ @n add1)
         (on-card `(add ,deck))))
-    (hpanel (spacer)
-            (counter (@~> @n (~a label _)) add-card subtract-card)
-            (spacer)))
-  (define money-view
-    (make-cards-picker! "Money Cards: " max-money-cards money-deck money?))
+    (hpanel (spacer) (counter (@~> @n (~a label _)) add-card subtract-card) (spacer)))
+  (define money-view (make-cards-picker! "Money Cards: " max-money-cards money-deck))
   (define material-views
     (for/list ([m (in-list material-kinds)])
-      (make-cards-picker! (~a m " Cards: ")
-                          max-material-cards
-                          (hash-ref material-decks m)
-                          (match-lambda
-                            [(material (== m) _) #t]
-                            [_ #f]))))
+      (make-cards-picker! (~a m " Cards: ") max-material-cards (hash-ref material-decks m))))
   (define herb-views
     (for/list ([h (in-list herb-kinds)])
-      (make-cards-picker! (~a h " Cards: ")
-                          max-herb-cards
-                          (hash-ref herb-decks h)
-                          (match-lambda
-                            [(herb (== h)) #t]
-                            [_ #f]))))
+      (make-cards-picker! (~a h " Cards: ") max-herb-cards (hash-ref herb-decks h))))
   (define/obs @random-item? #f)
   (define random-item-view
-    (checkbox #:label "Random Item Card?"
-              (match-lambda
-                [#t (on-card `(add ,(list random-item)))]
-                [#f (on-card `(remove ,random-item?))])))
+    (let ([deck (list random-item)])
+      (checkbox #:label "Random Item Card?"
+                (match-lambda
+                  [#t (on-card `(add ,deck))]
+                  [#f (on-card `(remove ,deck))]))))
   (vpanel
     #:stretch '(#f #f)
     random-item-view
@@ -75,13 +61,16 @@
     (apply group "Materials" material-views)
     (apply group "Herbs" herb-views)))
 
-(define ((loot-picker-updater @loot-deck) evt)
-  (define (update-old-deck old-loot-deck)
+(define ((loot-picker-updater @cards-per-loot-deck) evt)
+  (define (update cards-per-loot-deck)
     (match evt
-      [`(add ,from-deck) (cons (car (shuffle from-deck))
-                               old-loot-deck)]
-      [`(remove ,in-deck?) (remf in-deck? old-loot-deck)]))
-  (<~@ @loot-deck (~> update-old-deck shuffle)))
+      [`(add ,deck) (hash-update cards-per-loot-deck deck add1 0)]
+      [`(remove ,deck) (hash-update cards-per-loot-deck deck sub1 0)]))
+  (<@ @cards-per-loot-deck update))
+
+(define (build-loot-deck cards-per-loot-deck)
+  (shuffle (flatten (for/list ([(deck count) (in-hash cards-per-loot-deck)])
+                      (take (shuffle deck) count)))))
 
 (define (loot-button @loot-deck
                      @num-loot-cards
@@ -129,11 +118,27 @@
            (map make-player-button (@! @players)))))
 
 (module+ main
-  (define/obs @loot-deck empty)
+  (define/match (find-deck card)
+    [{(money _)} "Money"]
+    [{(or (material kind _) (herb kind))} (~a kind)]
+    [{(== random-item)} "Random Item"])
+  (define (render-table-with-actual-loot-deck)
+    (define deck (~> (@cards-per-loot-deck) @! build-loot-deck))
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
+      (dialog
+        (hpanel (text "Duplicates?") (text (~a (check-duplicates (map eq-hash-code deck)))))
+        (table '("ID" "Cards")
+               (list->vector deck)
+               #:entry->row (flow (~> (-< eq-hash-code _) (>< ~a) vector))
+               #:min-size '(250 300)))))
+  (define-flow count+decks->row (~> (-< (~> car car find-deck) (~> cdr ~a)) vector))
+  (define/obs @cards-per-loot-deck (hash))
   (void (render/eventspace
           ;; no separate eventspace: block main until this window closed
-          (window (hpanel (loot-picker #:on-card (loot-picker-updater @loot-deck))
-                          (table '("Card")
-                                 (@> @loot-deck list->vector)
-                                 #:entry->row (compose1 vector ~a)
-                                 #:min-size '(250 #f)))))))
+          (window (hpanel (loot-picker #:on-card (loot-picker-updater @cards-per-loot-deck))
+                          (table '("Deck" "Cards")
+                                 (@~> @cards-per-loot-deck (~> hash->list list->vector))
+                                 #:entry->row count+decks->row
+                                 #:min-size '(250 #f))
+                          (button "Make Loot Deck" render-table-with-actual-loot-deck))))))

@@ -706,27 +706,27 @@ possible number of players. The current @racket[|@num-players|] starts selected.
 @subsection{@tt{gui/loot-picker}}
 @defmodule[frosthaven-manager/gui/loot-picker]
 
-@defproc[(loot-picker
-           [#:on-card on-card
-            (-> (or/c (list/c 'add (listof loot-card?))
-                      (list/c 'remove predicate/c))
-                any)
-            void])
+@defproc[(loot-picker [#:on-card on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any) void])
          (is-a?/c view<%>)]{
 A GUI view to build a loot deck by including certain loot cards. The callback
-@racket[on-card] is invoked with an "event" that specifies either a deck of
-cards from which one should be added or a predicate to identify the card to
-remove.
+@racket[on-card] is invoked with an "event" that specifies a deck of cards from
+which one card should be added or removed.
 }
 
-@defproc[((loot-picker-updater
-            [|@loot-deck| (obs/c (listof loot-card?))])
-          [evt (or/c (list/c 'add (listof loot-card?))
-                     (list/c 'remove predicate/c))])
+@defproc[((loot-picker-updater [|@cards-per-loot-deck| (obs/c (hash/c (listof loot-card?) natural-number/c))])
+          [evt (list/c (or/c 'add 'remove) (listof loot-card?))])
          any]{
-Updates the observable @racket[|@loot-deck|] based on the event @racket[evt] as
-described in @racket[loot-picker] by picking a random card from the deck or
-removing a card matching the predicate, then shuffling.
+Updates the observable @racket[|@cards-per-loot-deck|] based on the event
+@racket[evt] as described in @racket[loot-picker] by updating the count of cards
+per deck.
+}
+
+@defproc[(build-loot-deck [cards-per-loot-deck (hash/c (listof loot-card?) natural-number/c)])
+         (listof loot-card?)]{
+Converts a count of cards per deck into an shuffled deck of loot cards. This can
+be considered the interpreter for a language whose values are like those
+produced by combined @racket[loot-picker] and @racket[loot-picker-updater];
+namely, mappings from decks to number of cards.
 }
 
 @defproc[(loot-button

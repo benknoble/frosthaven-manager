@@ -119,10 +119,10 @@
         (values set (ability-decks #f (shuffle abilities) empty)))))
 
 ;; Loot
-(define (update-loot-deck-and-num-loot-cards @loot-deck @num-loot-cards)
-  (flow (-< (loot-picker-updater @loot-deck)
+(define (update-loot-deck-and-num-loot-cards @cards-per-deck @num-loot-cards)
+  (flow (-< (loot-picker-updater @cards-per-deck)
             ;; order important
-            (gen (:= @num-loot-cards (length (@! @loot-deck)))))))
+            (gen (:= @num-loot-cards (apply + (hash-values (@! @cards-per-deck))))))))
 
 (define ((take-loot @loot-deck)) (<@ @loot-deck rest))
 
@@ -297,7 +297,8 @@
   ;; HACK: trigger updates in @creatures to re-render list-view (?)
   (:= @creatures (@! @creatures)))
 
-(define ((to-choose-monster-db @mode))
+(define ((to-choose-monster-db @mode @loot-deck @cards-per-deck))
+  (:= @loot-deck (build-loot-deck (@! @cards-per-deck)))
   (:= @mode 'choose-monster-db))
 (define ((to-choose-monsters @mode))
   (:= @mode 'choose-monsters))
@@ -345,6 +346,7 @@
   (define/obs @level 0)
   (define/obs @num-players 1)
   (define/obs @creatures empty)
+  (define/obs @cards-per-deck (hash))
   (define/obs @loot-deck empty)
   (define/obs @num-loot-cards 0)
   (define-values (@elements elements-view) (elements-cycler elements vpanel))
@@ -390,11 +392,9 @@
          (button "Next" (to-build-loot-deck @mode @creatures)))]
       [(build-loot-deck)
        (vpanel
-         (loot-picker
-           #:on-card
-           (update-loot-deck-and-num-loot-cards @loot-deck @num-loot-cards))
+         (loot-picker #:on-card (update-loot-deck-and-num-loot-cards @cards-per-deck @num-loot-cards))
          (spacer)
-         (button "Next" (to-choose-monster-db @mode)))]
+         (button "Next" (to-choose-monster-db @mode @loot-deck @cards-per-deck)))]
       [(choose-monster-db)
        (vpanel
          (hpanel
