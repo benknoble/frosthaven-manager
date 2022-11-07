@@ -398,21 +398,18 @@
          (button "Next" (to-choose-monster-db @mode @loot-deck @cards-per-deck)))]
       [(choose-monster-db)
        (vpanel
-         (hpanel
-           #:stretch '(#t #f)
+         (db-view @info-db @ability-db)
+         (hpanel #:stretch '(#t #f)
+           (spacer)
            (button "Open Monster DB"
                    (thunk
-                     (init-dbs
-                       (or (get-file "Monster DB") default-monster-db)
-                       @info-db @ability-db @ability-decks)))
+                     (init-dbs (or (get-file "Monster DB") default-monster-db)
+                               @info-db @ability-db @ability-decks)))
            (button "Use Default Monster DB"
                    (thunk
-                     (init-dbs
-                       default-monster-db
-                       @info-db @ability-db @ability-decks))))
-         (db-view @info-db @ability-db)
-         (button "Next" (to-choose-monsters @mode)
-                 #:enabled? (@~> @info-db (not hash-empty?))))]
+                     (init-dbs default-monster-db @info-db @ability-db @ability-decks)))
+           (spacer))
+         (button "Next" (to-choose-monsters @mode) #:enabled? (@~> @info-db (not hash-empty?))))]
       [(choose-monsters)
        (vpanel
          (multi-monster-picker
