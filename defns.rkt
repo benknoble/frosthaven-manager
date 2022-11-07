@@ -214,7 +214,7 @@
 
 (define ((player-act-on-hp proc) p)
   (define new-hp (proc (player-current-hp p)))
-  (if (not (positive? new-hp))
+  (if (not (>= new-hp 0))
     p
     (struct-copy player p [current-hp new-hp])))
 
