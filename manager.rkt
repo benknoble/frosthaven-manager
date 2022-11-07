@@ -121,7 +121,7 @@
 ;; Loot
 (define ((update-loot-deck-and-num-loot-cards @cards-per-deck @num-loot-cards) evt)
   ((loot-picker-updater @cards-per-deck) evt)
-  (:= @num-loot-cards (apply + (hash-values (@! @cards-per-deck)))))
+  (<@ @num-loot-cards (case (car evt) [(add) add1] [(remove) sub1])))
 
 (define ((take-loot @loot-deck)) (<@ @loot-deck rest))
 
