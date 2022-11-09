@@ -13,12 +13,16 @@
 (require racket/runtime-path
          net/sendurl
          racket/gui/easy
+         setup/getinfo
          frosthaven-manager/gui/markdown
          frosthaven-manager/gui/render)
 
 (define-runtime-path about.md "../ABOUT.md")
 
 (define (do-about)
+  (define about-text (file->string about.md))
+  (define version ((get-info '("frosthaven-manager")) 'version))
+  (define about+version (string-join (list about-text "---" (string-append "Version: " version)) "\n"))
   (with-closing-custodian/eventspace
     (render/eventspace
       #:eventspace closing-eventspace
@@ -26,7 +30,7 @@
         #:mixin close-custodian-mixin
         #:title "About Frosthaven Manager"
         #:size '(400 300)
-        (markdown-text about.md)))))
+        (markdown-text about+version)))))
 
 (define (about-menu-item)
   (menu-item "About Frosthaven Manager" do-about))

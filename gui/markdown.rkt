@@ -27,6 +27,7 @@
          racket/gui/easy/contract
          racket/gui/easy/observable
          net/sendurl
+         (only-in pict pict->bitmap hline)
          (only-in markdown
                   parse-markdown
                   current-strict-markdown?)
@@ -127,6 +128,9 @@
                     [list-nesting (add1 (list-nesting))])
        (insert-md-items editor body styles))]
     [(list* 'li _ body) (insert-list-item editor body styles)]
+    [(list* 'hr _) (insert-newline editor)
+                   (insert-newline editor)
+                   (send editor insert (make-object image-snip% (pict->bitmap (hline 9999 10))))]
     [(list* name _ body)
      (insert-md-items
        editor
