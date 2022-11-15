@@ -23,7 +23,6 @@
             frosthaven-manager/gui/counter
             frosthaven-manager/gui/elements
             frosthaven-manager/gui/helpers
-            frosthaven-manager/gui/hierlist
             frosthaven-manager/gui/level-info
             frosthaven-manager/gui/loot-picker
             frosthaven-manager/gui/markdown
@@ -658,28 +657,6 @@ Returns the new element state after waning for one cycle.
          (values position-integer? position-integer?)]{
 Returns translated @racket[x] and @racket[y] coordinates relative to
 @racket[top], assuming they were originally relative to @racket[this].
-}
-
-@subsection{@tt{gui/hierlist}}
-@defmodule[frosthaven-manager/gui/hierlist]
-
-@defproc[(hierlist
-           [|@item| (maybe-obs/c hierlist/c)]
-           [#:min-size |@min-size| (maybe-obs/c size/c) '(#f #f)]
-           [#:stretch |@stretch| (maybe-obs/c stretch/c) '(#t #t)]
-           [#:margin |@margin| (maybe-obs/c margin/c) '(0 0)]
-           [#:inset |@inset| (maybe-obs/c margin/c) '(5 5)]
-           [#:style style
-            (listof (one-of/c 'no-border 'control-border 'combo
-                              'no-hscroll 'no-vscroll
-                              'hide-hscroll 'hide-vscroll
-                              'auto-vscroll 'auto-hscroll
-                              'resize-corner 'deleted 'transparent))
-            '(no-hscroll)])
-         (is-a?/c view<%>)]{
-Produces a GUI view of a hierarchical list. The format of @racket[|@item|]
-described by @racket[hierlist/c] is not yet stable and therefore not documented
-here.
 }
 
 @subsection{@tt{gui/level-info}}

@@ -35,7 +35,7 @@
          frosthaven-manager/observable-operator
          frosthaven-manager/gui/mixins
          frosthaven-manager/gui/counter
-         frosthaven-manager/gui/hierlist
+         frosthaven-manager/gui/stacked-tables
 
          frosthaven-manager/qi
          frosthaven-manager/defns
@@ -416,13 +416,53 @@
         [("Abilities") (ability-view @ability-db)]
         [else (spacer)]))))
 
+(define (info-view @info-db)
+  (apply stacked-tables
+         (@~> @info-db (~> hash-keys list->vector))
+         info-view-stats-view
+         (info-view-columns @info-db)))
+
+;; (obs/c (or/c #f monster-stats?)) -> view
+(define (info-view-stats-view @stats?)
+  (apply vpanel
+         (map (match-lambda
+                [(list label func)
+                 (hpanel (text (~a label ":"))
+                         (text (@~> @stats? (if _ (~> func fmt-stat) "N/A"))))])
+              stats-table)))
+
+(define (info-view-columns @info-db)
+  (struct data [set name level elite? info name->info])
+  (list
+    ;; set -> #((data set name _ _ _ name->info))
+    (column "Set" values (λ (set)
+                           (define name->info (hash-ref (@! @info-db) set))
+                           (for/vector ([name (in-hash-keys name->info)])
+                             (data set name #f #f #f name->info))))
+    ;; (data set name _ _ _ name->info) -> #((date set name level elite? info name->info))
+    (column "Name" data-name (match-lambda
+                               [(data set name _ _ _ name->info)
+                                (define mi (hash-ref name->info name))
+                                (for*/vector ([level (in-range number-of-levels)]
+                                              [elite? (list #t #f)])
+                                  (data set name level elite? mi name->info))]))
+    ;; (date set name level elite? info name->info) -> monster-stats?
+    (column "Level"
+            (match-lambda [(data _ _ level elite? _ _)
+                           (~a "Level " level (if elite? " (Elite)" ""))])
+            (match-lambda
+              [(data set name level elite? info name->info)
+               (define ->stats (if elite? monster-info-elite-stats monster-info-normal-stats))
+               (~> (info) ->stats (list-ref level))]))))
+
 (define stats-table
-  `([,monster-stats-max-hp "Max HP"]
-    [,monster-stats-move "Move"]
-    [,monster-stats-attack "Attack"]
-    [,monster-stats-bonuses "Bonuses"]
-    [,monster-stats-effects "Effects"]
-    [,monster-stats-immunities "Immunities"]))
+  `(["Max HP" ,monster-stats-max-hp]
+    ["Move" ,monster-stats-move]
+    ["Attack" ,monster-stats-attack]
+    ["Bonuses" ,monster-stats-bonuses]
+    ["Effects" ,monster-stats-effects]
+    ["Immunities" ,monster-stats-immunities]))
+
 (define (fmt-stat s)
   (match s
     ['() "none"]
@@ -431,58 +471,34 @@
          (map fmt-stat _)
          (string-join "; "))]
     [else (~a s)]))
-(define (stats->hierlist* stats)
-  (for/list ([func+label (in-list stats-table)])
-    (match-define (list func label) func+label)
-    (~a label ": " (fmt-stat (func stats)))))
-
-(define (info->hierlist* info get-stats)
-  (for/list ([(stats i) (in-indexed (in-list (get-stats info)))])
-    `(item-list
-       ,(~a "Level " i)
-       ,(stats->hierlist* stats))))
-
-(define (info-db->hierlist info-db)
-  `(item-list
-     "Stats"
-     ,(for/list ([(set set-db) (in-hash info-db)])
-        `(item-list
-           ,set
-           ,(for/list ([(group info) (in-hash set-db)])
-              `(item-list
-                 ,group
-                 ((item-list
-                    "Normal Stats"
-                    ,(info->hierlist* info monster-info-normal-stats))
-                  (item-list
-                    "Elite Stats"
-                    ,(info->hierlist* info monster-info-elite-stats)))))))))
-
-(define (ability->hier-list ability)
-  `(item-list
-     ,(monster-ability-name ability)
-     ,(list
-        (~a "Initiative: " (monster-ability-initiative ability))
-        (~a "Shuffle? " (if (monster-ability-shuffle? ability) "Yes" "No"))
-        `(item-list
-           "Abilities"
-           ,(map ~a (monster-ability-abilities ability))))))
-
-(define (ability-db->hierlist ability-db)
-  `(item-list
-     "Abilities"
-     ,(for/list ([(set abilities) (in-hash ability-db)])
-        `(item-list
-           ,set
-           ,(map ability->hier-list abilities)))))
-
-(define (info-view @info-db)
-  (hierlist
-    (@> @info-db info-db->hierlist)))
 
 (define (ability-view @ability-db)
-  (hierlist
-    (@> @ability-db ability-db->hierlist)))
+  (apply stacked-tables
+         #:panel vpanel
+         (@~> @ability-db (~> hash-keys list->vector))
+         ability-view-ability-view
+         (ability-view-columns @ability-db)))
+
+;; (obs/c (or/c #f monster-ability?)) -> view
+(define (ability-view-ability-view @ability?)
+  (apply vpanel
+         (map (match-lambda
+                [(list label func)
+                 (hpanel (text label) (text (@~> @ability? (if _ func "N/A"))))])
+              ability-table)))
+
+(define (ability-view-columns @ability-db)
+  (list
+    ;; set -> #(monster-ability?)
+    (column "Set" values (λ (set)
+                           (~> (@ability-db) @! (hash-ref set) list->vector)))
+    ;; monster-ability? -> monster-ability?
+    (column "Ability" monster-ability-name values)))
+
+(define ability-table
+  `(["Initiative:" ,(flow (~> monster-ability-initiative ~a))]
+    ["Shuffle?" ,(flow (if monster-ability-shuffle? "Yes" "No"))]
+    ["Abilities:" ,(flow (~> monster-ability-abilities (string-join "\n")))]))
 
 (define-flow take-first (~> hash-keys car))
 (define (initial-set+info info-db)
