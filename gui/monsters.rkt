@@ -451,7 +451,7 @@
             (match-lambda [(data _ _ level elite? _ _)
                            (~a "Level " level (if elite? " (Elite)" ""))])
             (match-lambda
-              [(data set name level elite? info name->info)
+              [(data _ _ level elite? info _)
                (define ->stats (if elite? monster-info-elite-stats monster-info-normal-stats))
                (~> (info) ->stats (list-ref level))]))))
 
