@@ -131,6 +131,11 @@
     [(list* 'hr _) (insert-newline editor)
                    (insert-newline editor)
                    (send editor insert (make-object image-snip% (pict->bitmap (hline 9999 10))))]
+    [`(pre () (code () ,body))
+      (define lines (string-split body "\n"))
+      (for ([line (in-list lines)])
+        (insert-and-apply-styles editor line (cons code-s styles))
+        (insert-newline editor))]
     [(list* name _ body)
      (insert-md-items
        editor

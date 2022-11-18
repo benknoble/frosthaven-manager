@@ -1,0 +1,3 @@
+#! /bin/sh
+raco license-audit --no-main-distribution frosthaven-manager |
+  { echo '```'; cat -; echo; echo '```'; } > LICENSES.md
