@@ -308,17 +308,17 @@
           (== _ (~> creature-v (and monster-group*? monster-group*-mg)))
           equal?)))
 
-(define ((add-or-remove-monster-group @creatures) evt)
+(define ((add-or-remove-monster-group s) evt)
   (match evt
     [`(add ,mg)
-      (define next-id (~> (@creatures) @! sep (>< creature-id) max add1))
+      (define next-id (~> ((state-@creatures s)) @! sep (>< creature-id) max add1))
       (define selection
         (~> (mg) monster-group-monsters
             (and (not empty?) (~> first monster-number))))
-      (<~@ @creatures
+      (<~@ (state-@creatures s)
            (append
              (list (creature next-id (monster-group* selection mg)))))]
-    [`(remove ,mg) (<~@ @creatures (remf (creature-is-mg~? mg) _))]))
+    [`(remove ,mg) (<~@ (state-@creatures s) (remf (creature-is-mg~? mg) _))]))
 
 (define ((make-creature-view s) k @e)
   (cond-view
@@ -455,9 +455,7 @@
          (button "Next" (to-choose-monsters @mode) #:enabled? (@~> @info-db (not hash-empty?))))]
       [(choose-monsters)
        (vpanel
-         (multi-monster-picker
-           @info-db @level
-           #:on-change (add-or-remove-monster-group @creatures))
+         (multi-monster-picker @info-db @level #:on-change (add-or-remove-monster-group s))
          (button "Next" (to-play @mode @creatures)))]
       [(play)
        (vpanel
