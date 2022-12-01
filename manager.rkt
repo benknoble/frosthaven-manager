@@ -172,21 +172,21 @@
         (values set (ability-decks #f (shuffle abilities) empty)))))
 
 ;; Loot
-(define ((update-loot-deck-and-num-loot-cards @cards-per-deck @num-loot-cards) evt)
-  ((loot-picker-updater @cards-per-deck) evt)
-  (<@ @num-loot-cards (case (car evt) [(add) add1] [(remove) sub1])))
+(define ((update-loot-deck-and-num-loot-cards s) evt)
+  ((loot-picker-updater (state-@cards-per-deck s)) evt)
+  (<@ (state-@num-loot-cards s) (case (car evt) [(add) add1] [(remove) sub1])))
 
-(define ((take-loot @loot-deck)) (<@ @loot-deck rest))
+(define ((take-loot s)) (<@ (state-@loot-deck s) rest))
 
-(define ((give-player-loot* @loot-deck) p)
+(define ((give-player-loot* s) p)
   (define card
-    (@! (@~> @loot-deck (and (not empty?) first))))
+    (@! (@~> (state-@loot-deck s) (and (not empty?) first))))
   (if card
     ((player-add-loot card) p)
     p))
 
-(define ((give-player-loot @creatures @loot-deck) k)
-  (<~@ @creatures (update-players k (give-player-loot* @loot-deck))))
+(define ((give-player-loot s) k)
+  (<~@ (state-@creatures s) (update-players k (give-player-loot* s))))
 
 ;; Creatures
 (define (make-player-creature i)
@@ -445,7 +445,7 @@
          (button "Next" (to-build-loot-deck @mode @creatures)))]
       [(build-loot-deck)
        (vpanel
-         (loot-picker #:on-card (update-loot-deck-and-num-loot-cards @cards-per-deck @num-loot-cards))
+         (loot-picker #:on-card (update-loot-deck-and-num-loot-cards s))
          (spacer)
          (button "Next" (to-choose-monster-db @mode @loot-deck @cards-per-deck)))]
       [(choose-monster-db)
@@ -512,8 +512,8 @@
                    (@~> @creatures (filter (flow (~> creature-v player?)) _))
                    ;; valid because only enabled if loot-deck non-empty, and
                    ;; only closing if loot assigned
-                   #:on-close (take-loot @loot-deck)
-                   #:on-player (give-player-loot @creatures @loot-deck))
+                   #:on-close (take-loot s)
+                   #:on-player (give-player-loot s))
                  (level-stats @level @num-players)
                  (level-table @level)
                  (inspiration-table @num-players)))]
