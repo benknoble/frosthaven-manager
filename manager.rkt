@@ -29,6 +29,64 @@
 
 ;; TODO these functions need a home :(
 
+;; bag of state
+(struct state
+        [@mode
+         @level
+         @num-players
+         @creatures
+         @cards-per-deck
+         @loot-deck
+         @num-loot-cards
+         @elements
+         @in-draw?
+         @monster-modifier-deck
+         @monster-discard
+         @curses
+         @blesses
+         @modifier
+         @monster-prev-discard
+         @info-db
+         @ability-db
+         @ability-decks])
+
+(define (make-state @elements
+                    [@mode (@ 'start)]
+                    [@level (@ 0)]
+                    [@num-players (@ 1)]
+                    [@creatures (@ empty)]
+                    [@cards-per-deck (@ (hash))]
+                    [@loot-deck (@ empty)]
+                    [@num-loot-cards (@ 0)]
+                    [@in-draw? (@ #f)]
+                    [@monster-modifier-deck (@ (shuffle monster-modifier-deck))]
+                    [@monster-discard (@ empty)]
+                    [@curses (@ monster-curse-deck)]
+                    [@blesses (@ monster-bless-deck)]
+                    [@modifier (@ #f)]
+                    [@monster-prev-discard (@ #f)]
+                    [@info-db (@ (hash))]
+                    [@ability-db (@ (hash))]
+                    [@ability-decks (@ (hash))])
+  (state @mode
+         @level
+         @num-players
+         @creatures
+         @cards-per-deck
+         @loot-deck
+         @num-loot-cards
+         @elements
+         @in-draw?
+         @monster-modifier-deck
+         @monster-discard
+         @curses
+         @blesses
+         @modifier
+         @monster-prev-discard
+         @info-db
+         @ability-db
+         @ability-decks))
+
 ;; Ability Decks
 (struct ability-decks [current draw discard] #:transparent)
 
@@ -339,26 +397,25 @@
     do-adder))
 
 (define (manager)
-  ;; gui state
-  (define/obs @mode 'start)
-  ;; game state
-  (define/obs @level 0)
-  (define/obs @num-players 1)
-  (define/obs @creatures empty)
-  (define/obs @cards-per-deck (hash))
-  (define/obs @loot-deck empty)
-  (define/obs @num-loot-cards 0)
   (define-values (@elements elements-view) (elements-cycler elements vpanel))
-  (define/obs @in-draw? #f)
-  (define/obs @monster-modifier-deck (shuffle monster-modifier-deck))
-  (define/obs @monster-discard empty)
-  (define/obs @curses monster-curse-deck)
-  (define/obs @blesses monster-bless-deck)
-  (define/obs @modifier #f)
-  (define/obs @monster-prev-discard #f)
-  (define/obs @info-db (hash))
-  (define/obs @ability-db (hash))
-  (define/obs @ability-decks (hash))
+  (define s (make-state @elements))
+  (define @mode (state-@mode s))
+  (define @level (state-@level s))
+  (define @num-players (state-@num-players s))
+  (define @creatures (state-@creatures s))
+  (define @cards-per-deck (state-@cards-per-deck s))
+  (define @loot-deck (state-@loot-deck s))
+  (define @num-loot-cards (state-@num-loot-cards s))
+  (define @in-draw? (state-@in-draw? s))
+  (define @monster-modifier-deck (state-@monster-modifier-deck s))
+  (define @monster-discard (state-@monster-discard s))
+  (define @curses (state-@curses s))
+  (define @blesses (state-@blesses s))
+  (define @modifier (state-@modifier s))
+  (define @monster-prev-discard (state-@monster-prev-discard s))
+  (define @info-db (state-@info-db s))
+  (define @ability-db (state-@ability-db s))
+  (define @ability-decks (state-@ability-decks s))
   ;; functions
   (define do-curse-monster
     (deck-adder @curses @monster-modifier-deck))
