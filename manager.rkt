@@ -284,8 +284,8 @@
     #:on-new new
     #:on-select select))
 
-(define ((monster-group-initiative @ability-decks) mg)
-  (~> (@ability-decks mg)
+(define ((monster-group-initiative s) mg)
+  (~> ((state-@ability-decks s) mg)
       (== @! monster-group-set-name)
       hash-ref
       ability-decks-current
@@ -293,15 +293,14 @@
         [monster-ability? monster-ability-initiative]
         [else +inf.0])))
 
-(define (monster-group*-initiative @ability-decks)
-  (flow (~> monster-group*-mg
-            (monster-group-initiative @ability-decks))))
+(define (monster-group*-initiative s)
+  (flow (~> monster-group*-mg (monster-group-initiative s))))
 
-(define (creature-initiative @ability-decks)
+(define (creature-initiative s)
   (flow (~> creature-v
             (switch
               [player? player-initiative]
-              [monster-group*? (monster-group*-initiative @ability-decks)]))))
+              [monster-group*? (esc (monster-group*-initiative s))]))))
 
 ;; (-> mg (-> creature bool))
 (define-flow creature-is-mg~?
@@ -353,32 +352,29 @@
 (define ((to-choose-monsters @mode))
   (:= @mode 'choose-monsters))
 
-(define ((next-round @creatures @ability-decks
-                     @monster-modifier-deck @monster-discard
-                     @in-draw?
-                     @elements))
+(define ((next-round s))
   ;; wane elements
-  (for-each (flow (<@ wane-element)) @elements)
+  (for-each (flow (<@ wane-element)) (state-@elements s))
   ;; reset player initiative
-  (<~@ @creatures (update-all-players player-clear-initiative))
+  (<~@ (state-@creatures s) (update-all-players player-clear-initiative))
   ;; discard monster cards
-  (<@ @ability-decks
+  (<@ (state-@ability-decks s)
       (update-ability-decks ability-decks-discard-and-maybe-shuffle))
   ;; order creatures
-  (<~@ @creatures (sort < #:key (creature-initiative @ability-decks)))
+  (<~@ (state-@creatures s) (sort < #:key (creature-initiative s)))
   ;; shuffle modifiers if required
-  (when (shuffle-modifier-deck? (@! @monster-discard))
-    (reshuffle-deck @monster-modifier-deck @monster-discard))
+  (when (shuffle-modifier-deck? (@! (state-@monster-discard s)))
+    (reshuffle-deck (state-@monster-modifier-deck s) (state-@monster-discard s)))
   ;; toggle state
-  (<@ @in-draw? not))
+  (<@ (state-@in-draw? s) not))
 
-(define ((draw-abilities @creatures @ability-decks @in-draw?))
+(define ((draw-abilities s))
   ;; draw new monster cards
-  (<@ @ability-decks (update-ability-decks ability-decks-draw-next))
+  (<@ (state-@ability-decks s) (update-ability-decks ability-decks-draw-next))
   ;; order creatures
-  (<~@ @creatures (sort < #:key (creature-initiative @ability-decks)))
+  (<~@ (state-@creatures s) (sort < #:key (creature-initiative s)))
   ;; toggle state
-  (<@ @in-draw? not))
+  (<@ (state-@in-draw? s) not))
 
 ;; GUI
 (define (deck-adder-button @cards do-adder text original-deck)
@@ -494,15 +490,8 @@
              (text (@~> @monster-prev-discard
                         (~>> (or _ "") (~a "Previous Modifier: "))))
              (spacer)
-             (button "Next Round"
-                     #:enabled? @in-draw?
-                     (next-round @creatures @ability-decks
-                                 @monster-modifier-deck @monster-discard
-                                 @in-draw?
-                                 @elements))
-             (button "Draw Abilities"
-                     #:enabled? (@> @in-draw? not)
-                     (draw-abilities @creatures @ability-decks @in-draw?))))
+             (button "Next Round" #:enabled? @in-draw? (next-round s))
+             (button "Draw Abilities" #:enabled? (@> @in-draw? not) (draw-abilities s))))
          ;; bottom
          (hpanel #:stretch '(#f #f)
                  (loot-button
