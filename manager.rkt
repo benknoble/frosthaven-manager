@@ -234,9 +234,9 @@
 (define ((update-player-max-hp s) k f)
   (<~@ (state-@creatures s) (update-players k (player-act-on-max-hp f))))
 
-(define ((make-player-view @creatures @num-players) k @e)
+(define ((make-player-view s) k @e)
   (define (update proc)
-    (<~@ @creatures (update-players k proc)))
+    (<~@ (state-@creatures s) (update-players k proc)))
   (define-flow update-player-condition (~> player-condition-handler update))
   (define-flow update-player-hp (~> player-act-on-hp update))
   (define-flow update-player-xp (~> player-act-on-xp update))
@@ -244,15 +244,15 @@
     (update (flow (player-set-initiative i))))
   (player-view
     (@> @e creature-v)
-    @num-players
+    (state-@num-players s)
     #:on-condition update-player-condition
     #:on-hp update-player-hp
     #:on-xp update-player-xp
     #:on-initiative update-player-initiative))
 
-(define ((make-monster-group-view @creatures) k @e @ability-decks)
+(define ((make-monster-group-view s) k @e)
   (define (update proc [procn (flow 1>)])
-    (<~@ @creatures (update-monster-groups k proc procn)))
+    (<~@ (state-@creatures s) (update-monster-groups k proc procn)))
   (define (update-by-num num proc)
     (update (monster-group-update-num num proc)))
   (define @mg* (@> @e creature-v))
@@ -273,7 +273,7 @@
   (define @ability
     (obs-combine
       (flow (~> (== _ monster-group-set-name) hash-ref ability-decks-current))
-      @ability-decks @mg))
+      (state-@ability-decks s) @mg))
   (monster-group-view
     @mg
     @ability
@@ -321,12 +321,10 @@
              (list (creature next-id (monster-group* selection mg)))))]
     [`(remove ,mg) (<~@ @creatures (remf (creature-is-mg~? mg) _))]))
 
-(define ((make-creature-view @creatures @ability-decks @num-players) k @e)
+(define ((make-creature-view s) k @e)
   (cond-view
-    [(@~> @e (~> creature-v player?))
-     ((make-player-view @creatures @num-players) k @e)]
-    [(@~> @e (~> creature-v monster-group*?))
-     ((make-monster-group-view @creatures) k @e @ability-decks)]
+    [(@~> @e (~> creature-v player?)) ((make-player-view s) k @e)]
+    [(@~> @e (~> creature-v monster-group*?)) ((make-monster-group-view s) k @e)]
     [else (text "creature is neither player or monster-group*")]))
 
 ;; Transition functions
@@ -476,7 +474,7 @@
              (list-view @creatures
                #:min-size (@~> @creatures (~>> length (* 100) (list #f)))
                #:key creature-id
-               (make-creature-view @creatures @ability-decks @num-players)))
+               (make-creature-view s)))
            ;; right
            (vpanel
              #:stretch '(#f #t)
