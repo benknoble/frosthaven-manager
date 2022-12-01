@@ -163,11 +163,11 @@
     (shuffle-deck @deck)))
 
 ;; DBs
-(define (init-dbs db @info-db @ability-db @ability-decks)
+(define (init-dbs db s)
   (define-values (info-db ability-db) (get-dbs db))
-  (:= @info-db info-db)
-  (:= @ability-db ability-db)
-  (:= @ability-decks
+  (:= (state-@info-db s) info-db)
+  (:= (state-@ability-db s) ability-db)
+  (:= (state-@ability-decks s)
       (for/hash ([(set abilities) (in-hash ability-db)])
         (values set (ability-decks #f (shuffle abilities) empty)))))
 
@@ -455,11 +455,8 @@
            (spacer)
            (button "Open Monster DB"
                    (thunk
-                     (init-dbs (or (get-file "Monster DB") default-monster-db)
-                               @info-db @ability-db @ability-decks)))
-           (button "Use Default Monster DB"
-                   (thunk
-                     (init-dbs default-monster-db @info-db @ability-db @ability-decks)))
+                     (init-dbs (or (get-file "Monster DB") default-monster-db) s)))
+           (button "Use Default Monster DB" (thunk (init-dbs default-monster-db s)))
            (spacer))
          (button "Next" (to-choose-monsters @mode) #:enabled? (@~> @info-db (not hash-empty?))))]
       [(choose-monsters)
