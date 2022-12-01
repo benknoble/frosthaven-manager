@@ -466,21 +466,15 @@
       ;; right
       (vpanel
         #:stretch '(#f #t)
-        (deck-adder-button
-          (state-@curses s) do-curse-monster "Curse Monster" monster-curse-deck)
-        (deck-adder-button
-          (state-@blesses s) do-bless-monster "Bless Monster" monster-bless-deck)
+        (deck-adder-button (state-@curses s) do-curse-monster "Curse Monster" monster-curse-deck)
+        (deck-adder-button (state-@blesses s) do-bless-monster "Bless Monster" monster-bless-deck)
         (spacer)
-        (button
-          (@~> (state-@monster-modifier-deck s)
-               (~>> length (format "Draw Modifier (~a)")))
-          (draw-modifier s))
+        (button (@~> (state-@monster-modifier-deck s) (~>> length (format "Draw Modifier (~a)")))
+                (draw-modifier s))
         (button "Advantage" (draw-modifier* s))
         (button "Disadvantage" (draw-modifier* s worse-modifier))
-        (text (@~> (state-@modifier s)
-                   (~>> (or _ "") (~a "Most Recent Modifier: "))))
-        (text (@~> (state-@monster-prev-discard s)
-                   (~>> (or _ "") (~a "Previous Modifier: "))))
+        (text (@~> (state-@modifier s) (~>> (or _ "") (~a "Most Recent Modifier: "))))
+        (text (@~> (state-@monster-prev-discard s) (~>> (or _ "") (~a "Previous Modifier: "))))
         (spacer)
         (button "Next Round" #:enabled? (state-@in-draw? s) (next-round s))
         (button "Draw Abilities" #:enabled? (@> (state-@in-draw? s) not) (draw-abilities s))))
