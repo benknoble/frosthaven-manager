@@ -121,41 +121,36 @@
   (:= @deck (shuffle (append (@! @deck) (@! @discard))))
   (:= @discard empty))
 
-(define ((discard @monster-discard @curses @blesses) card)
+(define (discard @monster-discard @curses @blesses card)
   (cond
     [(equal? card curse) (<~@ @curses (cons card _))]
     [(equal? card bless) (<~@ @blesses (cons card _))]
     [else (<~@ @monster-discard (cons card _))]))
 
-(define ((draw-modifier @monster-modifier-deck @modifier
-                        @monster-discard @monster-prev-discard
-                        @curses @blesses))
+(define ((draw-modifier s))
   ;; better not be empty after this…
-  (when (empty? (@! @monster-modifier-deck))
-    (reshuffle-deck @monster-modifier-deck @monster-discard))
-  (define card (first (@! @monster-modifier-deck)))
-  (:= @monster-prev-discard (@! @modifier))
-  (:= @modifier card)
-  (<@ @monster-modifier-deck rest)
-  ((discard @monster-discard @curses @blesses) card))
+  (when (empty? (@! (state-@monster-modifier-deck s)))
+    (reshuffle-deck (state-@monster-modifier-deck s) (state-@monster-discard s)))
+  (define card (first (@! (state-@monster-modifier-deck s))))
+  (:= (state-@monster-prev-discard s) (@! (state-@modifier s)))
+  (:= (state-@modifier s) card)
+  (<@ (state-@monster-modifier-deck s) rest)
+  (discard (state-@monster-discard s) (state-@curses s) (state-@blesses s) card))
 
-(define ((draw-modifier* @monster-modifier-deck @modifier
-                         @monster-discard @monster-prev-discard
-                         @curses @blesses
-                         [better better-modifier]))
+(define ((draw-modifier* s [better better-modifier]))
   ;; better not be empty after this…
-  (when (~> (@monster-modifier-deck) @! length (< 2))
-    (reshuffle-deck @monster-modifier-deck @monster-discard))
-  (define cards (~> (@monster-modifier-deck) @! (take 2)))
+  (when (~> ((state-@monster-modifier-deck s)) @! length (< 2))
+    (reshuffle-deck (state-@monster-modifier-deck s) (state-@monster-discard s)))
+  (define cards (~> ((state-@monster-modifier-deck s)) @! (take 2)))
   (define best (~> (cards) sep better))
   (define worst (cond
                   [(equal? best (first cards)) (second cards)]
                   [(equal? best (second cards)) (first cards)]))
-  (:= @monster-prev-discard worst)
-  (:= @modifier best)
-  (<~@ @monster-modifier-deck (drop 2))
-  ((discard @monster-discard @curses @blesses) worst)
-  ((discard @monster-discard @curses @blesses) best))
+  (:= (state-@monster-prev-discard s) worst)
+  (:= (state-@modifier s) best)
+  (<~@ (state-@monster-modifier-deck s) (drop 2))
+  (discard (state-@monster-discard s) (state-@curses s) (state-@blesses s) worst)
+  (discard (state-@monster-discard s) (state-@curses s) (state-@blesses s) best))
 
 (define (shuffle-deck @deck)
   (:= @deck (shuffle (@! @deck))))
@@ -496,18 +491,9 @@
              (button
                (@~> @monster-modifier-deck
                     (~>> length (format "Draw Modifier (~a)")))
-               (draw-modifier @monster-modifier-deck @modifier
-                              @monster-discard @monster-prev-discard
-                              @curses @blesses))
-             (button "Advantage"
-                     (draw-modifier* @monster-modifier-deck @modifier
-                                     @monster-discard @monster-prev-discard
-                                     @curses @blesses))
-             (button "Disadvantage"
-                     (draw-modifier* @monster-modifier-deck @modifier
-                                     @monster-discard @monster-prev-discard
-                                     @curses @blesses
-                                     worse-modifier))
+               (draw-modifier s))
+             (button "Advantage" (draw-modifier* s))
+             (button "Disadvantage" (draw-modifier* s worse-modifier))
              (text (@~> @modifier
                         (~>> (or _ "") (~a "Most Recent Modifier: "))))
              (text (@~> @monster-prev-discard
