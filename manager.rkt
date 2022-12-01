@@ -327,30 +327,30 @@
     [else (text "creature is neither player or monster-group*")]))
 
 ;; Transition functions
-(define ((to-input-player-info @mode @creatures @num-players))
-  (when (empty? (@! @creatures))
-    (:= @creatures (build-list (@! @num-players) make-player-creature)))
-  (:= @mode 'input-player-info))
+(define ((to-input-player-info s))
+  (when (empty? (@! (state-@creatures s)))
+    (:= (state-@creatures s) (build-list (@! (state-@num-players s)) make-player-creature)))
+  (:= (state-@mode s) 'input-player-info))
 
-(define ((to-build-loot-deck @mode @creatures))
+(define ((to-build-loot-deck s))
   ;; give each player max-hp
-  (<~@ @creatures
+  (<~@ (state-@creatures s)
         (update-all-players
           (flow (~> (-< (~> player-max-hp const player-act-on-hp)
                         _)
                     apply))))
-  (:= @mode 'build-loot-deck))
+  (:= (state-@mode s) 'build-loot-deck))
 
-(define ((to-play @mode @creatures))
-  (:= @mode 'play)
-  ;; HACK: trigger updates in @creatures to re-render list-view (?)
-  (:= @creatures (@! @creatures)))
+(define ((to-play s))
+  (:= (state-@mode s) 'play)
+  ;; HACK: trigger updates in (state-@creatures s) to re-render list-view (?)
+  (:= (state-@creatures s) (@! (state-@creatures s))))
 
-(define ((to-choose-monster-db @mode @loot-deck @cards-per-deck))
-  (:= @loot-deck (build-loot-deck (@! @cards-per-deck)))
-  (:= @mode 'choose-monster-db))
-(define ((to-choose-monsters @mode))
-  (:= @mode 'choose-monsters))
+(define ((to-choose-monster-db s))
+  (:= (state-@loot-deck s) (build-loot-deck (@! (state-@cards-per-deck s))))
+  (:= (state-@mode s) 'choose-monster-db))
+(define ((to-choose-monsters s))
+  (:= (state-@mode s) 'choose-monsters))
 
 (define ((next-round s))
   ;; wane elements
@@ -429,19 +429,18 @@
        (vpanel
          (start-view #:on-level (λ:= @level)
                      #:on-player (λ:= @num-players))
-         (button "Play"
-                 (to-input-player-info @mode @creatures @num-players)))]
+         (button "Play" (to-input-player-info s)))]
       [(input-player-info)
        (vpanel
          (player-input-views @num-players
                              #:on-name (update-player-name s)
                              #:on-hp (update-player-max-hp s))
-         (button "Next" (to-build-loot-deck @mode @creatures)))]
+         (button "Next" (to-build-loot-deck s)))]
       [(build-loot-deck)
        (vpanel
          (loot-picker #:on-card (update-loot-deck-and-num-loot-cards s))
          (spacer)
-         (button "Next" (to-choose-monster-db @mode @loot-deck @cards-per-deck)))]
+         (button "Next" (to-choose-monster-db s)))]
       [(choose-monster-db)
        (vpanel
          (db-view @info-db @ability-db)
@@ -452,11 +451,11 @@
                      (init-dbs (or (get-file "Monster DB") default-monster-db) s)))
            (button "Use Default Monster DB" (thunk (init-dbs default-monster-db s)))
            (spacer))
-         (button "Next" (to-choose-monsters @mode) #:enabled? (@~> @info-db (not hash-empty?))))]
+         (button "Next" (to-choose-monsters s) #:enabled? (@~> @info-db (not hash-empty?))))]
       [(choose-monsters)
        (vpanel
          (multi-monster-picker @info-db @level #:on-change (add-or-remove-monster-group s))
-         (button "Next" (to-play @mode @creatures)))]
+         (button "Next" (to-play s)))]
       [(play)
        (vpanel
          (hpanel
