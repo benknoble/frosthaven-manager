@@ -413,9 +413,9 @@
   (define @ability-decks (state-@ability-decks s))
   ;; functions
   (define do-curse-monster
-    (deck-adder @curses @monster-modifier-deck))
+    (deck-adder (state-@curses s) (state-@monster-modifier-deck s)))
   (define do-bless-monster
-    (deck-adder @blesses @monster-modifier-deck))
+    (deck-adder (state-@blesses s) (state-@monster-modifier-deck s)))
   ;; gui
   (application-about-handler do-about)
   (window
