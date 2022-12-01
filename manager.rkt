@@ -228,11 +228,11 @@
       [c c]))
   (map update-only-monster-group creatures))
 
-(define ((update-player-name @creatures) k name)
-  (<~@ @creatures (update-players k (player-update-name name))))
+(define ((update-player-name s) k name)
+  (<~@ (state-@creatures s) (update-players k (player-update-name name))))
 
-(define ((update-player-max-hp @creatures) k f)
-  (<~@ @creatures (update-players k (player-act-on-max-hp f))))
+(define ((update-player-max-hp s) k f)
+  (<~@ (state-@creatures s) (update-players k (player-act-on-max-hp f))))
 
 (define ((make-player-view @creatures @num-players) k @e)
   (define (update proc)
@@ -440,8 +440,8 @@
       [(input-player-info)
        (vpanel
          (player-input-views @num-players
-                             #:on-name (update-player-name @creatures)
-                             #:on-hp (update-player-max-hp @creatures))
+                             #:on-name (update-player-name s)
+                             #:on-hp (update-player-max-hp s))
          (button "Next" (to-build-loot-deck @mode @creatures)))]
       [(build-loot-deck)
        (vpanel
