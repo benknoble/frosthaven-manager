@@ -123,10 +123,11 @@
   (:= @discard empty))
 
 (define (discard s card)
-  (cond
-    [(equal? card curse) (<~@ (state-@curses s) (cons card _))]
-    [(equal? card bless) (<~@ (state-@blesses s) (cons card _))]
-    [else (<~@ (state-@monster-discard s) (cons card _))]))
+  (<~@ (switch (card s) (% 1> 2>)
+         [(equal? curse) state-@curses]
+         [(equal? bless) state-@blesses]
+         [else state-@monster-discard])
+       (cons card _)))
 
 (define ((draw-modifier s))
   ;; better not be empty after this…
