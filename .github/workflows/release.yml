@@ -21,7 +21,7 @@ jobs:
       - name: Installing frosthaven-manager and its dependencies
         run: raco pkg install --no-docs --auto --name frosthaven-manager
       - name: Creating frosthaven-manager executable
-        run: raco exe --gui -o FrosthavenManager manager.rkt
+        run: raco exe --gui -o FrosthavenManager gui/manager.rkt
       - name: Creating frosthaven-manager distribution
         run: raco distribute linux-FrosthavenManager FrosthavenManager
       - name: Bundling frosthaven-manager distribution
@@ -45,7 +45,7 @@ jobs:
       - name: Installing frosthaven-manager and its dependencies
         run: raco pkg install --no-docs --auto --name frosthaven-manager
       - name: Creating frosthaven-manager executable
-        run: raco exe --gui -o FrosthavenManager manager.rkt
+        run: raco exe --gui -o FrosthavenManager gui/manager.rkt
       - name: Creating frosthaven-manager distribution
         run: raco distribute FrosthavenManager FrosthavenManager.app
       - name: Bundling frosthaven-manager distribution
@@ -69,7 +69,7 @@ jobs:
       - name: Installing frosthaven-manager and its dependencies
         run: raco pkg install --no-docs --auto --name frosthaven-manager
       - name: Creating frosthaven-manager executable
-        run: raco exe --gui -o FrosthavenManager manager.rkt
+        run: raco exe --gui -o FrosthavenManager gui/manager.rkt
       - name: Creating frosthaven-manager distribution
         run: raco distribute windows-FrosthavenManager FrosthavenManager.exe
       - name: Bundling frosthaven-manager distribution

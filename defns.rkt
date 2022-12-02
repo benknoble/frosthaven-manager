@@ -10,13 +10,6 @@
                         (-> any/c any/c)
                         void?)])
 
-  ;; GUI
-  (contract-out
-    [struct creature ([id any/c]
-                      [v (or/c player? monster-group*?)])]
-    [struct monster-group* ([active (or/c #f monster-number/c)]
-                            [mg monster-group?])])
-
   ;; level info
   (contract-out
     [struct level-info ([monster-level natural-number/c]
@@ -175,11 +168,6 @@
 
 (define max-players 4)
 (define num-players/c (integer-in 1 max-players))
-
-;; GUI
-
-(struct creature [id v] #:transparent)
-(struct monster-group* [active mg] #:transparent)
 
 ;; level info
 

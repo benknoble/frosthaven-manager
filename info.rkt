@@ -2,10 +2,11 @@
 
 (define collection "frosthaven-manager")
 (define racket-launcher-names '("frosthaven-manager"))
-(define racket-launcher-libraries '("manager"))
+(define racket-launcher-libraries '("gui/manager"))
 (define gracket-launcher-names '("FrosthavenManager"))
-(define gracket-launcher-libraries '("manager"))
-(define deps '("plot-lib"
+(define gracket-launcher-libraries '("gui/manager"))
+(define deps '("reprovide-lang-lib"
+               "plot-lib"
                "draw-lib"
                "markdown"
                "net-lib"
