@@ -161,15 +161,19 @@
   (discard s not-keep-card)
   (discard s keep-card))
 
-(define (shuffle-deck @deck)
-  (:= @deck (shuffle (@! @deck))))
+(define (shuffle-modifier-deck s)
+  (:= (state-@monster-modifier-deck s) (shuffle (@! (state-@monster-modifier-deck s)))))
 
-(define ((deck-adder @cards @deck))
+(define (((deck-adder state->@cards) s))
+  (define @cards (state->@cards s))
   (unless (empty? (@! @cards))
     (define card (first (@! @cards)))
     (<@ @cards rest)
-    (<~@ @deck (cons card _))
-    (shuffle-deck @deck)))
+    (<~@ (state-@monster-modifier-deck s) (cons card _))
+    (shuffle-modifier-deck s)))
+
+(define do-curse-monster (deck-adder state-@curses))
+(define do-bless-monster (deck-adder state-@blesses))
 
 ;; DBs
 (define (init-dbs db s)
@@ -459,8 +463,6 @@
     (button "Next" (to-play s))))
 
 (define (play-view s elements-view)
-  (define do-curse-monster (deck-adder (state-@curses s) (state-@monster-modifier-deck s)))
-  (define do-bless-monster (deck-adder (state-@blesses s) (state-@monster-modifier-deck s)))
   (vpanel
     (hpanel
       ;; left
@@ -475,8 +477,8 @@
       ;; right
       (vpanel
         #:stretch '(#f #t)
-        (deck-adder-button (state-@curses s) do-curse-monster "Curse Monster" monster-curse-deck)
-        (deck-adder-button (state-@blesses s) do-bless-monster "Bless Monster" monster-bless-deck)
+        (deck-adder-button (state-@curses s) (do-curse-monster s) "Curse Monster" monster-curse-deck)
+        (deck-adder-button (state-@blesses s) (do-bless-monster s) "Bless Monster" monster-bless-deck)
         (spacer)
         (button (@~> (state-@monster-modifier-deck s) (~>> length (format "Draw Modifier (~a)")))
                 (draw-modifier s))
