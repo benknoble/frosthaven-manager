@@ -348,9 +348,7 @@
   ;; give each player max-hp
   (<~@ (state-@creatures s)
         (update-all-players
-          (flow (~> (-< (~> player-max-hp const player-act-on-hp)
-                        _)
-                    apply))))
+          (flow (~> (-< (~> player-max-hp const player-act-on-hp) _) apply))))
   (:= (state-@mode s) 'build-loot-deck))
 
 (define ((to-play s))
