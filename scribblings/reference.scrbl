@@ -19,6 +19,7 @@
                      element-pics
                      elements)
             frosthaven-manager/enum-helpers
+            frosthaven-manager/manager
             frosthaven-manager/gui/common-menu
             frosthaven-manager/gui/counter
             frosthaven-manager/gui/elements
@@ -73,28 +74,6 @@ requires of a value @racket[v] that the result of @racket[(map key v)] is a
 Like @racket[list-update] for mutable @racket[vector]s. Equivalent to
 setting @racket[v]@subscript{@racket[pos]} to @racket[f] of
 @racket[v]@subscript{@racket[pos]}.
-}
-
-@subsection{GUI}
-
-@defstruct*[creature
-             ([id any/c]
-              [v (or/c player? monster-group*?)])
-             #:transparent]{
-A @racket[creature] is displayed in the central area of the Frosthaven Manager
-GUI, as described in @secref{Creature_List}. Therefore a @racket[creature-v] can
-be either a @racket[player] or a @racket[monster-group*].
-
-A @racket[creature] is identified by its unique @racket[creature-id].
-}
-
-@defstruct*[monster-group*
-             ([active (or/c #f monster-number/c)]
-              [mg monster-group?])
-             #:transparent]{
-A @racket[monster-group*] wraps a @racket[monster-group] with a possibly active
-@racket[monster-number/c], which identifies the monster currently displayed in
-@secref{Monster_Group_Controls}.
 }
 
 @subsection{Level Info}
@@ -590,6 +569,218 @@ that the @racket[display] string is the same as the constant name as in
 @racket[define-enum-type].
 }
 
+@section{@tt{manager}}
+@defmodule[frosthaven-manager/manager]
+
+This module reprovides all the bindings from
+@racketmodname[frosthaven-manager/manager/state],
+@racketmodname[frosthaven-manager/manager/ability-decks],
+@racketmodname[frosthaven-manager/manager/modifier-decks],
+@racketmodname[frosthaven-manager/manager/db], and
+@racketmodname[frosthaven-manager/manager/loot].
+
+@subsection{@tt{manager/state}}
+@defmodule[frosthaven-manager/manager/state]
+
+This module provides facilities for manipulating manager-level state.
+
+@defstruct*[creature
+             ([id any/c]
+              [v (or/c player? monster-group*?)])
+             #:transparent]{
+A @racket[creature] is displayed in the central area of the Frosthaven Manager
+GUI, as described in @secref{Creature_List}. Therefore a @racket[creature-v] can
+be either a @racket[player] or a @racket[monster-group*].
+
+A @racket[creature] is identified by its unique @racket[creature-id].
+}
+
+@defstruct*[monster-group*
+             ([active (or/c #f monster-number/c)]
+              [mg monster-group?])
+             #:transparent]{
+A @racket[monster-group*] wraps a @racket[monster-group] with a possibly active
+@racket[monster-number/c], which identifies the monster currently displayed in
+@secref{Monster_Group_Controls}.
+}
+
+@defstruct*[state
+             ([@mode symbol?]
+              [@level (obs/c level/c)]
+              [@num-players (obs/c num-players/c)]
+              [@creatures (obs/c (listof creature?))]
+              [@cards-per-deck (obs/c (hash/c (listof loot-card?) natural-number/c))]
+              [@loot-deck (obs/c (listof loot-card?))]
+              [@num-loot-cards (obs/c natural-number/c)]
+              [@elements (listof (obs/c element-state/c))]
+              [@in-draw? (obs/c boolean?)]
+              [@monster-modifier-deck (obs/c (listof monster-modifier?))]
+              [@monster-discard (obs/c (listof monster-modifier?))]
+              [@curses (obs/c (listof monster-modifier?))]
+              [@blesses (obs/c (listof monster-modifier?))]
+              [@modifier (obs/c monster-modifier?)]
+              [@monster-prev-discard (obs/c monster-modifier?)]
+              [@info-db (obs/c info-db/c)]
+              [@ability-db (obs/c ability-db/c)]
+              [@ability-decks (obs/c (hash/c string? ability-decks?))])]{
+All of the "global" manager state.
+}
+
+@defproc[(make-state
+           [|@|elements (obs/c element-state/c)]
+           [|@|mode symbol? (|@| 'start)]
+           [|@|level (obs/c level/c) (|@| 0)]
+           [|@|num-players (obs/c num-players/c) (|@| 1)]
+           [|@|creatures (obs/c (listof creature?)) (|@| empty)]
+           [|@|cards-per-deck (obs/c (hash/c (listof loot-card?) natural-number/c)) (|@| (hash))]
+           [|@|loot-deck (obs/c (listof loot-card?)) (|@| empty)]
+           [|@|num-loot-cards (obs/c natural-number/c) (|@| 0)]
+           [|@|in-draw? (obs/c boolean?) (|@| #f)]
+           [|@|monster-modifier-deck (obs/c (listof monster-modifier?)) (|@| (shuffle monster-modifier-deck))]
+           [|@|monster-discard (obs/c (listof monster-modifier?)) (|@| empty)]
+           [|@|curses (obs/c (listof monster-modifier?)) (|@| monster-curse-deck)]
+           [|@|blesses (obs/c (listof monster-modifier?)) (|@| monster-bless-deck)]
+           [|@|modifier (obs/c monster-modifier?) (|@| #f)]
+           [|@|monster-prev-discard (obs/c monster-modifier?) (|@| #f)]
+           [|@|info-db (obs/c info-db/c) (|@| (hash))]
+           [|@|ability-db (obs/c ability-db/c) (|@| (hash))]
+           [|@|ability-decks (obs/c (hash/c string? ability-decks?)) (|@| (hash))])
+         state?]{
+Create an initial state.
+}
+
+@defproc[(make-player-creature [i any/c]) creature?]{
+Make a creature with @racket[creature-id] @racket[i] and @racket[creature-v] a
+@racket[player?].
+}
+
+@deftogether[(
+    @defproc[(update-players [creatures (listof creature?)]
+                             [k any/c]
+                             [f (-> player? player?)])
+             (listof creature?)]
+    @defproc[(update-monster-groups [creatures (listof creature?)]
+                                    [k any/c]
+                                    [f (-> monster-group? monster-group?)]
+                                    [fn (-> (or/c #f monster-number/c) monster-group? (or/c #f monster-number/c))
+                                        (flow 1>)])
+             (listof creature?)]
+)]{
+Updates player or monster-group @racket[k] in @racket[creatures] via @racket[f].
+When updating a monster-group, @racket[fn] can update the
+@racket[monster-group*-active] number.
+}
+
+@deftogether[(
+    @defproc[(update-all-players [creatures (listof creature?)]
+                                 [f (-> player? player?)])
+             (listof creature?)]
+    @defproc[(update-all-monster-groups [creatures (listof creature?)]
+                                        [f (-> monster-group? monster-group?)])
+             (listof creature?)]
+)]{
+Updates all players or monster-groups in @racket[creatures] via @racket[f].
+}
+
+@deftogether[(
+    @defproc[((update-player-name [s state?]) [k any/c] [name string?]) any]
+    @defproc[((update-player-max-hp [s state?])
+              [k any/c]
+              [f (-> natural-number/c natural-number/c)])
+             any]
+)]{
+Updates player @racket[k]s name to @racket[name] or max health via @racket[f].
+}
+
+@defproc[(creature-initiative [s state?]) (-> creature? initiative?)]{
+Calculates a creature's initiative.
+}
+
+@defproc[(add-or-remove-monster-group [s state?])
+         (-> (or/c add-monster-event/c
+                   remove-monster-event/c)
+             any)]{
+Adds or removes a monster group based on the received event.
+}
+
+@subsection{@tt{manager/ability-decks}}
+@defmodule[frosthaven-manager/manager/ability-decks]
+
+@defstruct*[ability-decks ([current (or/c #f monster-ability?)]
+                           [draw (listof monster-ability?)]
+                           [discard (listof monster-ability?)])
+                          #:transparent]{
+Monster ability deck, with currently active card, draw pile, and discard pile.
+}
+
+@defproc[(ability-decks-draw-next [ad ability-decks?]) ability-decks?]{
+Draws a card from the ability deck.
+}
+
+@defproc[(ability-decks-discard-and-maybe-shuffle [ad ability-decks?])
+         ability-decks?]{
+Discards the active card and shuffles the ability deck if necessary.
+}
+
+@defproc[(update-ability-decks [f (-> ability-decks? ability-decks?)])
+         (-> (hash/c string? ability-decks?) (hash/c string? ability-decks?))]{
+Updates each deck via @racket[f].
+}
+
+@subsection{@tt{manager/modifier-decks}}
+@defmodule[frosthaven-manager/manager/modifier-decks]
+
+This module provides facilities for manipulating the modifier deck.
+
+@defproc[(reshuffle-modifier-deck [s state?]) any]{
+Reshuffle the monster modifier deck.
+}
+
+@defproc[(discard [s state?] [card monster-modifier?]) any]{
+Discard a card to the appropriate pile.
+}
+
+@defproc[(draw-modifier [s state?]) (-> any)]{
+Draws and discards a single modifier card.
+}
+
+@defproc[(draw-modifier* [s state?] [keep (-> monster-modifier? monster-modifier? monster-modifier?)])
+         (-> any)]{
+Draws two modifier cards and discards them with the kept card on top.
+}
+
+@deftogether[(@defproc[(do-curse-monster [s state?]) (-> any)]
+              @defproc[(do-bless-monster [s state?]) (-> any)])]{
+Add a curse or bless to the deck.
+}
+
+@subsection{@tt{manager/db}}
+@defmodule[frosthaven-manager/manager/db]
+
+This module provides facilities for manipulating the active monster databases.
+
+@defproc[(init-dbs [db path-string?] [s state?]) any]{
+Initialize the active monster databases.
+}
+
+@subsection{@tt{manager/loot}}
+@defmodule[frosthaven-manager/manager/loot]
+
+This module provides facilities for manipulating the loot deck.
+
+@defproc[(update-loot-deck-and-num-loot-cards [s state?])
+         (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any)]{
+Update the loot deck based on the loot-picker event.
+}
+
+@defproc[(take-loot [s state?]) (-> any)]{
+Discard the top loot card.
+}
+
+@defproc[((give-player-loot [s state?]) [k any/c]) any]{
+Give player @racket[k] the top loot card.
+}
+
 @section[#:tag "frosthaven-manager/gui"]{@tt{gui}}
 
 The following sections describe modules under @tt{frosthaven-manager/gui}.
@@ -712,7 +903,7 @@ namely, mappings from decks to number of cards.
            [|@loot-deck| (obs/c (listof loot-card?))]
            [|@num-loot-cards| (obs/c natural-number/c)]
            [|@num-players| (obs/c natural-number/c)]
-           [|@players| (obs/c (listof creature?))]
+           [|@players| (obs/c (listof (cons/c player? any/c)))]
            [#:on-close on-close (-> any) void]
            [#:on-player on-player (-> any/c any) void])
          (is-a?/c view<%>)]{
@@ -720,7 +911,7 @@ A GUI view of a button that, when clicked, shows a view to assign the top loot
 card from @racket[|@loot-deck|] to one of @racket[|@players|] via buttons. The
 callback @racket[on-close] is invoked when the view is closed and can be used
 to, @italic{e.g.}, remove the top loot card from the deck. The callback
-@racket[on-player] is invoked with the @racket[creature-id] of the player from
+@racket[on-player] is invoked with the ID (@racket[cdr]) of the player from
 @racket[|@players|] whose button is clicked to assign loot; it can be used to,
 @italic{e.g.}, assign the loot card. After @racket[on-player] is invoked, the
 view is closed, which invokes @racket[on-close].

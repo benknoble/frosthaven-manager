@@ -5,7 +5,8 @@
 (define racket-launcher-libraries '("gui/manager"))
 (define gracket-launcher-names '("FrosthavenManager"))
 (define gracket-launcher-libraries '("gui/manager"))
-(define deps '("plot-lib"
+(define deps '("reprovide-lang-lib"
+               "plot-lib"
                "draw-lib"
                "markdown"
                "net-lib"
