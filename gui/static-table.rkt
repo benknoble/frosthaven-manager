@@ -49,7 +49,7 @@
     (for/vector #:length num-rows ([i (in-range num-rows)])
       (index->entry i))
     #:selection selection
-    #:min-size (list (~> (column-widths) sep (>< second) (+ 40))
+    #:min-size (list (~> (column-widths) (sep second) (+ 40))
                      (* 30 num-rows))
     #:column-widths column-widths
     #:stretch '(#f #f)

@@ -291,10 +291,10 @@
   (define/obs @monster-groups empty)
   (define @monster-names
     (@~> @monster-groups
-         (~> sep (>< (~> cdr monster-group-name)) collect)))
+         (~> (sep (~> cdr monster-group-name)) collect)))
   (define/obs @next-id
     (@~> @monster-groups
-         (~> sep (>< car) (rectify -1) max add1)))
+         (~> (sep car) (rectify -1) max add1)))
   (define (make-simple-monster-group-view k @e)
     (define @m (@> @e cdr))
     (define @name (@> @m monster-group-name))
