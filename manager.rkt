@@ -27,380 +27,9 @@
          frosthaven-manager/monster-db
          frosthaven-manager/gui/monsters)
 
-;; TODO these functions need a home :(
-
-;; bag of state
-(struct state
-        [@mode
-         @level
-         @num-players
-         @creatures
-         @cards-per-deck
-         @loot-deck
-         @num-loot-cards
-         @elements
-         @in-draw?
-         @monster-modifier-deck
-         @monster-discard
-         @curses
-         @blesses
-         @modifier
-         @monster-prev-discard
-         @info-db
-         @ability-db
-         @ability-decks])
-
-(define (make-state @elements
-                    [@mode (@ 'start)]
-                    [@level (@ 0)]
-                    [@num-players (@ 1)]
-                    [@creatures (@ empty)]
-                    [@cards-per-deck (@ (hash))]
-                    [@loot-deck (@ empty)]
-                    [@num-loot-cards (@ 0)]
-                    [@in-draw? (@ #f)]
-                    [@monster-modifier-deck (@ (shuffle monster-modifier-deck))]
-                    [@monster-discard (@ empty)]
-                    [@curses (@ monster-curse-deck)]
-                    [@blesses (@ monster-bless-deck)]
-                    [@modifier (@ #f)]
-                    [@monster-prev-discard (@ #f)]
-                    [@info-db (@ (hash))]
-                    [@ability-db (@ (hash))]
-                    [@ability-decks (@ (hash))])
-  (state @mode
-         @level
-         @num-players
-         @creatures
-         @cards-per-deck
-         @loot-deck
-         @num-loot-cards
-         @elements
-         @in-draw?
-         @monster-modifier-deck
-         @monster-discard
-         @curses
-         @blesses
-         @modifier
-         @monster-prev-discard
-         @info-db
-         @ability-db
-         @ability-decks))
-
-;; Ability Decks
-(struct ability-decks [current draw discard] #:transparent)
-
-(define-flow (ability-decks-draw-next ad)
-  (~> (-< (~> ability-decks-draw (and (not empty?) first))
-          (~> ability-decks-draw (switch [(not empty?) rest]))
-          ability-decks-discard)
-      ability-decks))
-
-(define (ability-decks-discard-and-maybe-shuffle ad)
-  (match-define (ability-decks current draw discard) ad)
-  (define discard-with-current
-    (if (monster-ability? current)
-      (cons current discard)
-      discard))
-  (define shuffle?
-    (or (empty? draw)
-        (on (current)
-          (and monster-ability? monster-ability-shuffle?))))
-  (define-values (draw* discard*)
-    (if shuffle?
-      (values (shuffle (append draw discard-with-current)) empty)
-      (values draw discard-with-current)))
-  (ability-decks #f draw* discard*))
-
-(define ((update-ability-decks f) ads)
-  (for/hash ([(set ad) (in-hash ads)])
-    (values set (f ad))))
-
-;; Modifier decks
-(define (reshuffle-modifier-deck s)
-  (define-values (@deck @discard) (on (s) (-< state-@monster-modifier-deck state-@monster-discard)))
-  (:= @deck (shuffle (append (@! @deck) (@! @discard))))
-  (:= @discard empty))
-
-(define (discard s card)
-  (<~@ (switch (card s) (% 1> 2>)
-         [(equal? curse) state-@curses]
-         [(equal? bless) state-@blesses]
-         [else state-@monster-discard])
-       (cons card _)))
-
-;; only modifies state-@monster-modifier-deck
-(define (draw-card s)
-  ;; better not be empty after reshuffling…
-  (when (empty? (@! (state-@monster-modifier-deck s)))
-    (reshuffle-modifier-deck s))
-  (define card (first (@! (state-@monster-modifier-deck s))))
-  (<@ (state-@monster-modifier-deck s) rest)
-  card)
-
-;; only modifies state-@monster-modifier-deck
-(define (draw-cards s [n 1])
-  (for/list ([_ (in-range n)])
-    (draw-card s)))
-
-(define ((draw-modifier s))
-  (match-define (list card) (draw-cards s 1))
-  (:= (state-@monster-prev-discard s) (@! (state-@modifier s)))
-  (:= (state-@modifier s) card)
-  (discard s card))
-
-(define ((draw-modifier* s [keep better-modifier]))
-  (match-define (list a b) (draw-cards s 2))
-  (define keep-card (keep a b))
-  (define not-keep-card
-    (match* (a b)
-      [{(== keep-card) b} b]
-      [{a (== keep-card)} a]))
-  (:= (state-@monster-prev-discard s) not-keep-card)
-  (:= (state-@modifier s) keep-card)
-  (discard s not-keep-card)
-  (discard s keep-card))
-
-(define (shuffle-modifier-deck s)
-  (:= (state-@monster-modifier-deck s) (shuffle (@! (state-@monster-modifier-deck s)))))
-
-(define (((deck-adder state->@cards) s))
-  (define @cards (state->@cards s))
-  (unless (empty? (@! @cards))
-    (define card (first (@! @cards)))
-    (<@ @cards rest)
-    (<~@ (state-@monster-modifier-deck s) (cons card _))
-    (shuffle-modifier-deck s)))
-
-(define do-curse-monster (deck-adder state-@curses))
-(define do-bless-monster (deck-adder state-@blesses))
-
-;; DBs
-(define (init-dbs db s)
-  (define-values (info-db ability-db) (get-dbs db))
-  (:= (state-@info-db s) info-db)
-  (:= (state-@ability-db s) ability-db)
-  (:= (state-@ability-decks s)
-      (for/hash ([(set abilities) (in-hash ability-db)])
-        (values set (ability-decks #f (shuffle abilities) empty)))))
-
-;; Loot
-(define ((update-loot-deck-and-num-loot-cards s) evt)
-  ((loot-picker-updater (state-@cards-per-deck s)) evt)
-  (<@ (state-@num-loot-cards s) (case (car evt) [(add) add1] [(remove) sub1])))
-
-;; valid: only called if loot-deck non-empty, loot assigned
-(define ((take-loot s)) (<@ (state-@loot-deck s) rest))
-
-(define ((give-player-loot* s) p)
-  (define card
-    (@! (@~> (state-@loot-deck s) (and (not empty?) first))))
-  (if card
-    ((player-add-loot card) p)
-    p))
-
-(define ((give-player-loot s) k)
-  (<~@ (state-@creatures s) (update-players k (give-player-loot* s))))
-
-;; Creatures
-(define (make-player-creature i)
-  (creature i (make-player "" 1)))
-
-(define (update-players creatures k f)
-  (define (maybe-update-player e)
-    (if (~> (e) (-< creature-id creature-v) (and% (eq? k) player?))
-      (creature k (f (creature-v e)))
-      e))
-  (map maybe-update-player creatures))
-
-(define (update-monster-groups creatures k f [fn (flow 1>)])
-  (define (maybe-update-monster-group e)
-    (if (~> (e)
-            (-< creature-id creature-v)
-            (and% (eq? k) monster-group*?))
-      (let* ([mg* (creature-v e)]
-             [n (monster-group*-active mg*)]
-             [mg (monster-group*-mg mg*)]
-             [new-mg (f mg)]
-             [new-n (fn n new-mg)])
-        (creature k (monster-group* new-n new-mg)))
-      e))
-  (map maybe-update-monster-group creatures))
-
-(define (update-all-players creatures f)
-  (define (update-only-player c)
-    (match c
-      [(creature id (? player? p)) (creature id (f p))]
-      [c c]))
-  (map update-only-player creatures))
-
-(define (update-all-monster-groups creatures f)
-  (define (update-only-monster-group c)
-    (match c
-      [(creature id (monster-group* n mg))
-       (creature id (monster-group* n (f mg)))]
-      [c c]))
-  (map update-only-monster-group creatures))
-
-(define ((update-player-name s) k name)
-  (<~@ (state-@creatures s) (update-players k (player-update-name name))))
-
-(define ((update-player-max-hp s) k f)
-  (<~@ (state-@creatures s) (update-players k (player-act-on-max-hp f))))
-
-(define ((make-player-view s) k @e)
-  (define (update proc)
-    (<~@ (state-@creatures s) (update-players k proc)))
-  (define-flow update-player-condition (~> player-condition-handler update))
-  (define-flow update-player-hp (~> player-act-on-hp update))
-  (define-flow update-player-xp (~> player-act-on-xp update))
-  (define (update-player-initiative i)
-    (update (flow (player-set-initiative i))))
-  (player-view
-    (@> @e creature-v)
-    (state-@num-players s)
-    #:on-condition update-player-condition
-    #:on-hp update-player-hp
-    #:on-xp update-player-xp
-    #:on-initiative update-player-initiative))
-
-(define ((make-monster-group-view s) k @e)
-  (define (update proc [procn (flow 1>)])
-    (<~@ (state-@creatures s) (update-monster-groups k proc procn)))
-  (define (update-by-num num proc)
-    (update (monster-group-update-num num proc)))
-  (define @mg* (@> @e creature-v))
-  (define @mg (@> @mg* monster-group*-mg))
-  (define @n (@> @mg* monster-group*-active))
-  (define @ms (@> @mg monster-group-monsters))
-  (define (update-condition num c on?)
-    (update-by-num num (monster-update-condition c on?)))
-  (define (update-hp num proc)
-    (update-by-num num (monster-update-hp proc)))
-  (define (kill num)
-    (update (monster-group-remove num)
-            (flow (~> 2> monster-group-first-monster))))
-  (define (new num elite?)
-    (update (monster-group-add num elite?)
-            (const num)))
-  (define (select num) (update values (const num)))
-  (define @ability
-    (obs-combine
-      (flow (~> (== _ monster-group-set-name) hash-ref ability-decks-current))
-      (state-@ability-decks s) @mg))
-  (monster-group-view
-    @mg
-    @ability
-    @n
-    #:on-condition update-condition
-    #:on-hp update-hp
-    #:on-kill kill
-    #:on-new new
-    #:on-select select))
-
-(define ((monster-group-initiative s) mg)
-  (~> ((state-@ability-decks s) mg)
-      (== @! monster-group-set-name)
-      hash-ref
-      ability-decks-current
-      (switch
-        [monster-ability? monster-ability-initiative]
-        [else +inf.0])))
-
-(define (monster-group*-initiative s)
-  (flow (~> monster-group*-mg (monster-group-initiative s))))
-
-(define (creature-initiative s)
-  (flow (~> creature-v
-            (switch
-              [player? player-initiative]
-              [monster-group*? (esc (monster-group*-initiative s))]))))
-
-;; (-> mg (-> creature bool))
-(define-flow creature-is-mg~?
-  (clos (~>
-          (== _ (~> creature-v (and monster-group*? monster-group*-mg)))
-          equal?)))
-
-(define ((add-or-remove-monster-group s) evt)
-  (match evt
-    [`(add ,mg)
-      (define next-id (~> (s) state-@creatures @! (sep creature-id) max add1))
-      (define selection
-        (~> (mg) monster-group-monsters
-            (and (not empty?) (~> first monster-number))))
-      (define c (creature next-id (monster-group* selection mg)))
-      (<~@ (state-@creatures s) (append (list c)))]
-    [`(remove ,mg) (<~@ (state-@creatures s) (remf (creature-is-mg~? mg) _))]))
-
-(define ((make-creature-view s) k @e)
-  (cond-view
-    [(@~> @e (~> creature-v player?)) ((make-player-view s) k @e)]
-    [(@~> @e (~> creature-v monster-group*?)) ((make-monster-group-view s) k @e)]
-    [else (text "creature is neither player or monster-group*")]))
-
-;; Transition functions
-(define ((to-input-player-info s))
-  (when (empty? (@! (state-@creatures s)))
-    (:= (state-@creatures s) (build-list (@! (state-@num-players s)) make-player-creature)))
-  (:= (state-@mode s) 'input-player-info))
-
-(define ((to-build-loot-deck s))
-  ;; give each player max-hp
-  (<~@ (state-@creatures s)
-        (update-all-players
-          (flow (~> (-< (~> player-max-hp const player-act-on-hp) _) apply))))
-  (:= (state-@mode s) 'build-loot-deck))
-
-(define ((to-play s))
-  (:= (state-@mode s) 'play)
-  ;; HACK: trigger updates in (state-@creatures s) to re-render list-view (?)
-  (:= (state-@creatures s) (@! (state-@creatures s))))
-
-(define ((to-choose-monster-db s))
-  (:= (state-@loot-deck s) (build-loot-deck (@! (state-@cards-per-deck s))))
-  (:= (state-@mode s) 'choose-monster-db))
-(define ((to-choose-monsters s))
-  (:= (state-@mode s) 'choose-monsters))
-
-(define ((next-round s))
-  ;; wane elements
-  (for-each (flow (<@ wane-element)) (state-@elements s))
-  ;; reset player initiative
-  (<~@ (state-@creatures s) (update-all-players player-clear-initiative))
-  ;; discard monster cards
-  (<@ (state-@ability-decks s)
-      (update-ability-decks ability-decks-discard-and-maybe-shuffle))
-  ;; order creatures
-  (<~@ (state-@creatures s) (sort < #:key (creature-initiative s)))
-  ;; shuffle modifiers if required
-  (when (shuffle-modifier-deck? (@! (state-@monster-discard s)))
-    (reshuffle-modifier-deck s))
-  ;; toggle state
-  (<@ (state-@in-draw? s) not))
-
-(define ((draw-abilities s))
-  ;; draw new monster cards
-  (<@ (state-@ability-decks s) (update-ability-decks ability-decks-draw-next))
-  ;; order creatures
-  (<~@ (state-@creatures s) (sort < #:key (creature-initiative s)))
-  ;; toggle state
-  (<@ (state-@in-draw? s) not))
-
-;; GUI
-(define (deck-adder-button @cards do-adder text original-deck)
-  (button
-    #:enabled? (@~> @cards (not empty?))
-    (@~> @cards
-         (~> length
-             (format "~a (~a/~a)" text _ (length original-deck))))
-    do-adder))
-
 (define (manager)
   (define-values (@elements elements-view) (elements-cycler elements vpanel))
   (define s (make-state @elements))
-  ;; functions
-  ;; gui
   (application-about-handler do-about)
   (window
     #:title "Frosthaven Manager"
@@ -422,6 +51,8 @@
       [(choose-monsters) (choose-monsters-view s)]
       [(play) (play-view s elements-view)]
       [else (text "Broken")])))
+
+;;;; GUI
 
 (define (the-start-view s)
   (vpanel
@@ -498,3 +129,378 @@
             (level-stats (state-@level s) (state-@num-players s))
             (level-table (state-@level s))
             (inspiration-table (state-@num-players s)))))
+
+(define (deck-adder-button @cards do-adder text original-deck)
+  (button
+    #:enabled? (@~> @cards (not empty?))
+    (@~> @cards
+         (~> length
+             (format "~a (~a/~a)" text _ (length original-deck))))
+    do-adder))
+
+(define ((make-player-view s) k @e)
+  (define (update proc)
+    (<~@ (state-@creatures s) (update-players k proc)))
+  (define-flow update-player-condition (~> player-condition-handler update))
+  (define-flow update-player-hp (~> player-act-on-hp update))
+  (define-flow update-player-xp (~> player-act-on-xp update))
+  (define (update-player-initiative i)
+    (update (flow (player-set-initiative i))))
+  (player-view
+    (@> @e creature-v)
+    (state-@num-players s)
+    #:on-condition update-player-condition
+    #:on-hp update-player-hp
+    #:on-xp update-player-xp
+    #:on-initiative update-player-initiative))
+
+(define ((make-monster-group-view s) k @e)
+  (define (update proc [procn (flow 1>)])
+    (<~@ (state-@creatures s) (update-monster-groups k proc procn)))
+  (define (update-by-num num proc)
+    (update (monster-group-update-num num proc)))
+  (define @mg* (@> @e creature-v))
+  (define @mg (@> @mg* monster-group*-mg))
+  (define @n (@> @mg* monster-group*-active))
+  (define @ms (@> @mg monster-group-monsters))
+  (define (update-condition num c on?)
+    (update-by-num num (monster-update-condition c on?)))
+  (define (update-hp num proc)
+    (update-by-num num (monster-update-hp proc)))
+  (define (kill num)
+    (update (monster-group-remove num)
+            (flow (~> 2> monster-group-first-monster))))
+  (define (new num elite?)
+    (update (monster-group-add num elite?)
+            (const num)))
+  (define (select num) (update values (const num)))
+  (define @ability
+    (obs-combine
+      (flow (~> (== _ monster-group-set-name) hash-ref ability-decks-current))
+      (state-@ability-decks s) @mg))
+  (monster-group-view
+    @mg
+    @ability
+    @n
+    #:on-condition update-condition
+    #:on-hp update-hp
+    #:on-kill kill
+    #:on-new new
+    #:on-select select))
+
+(define ((make-creature-view s) k @e)
+  (cond-view
+    [(@~> @e (~> creature-v player?)) ((make-player-view s) k @e)]
+    [(@~> @e (~> creature-v monster-group*?)) ((make-monster-group-view s) k @e)]
+    [else (text "creature is neither player or monster-group*")]))
+
+;;;; bag of state
+
+(struct state
+        [@mode
+         @level
+         @num-players
+         @creatures
+         @cards-per-deck
+         @loot-deck
+         @num-loot-cards
+         @elements
+         @in-draw?
+         @monster-modifier-deck
+         @monster-discard
+         @curses
+         @blesses
+         @modifier
+         @monster-prev-discard
+         @info-db
+         @ability-db
+         @ability-decks])
+
+(define (make-state @elements
+                    [@mode (@ 'start)]
+                    [@level (@ 0)]
+                    [@num-players (@ 1)]
+                    [@creatures (@ empty)]
+                    [@cards-per-deck (@ (hash))]
+                    [@loot-deck (@ empty)]
+                    [@num-loot-cards (@ 0)]
+                    [@in-draw? (@ #f)]
+                    [@monster-modifier-deck (@ (shuffle monster-modifier-deck))]
+                    [@monster-discard (@ empty)]
+                    [@curses (@ monster-curse-deck)]
+                    [@blesses (@ monster-bless-deck)]
+                    [@modifier (@ #f)]
+                    [@monster-prev-discard (@ #f)]
+                    [@info-db (@ (hash))]
+                    [@ability-db (@ (hash))]
+                    [@ability-decks (@ (hash))])
+  (state @mode
+         @level
+         @num-players
+         @creatures
+         @cards-per-deck
+         @loot-deck
+         @num-loot-cards
+         @elements
+         @in-draw?
+         @monster-modifier-deck
+         @monster-discard
+         @curses
+         @blesses
+         @modifier
+         @monster-prev-discard
+         @info-db
+         @ability-db
+         @ability-decks))
+
+;; TODO these functions need a home :(
+
+;;;; Ability Decks
+
+(struct ability-decks [current draw discard] #:transparent)
+
+(define-flow (ability-decks-draw-next ad)
+  (~> (-< (~> ability-decks-draw (and (not empty?) first))
+          (~> ability-decks-draw (switch [(not empty?) rest]))
+          ability-decks-discard)
+      ability-decks))
+
+(define (ability-decks-discard-and-maybe-shuffle ad)
+  (match-define (ability-decks current draw discard) ad)
+  (define discard-with-current
+    (if (monster-ability? current)
+      (cons current discard)
+      discard))
+  (define shuffle?
+    (or (empty? draw)
+        (on (current)
+          (and monster-ability? monster-ability-shuffle?))))
+  (define-values (draw* discard*)
+    (if shuffle?
+      (values (shuffle (append draw discard-with-current)) empty)
+      (values draw discard-with-current)))
+  (ability-decks #f draw* discard*))
+
+(define ((update-ability-decks f) ads)
+  (for/hash ([(set ad) (in-hash ads)])
+    (values set (f ad))))
+
+;;;; Modifier decks
+
+(define (reshuffle-modifier-deck s)
+  (define-values (@deck @discard) (on (s) (-< state-@monster-modifier-deck state-@monster-discard)))
+  (:= @deck (shuffle (append (@! @deck) (@! @discard))))
+  (:= @discard empty))
+
+(define (discard s card)
+  (<~@ (switch (card s) (% 1> 2>)
+         [(equal? curse) state-@curses]
+         [(equal? bless) state-@blesses]
+         [else state-@monster-discard])
+       (cons card _)))
+
+;; only modifies state-@monster-modifier-deck
+(define (draw-card s)
+  ;; better not be empty after reshuffling…
+  (when (empty? (@! (state-@monster-modifier-deck s)))
+    (reshuffle-modifier-deck s))
+  (define card (first (@! (state-@monster-modifier-deck s))))
+  (<@ (state-@monster-modifier-deck s) rest)
+  card)
+
+;; only modifies state-@monster-modifier-deck
+(define (draw-cards s [n 1])
+  (for/list ([_ (in-range n)])
+    (draw-card s)))
+
+(define ((draw-modifier s))
+  (match-define (list card) (draw-cards s 1))
+  (:= (state-@monster-prev-discard s) (@! (state-@modifier s)))
+  (:= (state-@modifier s) card)
+  (discard s card))
+
+(define ((draw-modifier* s [keep better-modifier]))
+  (match-define (list a b) (draw-cards s 2))
+  (define keep-card (keep a b))
+  (define not-keep-card
+    (match* (a b)
+      [{(== keep-card) b} b]
+      [{a (== keep-card)} a]))
+  (:= (state-@monster-prev-discard s) not-keep-card)
+  (:= (state-@modifier s) keep-card)
+  (discard s not-keep-card)
+  (discard s keep-card))
+
+(define (shuffle-modifier-deck s)
+  (:= (state-@monster-modifier-deck s) (shuffle (@! (state-@monster-modifier-deck s)))))
+
+(define (((deck-adder state->@cards) s))
+  (define @cards (state->@cards s))
+  (unless (empty? (@! @cards))
+    (define card (first (@! @cards)))
+    (<@ @cards rest)
+    (<~@ (state-@monster-modifier-deck s) (cons card _))
+    (shuffle-modifier-deck s)))
+
+(define do-curse-monster (deck-adder state-@curses))
+(define do-bless-monster (deck-adder state-@blesses))
+
+;;;; DBs
+
+(define (init-dbs db s)
+  (define-values (info-db ability-db) (get-dbs db))
+  (:= (state-@info-db s) info-db)
+  (:= (state-@ability-db s) ability-db)
+  (:= (state-@ability-decks s)
+      (for/hash ([(set abilities) (in-hash ability-db)])
+        (values set (ability-decks #f (shuffle abilities) empty)))))
+
+;;;; Loot
+
+(define ((update-loot-deck-and-num-loot-cards s) evt)
+  ((loot-picker-updater (state-@cards-per-deck s)) evt)
+  (<@ (state-@num-loot-cards s) (case (car evt) [(add) add1] [(remove) sub1])))
+
+;; valid: only called if loot-deck non-empty, loot assigned
+(define ((take-loot s)) (<@ (state-@loot-deck s) rest))
+
+(define ((give-player-loot* s) p)
+  (define card
+    (@! (@~> (state-@loot-deck s) (and (not empty?) first))))
+  (if card
+    ((player-add-loot card) p)
+    p))
+
+(define ((give-player-loot s) k)
+  (<~@ (state-@creatures s) (update-players k (give-player-loot* s))))
+
+;;;; Creatures
+
+(define (make-player-creature i)
+  (creature i (make-player "" 1)))
+
+(define (update-players creatures k f)
+  (define (maybe-update-player e)
+    (if (~> (e) (-< creature-id creature-v) (and% (eq? k) player?))
+      (creature k (f (creature-v e)))
+      e))
+  (map maybe-update-player creatures))
+
+(define (update-monster-groups creatures k f [fn (flow 1>)])
+  (define (maybe-update-monster-group e)
+    (if (~> (e)
+            (-< creature-id creature-v)
+            (and% (eq? k) monster-group*?))
+      (let* ([mg* (creature-v e)]
+             [n (monster-group*-active mg*)]
+             [mg (monster-group*-mg mg*)]
+             [new-mg (f mg)]
+             [new-n (fn n new-mg)])
+        (creature k (monster-group* new-n new-mg)))
+      e))
+  (map maybe-update-monster-group creatures))
+
+(define (update-all-players creatures f)
+  (define (update-only-player c)
+    (match c
+      [(creature id (? player? p)) (creature id (f p))]
+      [c c]))
+  (map update-only-player creatures))
+
+(define (update-all-monster-groups creatures f)
+  (define (update-only-monster-group c)
+    (match c
+      [(creature id (monster-group* n mg))
+       (creature id (monster-group* n (f mg)))]
+      [c c]))
+  (map update-only-monster-group creatures))
+
+(define ((update-player-name s) k name)
+  (<~@ (state-@creatures s) (update-players k (player-update-name name))))
+
+(define ((update-player-max-hp s) k f)
+  (<~@ (state-@creatures s) (update-players k (player-act-on-max-hp f))))
+
+(define ((monster-group-initiative s) mg)
+  (~> ((state-@ability-decks s) mg)
+      (== @! monster-group-set-name)
+      hash-ref
+      ability-decks-current
+      (switch
+        [monster-ability? monster-ability-initiative]
+        [else +inf.0])))
+
+(define (monster-group*-initiative s)
+  (flow (~> monster-group*-mg (monster-group-initiative s))))
+
+(define (creature-initiative s)
+  (flow (~> creature-v
+            (switch
+              [player? player-initiative]
+              [monster-group*? (esc (monster-group*-initiative s))]))))
+
+;; (-> mg (-> creature bool))
+(define-flow creature-is-mg~?
+  (clos (~>
+          (== _ (~> creature-v (and monster-group*? monster-group*-mg)))
+          equal?)))
+
+(define ((add-or-remove-monster-group s) evt)
+  (match evt
+    [`(add ,mg)
+      (define next-id (~> (s) state-@creatures @! (sep creature-id) max add1))
+      (define selection
+        (~> (mg) monster-group-monsters
+            (and (not empty?) (~> first monster-number))))
+      (define c (creature next-id (monster-group* selection mg)))
+      (<~@ (state-@creatures s) (append (list c)))]
+    [`(remove ,mg) (<~@ (state-@creatures s) (remf (creature-is-mg~? mg) _))]))
+
+;;;; Transition functions
+
+(define ((to-input-player-info s))
+  (when (empty? (@! (state-@creatures s)))
+    (:= (state-@creatures s) (build-list (@! (state-@num-players s)) make-player-creature)))
+  (:= (state-@mode s) 'input-player-info))
+
+(define ((to-build-loot-deck s))
+  ;; give each player max-hp
+  (<~@ (state-@creatures s)
+        (update-all-players
+          (flow (~> (-< (~> player-max-hp const player-act-on-hp) _) apply))))
+  (:= (state-@mode s) 'build-loot-deck))
+
+(define ((to-play s))
+  (:= (state-@mode s) 'play)
+  ;; HACK: trigger updates in (state-@creatures s) to re-render list-view (?)
+  (:= (state-@creatures s) (@! (state-@creatures s))))
+
+(define ((to-choose-monster-db s))
+  (:= (state-@loot-deck s) (build-loot-deck (@! (state-@cards-per-deck s))))
+  (:= (state-@mode s) 'choose-monster-db))
+(define ((to-choose-monsters s))
+  (:= (state-@mode s) 'choose-monsters))
+
+(define ((next-round s))
+  ;; wane elements
+  (for-each (flow (<@ wane-element)) (state-@elements s))
+  ;; reset player initiative
+  (<~@ (state-@creatures s) (update-all-players player-clear-initiative))
+  ;; discard monster cards
+  (<@ (state-@ability-decks s)
+      (update-ability-decks ability-decks-discard-and-maybe-shuffle))
+  ;; order creatures
+  (<~@ (state-@creatures s) (sort < #:key (creature-initiative s)))
+  ;; shuffle modifiers if required
+  (when (shuffle-modifier-deck? (@! (state-@monster-discard s)))
+    (reshuffle-modifier-deck s))
+  ;; toggle state
+  (<@ (state-@in-draw? s) not))
+
+(define ((draw-abilities s))
+  ;; draw new monster cards
+  (<@ (state-@ability-decks s) (update-ability-decks ability-decks-draw-next))
+  ;; order creatures
+  (<~@ (state-@creatures s) (sort < #:key (creature-initiative s)))
+  ;; toggle state
+  (<@ (state-@in-draw? s) not))
