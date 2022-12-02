@@ -149,16 +149,17 @@
   (:= (state-@modifier s) card)
   (discard s card))
 
-(define ((draw-modifier* s [better better-modifier]))
+(define ((draw-modifier* s [keep better-modifier]))
   (match-define (list a b) (draw-cards s 2))
-  (define best (better a b))
-  (define worst (match* (a b)
-                  [{(== best) worst} worst]
-                  [{worst (== best)} worst]))
-  (:= (state-@monster-prev-discard s) worst)
-  (:= (state-@modifier s) best)
-  (discard s worst)
-  (discard s best))
+  (define keep-card (keep a b))
+  (define not-keep-card
+    (match* (a b)
+      [{(== keep-card) b} b]
+      [{a (== keep-card)} a]))
+  (:= (state-@monster-prev-discard s) not-keep-card)
+  (:= (state-@modifier s) keep-card)
+  (discard s not-keep-card)
+  (discard s keep-card))
 
 (define (shuffle-deck @deck)
   (:= @deck (shuffle (@! @deck))))
