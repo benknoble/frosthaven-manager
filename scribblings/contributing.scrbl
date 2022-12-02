@@ -101,9 +101,9 @@ Most of the game-related definitions are in
 @racketmodname[frosthaven-manager/defns]. Support for elements and their images
 is in @racketmodname[frosthaven-manager/elements]. Most GUI components are in
 modules under @seclink["frosthaven-manager/gui"]{@tt{frosthaven-manager/gui}}.
-The Frosthaven Manager application is @racketmodname[frosthaven-manager/manager].
-The monster database is manipulated by
-@racketmodname[frosthaven-manager/monster-db].
+The Frosthaven Manager application is
+@racketmodname[frosthaven-manager/gui/manager]. The monster database is
+manipulated by @racketmodname[frosthaven-manager/monster-db].
 
 The module @racketmodname[frosthaven-manager/enum-helpers] provides a utility
 for modifying @tech[#:doc '(lib "rebellion/main.scrbl")]{enum types} from

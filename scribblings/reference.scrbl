@@ -25,6 +25,7 @@
             frosthaven-manager/gui/helpers
             frosthaven-manager/gui/level-info
             frosthaven-manager/gui/loot-picker
+            frosthaven-manager/gui/manager
             frosthaven-manager/gui/markdown
             frosthaven-manager/gui/mixins
             frosthaven-manager/gui/monsters
@@ -33,7 +34,6 @@
             frosthaven-manager/gui/stacked-tables
             frosthaven-manager/gui/start
             frosthaven-manager/gui/static-table
-            frosthaven-manager/manager
             frosthaven-manager/monster-db
             frosthaven-manager/observable-operator
             frosthaven-manager/qi
@@ -729,6 +729,16 @@ See @secref{Scenario_Information_and_Loot} for how @racket[loot-button]
 functions in Frosthaven Manager.
 }
 
+@subsection{@tt{gui/manager}}
+@defmodule[frosthaven-manager/gui/manager]
+
+This module's main function is to run the Frosthaven Manager. It provides only
+a single binding:
+
+@defproc[(manager) (is-a?/c view<%>)]{
+A view for the Frosthaven Manager. Render with @racket[render/eventspace].
+}
+
 @subsection{@tt{gui/markdown}}
 @defmodule[frosthaven-manager/gui/markdown]
 
@@ -1118,16 +1128,6 @@ The selection is determined by @racket[|@selection|] as with @racket[table].
 
 The column widths are calculated automatically based on @racket[columns], or are
 provided as @racket[widths].
-}
-
-@section{@tt{manager}}
-@defmodule[frosthaven-manager/manager]
-
-This module's main function is to run the Frosthaven Manager. It provides only
-a single binding:
-
-@defproc[(manager) (is-a?/c view<%>)]{
-A view for the Frosthaven Manager. Render with @racket[render/eventspace].
 }
 
 @section{@tt{monster-db}}
