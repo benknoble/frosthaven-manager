@@ -129,28 +129,34 @@
          [else state-@monster-discard])
        (cons card _)))
 
-(define ((draw-modifier s))
-  ;; better not be empty after this…
+;; only modifies state-@monster-modifier-deck
+(define (draw-card s)
+  ;; better not be empty after reshuffling…
   (when (empty? (@! (state-@monster-modifier-deck s)))
     (reshuffle-modifier-deck s))
   (define card (first (@! (state-@monster-modifier-deck s))))
+  (<@ (state-@monster-modifier-deck s) rest)
+  card)
+
+;; only modifies state-@monster-modifier-deck
+(define (draw-cards s [n 1])
+  (for/list ([_ (in-range n)])
+    (draw-card s)))
+
+(define ((draw-modifier s))
+  (match-define (list card) (draw-cards s 1))
   (:= (state-@monster-prev-discard s) (@! (state-@modifier s)))
   (:= (state-@modifier s) card)
-  (<@ (state-@monster-modifier-deck s) rest)
   (discard s card))
 
 (define ((draw-modifier* s [better better-modifier]))
-  ;; better not be empty after this…
-  (when (~> ((state-@monster-modifier-deck s)) @! length (< 2))
-    (reshuffle-modifier-deck s))
-  (define cards (~> ((state-@monster-modifier-deck s)) @! (take 2)))
+  (define cards (draw-cards s 2))
   (define best (~> (cards) sep better))
   (define worst (cond
                   [(equal? best (first cards)) (second cards)]
                   [(equal? best (second cards)) (first cards)]))
   (:= (state-@monster-prev-discard s) worst)
   (:= (state-@modifier s) best)
-  (<~@ (state-@monster-modifier-deck s) (drop 2))
   (discard s worst)
   (discard s best))
 
