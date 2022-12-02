@@ -122,11 +122,11 @@
   (:= @deck (shuffle (append (@! @deck) (@! @discard))))
   (:= @discard empty))
 
-(define (discard @monster-discard @curses @blesses card)
+(define (discard s card)
   (cond
-    [(equal? card curse) (<~@ @curses (cons card _))]
-    [(equal? card bless) (<~@ @blesses (cons card _))]
-    [else (<~@ @monster-discard (cons card _))]))
+    [(equal? card curse) (<~@ (state-@curses s) (cons card _))]
+    [(equal? card bless) (<~@ (state-@blesses s) (cons card _))]
+    [else (<~@ (state-@monster-discard s) (cons card _))]))
 
 (define ((draw-modifier s))
   ;; better not be empty after this…
@@ -136,7 +136,7 @@
   (:= (state-@monster-prev-discard s) (@! (state-@modifier s)))
   (:= (state-@modifier s) card)
   (<@ (state-@monster-modifier-deck s) rest)
-  (discard (state-@monster-discard s) (state-@curses s) (state-@blesses s) card))
+  (discard s card))
 
 (define ((draw-modifier* s [better better-modifier]))
   ;; better not be empty after this…
@@ -150,8 +150,8 @@
   (:= (state-@monster-prev-discard s) worst)
   (:= (state-@modifier s) best)
   (<~@ (state-@monster-modifier-deck s) (drop 2))
-  (discard (state-@monster-discard s) (state-@curses s) (state-@blesses s) worst)
-  (discard (state-@monster-discard s) (state-@curses s) (state-@blesses s) best))
+  (discard s worst)
+  (discard s best))
 
 (define (shuffle-deck @deck)
   (:= @deck (shuffle (@! @deck))))
