@@ -189,6 +189,7 @@
   ((loot-picker-updater (state-@cards-per-deck s)) evt)
   (<@ (state-@num-loot-cards s) (case (car evt) [(add) add1] [(remove) sub1])))
 
+;; valid: only called if loot-deck non-empty, loot assigned
 (define ((take-loot s)) (<@ (state-@loot-deck s) rest))
 
 (define ((give-player-loot* s) p)
@@ -488,13 +489,12 @@
         (button "Draw Abilities" #:enabled? (@> (state-@in-draw? s) not) (draw-abilities s))))
     ;; bottom
     (hpanel #:stretch '(#f #f)
-            (loot-button
-              (state-@loot-deck s) (state-@num-loot-cards s) (state-@num-players s)
-              (@~> (state-@creatures s) (filter (flow (~> creature-v player?)) _))
-              ;; valid because only enabled if loot-deck non-empty, and
-              ;; only closing if loot assigned
-              #:on-close (take-loot s)
-              #:on-player (give-player-loot s))
+            (loot-button (state-@loot-deck s)
+                         (state-@num-loot-cards s)
+                         (state-@num-players s)
+                         (@~> (state-@creatures s) (filter (flow (~> creature-v player?)) _))
+                         #:on-close (take-loot s)
+                         #:on-player (give-player-loot s))
             (level-stats (state-@level s) (state-@num-players s))
             (level-table (state-@level s))
             (inspiration-table (state-@num-players s)))))
