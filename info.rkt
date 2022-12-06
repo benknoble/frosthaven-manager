@@ -5,7 +5,9 @@
 (define racket-launcher-libraries '("gui/manager"))
 (define gracket-launcher-names '("FrosthavenManager"))
 (define gracket-launcher-libraries '("gui/manager"))
-(define deps '("reprovide-lang-lib"
+(define deps '("functional-lib"
+               "megaparsack-lib"
+               "reprovide-lang-lib"
                "plot-lib"
                "draw-lib"
                "markdown"
@@ -20,6 +22,7 @@
                "base"))
 (define build-deps '("gui-doc"
                      "gui-easy"
+                     "megaparsack-doc"
                      ("qi-doc" #:version "3.0")
                      "rackunit-lib"
                      "scribble-lib"

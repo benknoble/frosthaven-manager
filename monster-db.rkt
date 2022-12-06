@@ -4,6 +4,7 @@
   (contract-out
     [info-db/c contract?]
     [ability-db/c contract?]
+    [datums->dbs (-> (listof any/c) (values info-db/c ability-db/c))]
     [get-dbs (-> path-string? (values info-db/c ability-db/c))]
     [default-monster-db path-string?]))
 
@@ -18,11 +19,14 @@
   ;; Monster Set -> Monster Deck
   (hash/c string? (listof monster-ability?)))
 
-(define-runtime-path default-monster-db "sample-db.rktd")
+(define-runtime-path default-monster-db "sample-bestiary.rkt")
 
 (define (get-dbs db-file)
-  (~> (db-file)
-      (try file->list [exn:fail? '()]) sep
+  (values (dynamic-require db-file 'info-db)
+          (dynamic-require db-file 'action-db)))
+
+(define-flow datums->dbs
+  (~> sep
       (partition
         ;; info db
         [monster-info? (~>> collect (group-by monster-info-set-name)
@@ -34,8 +38,7 @@
 
 (module+ test
   (require rackunit)
-  (define-values (info abilities)
-    (get-dbs "sample-db.rktd"))
+  (define-values (info abilities) (get-dbs default-monster-db))
   (check-equal? info
                 #hash(("archer"
                        .
@@ -107,24 +110,21 @@
   (check-equal? abilities
                 #hash(("archer"
                        .
-                       (#s(monster-ability
-                            "archer"
-                            "double-shot"
-                            25
-                            ("attack +2, range 5" "attack +2, range 3, +1 if same target")
-                            #f)
-                        #s(monster-ability
-                            "archer"
-                            "take aim"
-                            80
-                            ("move +2" "strengthen self")
-                            #t)))
+                       (#s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
+                        #s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
+                        #s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
+                        #s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
+                        #s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
+                        #s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
+                        #s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
+                        #s(monster-ability "archer" "take aim" 80 ("move +2" "strengthen self") #t)))
                       ("guard"
                        .
-                       (#s(monster-ability
-                            "guard"
-                            "rushing charge"
-                            25
-                            ("move +3" "attack +2 + number of spaces moved towards target")
-                            #f)
+                       (#s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
+                        #s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
+                        #s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
+                        #s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
+                        #s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
+                        #s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
+                        #s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
                         #s(monster-ability "guard" "stand tall" 80 ("shield 3") #t))))))

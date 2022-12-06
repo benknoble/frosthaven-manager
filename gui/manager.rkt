@@ -80,10 +80,10 @@
     (hpanel
       #:stretch '(#t #f)
       (spacer)
-      (button "Open Monster DB"
+      (button "Open Bestiary"
               (thunk
-                (init-dbs (or (get-file "Monster DB") default-monster-db) s)))
-      (button "Use Default Monster DB" (thunk (init-dbs default-monster-db s)))
+                (init-dbs (or (get-file "Bestiary") default-monster-db) s)))
+      (button "Use Default Bestiary" (thunk (init-dbs default-monster-db s)))
       (spacer))
     (button "Next" (to-choose-monsters s) #:enabled? (@~> (state-@info-db s) (not hash-empty?)))))
 

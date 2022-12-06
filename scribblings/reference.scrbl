@@ -13,6 +13,7 @@
                        <~)
             racket/gui/easy/contract
             qi
+            megaparsack
             frosthaven-manager/defns
             (only-in frosthaven-manager/elements
                      size
@@ -36,6 +37,7 @@
             frosthaven-manager/gui/start
             frosthaven-manager/gui/static-table
             frosthaven-manager/monster-db
+            frosthaven-manager/parsers/monster
             frosthaven-manager/observable-operator
             frosthaven-manager/qi
             frosthaven-manager/qi/list2hash
@@ -1323,6 +1325,12 @@ The column widths are calculated automatically based on @racket[columns], or are
 provided as @racket[widths].
 }
 
+@section{@tt{bestiary}}
+@defmodule[frosthaven-manager/bestiary #:lang]
+
+This module implements the bestiary language. See
+@secref{Editing_Monster_Information} for more information.
+
 @section{@tt{monster-db}}
 @defmodule[frosthaven-manager/monster-db]
 
@@ -1337,6 +1345,12 @@ Contracts recognizing monster databases of @racket[monster-info] and
 @racket[monster-ability] values.
 }
 
+@defproc[(datums->dbs [xs (listof any/c)])
+         (values info-db/c ability-db/c)]{
+Filters the @racket[monster-info] and @racket[monster-ability] values out of
+@racket[xs] and produces monster databases.
+}
+
 @defproc[(get-dbs [db-file path-string?])
          (values info-db/c ability-db/c)]{
 Reads @racket[db-file] and produces the monster databases.
@@ -1344,6 +1358,27 @@ Reads @racket[db-file] and produces the monster databases.
 
 @defthing[default-monster-db path-string?]{
 The demo, default monster database included with Frosthaven Manager.
+}
+
+@section{@tt{parsers}}
+
+@subsection{@tt{parsers/monster}}
+@defmodule[frosthaven-manager/parsers/monster]
+
+This module contains parsers for @(hash-lang)
+@racketmodname[frosthaven-manager/bestiary]. See
+@secref{Editing_Monster_Information} for more details.
+
+@defproc[(parse-bestiary [src any/c] [in input-port?] [#:syntax? syn? any/c])
+         (or/c syntax? (listof (or/c monster-info? (listof monster-ability?))))]{
+The result is @racket[syntax?] if @racket[syn?] is true, and the datum it
+contains matches @racket[(listof (or/c monster-info? (listof monster-ability?)))].
+}
+
+@deftogether[(@defthing[monster/p (parser/c char? monster-info?)]
+              @defthing[ability-deck/p (parser/c char? (listof monster-ability?))]
+              @defthing[bestiary/p (parser/c char? (listof (or/c monster-info? (listof monster-ability?))))])]{
+Textual parsers for parts of the bestiary language.
 }
 
 @section{@tt{observable-operator}}
