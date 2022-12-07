@@ -960,6 +960,7 @@ The following Markdown features are supported:
           @item{Hyperlinks;}
           @item{Blockquotes;}
           @item{Unordered and ordered lists;}
+          @item{Horizontal rules;}
           @item{@bold{Bold}, @italic{italic}, and @tt{code} styles;}
           @item{and six levels of headings.}
 ]
@@ -974,6 +975,7 @@ these map to the Markdown features above:
           @item{Any expression tagged @tt{ul}}
           @item{Any expression tagged @tt{ol}}
           @item{Any expression tagged @tt{li}}
+          @item{Any expression tagged @tt{hr}}
           @item{Any expression tagged @tt{p}}
           @item{Any expression tagged @tt{strong}}
           @item{Any expression tagged @tt{em}}
