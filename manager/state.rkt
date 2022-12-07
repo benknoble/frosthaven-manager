@@ -6,7 +6,7 @@
                       [v (or/c player? monster-group*?)])]
     [struct monster-group* ([active (or/c #f monster-number/c)]
                             [mg monster-group?])]
-    [struct state ([@mode symbol?]
+    [struct state ([@mode (obs/c symbol?)]
                    [@level (obs/c level/c)]
                    [@num-players (obs/c num-players/c)]
                    [@creatures (obs/c (listof creature?))]
@@ -19,13 +19,13 @@
                    [@monster-discard (obs/c (listof monster-modifier?))]
                    [@curses (obs/c (listof monster-modifier?))]
                    [@blesses (obs/c (listof monster-modifier?))]
-                   [@modifier (obs/c monster-modifier?)]
-                   [@monster-prev-discard (obs/c monster-modifier?)]
+                   [@modifier (obs/c (or/c #f monster-modifier? ))]
+                   [@monster-prev-discard (obs/c (or/c #f monster-modifier?))]
                    [@info-db (obs/c info-db/c)]
                    [@ability-db (obs/c ability-db/c)]
                    [@ability-decks (obs/c (hash/c string? ability-decks?))])]
     [make-state
-      (->* ((obs/c element-state/c))
+      (->* ((listof (obs/c element-state/c)))
            (symbol?
              (obs/c level/c)
              (obs/c num-players/c)
@@ -55,7 +55,7 @@
     [update-all-monster-groups (-> (listof creature?) (-> monster-group? monster-group?) (listof creature?))]
     [update-player-name (-> state? (-> any/c string? any))]
     [update-player-max-hp (-> state? (-> any/c (-> natural-number/c natural-number/c) any))]
-    [creature-initiative (-> state? (-> creature? initiative?))]
+    [creature-initiative (-> state? (-> creature? (or/c +inf.0 initiative?)))]
     [add-or-remove-monster-group (-> state? (-> (or/c add-monster-event/c remove-monster-event/c) any))]))
 
 (require racket/gui/easy/contract

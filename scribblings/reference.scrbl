@@ -627,8 +627,8 @@ All of the "global" manager state.
 }
 
 @defproc[(make-state
-           [|@|elements (obs/c element-state/c)]
-           [|@|mode symbol? (|@| 'start)]
+           [|@|elements (listof (obs/c element-state/c))]
+           [|@|mode (obs/c symbol?) (|@| 'start)]
            [|@|level (obs/c level/c) (|@| 0)]
            [|@|num-players (obs/c num-players/c) (|@| 1)]
            [|@|creatures (obs/c (listof creature?)) (|@| empty)]
@@ -640,8 +640,8 @@ All of the "global" manager state.
            [|@|monster-discard (obs/c (listof monster-modifier?)) (|@| empty)]
            [|@|curses (obs/c (listof monster-modifier?)) (|@| monster-curse-deck)]
            [|@|blesses (obs/c (listof monster-modifier?)) (|@| monster-bless-deck)]
-           [|@|modifier (obs/c monster-modifier?) (|@| #f)]
-           [|@|monster-prev-discard (obs/c monster-modifier?) (|@| #f)]
+           [|@|modifier (obs/c (or/c #f monster-modifier?)) (|@| #f)]
+           [|@|monster-prev-discard (obs/c (or/c #f monster-modifier?)) (|@| #f)]
            [|@|info-db (obs/c info-db/c) (|@| (hash))]
            [|@|ability-db (obs/c ability-db/c) (|@| (hash))]
            [|@|ability-decks (obs/c (hash/c string? ability-decks?)) (|@| (hash))])
@@ -692,7 +692,7 @@ Updates all players or monster-groups in @racket[creatures] via @racket[f].
 Updates player @racket[k]s name to @racket[name] or max health via @racket[f].
 }
 
-@defproc[(creature-initiative [s state?]) (-> creature? initiative?)]{
+@defproc[(creature-initiative [s state?]) (-> creature? (or/c +inf.0 initiative?))]{
 Calculates a creature's initiative.
 }
 

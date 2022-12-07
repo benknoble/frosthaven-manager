@@ -4,7 +4,7 @@
   (contract-out
     [reshuffle-modifier-deck (-> state? any)]
     [discard (-> state? monster-modifier? any)]
-    [draw-modifier (-> (state?) (-> any))]
+    [draw-modifier (-> state? (-> any))]
     [draw-modifier* (->* (state?)
                          ((-> monster-modifier? monster-modifier? monster-modifier?))
                          (-> any))]
