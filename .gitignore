@@ -3,3 +3,8 @@
 .\#*
 compiled/
 /doc/
+/docs/
+/FrosthavenManager.app/
+/macOS-FrosthavenManager/
+/linux-FrosthavenManager/
+/windows-FrosthavenManager/

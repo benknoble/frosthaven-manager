@@ -10,15 +10,12 @@
 @(define racket-lang.org "https://racket-lang.org/index.html")
 @(define benknoble/frosthaven-manager "https://github.com/benknoble/frosthaven-manager")
 
-@margin-note{Note that the name of the directory will determine the package
-name. In the guide below, some commands refer to modules and some refer to
-package name. I have used a package name of @tt{frosthaven-manager} everywhere,
-so I recommend cloning the code into a directory with that name.}
+@margin-note{On Windows without make, I recommend @tt|{choco instally make}|.}
 
 @itemlist[#:style 'ordered
           @item{Install @link[racket-lang.org]{Racket}. For example, on macOS with homebrew you might run @terminal|{brew install --cask racket}|}
           @item{Clone the @link[benknoble/frosthaven-manager]{benknoble/frosthaven-manager repository}.}
-          @item{Install the package as a link by running @tt|{raco pkg install}| from the cloned directory.}
+          @item{Install the package as a link. For example, you might go to the cloned directory and run @terminal|{make install}|}
 ]
 
 @subsection{Running tests}
@@ -26,12 +23,17 @@ so I recommend cloning the code into a directory with that name.}
 You can run automated tests with
 
 @terminal|{
-raco test -xp frosthaven-manager
+make test
 }|
 
-Manual GUI tests can be run by running the program or application, @italic{e.g.},
-with @tt|{racket manager.rkt}| for the Frosthaven Manager. Many GUI modules come
-with manual demos of the components they provide.
+You may prefer to pass @tt|{RACO_TEST_ARGS=-x}| to skip modules without tests.
+
+Manual GUI tests can be run by running the program or application,
+@italic{e.g.}, with @tt|{racket gui/manager.rkt}| for the Frosthaven Manager.
+Many GUI modules come with manual demos of the components they provide.
+
+You can also build executables and distributions using the corresponding make
+targets.
 
 @subsection{Rebuild the package}
 
@@ -39,10 +41,11 @@ This makes sure that your local installation is compiled, that the docs are
 up-to-date, and that the dependencies are appropriately adjusted.
 
 @terminal|{
-raco setup --check-pkg-deps --unused-pkg-deps --fix-pkg-deps frosthaven-manager
+make fix-deps
 }|
 
-You should manually verify any dependency updates.
+You should manually verify any dependency updates. The command @tt|{git diff
+info.rkt}| will show any changes to the dependencies.
 
 @subsection{View the local documentation}
 
@@ -102,8 +105,9 @@ Most of the game-related definitions are in
 is in @racketmodname[frosthaven-manager/elements]. Most GUI components are in
 modules under @seclink["frosthaven-manager/gui"]{@tt{frosthaven-manager/gui}}.
 The Frosthaven Manager application is
-@racketmodname[frosthaven-manager/gui/manager]. The monster database is
-manipulated by @racketmodname[frosthaven-manager/monster-db].
+@racketmodname[frosthaven-manager/gui/manager] with state provided by
+@racketmodname[frosthaven-manager/manager]. The monster database is manipulated
+by @racketmodname[frosthaven-manager/monster-db].
 
 The module @racketmodname[frosthaven-manager/enum-helpers] provides a utility
 for modifying @tech[#:doc '(lib "rebellion/main.scrbl")]{enum types} from

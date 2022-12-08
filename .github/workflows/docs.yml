@@ -22,9 +22,9 @@ jobs:
           variant: 'CS'
           version: 'stable'
       - name: Install Package
-        run: raco pkg install --batch --auto --name frosthaven-manager
+        run: make install RACO_INSTALL_ARGS=--batch
       - name: Build docs
-        run: scribble +m --redirect-main http://pkg-build.racket-lang.org/doc/ --htmls --dest ./docs ./scribblings/frosthaven-manager.scrbl
+        run: make docs/frosthaven-manager/index.html
       - name: Push to GH Pages
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:

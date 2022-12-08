@@ -32,3 +32,9 @@
 (define version "0.4")
 (define pkg-authors '(benknoble))
 (define license 'MIT)
+
+(define compile-omit-paths '("FrosthavenManager.app"
+                             "macOS-FrosthavenManager"
+                             "linux-FrosthavenManager"
+                             "windows-FrosthavenManager"
+                             "docs"))

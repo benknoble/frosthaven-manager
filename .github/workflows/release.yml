@@ -19,13 +19,9 @@ jobs:
           variant: CS
           version: stable
       - name: Installing frosthaven-manager and its dependencies
-        run: raco pkg install --no-docs --auto --name frosthaven-manager
-      - name: Creating frosthaven-manager executable
-        run: raco exe --gui -o FrosthavenManager gui/manager.rkt
-      - name: Creating frosthaven-manager distribution
-        run: raco distribute linux-FrosthavenManager FrosthavenManager
+        run: make install RACO_INSTALL_ARGS=--no-docs
       - name: Bundling frosthaven-manager distribution
-        run: 'tar cvf - linux-FrosthavenManager | gzip >linux-FrosthavenManager.tar.gz'
+        run: make linux-FrosthavenManager.tar.gz
       - name: Upload FrosthavenManager artifact
         uses: actions/upload-artifact@v3
         with:
@@ -43,13 +39,9 @@ jobs:
           variant: CS
           version: stable
       - name: Installing frosthaven-manager and its dependencies
-        run: raco pkg install --no-docs --auto --name frosthaven-manager
-      - name: Creating frosthaven-manager executable
-        run: raco exe --gui -o FrosthavenManager gui/manager.rkt
-      - name: Creating frosthaven-manager distribution
-        run: raco distribute FrosthavenManager FrosthavenManager.app
+        run: make install RACO_INSTALL_ARGS=--no-docs
       - name: Bundling frosthaven-manager distribution
-        run: 'tar cvf - FrosthavenManager | gzip >macOS-FrosthavenManager.tar.gz'
+        run: make macOS-FrosthavenManager.tar.gz
       - name: Upload FrosthavenManager.app artifact
         uses: actions/upload-artifact@v3
         with:
@@ -66,14 +58,12 @@ jobs:
           distribution: full
           variant: CS
           version: stable
+      - name: Install make
+        run: choco install make -y
       - name: Installing frosthaven-manager and its dependencies
-        run: raco pkg install --no-docs --auto --name frosthaven-manager
-      - name: Creating frosthaven-manager executable
-        run: raco exe --gui -o FrosthavenManager gui/manager.rkt
-      - name: Creating frosthaven-manager distribution
-        run: raco distribute windows-FrosthavenManager FrosthavenManager.exe
+        run: make install RACO_INSTALL_ARGS=--no-docs
       - name: Bundling frosthaven-manager distribution
-        run: '7z a windows-FrosthavenManager.zip windows-FrosthavenManager\'
+        run: make windows-FrosthavenManager.zip
       - name: Upload FrosthavenManager artifact
         uses: actions/upload-artifact@v3
         with:
