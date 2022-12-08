@@ -32,13 +32,15 @@
    (define-values (info-db action-db)
      (datums->dbs (list infos ... actions ... ...)))))
 
-(module reader racket
-  (provide read-syntax)
-  (require syntax/strip-context
-           frosthaven-manager/parsers/monster)
+(module reader syntax/module-reader
+  frosthaven-manager/bestiary
+  #:whole-body-readers? #t
+  #:read-syntax read-syntax
+  #:read read
+  (require frosthaven-manager/parsers/monster)
   (define (read-syntax src in)
     (port-count-lines! in)
-    (define bestiary (parse-bestiary src in #:syntax? #t))
-    (strip-context
-      #`(module bestiary frosthaven-manager/bestiary
-          #,@bestiary))))
+    (parse-bestiary src in #:syntax? #t))
+  (define (read in)
+    (port-count-lines! in)
+    (parse-bestiary (object-name in) in #:syntax? #f)))

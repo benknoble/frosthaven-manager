@@ -4,7 +4,7 @@ SHELL = /bin/sh
 
 PKG = frosthaven-manager
 COLLECT = frosthaven-manager
-LANGS = frosthaven-manager/bestiary
+LANGS = ++lang frosthaven-manager/bestiary
 
 EXES = FrosthavenManager.app/Contents/MacOS/FrosthavenManager \
        FrosthavenManager \
@@ -37,7 +37,7 @@ docs/frosthaven-manager/index.html:
 	scribble +m --redirect-main http://pkg-build.racket-lang.org/doc/ --htmls --dest ./docs ./scribblings/frosthaven-manager.scrbl
 
 $(EXES): gui/manager.rkt
-	$(RACO) exe --gui -o FrosthavenManager gui/manager.rkt
+	$(RACO) exe --gui -o FrosthavenManager $(LANGS) gui/manager.rkt
 
 # POSIX leaves $< unspecified in these target rules
 macOS-FrosthavenManager: FrosthavenManager.app/Contents/MacOS/FrosthavenManager
