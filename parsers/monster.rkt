@@ -102,6 +102,9 @@
                                "Immunities" immunities/p))
 (define stat/ps (append (hash-values required-stat/ps) (hash-values optional-stat/ps)))
 
+(define-flow stats-labels (map labelled-label _))
+(define-flow stats-labels-sufficient (subset? (hash-keys required-stat/ps) _))
+
 (define stats/p
   (fmap (λ (label-values)
           (define lookup-table
@@ -117,11 +120,9 @@
                       (list  #f    #f      #f        empty      empty      empty))))
         (guard/p
           (many+/p (apply or/p (map try/p stat/ps)) #:sep skip-ws)
-          (flow (~>> (map labelled-label)
-                     (and (not check-duplicates)
-                          (subset? (hash-keys required-stat/ps) _))))
+          (flow (~> stats-labels (and (not check-duplicates) stats-labels-sufficient)))
           "exactly one each of HP, Move, Attack, and up to one each of Bonuses, Effects, and Immunities"
-          (flow (map labelled-label _)))))
+          stats-labels)))
 
 (define full-stats/p
   (do (char/p #\[) skip-ws
@@ -136,6 +137,9 @@
              [type (list "normal" "elite")])
     (list level type)))
 
+(define-flow level-x-type-dupes (~> check-duplicates (and _ (take 2))))
+(define-flow level-x-type-set (~> (sep (take 2)) set))
+
 (define monster/p
   (do (string/p "begin-monster") skip-ws
       [name <- (non-empty-text/p "non-empty monster name")] skip-ws
@@ -149,11 +153,10 @@
                            "name with monster set"
                            (const name)))] skip-ws
       [stats <- (guard/p (repeat/p (set-count level-x-type) (do [s <- full-stats/p] skip-ws (pure s)))
-                         (flow (and (not check-duplicates)
-                                    (~>> (sep (take 2)) set (set=? level-x-type))))
+                         (flow (and (not level-x-type-dupes) (~> level-x-type-set (set=? level-x-type))))
                          "exactly one set of stats for each level (0–7) and type (normal or elite)"
-                         (flow (or (~> check-duplicates (and _ (take 2)))
-                                   (~>> (sep (take 2)) set (set-subtract level-x-type)
+                         (flow (or level-x-type-dupes
+                                   (~>> level-x-type-set (set-subtract level-x-type)
                                         set->list (string-join _ ",")))))] skip-ws
       (string/p "end-monster")
       (pure
@@ -188,6 +191,14 @@
                     (monster-ability set card-name initiative abilities shuffle?)])
                  cards))))
 
+(define-flow monster-name-dupes (~> (>< monster-info-name) collect check-duplicates))
+(define-flow ability-set-dupes (~> (>< (~> first monster-ability-set-name)) collect check-duplicates))
+(define listof-monster-ability? (listof monster-ability?))
+(define-flow bestiary-dupes
+  (~> sep (partition
+            [monster-info? monster-name-dupes]
+            [listof-monster-ability? ability-set-dupes])))
+
 (define bestiary/p
   (guard/p
     (fmap first
@@ -195,19 +206,9 @@
               (many-until/p (or/p (try/p monster/p) ability-deck/p)
                             #:sep skip-ws
                             #:end (try/p (do skip-ws eof/p)))))
-    (flow (~> sep
-              (partition
-                [monster-info? (~> (>< monster-info-name) collect (not check-duplicates))]
-                [(and list? (andmap monster-ability? _))
-                 (~> (>< (~> first monster-ability-set-name)) collect (not check-duplicates))])
-              AND))
-    "no duplicate monster or ability-decks"
-    (flow (~> sep
-              (partition
-                [monster-info? (~> (>< monster-info-name) collect check-duplicates)]
-                [(and list? (andmap monster-ability? _))
-                 (~> (>< (~> first monster-ability-set-name)) collect check-duplicates)])
-              (pass _) collect (string-join ",")))))
+    (flow (~> bestiary-dupes none?))
+    "no duplicate monsters or ability-decks"
+    (flow (~> bestiary-dupes (pass _) collect (string-join ",")))))
 
 (define (parse-bestiary src in #:syntax? syntax?)
   (define wrapper (if syntax? syntax/p identity))
