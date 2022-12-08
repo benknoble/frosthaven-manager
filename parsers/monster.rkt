@@ -84,13 +84,15 @@
                (pure (sign number)))))
 
 (define non-empty-string? (not/c (string-len/c 1)))
+(define (non-empty-text/p why)
+  (guard/p text/p non-empty-string? why))
 
 (define hp/p (value/p "HP" (guard/p number/p positive-integer? "positive maximum health")))
 (define move/p (value/p "Move" (guard/p number/p natural-number/c "base move value at least 0")))
 (define attack/p (value/p "Attack" (guard/p number/p natural-number/c "base attack at least 0")))
-(define bonuses/p (value/p "Bonuses" (list-value/p (guard/p text/p non-empty-string? "non-empty bonus text"))))
-(define effects/p (value/p "Effects" (list-value/p (guard/p text/p non-empty-string? "non-empty effect text"))))
-(define immunities/p (value/p "Immunities" (list-value/p (guard/p text/p non-empty-string? "non-empty immunity text"))))
+(define bonuses/p (value/p "Bonuses" (list-value/p (non-empty-text/p "non-empty bonus text"))))
+(define effects/p (value/p "Effects" (list-value/p (non-empty-text/p "non-empty effect text"))))
+(define immunities/p (value/p "Immunities" (list-value/p (non-empty-text/p "non-empty immunity text"))))
 
 (define required-stat/ps (hash "HP" hp/p
                                "Move" move/p
@@ -136,9 +138,9 @@
 
 (define monster/p
   (do (string/p "begin-monster") skip-ws
-      [name <- (guard/p text/p non-empty-string? "non-empty monster name")] skip-ws
+      [name <- (non-empty-text/p "non-empty monster name")] skip-ws
       [set-name <- (or/p (do (char/p #\() skip-ws
-                             [set <- (guard/p text/p non-empty-string? "non-empty set name")] skip-ws
+                             [set <- (non-empty-text/p "non-empty set name")] skip-ws
                              (char/p #\))
                              (pure set))
                          (guard/p
@@ -168,7 +170,7 @@
   (label/p
     "ability card"
     (do (char/p #\[) skip-ws
-        [card <- (guard/p text/p non-empty-string? "non-empty card name")] skip-ws
+        [card <- (non-empty-text/p "non-empty card name")] skip-ws
         [initiative <- (guard/p number/p (flow (<= 0 _ 99)) "valid initiative between 0 and 99")] skip-ws
         [shuffle? <- (or/p (try/p (fmap (const #t) (string/p "shuffle")))
                            (pure #f))] skip-ws
@@ -178,7 +180,7 @@
 
 (define ability-deck/p
   (do (string/p "begin-ability-deck") skip-ws
-      [set <- (guard/p text/p non-empty-string? "non-empty set name")] skip-ws
+      [set <- (non-empty-text/p "non-empty set name")] skip-ws
       [cards <- (repeat/p 8 (do [v <- ability-card/p] skip-ws (pure v)))] skip-ws
       (string/p "end-ability-deck")
       (pure (map (match-lambda
