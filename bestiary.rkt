@@ -20,12 +20,11 @@
   #:with ((infos ...) ((actions ...) ...))
   (let-values ([(infos actions) (partition (flow (~> syntax-e monster-info?)) (attribute e))])
     (list infos actions))
-  #:attr sets (list->set (map monster-info-set-name (syntax->datum #'(infos ...))))
-  #:attr ability-sets (list->set (map monster-ability-set-name (syntax->datum #'(actions ... ...))))
-  #:fail-unless (subset? (attribute sets) (attribute ability-sets))
+  #:do [(define sets (list->set (map monster-info-set-name (syntax->datum #'(infos ...)))))
+        (define ability-sets (list->set (map monster-ability-set-name (syntax->datum #'(actions ... ...)))))]
+  #:fail-unless (subset? sets ability-sets)
   (format "these monster sets have no ability decks: ~a"
-          (~> ((attribute sets) (attribute ability-sets))
-              set-subtract set->list (string-join ",")))
+          (~> (sets ability-sets) set-subtract set->list (string-join ",")))
   ;;=>
   (#%module-begin
    (provide info-db action-db)
