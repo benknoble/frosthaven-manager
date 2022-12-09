@@ -11,7 +11,7 @@ jobs:
     name: "Build on Linux Racket CS Stable"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.1.0
       - uses: Bogdanp/setup-racket@v1.9
         with:
           architecture: x64
@@ -31,7 +31,7 @@ jobs:
     name: "Build on MacOS Racket CS Stable"
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.1.0
       - uses: Bogdanp/setup-racket@v1.9
         with:
           architecture: x64
@@ -51,7 +51,7 @@ jobs:
     name: "Build on Windows Racket CS Stable"
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.1.0
       - uses: Bogdanp/setup-racket@v1.9
         with:
           architecture: x64

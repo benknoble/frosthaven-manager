@@ -19,19 +19,19 @@ uninstall:
 	$(RACO) pkg remove $(PKG)
 
 setup:
-	$(RACO) setup --pkgs $(PKG) $(RACO_SETUP_ARGS)
+	$(RACO) setup $(RACO_SETUP_ARGS) --pkgs $(PKG)
 
 test:
 	$(RACO) test $(RACO_TEST_ARGS) --package $(PKG)
 
 check-deps:
-	$(RACO) setup --check-pkg-deps --pkgs $(PKG) $(RACO_SETUP_ARGS)
+	$(RACO) setup $(RACO_SETUP_ARGS) --check-pkg-deps --pkgs $(PKG)
 
 fix-deps:
-	$(RACO) setup --fix-pkg-deps --pkgs $(PKG) $(RACO_SETUP_ARGS)
+	$(RACO) setup $(RACO_SETUP_ARGS) --fix-pkg-deps --pkgs $(PKG)
 
 fix-doc-index:
-	$(RACO) setup --doc-index --pkgs $(PKG) $(RACO_SETUP_ARGS)
+	$(RACO) setup $(RACO_SETUP_ARGS) --doc-index --pkgs $(PKG)
 
 docs/frosthaven-manager/index.html:
 	scribble +m --redirect-main http://pkg-build.racket-lang.org/doc/ --htmls --dest ./docs ./scribblings/frosthaven-manager.scrbl
