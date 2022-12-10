@@ -19,7 +19,7 @@ jobs:
           variant: CS
           version: stable
       - name: Installing frosthaven-manager and its dependencies
-        run: make install RACO_INSTALL_ARGS=--no-docs
+        run: make install setup RACO_SETUP_ARGS=--no-docs RACO_INSTALL_ARGS=--no-docs
       - name: Bundling frosthaven-manager distribution
         run: make linux-FrosthavenManager.tar.gz
       - name: Upload FrosthavenManager artifact
@@ -39,7 +39,7 @@ jobs:
           variant: CS
           version: stable
       - name: Installing frosthaven-manager and its dependencies
-        run: make install RACO_INSTALL_ARGS=--no-docs
+        run: make install setup RACO_SETUP_ARGS=--no-docs RACO_INSTALL_ARGS=--no-docs
       - name: Bundling frosthaven-manager distribution
         run: make macOS-FrosthavenManager.tar.gz
       - name: Upload FrosthavenManager.app artifact
@@ -61,7 +61,7 @@ jobs:
       - name: Install make
         run: choco install make -y
       - name: Installing frosthaven-manager and its dependencies
-        run: make install RACO_INSTALL_ARGS=--no-docs
+        run: make install setup RACO_SETUP_ARGS=--no-docs RACO_INSTALL_ARGS=--no-docs
       - name: Bundling frosthaven-manager distribution
         run: make windows-FrosthavenManager.zip
       - name: Upload FrosthavenManager artifact
