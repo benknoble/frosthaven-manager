@@ -18,9 +18,9 @@
 
 (begin-for-syntax
   (require setup/getinfo)
-  (define version ((get-info '("frosthaven-manager")) 'version)))
+  (define (get-version) ((get-info '("frosthaven-manager")) 'version)))
 (define-syntax (version stx)
-  (datum->syntax stx version stx stx))
+  (datum->syntax stx (get-version) stx stx))
 
 (define-runtime-path about.md "../ABOUT.md")
 
