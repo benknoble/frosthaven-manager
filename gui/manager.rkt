@@ -117,6 +117,7 @@
         (text (@~> (state-@modifier s) (~>> (or _ "") (~a "Most Recent Modifier: "))))
         (text (@~> (state-@monster-prev-discard s) (~>> (or _ "") (~a "Previous Modifier: "))))
         (spacer)
+        (text (@~> (state-@round s) (~a "Round: " _)))
         (button "Next Round" #:enabled? (state-@in-draw? s) (next-round s))
         (button "Draw Abilities" #:enabled? (@> (state-@in-draw? s) not) (draw-abilities s))))
     ;; bottom
@@ -235,6 +236,8 @@
   ;; shuffle modifiers if required
   (when (shuffle-modifier-deck? (@! (state-@monster-discard s)))
     (reshuffle-modifier-deck s))
+  ;; increment round number
+  (<@ (state-@round s) add1)
   ;; toggle state
   (<@ (state-@in-draw? s) not))
 

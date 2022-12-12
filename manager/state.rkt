@@ -15,6 +15,7 @@
                    [@num-loot-cards (obs/c natural-number/c)]
                    [@elements (listof (obs/c element-state/c))]
                    [@in-draw? (obs/c boolean?)]
+                   [@round (obs/c natural-number/c)]
                    [@monster-modifier-deck (obs/c (listof monster-modifier?))]
                    [@monster-discard (obs/c (listof monster-modifier?))]
                    [@curses (obs/c (listof monster-modifier?))]
@@ -34,6 +35,7 @@
              (obs/c (listof loot-card?))
              (obs/c natural-number/c)
              (obs/c boolean?)
+             (obs/c natural-number/c)
              (obs/c (listof monster-modifier?))
              (obs/c (listof monster-modifier?))
              (obs/c (listof monster-modifier?))
@@ -82,6 +84,7 @@
          @num-loot-cards
          @elements
          @in-draw?
+         @round
          @monster-modifier-deck
          @monster-discard
          @curses
@@ -101,6 +104,7 @@
                     [@loot-deck (@ empty)]
                     [@num-loot-cards (@ 0)]
                     [@in-draw? (@ #f)]
+                    [@round (@ 1)]
                     [@monster-modifier-deck (@ (shuffle monster-modifier-deck))]
                     [@monster-discard (@ empty)]
                     [@curses (@ monster-curse-deck)]
@@ -119,6 +123,7 @@
          @num-loot-cards
          @elements
          @in-draw?
+         @round
          @monster-modifier-deck
          @monster-discard
          @curses

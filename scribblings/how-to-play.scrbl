@@ -140,7 +140,7 @@ two is used, and the better is discarded. The used card will appear next to
 @subsubsection{Advancing the Scenario}
 
 At the bottom of the right control group you will find two (2) buttons. Only
-one will be available to you at a time.
+one will be available to you at a time. You will also find the round number.
 
 The first button is "Next Round." After every group has taken their turn, use
 this button to move to the next round. At this point, you would begin entering
