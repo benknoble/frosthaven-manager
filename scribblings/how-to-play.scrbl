@@ -137,6 +137,9 @@ Like the "Advantage" button, two cards are drawn. This time, the worse of the
 two is used, and the better is discarded. The used card will appear next to
 "Most Recent Modifier," with the better next to "Previous Modifier."
 
+You can also click "Show Discard Pile" to see the entire discard pile with the
+most recently discarded cards on top.
+
 @subsubsection{Advancing the Scenario}
 
 At the bottom of the right control group you will find two (2) buttons. Only

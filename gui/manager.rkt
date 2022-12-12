@@ -116,6 +116,7 @@
         (button "Disadvantage" (draw-modifier* s worse-modifier))
         (text (@~> (state-@modifier s) (~>> (or _ "") (~a "Most Recent Modifier: "))))
         (text (@~> (state-@monster-prev-discard s) (~>> (or _ "") (~a "Previous Modifier: "))))
+        (button "Show Discard Pile" (show-discard-pile s))
         (spacer)
         (text (@~> (state-@round s) (~a "Round: " _)))
         (button "Next Round" #:enabled? (state-@in-draw? s) (next-round s))
@@ -197,6 +198,16 @@
     [(@~> @e (~> creature-v player?)) ((make-player-view s) k @e)]
     [(@~> @e (~> creature-v monster-group*?)) ((make-monster-group-view s) k @e)]
     [else (text "creature is neither player or monster-group*")]))
+
+(define ((show-discard-pile s))
+  (render
+    (dialog
+      #:title "Discard Pile"
+      #:min-size (@~> (state-@monster-discard s) (~>> length (* 30) (list 200)))
+      (text "(Most recent first)")
+      (spacer)
+      (text (@~> (state-@monster-discard s) (~>> (map ~a) (string-join _ "\n"))))
+      (spacer))))
 
 ;;;; Transition functions
 
