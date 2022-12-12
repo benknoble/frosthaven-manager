@@ -607,24 +607,24 @@ A @racket[monster-group*] wraps a @racket[monster-group] with a possibly active
 }
 
 @defstruct*[state
-             ([@mode symbol?]
-              [@level (obs/c level/c)]
-              [@num-players (obs/c num-players/c)]
-              [@creatures (obs/c (listof creature?))]
-              [@cards-per-deck (obs/c (hash/c (listof loot-card?) natural-number/c))]
-              [@loot-deck (obs/c (listof loot-card?))]
-              [@num-loot-cards (obs/c natural-number/c)]
-              [@elements (listof (obs/c element-state/c))]
-              [@in-draw? (obs/c boolean?)]
-              [@monster-modifier-deck (obs/c (listof monster-modifier?))]
-              [@monster-discard (obs/c (listof monster-modifier?))]
-              [@curses (obs/c (listof monster-modifier?))]
-              [@blesses (obs/c (listof monster-modifier?))]
-              [@modifier (obs/c monster-modifier?)]
-              [@monster-prev-discard (obs/c monster-modifier?)]
-              [@info-db (obs/c info-db/c)]
-              [@ability-db (obs/c ability-db/c)]
-              [@ability-decks (obs/c (hash/c string? ability-decks?))])]{
+             ([|@|mode symbol?]
+              [|@|level (obs/c level/c)]
+              [|@|num-players (obs/c num-players/c)]
+              [|@|creatures (obs/c (listof creature?))]
+              [|@|cards-per-deck (obs/c (hash/c (listof loot-card?) natural-number/c))]
+              [|@|loot-deck (obs/c (listof loot-card?))]
+              [|@|num-loot-cards (obs/c natural-number/c)]
+              [|@|elements (listof (obs/c element-state/c))]
+              [|@|in-draw? (obs/c boolean?)]
+              [|@|monster-modifier-deck (obs/c (listof monster-modifier?))]
+              [|@|monster-discard (obs/c (listof monster-modifier?))]
+              [|@|curses (obs/c (listof monster-modifier?))]
+              [|@|blesses (obs/c (listof monster-modifier?))]
+              [|@|modifier (obs/c monster-modifier?)]
+              [|@|monster-prev-discard (obs/c monster-modifier?)]
+              [|@|info-db (obs/c info-db/c)]
+              [|@|ability-db (obs/c ability-db/c)]
+              [|@|ability-decks (obs/c (hash/c string? ability-decks?))])]{
 All of the "global" manager state.
 }
 
