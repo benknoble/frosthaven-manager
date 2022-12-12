@@ -836,6 +836,12 @@ Returns both a list of observables controlling element states and a GUI view
 displaying the @racket[element-pics].
 }
 
+@deftogether[(@defproc[(infuse-all [es (listof (obs/c element-state/c))]) any]
+              @defproc[(consume-all [es (listof (obs/c element-state/c))]) any])]{
+Set all element states @racket[es] to @racket['infused] or @racket['unfused],
+respectively.
+}
+
 @defproc[(wane-element [state element-state/c])
          element-state/c]{
 Returns the new element state after waning for one cycle.

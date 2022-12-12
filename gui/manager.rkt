@@ -96,7 +96,10 @@
   (vpanel
     (hpanel
       ;; left
-      elements-view
+      (vpanel
+        elements-view
+        (button "Infuse All" (thunk (infuse-all (state-@elements s))))
+        (button "Consume All" (thunk (consume-all (state-@elements s)))))
       ;; main
       (group
         "Creatures"

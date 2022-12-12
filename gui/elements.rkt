@@ -7,6 +7,8 @@
                           ((unconstrained-domain-> (is-a?/c view<%>)))
                           (values (listof (obs/c element-state/c))
                                   (is-a?/c view<%>)))]
+    [infuse-all (-> (listof (obs/c element-state/c)) any)]
+    [consume-all (-> (listof (obs/c element-state/c)) any)]
     [wane-element (-> element-state/c element-state/c)]))
 
 (define element-state/c (or/c 'unfused 'infused 'waning))
@@ -24,6 +26,13 @@
 (define (elements-cycler es [panel hpanel])
   (define-values (states views) (element-cyclers es))
   (values states (apply panel #:stretch '(#f #f) views)))
+
+(define ((make-all state) es)
+  (for ([@e (in-list es)])
+    (:= @e state)))
+
+(define infuse-all (make-all 'infused))
+(define consume-all (make-all 'unfused))
 
 (define (make-transition-element-state @state)
   (λ ()

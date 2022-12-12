@@ -98,6 +98,9 @@ element---now, the background should be back to black. Alternately, you can
 click the element to transition to the state indicated by the button. You can
 also right-click the element to transition to any state.
 
+The "Infuse All" and "Consume All" buttons will infuse or unfuse all the
+elements, respectively.
+
 Note that elements are advanced automatically by the "Next Round" button as in
 @secref{Advancing_the_Scenario}.
 
