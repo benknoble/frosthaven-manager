@@ -1378,14 +1378,21 @@ This module contains parsers for @(hash-lang)
 @secref{Editing_Monster_Information} for more details.
 
 @defproc[(parse-bestiary [src any/c] [in input-port?] [#:syntax? syn? any/c])
-         (or/c syntax? (listof (or/c monster-info? (listof monster-ability?))))]{
-The result is @racket[syntax?] if @racket[syn?] is true, and the datum it
-contains matches @racket[(listof (or/c monster-info? (listof monster-ability?)))].
+         (or/c syntax? bestiary/c)]{
+The result is @racket[syntax?] with source @racket[src] if @racket[syn?] is
+true, and the datum it contains matches @racket[bestiary/c].
+}
+
+@defthing[bestiary/c (or/c (list/c 'import string?)
+                           monster-info?
+                           (listof monster-ability?))]{
+A contract for bestiary values.
 }
 
 @deftogether[(@defthing[monster/p (parser/c char? monster-info?)]
               @defthing[ability-deck/p (parser/c char? (listof monster-ability?))]
-              @defthing[bestiary/p (parser/c char? (listof (or/c monster-info? (listof monster-ability?))))])]{
+              @defthing[import-monsters/p (parser/c char? (list/c 'import string?))]
+              @defthing[bestiary/p (parser/c char? bestiary/c)])]{
 Textual parsers for parts of the bestiary language.
 }
 

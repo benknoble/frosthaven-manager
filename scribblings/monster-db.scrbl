@@ -215,6 +215,49 @@ begin-ability-deck
 end-ability-deck
 }|
 
+And that's how you write a monster or ability deck!
+
+@subsubsection{Using Multiple Bestiaries}
+
+It's possible to import the monsters from one bestiary into another. The command
+@racket[import-monsters] does this when given a filename written as @tech{game
+text}. For example:
+
+@codeblock|{
+import-monsters "guards.rkt"
+}|
+
+would import all the monsters and ability decks in the file
+@filepath{guards.rkt} for use in the current bestiary.
+
+Use the @tt{/} slash character to separate folders and directories from
+filenames. If there is no slash, the bestiary from which to import is assumed to
+be in the same folder or directory as the bestiary containing the import
+command. Use @tt{..} to mean the folder or directory containing the bestiary
+with the import command, so that the following command imports
+@filepath{monsters.rkt} in the current bestiary's containing folder or
+directory:
+
+@codeblock|{
+import-monsters "../monsters.rkt"
+}|
+
+One organizational strategy for your bestiaries is the "One Set per File" rule.
+Each monster set gets its own bestiary file with an ability deck and monsters.
+For example, all the "guard" monsters go with the guard ability deck in
+@filepath{guards.rkt}.
+
+Then you might have a final bestiary @filepath{my_bestiary.rkt} that imports
+each set, like so:
+
+@filebox["my_bestiary.rkt"]{
+@codeblock|{
+import-monsters "guards.rkt"
+…
+}|}
+
+An @hyperlink["https://github.com/benknoble/frosthaven-manager/tree/main/testfiles/sample-bestiary-import.rkt"]{example of this format can be found in the source}.
+
 You've now seen everything you need to write your own bestiary. Below,
 you'll find a succint reference for the format.
 
@@ -234,10 +277,17 @@ The following terms are used both in the explanation by example:
 The grammar for the bestiary is as follows. Whitespace is ignored except in
 @tech{game text}.
 
+Any bestiary file that defines a monster is required to define an ability deck
+for that monster's set. Importing bestiaries that conflict with each other or
+with the current bestiary is also an error. Cyclic imports are disallowed.
+
 @(require scribble/bnf)
 
 @BNF[(list @nonterm{bestiary}
-           @kleenestar[@BNF-group[@BNF-alt[@nonterm{monster} @nonterm{ability deck}]]])
+           @kleenestar[@BNF-group[@BNF-alt[@nonterm{import} @nonterm{monster} @nonterm{ability deck}]]])
+
+     (list @nonterm{import}
+           @BNF-seq[@litchar{import-monsters} @nonterm{file:text}])
 
      (list @nonterm{monster}
            @BNF-seq-lines[(list @litchar{begin-monster})
