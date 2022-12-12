@@ -19,7 +19,7 @@
 ;; e ::= <monster-info> | listof <monster-ability>
 (define-syntax-parse-rule (mb e:expr ...)
   #:with info-db (datum->syntax #f 'info-db)
-  #:with action-db (datum->syntax #f 'action-db)
+  #:with ability-db (datum->syntax #f 'ability-db)
   #:with ((({~datum import} import) ...)
           (infos ...)
           ((actions ...) ...))
@@ -52,11 +52,11 @@
   #:with (imported-ability-db ...) (generate-temporaries #'(import ...))
   ;;=>
   (#%module-begin
-   (provide info-db action-db)
+   (provide info-db ability-db)
    (require (rename-in import
                        [info-db imported-info-db]
-                       [action-db imported-ability-db]) ...)
-   (define-values (original-info-db original-action-db)
+                       [ability-db imported-ability-db]) ...)
+   (define-values (original-info-db original-ability-db)
      (datums->dbs (list infos ... actions ... ...)))
    (define info-db
      (hash-union original-info-db imported-info-db ...
@@ -65,8 +65,8 @@
                    (hash-union ms1 ms2
                                #:combine/key
                                (λ (k _m1 _m2) (error 'import-monsters "duplicate definitions for monster ~e" k))))))
-   (define action-db
-     (hash-union original-action-db imported-ability-db ...
+   (define ability-db
+     (hash-union original-ability-db imported-ability-db ...
                  #:combine/key
                  (λ (k _as1 _as2)
                    (error 'import-monsters "duplicate ability decks for set ~e" k))))))

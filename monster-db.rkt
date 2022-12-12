@@ -23,7 +23,7 @@
 
 (define (get-dbs db-file)
   (values (dynamic-require db-file 'info-db)
-          (dynamic-require db-file 'action-db)))
+          (dynamic-require db-file 'ability-db)))
 
 (define-flow datums->dbs
   (~> sep
