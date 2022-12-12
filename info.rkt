@@ -38,3 +38,6 @@
                              "linux-FrosthavenManager"
                              "windows-FrosthavenManager"
                              "docs"))
+(define test-omit-paths (append
+                          compile-omit-paths
+                          '()))
