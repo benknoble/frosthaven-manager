@@ -2,12 +2,14 @@
 ; vim: lw-=do
 
 (provide
+  bestiary/c
   (contract-out
     [parse-bestiary (-> any/c input-port? #:syntax? any/c
-                        (or/c syntax? (listof (or/c monster-info? (listof monster-ability?)))))]
+                        (or/c syntax? bestiary/c))]
     [monster/p (parser/c char? monster-info?)]
     [ability-deck/p (parser/c char? (listof monster-ability?))]
-    [bestiary/p (parser/c char? (listof (or/c monster-info? (listof monster-ability?))))]))
+    [import-monsters/p (parser/c char? (list/c 'import string?))]
+    [bestiary/p (parser/c char? bestiary/c)]))
 
 (require megaparsack
          megaparsack/text
@@ -17,6 +19,11 @@
                     [map fmap])
          frosthaven-manager/qi
          frosthaven-manager/defns)
+
+(define bestiary/c
+  (or/c (list/c 'import string?)
+        monster-info?
+        (listof monster-ability?)))
 
 #| monster syntax
 - outside of <text> elements, whitespace is ignored
@@ -191,6 +198,11 @@
                     (monster-ability set card-name initiative abilities shuffle?)])
                  cards))))
 
+(define import-monsters/p
+  (do (string/p "import-monsters") skip-ws
+      [imported <- (non-empty-text/p "non-empty filename")]
+      (pure `(import ,imported))))
+
 (define-flow monster-name-dupes (~> (>< monster-info-name) collect check-duplicates))
 (define-flow ability-set-dupes (~> (>< (~> first monster-ability-set-name)) collect check-duplicates))
 (define listof-monster-ability? (listof monster-ability?))
@@ -203,7 +215,7 @@
   (guard/p
     (fmap first
           (do skip-ws
-              (many-until/p (or/p (try/p monster/p) ability-deck/p)
+              (many-until/p (or/p import-monsters/p (try/p monster/p) ability-deck/p)
                             #:sep skip-ws
                             #:end (try/p (do skip-ws eof/p)))))
     (flow (~> bestiary-dupes none?))
