@@ -1334,10 +1334,10 @@ provided as @racket[widths].
 }
 
 @section{@tt{bestiary}}
-@defmodule[frosthaven-manager/bestiary #:lang]
 
 This module implements the bestiary language. See
-@secref{Editing_Monster_Information} for more information.
+@secref{Editing_Monster_Information} and
+@racketmodname[frosthaven-manager/bestiary] for more information.
 
 @section{@tt{monster-db}}
 @defmodule[frosthaven-manager/monster-db]

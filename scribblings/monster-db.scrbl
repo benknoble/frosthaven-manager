@@ -263,6 +263,8 @@ you'll find a succint reference for the format.
 
 @subsection{Monster Information Format Reference}
 
+@defmodule[frosthaven-manager/bestiary #:lang]
+
 @margin-note{The @secref{Developer_Reference} for monster information documents the
 underlying data structures, like @racket[monster-info], @racket[monster-stats],
 and @racket[monster-ability].}
