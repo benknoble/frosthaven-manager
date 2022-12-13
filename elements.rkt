@@ -21,7 +21,6 @@
          (only-in 2htdp/image
                   wedge)
          racket/draw
-         plot/pict
          frosthaven-manager/qi)
 
 (struct element-pics [name infused waning unfused] #:transparent)
@@ -131,26 +130,43 @@
   (element-pics "Ice" infused-ice waning-ice unfused-ice))
 
 (define (air-overlay)
-  (let* ([spiral-plot
-           (parameterize ([plot-x-ticks no-ticks]
-                          [plot-y-ticks no-ticks]
-                          [plot-x-label #f]
-                          [plot-y-label #f]
-                          [line-width 3]
-                          [plot-width (half size)]
-                          [plot-height (half size)]
-                          [plot-background-alpha 0]
-                          [plot-foreground-alpha 0])
-             ;; https://en.wikipedia.org/wiki/Archimedean_spiral
-             (plot (polar (λ (θ) (* -3 θ))
-                          #:color "white")))]
+  (let* ([n-samples 500]
+         ;; https://en.wikipedia.org/wiki/Archimedean_spiral
+         [spiral (flow (* -3))]
+         [θs (range 0 (* 2 pi) (/ (* 2 pi) n-samples))]
+         [rs (map spiral θs)]
+         [polar->cartesian (λ (r θ) (~> (θ) (-< cos sin) (>< (* r))))]
+         [points (map (flow (~> polar->cartesian collect)) rs θs)]
+         [path (let ([p (new dc-path%)])
+                 (match-define (cons (list x0 y0) pts) points)
+                 (define xm (apply min (map first pts)))
+                 (define ym (* 2 (apply min (map second pts))))
+                 (begin0 p
+                   (send p move-to (- x0 xm) (- y0 ym))
+                   (for ([pt (in-list pts)])
+                     (match-define (list x y) pt)
+                     (send p line-to (- x xm) (- y ym)))))]
+         [spiral-plot
+           (scale
+             (dc
+               (lambda (dc dx dy)
+                 (define old-brush (send dc get-brush))
+                 (define old-pen (send dc get-pen))
+                 (send* dc
+                   (set-brush (new brush% [style 'transparent]))
+                   (set-pen (new pen% [color "white"] [width 4]))
+                   (draw-path path dx dy)
+                   (set-brush old-brush)
+                   (set-pen old-pen)))
+               30 30)
+             30/25 -30/25)]
          [spiral (~> (spiral-plot)
-                     (scale 1/2 -1/2)
+                     (scale 1/3 -1/2)
                      (rotate (* pi 1/2)))]
-         [bar+spiral (~> (size) half (- 3)
+         [bar+spiral (~> (size) half (- 5)
                          (filled-rounded-rectangle 0.5) white
-                         (translate 3 0)
-                         (hb-append -2 _ spiral))]
+                         (translate 4 0.5)
+                         (hb-append -3 _ spiral))]
          [middle (~> (size) (* 2/3) (- 5)
                      (filled-rounded-rectangle 1) white)])
     (~> (bar+spiral)

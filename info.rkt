@@ -8,7 +8,6 @@
 (define deps '("functional-lib"
                "megaparsack-lib"
                "reprovide-lang-lib"
-               "plot-lib"
                "draw-lib"
                "markdown"
                "net-lib"
