@@ -29,8 +29,7 @@
          frosthaven-manager/gui/monsters)
 
 (define (manager)
-  (define-values (@elements elements-view) (elements-cycler (elements) vpanel))
-  (define s (make-state @elements))
+  (define s (make-state))
   (application-about-handler do-about)
   (window
     #:title "Frosthaven Manager"
@@ -50,7 +49,7 @@
       [(build-loot-deck) (build-loot-deck-view s)]
       [(choose-monster-db) (choose-monster-db-view s)]
       [(choose-monsters) (choose-monsters-view s)]
-      [(play) (play-view s elements-view)]
+      [(play) (play-view s)]
       [else (text "Broken")])))
 
 ;;;; GUI
@@ -92,14 +91,16 @@
     (multi-monster-picker (state-@info-db s) (state-@level s) #:on-change (add-or-remove-monster-group s))
     (button "Next" (to-play s))))
 
-(define (play-view s elements-view)
+(define (play-view s)
   (vpanel
     (hpanel
       ;; left
-      (vpanel
-        elements-view
-        (button "Infuse All" (thunk (infuse-all (state-@elements s))))
-        (button "Consume All" (thunk (consume-all (state-@elements s)))))
+      (let* ([es (elements)]
+             [@elements (state-@elements s)])
+        (vpanel
+          (elements-cycler @elements es vpanel)
+          (button "Infuse All" (thunk (infuse-all @elements)))
+          (button "Consume All" (thunk (consume-all @elements)))))
       ;; main
       (group
         "Creatures"

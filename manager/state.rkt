@@ -26,7 +26,7 @@
                    [@ability-db (obs/c ability-db/c)]
                    [@ability-decks (obs/c (hash/c string? ability-decks?))])]
     [make-state
-      (->* ((listof (obs/c element-state/c)))
+      (->* ()
            (symbol?
              (obs/c level/c)
              (obs/c num-players/c)
@@ -34,6 +34,7 @@
              (obs/c (hash/c (listof loot-card?) natural-number/c))
              (obs/c (listof loot-card?))
              (obs/c natural-number/c)
+             (listof (obs/c element-state/c))
              (obs/c boolean?)
              (obs/c natural-number/c)
              (obs/c (listof monster-modifier?))
@@ -64,7 +65,9 @@
          frosthaven-manager/observable-operator
          frosthaven-manager/qi
          frosthaven-manager/defns
-         (only-in frosthaven-manager/gui/elements element-state/c)
+         (only-in frosthaven-manager/gui/elements
+                  element-state/c
+                  make-states)
          frosthaven-manager/monster-db
          (only-in frosthaven-manager/gui/monsters
                   add-monster-event/c
@@ -95,14 +98,14 @@
          @ability-db
          @ability-decks])
 
-(define (make-state @elements
-                    [@mode (@ 'start)]
+(define (make-state [@mode (@ 'start)]
                     [@level (@ 0)]
                     [@num-players (@ 1)]
                     [@creatures (@ empty)]
                     [@cards-per-deck (@ (hash))]
                     [@loot-deck (@ empty)]
                     [@num-loot-cards (@ 0)]
+                    [@elements (make-states '(fire ice air earth light dark))]
                     [@in-draw? (@ #f)]
                     [@round (@ 1)]
                     [@monster-modifier-deck (@ (shuffle monster-modifier-deck))]

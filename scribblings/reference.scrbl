@@ -630,7 +630,6 @@ All of the "global" manager state.
 }
 
 @defproc[(make-state
-           [|@|elements (listof (obs/c element-state/c))]
            [|@|mode (obs/c symbol?) (|@| 'start)]
            [|@|level (obs/c level/c) (|@| 0)]
            [|@|num-players (obs/c num-players/c) (|@| 1)]
@@ -638,6 +637,7 @@ All of the "global" manager state.
            [|@|cards-per-deck (obs/c (hash/c (listof loot-card?) natural-number/c)) (|@| (hash))]
            [|@|loot-deck (obs/c (listof loot-card?)) (|@| empty)]
            [|@|num-loot-cards (obs/c natural-number/c) (|@| 0)]
+           [|@|elements (listof (obs/c element-state/c)) (make-states '(fire ice air earth light dark))]
            [|@|in-draw? (obs/c boolean?) (|@| #f)]
            [|@|round (obs/c natural-number/c) (|@| 1)]
            [|@|monster-modifier-deck (obs/c (listof monster-modifier?)) (|@| (shuffle monster-modifier-deck))]
@@ -828,12 +828,18 @@ A contract recognizing valid element states.
 }
 
 @defproc[(elements-cycler
+           [|@|states (listof (obs/c element-state/c))]
            [es (listof element-pics?)]
            [panel (unconstrained-domain-> (is-a?/c view<%>)) hpanel])
-         (values (listof (obs/c element-state/c))
-                 (is-a?/c view<%>))]{
-Returns both a list of observables controlling element states and a GUI view
-displaying the @racket[element-pics].
+         (is-a?/c view<%>)]{
+Returns a GUI view displaying the @racket[element-pics]. Each element of
+@racket[es] is controlled by the corresponding element of @racket[|@|states].
+}
+
+@defproc[(make-states [es (listof any/c)])
+         (listof (obs/c element-state/c))]{
+Builds an equally-sized list of element states to control @racket[es] in
+@racket[elements-cycler].
 }
 
 @deftogether[(@defproc[(infuse-all [es (listof (obs/c element-state/c))]) any]

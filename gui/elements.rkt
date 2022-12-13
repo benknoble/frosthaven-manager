@@ -3,10 +3,11 @@
 (provide
   (contract-out
     [element-state/c contract?]
-    [elements-cycler (->* ((listof element-pics?))
+    [elements-cycler (->* ((listof (obs/c element-state/c))
+                           (listof element-pics?))
                           ((unconstrained-domain-> (is-a?/c view<%>)))
-                          (values (listof (obs/c element-state/c))
-                                  (is-a?/c view<%>)))]
+                          (is-a?/c view<%>))]
+    [make-states (-> (listof any/c) (listof (obs/c element-state/c)))]
     [infuse-all (-> (listof (obs/c element-state/c)) any)]
     [consume-all (-> (listof (obs/c element-state/c)) any)]
     [wane-element (-> element-state/c element-state/c)]))
@@ -23,9 +24,12 @@
          frosthaven-manager/elements
          (only-in pict inset))
 
-(define (elements-cycler es [panel hpanel])
-  (define-values (states views) (element-cyclers es))
-  (values states (apply panel #:stretch '(#f #f) views)))
+(define (elements-cycler @states es [panel hpanel])
+  (apply panel #:stretch '(#f #f) (element-cyclers @states es)))
+
+(define (make-states es)
+  ;; don't use const; we don't want them to all be eq?
+  (map (λ (_) (@ 'unfused)) es))
 
 (define ((make-all state) es)
   (for ([@e (in-list es)])
@@ -59,8 +63,7 @@
                                (menu-item "Unfused" (λ () (:= @state 'unfused))))))
            (render-popup-menu (current-renderer) pum x y))]))))
 
-(define (element-cycler e)
-  (define/obs @element-state 'unfused)
+(define (element-cycler @element-state e)
   (define (make-pict-for-canvas s)
     (inset ((state->pict e) s) (+ 3 (/ size 3)) 3 0 0))
   (define cycle-element (make-transition-element-state @element-state))
@@ -69,13 +72,11 @@
                  make-pict-for-canvas
                  #:min-size (list (+ 6 size) (+ 6 size))
                  #:mixin (handle-element-clicks @element-state)))
-  (define cycler-view
-    (group
-      (element-pics-name e)
-      #:stretch '(#f #f)
-      pict-view
-      (button (@> @element-state state->text) cycle-element)))
-  (values @element-state cycler-view))
+  (group
+    (element-pics-name e)
+    #:stretch '(#f #f)
+    pict-view
+    (button (@> @element-state state->text) cycle-element)))
 
 (define (state->pict e)
   (match-lambda
@@ -104,22 +105,16 @@
     ['waning 'unfused]
     [_ 'unfused]))
 
-(define (element-cyclers es)
-  (for/fold ([@states empty]
-             [views empty]
-             #:result (values (reverse @states)
-                              (reverse views)))
-    ([e (in-list es)])
-    (define-values (@state view) (element-cycler e))
-    (values (cons @state @states)
-            (cons view views))))
+(define (element-cyclers @states es)
+  (map element-cycler @states es))
 
 (module+ main
-  (define-values (@states view) (elements-cycler (elements)))
+  (define es (elements))
+  (define @states (make-states es))
   ;; demo
   (void (render/eventspace
           ;; no separate eventspace: block main until this window closed
-          (window (vpanel view
+          (window (vpanel (elements-cycler @states es)
                           (button "Next Round"
                                   (thunk (for-each (curryr obs-update! wane-element) @states)))))))
   ;; testing errors
