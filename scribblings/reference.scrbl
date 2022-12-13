@@ -5,6 +5,7 @@
             (except-in racket
                        null)
             racket/gui/base
+            (only-in pict pict?)
             (only-in xml xexpr?)
             rebellion/type/enum
             racket/gui/easy
@@ -17,7 +18,7 @@
             frosthaven-manager/defns
             (only-in frosthaven-manager/elements
                      size
-                     element-pics
+                     element-pics element-pics?
                      elements)
             frosthaven-manager/enum-helpers
             frosthaven-manager/manager

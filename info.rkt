@@ -20,7 +20,8 @@
                ("gui-easy-lib" #:version "0.5")
                "rebellion"
                "base"))
-(define build-deps '("gui-doc"
+(define build-deps '("pict-doc"
+                     "gui-doc"
                      "gui-easy"
                      "megaparsack-doc"
                      ("qi-doc" #:version "3.0")
