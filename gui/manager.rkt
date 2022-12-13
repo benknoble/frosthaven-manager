@@ -29,7 +29,7 @@
          frosthaven-manager/gui/monsters)
 
 (define (manager)
-  (define-values (@elements elements-view) (elements-cycler elements vpanel))
+  (define-values (@elements elements-view) (elements-cycler (elements) vpanel))
   (define s (make-state @elements))
   (application-about-handler do-about)
   (window

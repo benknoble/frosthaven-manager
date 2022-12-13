@@ -107,7 +107,7 @@ Note that elements are advanced automatically by the "Next Round" button as in
 Here are the elements in each of the unfused, infused, and waning states:
 
 @(apply elem
-        (for/list ([e (in-list elements)])
+        (for/list ([e (in-list (elements))])
           (vc-append
             (text (element-pics-name e))
             (element-pics-unfused e)

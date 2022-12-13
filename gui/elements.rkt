@@ -115,12 +115,12 @@
             (cons view views))))
 
 (module+ main
-  (define-values (@states view) (elements-cycler elements))
+  (define-values (@states view) (elements-cycler (elements)))
   ;; demo
   (void (render/eventspace
           ;; no separate eventspace: block main until this window closed
-         (window (vpanel view
-                         (button "Next Round"
-                                 (thunk (for-each (curryr obs-update! wane-element) @states)))))))
+          (window (vpanel view
+                          (button "Next Round"
+                                  (thunk (for-each (curryr obs-update! wane-element) @states)))))))
   ;; testing errors
   #;(void (obs-update! (car @states) (thunk* 'gibberish))))

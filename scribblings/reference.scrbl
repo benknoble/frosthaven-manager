@@ -553,12 +553,11 @@ The size of the element pictures.
 A container for a named set of element pictures.
 }
 
-@defthing[elements
-           (listof element-pics?)]{
-All of the elements bundled together. This module also provides bindings from
-the names of the elemnts to @racket[element-pics] values, but they are not
-documented here. See @secref{Elements_Tracker} for the various element names and
-pictures.
+@defproc[(elements) (listof element-pics?)]{
+Returns all of the elements bundled together. This module also provides bindings
+from the names of the elemnts to procedures returning @racket[element-pics]
+values, but they are not documented here. See @secref{Elements_Tracker} for the
+various element names and pictures.
 }
 
 @section{@tt{enum-helpers}}

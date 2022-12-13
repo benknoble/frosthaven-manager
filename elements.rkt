@@ -7,13 +7,13 @@
                           [infused pict?]
                           [waning pict?]
                           [unfused pict?])]
-    [fire element-pics?]
-    [ice element-pics?]
-    [air element-pics?]
-    [earth element-pics?]
-    [light element-pics?]
-    [dark element-pics?]
-    [elements (listof element-pics?)]))
+    [fire (-> element-pics?)]
+    [ice (-> element-pics?)]
+    [air (-> element-pics?)]
+    [earth (-> element-pics?)]
+    [light (-> element-pics?)]
+    [dark (-> element-pics?)]
+    [elements (-> (listof element-pics?))]))
 
 (require pict
          pict/color
@@ -32,7 +32,7 @@
 (define-flow half (* 1/2))
 (define-flow avg (~> (-< + count) /))
 
-(define base (disk size))
+(define (base) (disk size))
 
 (define (half-wedge size color)
   (wedge size 180 "solid" color))
@@ -103,14 +103,14 @@
             (~> (scale 0.3 0.2) (translate 0 14)))
         cc-superimpose)))
 
-(define colored-fire-overlay (fire-overlay "red" "orange" "yellow" "white"))
-(define bw-fire-overlay (fire-overlay "white" "black" "white" "black"))
-(define infused-fire (cc-superimpose (red base) colored-fire-overlay))
-(define waning-fire (cc-superimpose (wane "red") colored-fire-overlay))
-(define unfused-fire (cc-superimpose base bw-fire-overlay))
-(define fire (element-pics "Fire" infused-fire waning-fire unfused-fire))
+(define (colored-fire-overlay) (fire-overlay "red" "orange" "yellow" "white"))
+(define (bw-fire-overlay) (fire-overlay "white" "black" "white" "black"))
+(define (infused-fire) (cc-superimpose (red (base)) (colored-fire-overlay)))
+(define (waning-fire) (cc-superimpose (wane "red") (colored-fire-overlay)))
+(define (unfused-fire) (cc-superimpose (base) (bw-fire-overlay)))
+(define (fire) (element-pics "Fire" (infused-fire) (waning-fire) (unfused-fire)))
 
-(define ice-overlay
+(define (ice-overlay)
   (let* ([bar (~> ((filled-rectangle 2 trimmed-size)) white (inset 5 0))]
          [branch (white (filled-rectangle 2 5))]
          [fractal
@@ -122,12 +122,12 @@
     (~> (fractal)
         (-< _ (rotate (half pi)) (rotate (/ pi 4)) (rotate (/ pi -4)))
         cc-superimpose)))
-(define infused-ice (cc-superimpose (cyan base) ice-overlay))
-(define waning-ice (cc-superimpose (wane "cyan") ice-overlay))
-(define unfused-ice (cc-superimpose base ice-overlay))
-(define ice (element-pics "Ice" infused-ice waning-ice unfused-ice))
+(define (infused-ice) (cc-superimpose (cyan (base)) (ice-overlay)))
+(define (waning-ice) (cc-superimpose (wane "cyan") (ice-overlay)))
+(define (unfused-ice) (cc-superimpose (base) (ice-overlay)))
+(define (ice) (element-pics "Ice" (infused-ice) (waning-ice) (unfused-ice)))
 
-(define air-overlay
+(define (air-overlay)
   (let* ([spiral-plot
            (parameterize ([plot-x-ticks no-ticks]
                           [plot-y-ticks no-ticks]
@@ -156,17 +156,17 @@
         (refocus middle)
         (translate -1 0)
         (hc-append (cloud 15 (* 2/3 size) "white")))))
-(define infused-air (cc-superimpose (colorize base "light gray") air-overlay))
-(define waning-air (cc-superimpose (wane "light gray") air-overlay))
-(define unfused-air (cc-superimpose base air-overlay))
-(define air (element-pics "Air" infused-air waning-air unfused-air))
+(define (infused-air) (cc-superimpose (colorize (base) "light gray") (air-overlay)))
+(define (waning-air) (cc-superimpose (wane "light gray") (air-overlay)))
+(define (unfused-air) (cc-superimpose (base) (air-overlay)))
+(define (air) (element-pics "Air" (infused-air) (waning-air) (unfused-air)))
 
 (define-flow right-isoceles-hypotenuse->leg
   (/ (sqrt 2)))
 (define-flow size->dx
   (~> right-isoceles-hypotenuse->leg -))
 
-(define earth-overlay
+(define (earth-overlay)
   (let* ([stem (white (filled-rectangle 2 trimmed-size))]
          [large-size (- (half trimmed-size) 3)]
          [large-branch (white (filled-rectangle 2 large-size))]
@@ -195,26 +195,27 @@
         hc-append
         (refocus stem)
         (rotate (* pi -1/4)))))
-(define infused-earth (cc-superimpose (colorize base "dark green") earth-overlay))
-(define waning-earth (cc-superimpose (wane "dark green") earth-overlay))
-(define unfused-earth (cc-superimpose base earth-overlay))
-(define earth (element-pics "Earth" infused-earth waning-earth unfused-earth))
+(define (infused-earth) (cc-superimpose (colorize (base) "dark green") (earth-overlay)))
+(define (waning-earth) (cc-superimpose (wane "dark green") (earth-overlay)))
+(define (unfused-earth) (cc-superimpose (base) (earth-overlay)))
+(define (earth) (element-pics "Earth" (infused-earth) (waning-earth) (unfused-earth)))
 
-(define light-overlay (cc-superimpose (white (outline-flash trimmed-size trimmed-size 8 .55))
-                                      (white (filled-flash (- size 25) (- size 25) 8 .55))))
-(define infused-light (cc-superimpose (colorize base "gold") light-overlay))
-(define waning-light (cc-superimpose (wane "gold") light-overlay))
-(define unfused-light (cc-superimpose base light-overlay))
-(define light (element-pics "Light" infused-light waning-light unfused-light))
+(define (light-overlay)
+  (cc-superimpose (white (outline-flash trimmed-size trimmed-size 8 .55))
+                  (white (filled-flash (- size 25) (- size 25) 8 .55))))
+(define (infused-light) (cc-superimpose (colorize (base) "gold") (light-overlay)))
+(define (waning-light) (cc-superimpose (wane "gold") (light-overlay)))
+(define (unfused-light) (cc-superimpose (base) (light-overlay)))
+(define (light) (element-pics "Light" (infused-light) (waning-light) (unfused-light)))
 
 (define (dark-disks color)
   (flow (~> (pin-over (- (half size) 6) (/ size 4)
                       (disk (half size) #:color "white" #:border-color color #:border-width 1))
             (pin-over 6 (/ size 4)
                       (disk (half size) #:color color #:border-color "white" #:border-width 1)))))
-(define infused-dark (~> (base) (colorize "purple") (dark-disks "purple")))
-(define waning-dark (~> ("purple") wane (dark-disks "purple")))
-(define unfused-dark (~> (base) (dark-disks "black")))
-(define dark (element-pics "Dark" infused-dark waning-dark unfused-dark))
+(define (infused-dark) (~> ((base)) (colorize "purple") (dark-disks "purple")))
+(define (waning-dark) (~> ("purple") wane (dark-disks "purple")))
+(define (unfused-dark) (~> ((base)) (dark-disks "black")))
+(define (dark) (element-pics "Dark" (infused-dark) (waning-dark) (unfused-dark)))
 
-(define elements (list fire ice air earth light dark))
+(define (elements) (list (fire) (ice) (air) (earth) (light) (dark)))
