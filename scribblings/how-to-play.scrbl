@@ -219,4 +219,10 @@ value of Gold, and XP and Inspiration bonuses for completing the scenario. The
 "Level Table" and "Inspiration Table" buttons show tables for the scenario
 statistics by level and inspiration by number of players, respectively.
 
+@subsection{Saving and Loading a Game}
+
+At any time, you can save the state of the game using the @onscreen{Save Game}
+button in the @onscreen{File} menu. You can also load a saved game using the
+@onscreen{Load Game} button in the same menu.
+
 And that's it! Now you know how to play!

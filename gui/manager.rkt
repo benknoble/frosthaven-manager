@@ -13,6 +13,7 @@
 (require racket/gui/easy
          (only-in racket/gui
                   get-file
+                  put-file
                   application-about-handler)
          frosthaven-manager/observable-operator
          frosthaven-manager/qi
@@ -35,6 +36,9 @@
     #:title "Frosthaven Manager"
     #:size '(800 600)
     (menu-bar
+      (menu "File"
+            (menu-item "&Save Game" (thunk (do-save-game s)))
+            (menu-item "L&oad Game" (thunk (do-load-game s))))
       (menu "Help"
             (about-menu-item)
             (how-to-play-menu-item)
@@ -263,3 +267,19 @@
   (<~@ (state-@creatures s) (sort < #:key (creature-initiative s)))
   ;; toggle state
   (<@ (state-@in-draw? s) not))
+
+;;;; Save & Load
+
+(define ((save-game s) p)
+  (call-with-output-file* p (curry serialize-state s) #:exists 'replace))
+
+(define (do-save-game s)
+  (cond [(put-file "Save Game") => (save-game s)]))
+
+(define ((load-game s) p)
+  (define saved-state (call-with-input-file* p deserialize-state))
+  (copy-state saved-state s)
+  (to-play s))
+
+(define (do-load-game s)
+  (cond [(get-file "Load Game") => (load-game s)]))
