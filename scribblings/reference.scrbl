@@ -621,8 +621,8 @@ A @racket[monster-group*] wraps a @racket[monster-group] with a possibly active
               [|@|monster-discard (obs/c (listof monster-modifier?))]
               [|@|curses (obs/c (listof monster-modifier?))]
               [|@|blesses (obs/c (listof monster-modifier?))]
-              [|@|modifier (obs/c monster-modifier?)]
-              [|@|monster-prev-discard (obs/c monster-modifier?)]
+              [|@|modifier (obs/c (or/c #f monster-modifier?))]
+              [|@|monster-prev-discard (obs/c (or/c #f monster-modifier?))]
               [|@|info-db (obs/c info-db/c)]
               [|@|ability-db (obs/c ability-db/c)]
               [|@|ability-decks (obs/c (hash/c string? ability-decks?))])]{
@@ -630,25 +630,25 @@ All of the "global" manager state.
 }
 
 @defproc[(make-state
-           [|@|mode (obs/c symbol?) (|@| 'start)]
-           [|@|level (obs/c level/c) (|@| 0)]
-           [|@|num-players (obs/c num-players/c) (|@| 1)]
-           [|@|creatures (obs/c (listof creature?)) (|@| empty)]
-           [|@|cards-per-deck (obs/c (hash/c (listof loot-card?) natural-number/c)) (|@| (hash))]
-           [|@|loot-deck (obs/c (listof loot-card?)) (|@| empty)]
-           [|@|num-loot-cards (obs/c natural-number/c) (|@| 0)]
-           [|@|elements (listof (obs/c element-state/c)) (make-states '(fire ice air earth light dark))]
-           [|@|in-draw? (obs/c boolean?) (|@| #f)]
-           [|@|round (obs/c natural-number/c) (|@| 1)]
-           [|@|monster-modifier-deck (obs/c (listof monster-modifier?)) (|@| (shuffle monster-modifier-deck))]
-           [|@|monster-discard (obs/c (listof monster-modifier?)) (|@| empty)]
-           [|@|curses (obs/c (listof monster-modifier?)) (|@| monster-curse-deck)]
-           [|@|blesses (obs/c (listof monster-modifier?)) (|@| monster-bless-deck)]
-           [|@|modifier (obs/c (or/c #f monster-modifier?)) (|@| #f)]
-           [|@|monster-prev-discard (obs/c (or/c #f monster-modifier?)) (|@| #f)]
-           [|@|info-db (obs/c info-db/c) (|@| (hash))]
-           [|@|ability-db (obs/c ability-db/c) (|@| (hash))]
-           [|@|ability-decks (obs/c (hash/c string? ability-decks?)) (|@| (hash))])
+           [|@|mode (maybe-obs/c symbol?) (|@| 'start)]
+           [|@|level (maybe-obs/c level/c) (|@| 0)]
+           [|@|num-players (maybe-obs/c num-players/c) (|@| 1)]
+           [|@|creatures (maybe-obs/c (listof creature?)) (|@| empty)]
+           [|@|cards-per-deck (maybe-obs/c (hash/c (listof loot-card?) natural-number/c)) (|@| (hash))]
+           [|@|loot-deck (maybe-obs/c (listof loot-card?)) (|@| empty)]
+           [|@|num-loot-cards (maybe-obs/c natural-number/c) (|@| 0)]
+           [|@|elements (listof (maybe-obs/c element-state/c)) (make-states '(fire ice air earth light dark))]
+           [|@|in-draw? (maybe-obs/c boolean?) (|@| #f)]
+           [|@|round (maybe-obs/c natural-number/c) (|@| 1)]
+           [|@|monster-modifier-deck (maybe-obs/c (listof monster-modifier?)) (|@| (shuffle monster-modifier-deck))]
+           [|@|monster-discard (maybe-obs/c (listof monster-modifier?)) (|@| empty)]
+           [|@|curses (maybe-obs/c (listof monster-modifier?)) (|@| monster-curse-deck)]
+           [|@|blesses (maybe-obs/c (listof monster-modifier?)) (|@| monster-bless-deck)]
+           [|@|modifier (maybe-obs/c (or/c #f monster-modifier?)) (|@| #f)]
+           [|@|monster-prev-discard (maybe-obs/c (or/c #f monster-modifier?)) (|@| #f)]
+           [|@|info-db (maybe-obs/c info-db/c) (|@| (hash))]
+           [|@|ability-db (maybe-obs/c ability-db/c) (|@| (hash))]
+           [|@|ability-decks (maybe-obs/c (hash/c string? ability-decks?)) (|@| (hash))])
          state?]{
 Create an initial state.
 }

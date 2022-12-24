@@ -28,24 +28,24 @@
     [make-state
       (->* ()
            (symbol?
-             (obs/c level/c)
-             (obs/c num-players/c)
-             (obs/c (listof creature?))
-             (obs/c (hash/c (listof loot-card?) natural-number/c))
-             (obs/c (listof loot-card?))
-             (obs/c natural-number/c)
-             (listof (obs/c element-state/c))
-             (obs/c boolean?)
-             (obs/c natural-number/c)
-             (obs/c (listof monster-modifier?))
-             (obs/c (listof monster-modifier?))
-             (obs/c (listof monster-modifier?))
-             (obs/c (listof monster-modifier?))
-             (obs/c monster-modifier?)
-             (obs/c monster-modifier?)
-             (obs/c info-db/c)
-             (obs/c ability-db/c)
-             (obs/c (hash/c string? ability-decks?)))
+             (maybe-obs/c level/c)
+             (maybe-obs/c num-players/c)
+             (maybe-obs/c (listof creature?))
+             (maybe-obs/c (hash/c (listof loot-card?) natural-number/c))
+             (maybe-obs/c (listof loot-card?))
+             (maybe-obs/c natural-number/c)
+             (listof (maybe-obs/c element-state/c))
+             (maybe-obs/c boolean?)
+             (maybe-obs/c natural-number/c)
+             (maybe-obs/c (listof monster-modifier?))
+             (maybe-obs/c (listof monster-modifier?))
+             (maybe-obs/c (listof monster-modifier?))
+             (maybe-obs/c (listof monster-modifier?))
+             (maybe-obs/c (or/c #f monster-modifier?))
+             (maybe-obs/c (or/c #f monster-modifier?))
+             (maybe-obs/c info-db/c)
+             (maybe-obs/c ability-db/c)
+             (maybe-obs/c (hash/c string? ability-decks?)))
            state?)]
     [make-player-creature (-> any/c creature?)]
     [update-players (-> (listof creature?) any/c (-> player? player?) (listof creature?))]
@@ -117,25 +117,25 @@
                     [@info-db (@ (hash))]
                     [@ability-db (@ (hash))]
                     [@ability-decks (@ (hash))])
-  (state @mode
-         @level
-         @num-players
-         @creatures
-         @cards-per-deck
-         @loot-deck
-         @num-loot-cards
-         @elements
-         @in-draw?
-         @round
-         @monster-modifier-deck
-         @monster-discard
-         @curses
-         @blesses
-         @modifier
-         @monster-prev-discard
-         @info-db
-         @ability-db
-         @ability-decks))
+  (state (@ @mode)
+         (@ @level)
+         (@ @num-players)
+         (@ @creatures)
+         (@ @cards-per-deck)
+         (@ @loot-deck)
+         (@ @num-loot-cards)
+         (map @ @elements)
+         (@ @in-draw?)
+         (@ @round)
+         (@ @monster-modifier-deck)
+         (@ @monster-discard)
+         (@ @curses)
+         (@ @blesses)
+         (@ @modifier)
+         (@ @monster-prev-discard)
+         (@ @info-db)
+         (@ @ability-db)
+         (@ @ability-decks)))
 
 (define (make-player-creature i)
   (creature i (make-player "" 1)))
