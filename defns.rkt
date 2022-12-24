@@ -57,7 +57,7 @@
   ;; loot deck
   (enum-out material-kind)
   (enum-out herb-kind)
-  (singleton-out random-item)
+  (enum-out random-item-type)
   (contract-out
     [struct money ([amount (integer-in 1 3)])]
     [struct material ([name material-kind?]
@@ -274,7 +274,12 @@
   (list arrowvine axenut corpsecap flamefruit rockroot snowthistle))
 (serializable-struct herb [name] #:transparent) ;; amount is always 1
 (define max-herb-cards 2) ;; each
-(define-singleton-type random-item)
+(define-serializable-enum-type random-item-type
+  (random-item)
+  #:descriptor-name discriptor:random-item
+  #:predicate-name random-item?
+  #:discriminator-name discriminator:random-item
+  #:selector-name selector:random-item)
 (define max-random-item-cards 1)
 
 (define loot-card? (or/c money? material? herb? random-item?))

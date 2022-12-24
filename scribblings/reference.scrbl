@@ -265,6 +265,8 @@ Serializable.
               @defthing[random-item random-item?]
 )]{
 Represents the random-item loot card.
+
+Serializable.
 }
 
 @defstruct*[money ([amount (integer-in 1 3)])
