@@ -12,10 +12,11 @@
           (-> (hash/c string? ability-decks?)
               (hash/c string? ability-decks?)))]))
 
-(require frosthaven-manager/qi
+(require racket/serialize
+         frosthaven-manager/qi
          frosthaven-manager/defns)
 
-(struct ability-decks [current draw discard] #:transparent)
+(serializable-struct ability-decks [current draw discard] #:transparent)
 
 (define-flow (ability-decks-draw-next ad)
   (~> (-< (~> ability-decks-draw (and (not empty?) first))

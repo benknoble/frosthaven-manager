@@ -143,6 +143,7 @@
     [monster-group-first-monster (-> monster-group? (or/c #f monster-number/c))]))
 
 (require
+  racket/serialize
   rebellion/type/enum
   rebellion/type/singleton
   frosthaven-manager/qi
@@ -193,7 +194,7 @@
 
 ;; players
 
-(struct player [name max-hp current-hp xp conditions initiative loot] #:transparent)
+(serializable-struct player [name max-hp current-hp xp conditions initiative loot] #:transparent)
 (define (make-player name max-hp)
   (player name max-hp max-hp 0 empty 0 empty))
 
@@ -257,21 +258,21 @@
 
 ;; loot deck
 
-(struct money [amount] #:transparent)
+(serializable-struct money [amount] #:transparent)
 (define max-money-cards 20)
-(define-enum-type material-kind
+(define-serializable-enum-type material-kind
   (lumber metal hide)
   #:property-maker make-property-maker-that-displays-as-constant-names)
 (define material-kinds
   (list lumber metal hide))
-(struct material [name amount] #:transparent)
+(serializable-struct material [name amount] #:transparent)
 (define max-material-cards 8) ;; each
-(define-enum-type herb-kind
+(define-serializable-enum-type herb-kind
   (arrowvine axenut corpsecap flamefruit rockroot snowthistle)
   #:property-maker make-property-maker-that-displays-as-constant-names)
 (define herb-kinds
   (list arrowvine axenut corpsecap flamefruit rockroot snowthistle))
-(struct herb [name] #:transparent) ;; amount is always 1
+(serializable-struct herb [name] #:transparent) ;; amount is always 1
 (define max-herb-cards 2) ;; each
 (define-singleton-type random-item)
 (define max-random-item-cards 1)
@@ -308,10 +309,10 @@
 
 (define initiative? (integer-in 0 99))
 (define ability? string?)
-(define-enum-type element
+(define-serializable-enum-type element
   (fire ice air earth light dark)
   #:property-maker make-property-maker-that-displays-as-constant-names)
-(define-enum-type monster-modifier
+(define-serializable-enum-type monster-modifier
   (zero minus1 plus1 minus2 plus2 null crit curse bless)
   #:property-maker make-property-maker-that-displays-as-constant-names)
 (define monster-modifier-deck
@@ -342,7 +343,7 @@
 (define-flow (worse-modifier x y)
   (~>> list (argmin modifier-ranking)))
 
-(define-enum-type condition
+(define-serializable-enum-type condition
   (regenerate ward invisible strengthen wound brittle bane poison immobilize disarm impair stun muddle)
   #:property-maker make-property-maker-that-displays-as-constant-names)
 (define conditions
@@ -354,8 +355,8 @@
 (struct monster-info [set-name name normal-stats elite-stats] #:prefab)
 (struct monster-ability [set-name name initiative abilities shuffle?] #:prefab)
 (define monster-number/c (integer-in 1 10))
-(struct monster [number elite? current-hp conditions] #:transparent)
-(struct monster-group [set-name name level normal-stats elite-stats monsters] #:transparent)
+(serializable-struct monster [number elite? current-hp conditions] #:transparent)
+(serializable-struct monster-group [set-name name level normal-stats elite-stats monsters] #:transparent)
 
 (define (make-monster* stats number elite?)
   (monster number elite? (monster-stats-max-hp stats) empty))

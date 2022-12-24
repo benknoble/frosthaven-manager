@@ -1,6 +1,7 @@
 #lang racket
 
 (provide
+  state-deserialize-info
   (contract-out
     [struct creature ([id any/c]
                       [v (or/c player? monster-group*?)])]
@@ -47,6 +48,8 @@
              (maybe-obs/c ability-db/c)
              (maybe-obs/c (hash/c string? ability-decks?)))
            state?)]
+    [serialize-state (-> state? output-port? void?)]
+    [deserialize-state (-> input-port? state?)]
     [make-player-creature (-> any/c creature?)]
     [update-players (-> (listof creature?) any/c (-> player? player?) (listof creature?))]
     [update-monster-groups (-> (listof creature?)
@@ -61,7 +64,9 @@
     [creature-initiative (-> state? (-> creature? (or/c +inf.0 initiative?)))]
     [add-or-remove-monster-group (-> state? (-> (or/c add-monster-event/c remove-monster-event/c) any))]))
 
-(require racket/gui/easy/contract
+(require racket/serialize
+         racket/fasl
+         racket/gui/easy/contract
          frosthaven-manager/observable-operator
          frosthaven-manager/qi
          frosthaven-manager/defns
@@ -74,8 +79,15 @@
                   remove-monster-event/c)
          frosthaven-manager/manager/ability-decks)
 
-(struct creature [id v] #:transparent)
-(struct monster-group* [active mg] #:transparent)
+(serializable-struct creature [id v] #:transparent)
+(serializable-struct monster-group* [active mg] #:transparent)
+
+;; private observable utilities for this module
+(define-flow s@->v (~> struct->vector (vector-drop 1) (vector-map @!* _)))
+(define (@!* o)
+  (cond
+    [(list? o) (map @! o)]
+    [else (@! o)]))
 
 (struct state
         [@mode
@@ -96,7 +108,14 @@
          @monster-prev-discard
          @info-db
          @ability-db
-         @ability-decks])
+         @ability-decks]
+        #:transparent ;; for struct->vector
+        #:property prop:serializable
+        (make-serialize-info
+          s@->v
+          #'state-deserialize-info
+          #f
+          (or (current-load-relative-directory) (current-directory))))
 
 (define (make-state [@mode (@ 'start)]
                     [@level (@ 0)]
@@ -136,6 +155,35 @@
          (@ @info-db)
          (@ @ability-db)
          (@ @ability-decks)))
+
+(define state-deserialize-info
+  (make-deserialize-info
+    make-state
+    (thunk
+      (error 'state "cycles not supported"))))
+
+(define (serialize-state s out)
+  (s-exp->fasl (serialize s) out))
+
+(define (deserialize-state in)
+  (deserialize (fasl->s-exp in)))
+
+(module+ test
+  (require rackunit)
+  ;; dynamic-require: break module cycle
+  ;; frosthaven-manager/manager/db -> frosthaven-manager/manager/state
+  (define init-dbs (dynamic-require 'frosthaven-manager/manager/db 'init-dbs))
+
+  (test-case
+    "Serializable state"
+
+    (define s (make-state))
+    (void (init-dbs default-monster-db s))
+    (define-values (readable writable) (make-pipe (expt 2 10)))
+    (thread (thunk (serialize-state s writable)))
+    (define s* (deserialize-state readable))
+
+    (check-equal? (s@->v s*) (s@->v s))))
 
 (define (make-player-creature i)
   (creature i (make-player "" 1)))

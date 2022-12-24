@@ -4,6 +4,7 @@
           (for-label
             (except-in racket
                        null)
+            racket/serialize
             racket/gui/base
             (only-in pict pict?)
             (only-in xml xexpr?)
@@ -140,6 +141,8 @@ needs.
 
 You will not usually need the @racket[player] constructor: use the smart
 constructor @racket[make-player] instead.
+
+Serializable.
 }
 
 @defproc[(make-player [name string?] [max-hp positive-integer?]) player?]{
@@ -236,6 +239,8 @@ Formats the string @racket["HP: current/max"] for the player @racket[p].
               @defthing[material-kinds (listof material-kind?)]
 )]{
 Represents materials for loot cards.
+
+Serializable.
 }
 
 @deftogether[(
@@ -251,6 +256,8 @@ Represents materials for loot cards.
               @defthing[herb-kinds (listof herb-kind?)]
 )]{
 Represents herbs for loot cards.
+
+Serializable.
 }
 
 @deftogether[(
@@ -263,6 +270,8 @@ Represents the random-item loot card.
 @defstruct*[money ([amount (integer-in 1 3)])
                   #:transparent]{
 Represents a loot card worth 1 to 3 gold.
+
+Serializable.
 }
 
 @defstruct*[material
@@ -270,11 +279,15 @@ Represents a loot card worth 1 to 3 gold.
               [amount (apply list/c (build-list max-players (const natural-number/c)))])
              #:transparent]{
 Represents a loot card for a material; the amount varies by number of players.
+
+Serializable.
 }
 
 @defstruct*[herb ([name herb-kind?])
                  #:transparent]{
 Represents a loot card for an herb.
+
+Serializable.
 }
 
 @defthing[loot-card?
@@ -321,6 +334,8 @@ known. Modifications via stickers are not yet supported.
               @defthing[dark element?]
 )]{
 The elements.
+
+Serializable.
 }
 
 @deftogether[(
@@ -337,6 +352,8 @@ The elements.
               @defthing[bless monster-modifier?]
 )]{
 Monster modifier cards.
+
+Serializable.
 }
 
 @deftogether[(
@@ -358,6 +375,8 @@ Monster modifier cards.
 )]{
 The @racket[condition?] predicate recognizes all valid conditions, which are
 listed here.
+
+Serializable.
 }
 
 @defproc[(initiative? [v any/c]) boolean?]{
@@ -440,6 +459,8 @@ A @racket[monster] captures the individual status of a monster, but not its
 game statistics. Those are listed in its parent @racket[monster-group].
 
 Prefer the smart constructor @racket[make-monster].
+
+Serializable.
 }
 
 @defstruct*[monster-group
@@ -455,6 +476,8 @@ A @racket[monster-group] describes a group of @racket[monster]s and their stats.
 Prefer the smart constructor @racket[make-monster-group] and the update
 functions, which maintain an invariant of monsters sorted by eliteness and
 number.
+
+Serializable.
 }
 
 @defproc[(make-monster [info monster-info?]
@@ -617,6 +640,8 @@ GUI, as described in @secref{Creature_List}. Therefore a @racket[creature-v] can
 be either a @racket[player] or a @racket[monster-group*].
 
 A @racket[creature] is identified by its unique @racket[creature-id].
+
+Serializable.
 }
 
 @defstruct*[monster-group*
@@ -626,6 +651,8 @@ A @racket[creature] is identified by its unique @racket[creature-id].
 A @racket[monster-group*] wraps a @racket[monster-group] with a possibly active
 @racket[monster-number/c], which identifies the monster currently displayed in
 @secref{Monster_Group_Controls}.
+
+Serializable.
 }
 
 @defstruct*[state
@@ -673,6 +700,11 @@ All of the "global" manager state.
            [|@|ability-decks (maybe-obs/c (hash/c string? ability-decks?)) (|@| (hash))])
          state?]{
 Create an initial state.
+}
+
+@deftogether[(@defproc[(serialize-state [s state?] [out output-port?]) any]
+              @defproc[(deserialize-state [in input-port?]) state?])]{
+Procedures to serialize and deserialize a @racket[state?] value.
 }
 
 @defproc[(make-player-creature [i any/c]) creature?]{
@@ -737,6 +769,8 @@ Adds or removes a monster group based on the received event.
                            [discard (listof monster-ability?)])
                           #:transparent]{
 Monster ability deck, with currently active card, draw pile, and discard pile.
+
+Serializable.
 }
 
 @defproc[(ability-decks-draw-next [ad ability-decks?]) ability-decks?]{
