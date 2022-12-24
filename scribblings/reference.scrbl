@@ -709,6 +709,12 @@ Create an initial state.
 Procedures to serialize and deserialize a @racket[state?] value.
 }
 
+@defproc[(copy-state [from state?] [to state?]) any]{
+Copies the state from @racket[from] to @racket[to] by updating the internal
+observables. This makes it possible to update an existing @racket[state?] with
+the values from a deserialized @racket[state?].
+}
+
 @defproc[(make-player-creature [i any/c]) creature?]{
 Make a creature with @racket[creature-id] @racket[i] and @racket[creature-v] a
 @racket[player?].

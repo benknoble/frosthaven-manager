@@ -50,6 +50,7 @@
            state?)]
     [serialize-state (-> state? output-port? void?)]
     [deserialize-state (-> input-port? state?)]
+    [copy-state (-> state? state? any)]
     [make-player-creature (-> any/c creature?)]
     [update-players (-> (listof creature?) any/c (-> player? player?) (listof creature?))]
     [update-monster-groups (-> (listof creature?)
@@ -184,6 +185,48 @@
     (define s* (deserialize-state readable))
 
     (check-equal? (s@->v s*) (s@->v s))))
+
+(define (copy-state from to)
+  (:=     (state-@mode to)
+      (@! (state-@mode from)))
+  (:=     (state-@level to)
+      (@! (state-@level from)))
+  (:=     (state-@num-players to)
+      (@! (state-@num-players from)))
+  (:=     (state-@creatures to)
+      (@! (state-@creatures from)))
+  (:=     (state-@cards-per-deck to)
+      (@! (state-@cards-per-deck from)))
+  (:=     (state-@loot-deck to)
+      (@! (state-@loot-deck from)))
+  (:=     (state-@num-loot-cards to)
+      (@! (state-@num-loot-cards from)))
+  (for ([to-element (in-list (state-@elements to))]
+        [from-element (in-list (state-@elements from))])
+    (:=     to-element
+        (@! from-element)))
+  (:=     (state-@in-draw? to)
+      (@! (state-@in-draw? from)))
+  (:=     (state-@round to)
+      (@! (state-@round from)))
+  (:=     (state-@monster-modifier-deck to)
+      (@! (state-@monster-modifier-deck from)))
+  (:=     (state-@monster-discard to)
+      (@! (state-@monster-discard from)))
+  (:=     (state-@curses to)
+      (@! (state-@curses from)))
+  (:=     (state-@blesses to)
+      (@! (state-@blesses from)))
+  (:=     (state-@modifier to)
+      (@! (state-@modifier from)))
+  (:=     (state-@monster-prev-discard to)
+      (@! (state-@monster-prev-discard from)))
+  (:=     (state-@info-db to)
+      (@! (state-@info-db from)))
+  (:=     (state-@ability-db to)
+      (@! (state-@ability-db from)))
+  (:=     (state-@ability-decks to)
+      (@! (state-@ability-decks from))))
 
 (define (make-player-creature i)
   (creature i (make-player "" 1)))
