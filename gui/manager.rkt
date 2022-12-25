@@ -278,8 +278,7 @@
 
 (define ((load-game s) p)
   (define saved-state (call-with-input-file* p deserialize-state))
-  (copy-state saved-state s)
-  (to-play s))
+  (copy-state saved-state s))
 
 (define (do-load-game s)
   (cond [(get-file "Load Game") => (load-game s)]))
