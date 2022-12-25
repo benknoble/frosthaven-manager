@@ -85,7 +85,7 @@
       (spacer)
       (button "Open Bestiary"
               (thunk
-                (init-dbs (or (get-file "Bestiary") default-monster-db) s)))
+                (init-dbs (or (get-file/filter "Bestiary" '("Bestiary" "*.rkt")) default-monster-db) s)))
       (button "Use Default Bestiary" (thunk (init-dbs default-monster-db s)))
       (spacer))
     (button "Next" (to-choose-monsters s) #:enabled? (@~> (state-@info-db s) (not hash-empty?)))))
@@ -274,11 +274,22 @@
   (call-with-output-file* p (curry serialize-state s) #:exists 'replace))
 
 (define (do-save-game s)
-  (cond [(put-file "Save Game") => (save-game s)]))
+  (cond [(put-file/filter "Save Game" '("Saved Games" "*.fasl")) => (save-game s)]))
 
 (define ((load-game s) p)
   (define saved-state (call-with-input-file* p deserialize-state))
   (copy-state saved-state s))
 
 (define (do-load-game s)
-  (cond [(get-file "Load Game") => (load-game s)]))
+  (cond [(get-file/filter "Load Game" '("Saved Games" "*.fasl")) => (load-game s)]))
+
+;;;; Files
+
+(define (get-file/filter message filter)
+  (get-file message #f #f #f (->extension (second filter)) empty (list filter '("Any" "*.*"))))
+
+(define (put-file/filter message filter)
+  (put-file message #f #f #f (->extension (second filter)) empty (list filter '("Any" "*.*"))))
+
+(define-flow ->extension
+  (~> path-get-extension (and _ (~> bytes->string/utf-8 (substring 1)))))
