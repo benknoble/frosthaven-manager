@@ -25,5 +25,7 @@ jobs:
         run: make install RACO_INSTALL_ARGS=--no-docs
       - name: Compiling frosthaven-manager and building its docs
         run: make check-deps RACO_SETUP_ARGS=--unused-pkg-deps
+      - name: Install xvfb to run headless tests
+        run: apt-get install xvfb
       - name: Testing frosthaven-manager
-        run: make test RACO_TEST_ARGS=--no-run-if-absent
+        run: xvfb-run make test RACO_TEST_ARGS=--no-run-if-absent
