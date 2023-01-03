@@ -21,9 +21,9 @@
          frosthaven-manager/defns)
 
 (define bestiary/c
-  (or/c (list/c 'import string?)
-        monster-info?
-        (listof monster-ability?)))
+  (listof (or/c (list/c 'import string?)
+                monster-info?
+                (listof monster-ability?))))
 
 #| monster syntax
 - outside of <text> elements, whitespace is ignored
