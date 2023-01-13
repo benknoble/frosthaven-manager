@@ -61,7 +61,7 @@
   (contract-out
     [struct money ([amount (integer-in 1 3)])]
     [struct material ([name material-kind?]
-                      [amount (apply list/c (build-list max-players (const natural-number/c)))])]
+                      [amount (apply list/c (build-list (sub1 max-players) (const natural-number/c)))])]
     [struct herb ([name herb-kind?])]
     [loot-card? predicate/c]
     [format-loot-card (-> num-players/c (-> loot-card? string?))]
@@ -168,7 +168,7 @@
   (vector-set! v pos (f (vector-ref v pos))))
 
 (define max-players 4)
-(define num-players/c (integer-in 1 max-players))
+(define num-players/c (integer-in 2 max-players))
 
 ;; level info
 
@@ -289,7 +289,7 @@
     (if (> 1) "s" ""))
   (match-lambda
     [(money amount) (format "~a gold coin~a" amount (s? amount))]
-    [(material name (app (flow (list-ref num-players)) amount))
+    [(material name (app (flow (list-ref (sub1 num-players))) amount))
      (format "~a ~a~a" amount name (s? amount))]
     [(herb name) (format "1 ~a" name)]
     [(== random-item) "The random item!"]))
@@ -302,7 +302,7 @@
 (define (make-material-deck m)
   (build-list
     max-material-cards
-    (thunk* (material m (build-list max-players (thunk* (random 1 3)))))))
+    (thunk* (material m (build-list (sub1 max-players) (thunk* (random 1 3)))))))
 (define material-decks
   (for/hash ([m (in-list material-kinds)])
     (values m (make-material-deck m))))

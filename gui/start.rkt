@@ -23,7 +23,7 @@
               #:choice->label ~a
               on-level)
       (choice #:label "Number of Players"
-              (build-list max-players add1)
+              (build-list (sub1 max-players) (curry + 2))
               #:choice->label ~a
               on-player))
     (spacer)))

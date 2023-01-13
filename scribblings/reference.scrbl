@@ -683,7 +683,7 @@ All of the "global" manager state.
 @defproc[(make-state
            [|@|mode (maybe-obs/c symbol?) (|@| 'start)]
            [|@|level (maybe-obs/c level/c) (|@| 0)]
-           [|@|num-players (maybe-obs/c num-players/c) (|@| 1)]
+           [|@|num-players (maybe-obs/c num-players/c) (|@| 2)]
            [|@|creatures (maybe-obs/c (listof creature?)) (|@| empty)]
            [|@|cards-per-deck (maybe-obs/c (hash/c (listof loot-card?) natural-number/c)) (|@| (hash))]
            [|@|loot-deck (maybe-obs/c (listof loot-card?)) (|@| empty)]
