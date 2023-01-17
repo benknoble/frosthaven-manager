@@ -278,7 +278,7 @@ Serializable.
 
 @defstruct*[material
              ([name material-kind?]
-              [amount (apply list/c (build-list max-players (const natural-number/c)))])
+              [amount (apply list/c (build-list (sub1 max-players) (const natural-number/c)))])
              #:transparent]{
 Represents a loot card for a material; the amount varies by number of players.
 
@@ -1453,9 +1453,11 @@ The result is @racket[syntax?] with source @racket[src] if @racket[syn?] is
 true, and the datum it contains matches @racket[bestiary/c].
 }
 
-@defthing[bestiary/c (or/c (list/c 'import string?)
-                           monster-info?
-                           (listof monster-ability?))]{
+@defthing[bestiary/c contract?
+                     #:value
+                     (listof (or/c (list/c 'import string?)
+                                   monster-info?
+                                   (listof monster-ability?)))]{
 A contract for bestiary values.
 }
 
