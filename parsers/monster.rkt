@@ -29,7 +29,7 @@
 - outside of <text> elements, whitespace is ignored
 
 "begin-monster"
-  <name:text> ( "(" <set:text> ")" )? ;=> set in parens; if omitted, use second "word" of name
+  <name:text> ( "(" <set:text> ")" )? ;=> set in parens; if omitted, use last "word" of name
   ( "[" <level:number> ("elite" | "normal") <stats> "]" )16 ;=> exactly one of each of {0-7}x{"elite", "normal"}
 "end-monster"
 
@@ -147,6 +147,8 @@
 (define-flow level-x-type-dupes (~> check-duplicates (and _ (take 2))))
 (define-flow level-x-type-set (~> (sep (take 2)) set))
 
+(define-flow name->set (~> string-split (and (~> length (> 1)) last)))
+
 (define monster/p
   (do (string/p "begin-monster") skip-ws
       [name <- (non-empty-text/p "non-empty monster name")] skip-ws
@@ -155,7 +157,7 @@
                              (char/p #\))
                              (pure set))
                          (guard/p
-                           (~> (name) string-split (and (~> length (> 1)) last) pure)
+                           (~> (name) name->set pure)
                            (flow (and _ (~> string-length (not zero?))))
                            "name with monster set"
                            (const name)))] skip-ws
