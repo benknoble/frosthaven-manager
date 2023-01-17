@@ -53,10 +53,10 @@
   (define table
     (static-table
       '("Players" "Inspiration")
-      max-players
+      (sub1 max-players)
       (list inspiration-reward)
-      #:index->entry add1
-      #:selection (@> @num-players sub1)))
+      #:index->entry (curry + 2)
+      #:selection (@~> @num-players (- 2))))
   (define (action)
     (with-closing-custodian/eventspace
       (render/eventspace #:eventspace closing-eventspace

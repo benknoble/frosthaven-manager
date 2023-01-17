@@ -120,7 +120,7 @@
 
 (define (make-state [@mode (@ 'start)]
                     [@level (@ 0)]
-                    [@num-players (@ 1)]
+                    [@num-players (@ 2)]
                     [@creatures (@ empty)]
                     [@cards-per-deck (@ (hash))]
                     [@loot-deck (@ empty)]
