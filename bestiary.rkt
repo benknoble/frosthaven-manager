@@ -16,7 +16,7 @@
                      frosthaven-manager/qi
                      frosthaven-manager/monster-db))
 
-;; e ::= <monster-info> | listof <monster-ability>
+;; e ::= '(import "path") | <monster-info> | listof <monster-ability>
 (define-syntax-parse-rule (mb e:expr ...)
   #:with info-db (datum->syntax #f 'info-db)
   #:with ability-db (datum->syntax #f 'ability-db)
