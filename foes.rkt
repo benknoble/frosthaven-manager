@@ -91,11 +91,11 @@
 
 (define ((make-foes-maker foes info-db) level number-of-players)
   (for/list ([foe (in-list foes)])
-    (match-define (list set name numbering (? list? specs)) foe)
+    (match-define (list set name numbering specs) foe)
     (define info (~> (info-db) (hash-ref set) (hash-ref name)))
     (define monster-types
       (~> (specs) sep
-          (>< (list-ref (- number-of-players 2)))
+          (>< (hash-ref number-of-players))
           (pass (not (equal? "absent")))
           (>< (switch
                 [(equal? "normal") #f]

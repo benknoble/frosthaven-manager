@@ -1,8 +1,6 @@
 #lang racket
 ; vim: lw-=do
 
-;; TODO: make syntaxes more consistent
-
 (provide
   foes/pc
   foe/pc
@@ -52,6 +50,26 @@
   (do (many/p space/p)
       void/p))
 
+(define (opt/p p)
+  (do (char/p #\() skip-ws
+      [x <- p] skip-ws
+      (char/p #\))
+      (pure x)))
+
+(struct labelled [label v])
+(define (labelled/p label/p p)
+  (do (char/p #\[) skip-ws
+      [label <- label/p] skip-ws
+      [v <- p] skip-ws
+      (char/p #\])
+      (pure (labelled label v))))
+
+(define (map/p key/p value/p)
+  (do (char/p #\<) skip-ws
+      [kvps <- (many/p (labelled/p key/p value/p) #:sep skip-ws)] skip-ws
+      (char/p #\>)
+      (pure (~> (kvps) sep (>< (-< labelled-label labelled-v)) hash))))
+
 (define monster-type/pc (or/c "absent" "normal" "elite"))
 (define monster-type/p
   (or/p (string/p "absent") (string/p "normal") (string/p "elite")))
@@ -71,23 +89,20 @@
 
 (define numbering/pc (or/c "ordered" "random" #f))
 (define numbering/p
-  (do (char/p #\[) skip-ws
-      [option <- (or/p (string/p "ordered") (string/p "random"))] skip-ws
-      (string-ci/p "numbering") skip-ws
-      (char/p #\])
-      (pure option)))
+  (opt/p (do [option <- (or/p (string/p "ordered") (string/p "random"))] skip-ws
+             (string-ci/p "numbering") skip-ws
+             (pure option))))
 
-(define spec/pc (list/c monster-type/pc monster-type/pc monster-type/pc))
+(define spec/pc (hash/c (or/c 2 3 4) monster-type/pc #:immutable #t))
 (define spec/p
-  (let ([spec-part (λ (n)
-                     (do (string/p (~a n ":"))
-                         monster-type/p))])
-    (do (char/p #\<) skip-ws
-        [2p <- (spec-part 2)] skip-ws
-        [3p <- (spec-part 3)] skip-ws
-        [4p <- (spec-part 4)] skip-ws
-        (char/p #\>)
-        (pure (list 2p 3p 4p)))))
+  (guard/p
+    (fmap
+      (flow (hash-map/copy (flow (== (~> string string->number) _))))
+      (map/p (char-in/p "234") monster-type/p))
+    (flow (~> hash-keys (set=? '(2 3 4))))
+    "entries for each of 2, 3, and 4 players"
+    (flow (~>> hash-keys (set-subtract '(2 3 4))
+               (map ~a) (string-join _ ", " #:before-first "missing ")))))
 
 (define-flow name->set (~> string-split (and (~> length (> 1)) last)))
 
@@ -95,10 +110,7 @@
 (define foe/p
   (do (string/p "begin-foe") skip-ws
       [name <- monster-name/p] skip-ws
-      [set-name <- (or/p (do (char/p #\() skip-ws
-                             [set <- (non-empty-text/p "non-empty set name")] skip-ws
-                             (char/p #\))
-                             (pure set))
+      [set-name <- (or/p (opt/p (non-empty-text/p "non-empty set name"))
                          (guard/p
                            (~> (name) name->set pure)
                            (flow (and _ (~> string-length (not zero?))))
