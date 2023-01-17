@@ -121,10 +121,15 @@
     (parse-foes src in #:syntax? #f)))
 
 (module+ debug
-  (provide view-foes)
+  (provide view-foes
+           view-all-foes)
   (require racket/gui/easy
            frosthaven-manager/observable-operator
            frosthaven-manager/gui/monsters)
+  (define (view-all-foes make-foes level)
+    (for-each (compose1 view-foes make-foes)
+              (list level level level)
+              '(2 3 4)))
   (define (view-foes foes)
     (render
       (window
