@@ -1,25 +1,25 @@
 #lang racket
 
 (provide
-  #%app #%datum #%top
+  #%app #%datum #%top #%top-interaction
   (rename-out [mb #%module-begin]))
 
 (require syntax/parse/define
          racket/hash
-         frosthaven-manager/defns
          frosthaven-manager/monster-db
          (for-syntax syntax/parse
                      racket/list
                      racket/set
                      racket/string
+                     racket/syntax
                      frosthaven-manager/defns
                      frosthaven-manager/qi
                      frosthaven-manager/monster-db))
 
 ;; e ::= '(import "path") | <monster-info> | listof <monster-ability>
 (define-syntax-parse-rule (mb e:expr ...)
-  #:with info-db (datum->syntax #f 'info-db)
-  #:with ability-db (datum->syntax #f 'ability-db)
+  #:with info-db (format-id this-syntax "info-db" #:source this-syntax)
+  #:with ability-db (format-id this-syntax "ability-db" #:source this-syntax)
   #:with ((({~datum import} import) ...)
           (infos ...)
           ((actions ...) ...))
