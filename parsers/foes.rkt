@@ -4,6 +4,9 @@
 (provide
   foes/pc
   foe/pc
+  spec/pc
+  numbering/pc
+  monster-type/pc
   (contract-out
     [parse-foes (-> any/c input-port? #:syntax? any/c
                     (or/c syntax? foes/pc))]

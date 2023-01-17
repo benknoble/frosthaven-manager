@@ -39,6 +39,7 @@
             frosthaven-manager/gui/start
             frosthaven-manager/gui/static-table
             frosthaven-manager/monster-db
+            frosthaven-manager/parsers/foes
             frosthaven-manager/parsers/monster
             frosthaven-manager/observable-operator
             frosthaven-manager/qi
@@ -831,6 +832,14 @@ This module provides facilities for manipulating the active monster databases.
 Initialize the active monster databases.
 }
 
+@defproc[(init-dbs-and-foes [db path-string?] [s state?]) any]{
+Initialize the active monster databases, exactly as @racket[init-dbs].
+Additionally, initialize the foes from @racket[db] if it provides a foes
+specification. This manipulates @racket[(state-@creatures s)]; see also
+@racket[add-or-remove-monster-group] and
+@racketmodname[frosthaven-manager/foes].
+}
+
 @subsection{@tt{manager/loot}}
 @defmodule[frosthaven-manager/manager/loot]
 
@@ -1439,6 +1448,32 @@ The demo, default monster database included with Frosthaven Manager.
 }
 
 @section{@tt{parsers}}
+
+@subsection{@tt{parsers/foes}}
+@defmodule[frosthaven-manager/parsers/foes]
+
+This module contains parsers for @(hash-lang)
+@racketmodname[frosthaven-manager/foes]. See
+@secref{Editing_Monster_Information} for more details.
+
+@defproc[(parse-foes [src any/c] [in input-port?] [#:syntax? syn? any/c])
+         (or/c syntax? foes/pc)]{
+The result is @racket[syntax?] with source @racket[src] if @racket[syn?] is
+true, and the datum it contains matches @racket[foes/pc].
+}
+
+@deftogether[(@defthing[foes/pc contract? #:value (listof (or/c (list/c 'import string?) monster-info? (listof monster-ability?) foe/pc))]
+              @defthing[foe/pc contract? #:value (list/c string? string? numbering/pc (listof spec/pc))]
+              @defthing[spec/pc contract? #:value (hash/c (or/c 2 3 4) monster-type/pc #:immutable #t)]
+              @defthing[numbering/pc contract? #:value (or/c "ordered" "random" #f)]
+              @defthing[monster-type/pc contract? #:value (or/c "absent" "normal" "elite")])]{
+Contracts for foes values.
+}
+
+@deftogether[(@defthing[foes/p (parser/c char? foes/pc)]
+              @defthing[foe/p (parser/c char? foe/pc)])]{
+Textual parsers for parts of the foes language.
+}
 
 @subsection{@tt{parsers/monster}}
 @defmodule[frosthaven-manager/parsers/monster]

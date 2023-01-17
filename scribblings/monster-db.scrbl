@@ -28,11 +28,18 @@ be avoided when working with plain text.}
 Since the contents of the file will be a program in a Racket dialect, the
 traditional suffix is @tt{rkt}. So you might create a plain-text file named
 @tt{my_bestiary.rkt} to contain your bestiary. We'll cover the exact
-format in the next section, @secref{How_can_I_Edit_Monster_Information_}.
+format in the next sections, starting with @secref{Monster_Information_Format_by_Example}.
 
-@section{How can I Edit Monster Information?}
+Instead of a bestiary, you can use a foe specification. These tend to be
+scenario-specific, rather than a general collection of monsters. You can use all
+the things you learn about bestiaries to define or import monsters and
+abilities, and you will use a few new things to specify what foes you'll face in
+the scenario. A good pattern for personal organization is to use bestiaries to
+define a collection of monsters, and foe specifications to define
+scenario-specific foes by importing the bestiary. We'll cover this part starting
+in @secref{Foe_Specification_by_Example}.
 
-@subsection{Monster Information Format By Example}
+@section{Monster Information Format by Example}
 
 Let's start with an example bestiary. This is the one that comes with
 Frosthaven Manager to try things out:
@@ -66,7 +73,7 @@ on line 21: these numbers are part of the @tech{game text}, like in an ability.
 
 With these observations, we're ready to write a monster definition!
 
-@subsubsection{Write Your Own Monster}
+@subsection{Write Your Own Monster}
 
 @; Use codeblock in this section so that the examples look the same as the one
 @; rendered by typeset-code above.
@@ -219,7 +226,7 @@ end-ability-deck
 
 And that's how you write a monster or ability deck!
 
-@subsubsection{Using Multiple Bestiaries}
+@subsection{Using Multiple Bestiaries}
 
 It's possible to import the monsters from one bestiary into another. The command
 @racket[import-monsters] does this when given a filename written as @tech{game
@@ -264,7 +271,7 @@ An @hyperlink["https://github.com/benknoble/frosthaven-manager/tree/main/testfil
 You've now seen everything you need to write your own bestiary. Below,
 you'll find a succint reference for the format.
 
-@subsection{Monster Information Format Reference}
+@section{Monster Information Format Reference}
 
 @defmodule[frosthaven-manager/bestiary #:lang]
 
@@ -290,6 +297,138 @@ with the current bestiary is also an error. Cyclic imports are disallowed.
 
 @BNF[(list @nonterm{bestiary}
            @kleenestar[@BNF-group[@BNF-alt[@nonterm{import} @nonterm{monster} @nonterm{ability deck}]]])
+
+     (list @nonterm{import}
+           @BNF-seq[@litchar{import-monsters} @nonterm{file:text}])
+
+     (list @nonterm{monster}
+           @BNF-seq-lines[(list @litchar{begin-monster})
+                          (list @nonterm{name:text}
+                                @optional[@BNF-seq[@litchar{(} @nonterm{set:text} @litchar{)}]])
+                          (list @kleenerange[16 16 @nonterm{stats}])
+                          (list @litchar{end-monster})])
+
+     (list @nonterm{stats}
+           @BNF-seq[@litchar{[} @nonterm{level:number}
+                                @BNF-group[@BNF-alt[@litchar{normal} @litchar{elite}]]
+                                @nonterm{stat-block} @litchar{]}])
+
+     (list @nonterm{stat-block}
+           @BNF-seq[@nonterm{hp} @nonterm{move} @nonterm{attack}
+                    @optional{@nonterm{bonuses}}
+                    @optional{@nonterm{effects}}
+                    @optional{@nonterm{immunities}}])
+
+     (list @nonterm{hp} @BNF-seq[@litchar{[} @litchar{HP} @nonterm{number} @litchar{]}])
+     (list @nonterm{move} @BNF-seq[@litchar{[} @litchar{Move} @nonterm{number} @litchar{]}])
+     (list @nonterm{attack} @BNF-seq[@litchar{[} @litchar{Attack} @nonterm{number} @litchar{]}])
+     (list @nonterm{bonuses} @BNF-seq[@litchar{[} @litchar{Bonuses} @nonterm{text-list} @litchar{]}])
+     (list @nonterm{effects} @BNF-seq[@litchar{[} @litchar{Effects} @nonterm{text-list} @litchar{]}])
+     (list @nonterm{immunities} @BNF-seq[@litchar{[} @litchar{Immunities} @nonterm{text-list} @litchar{]}])
+
+     (list @nonterm{ability deck}
+           @BNF-seq-lines[(list @litchar{begin-ability-deck})
+                          (list @nonterm{set:text})
+                          (list @kleenerange[8 8 @nonterm{card}])
+                          (list @litchar{end-ability-deck})])
+
+     (list @nonterm{card}
+           @BNF-seq[@litchar{[} @litchar{name:text}
+                                @litchar{initiative:number}
+                                @optional{@litchar{shuffle}}
+                                @nonterm{text-list} @litchar{]}])
+
+     (list @nonterm{text-list} @BNF-seq[@litchar["{"] @kleenestar[@nonterm{text}] @litchar["}"]])]
+
+Text like @nonterm{nonterminals} should be replaced with their right-hand-sides.
+Text like @litchar{literal} should be typed exactly. Text like
+@optional{@nonterm{optional}} is optional. Text like
+@kleenestar{@nonterm{repeat}} can be repeated 0 or more times, while
+@kleenerange['n 'n]{@nonterm{repeat}} should be repeated exactly @italic{n}
+times. Text like @BNF-group[@BNF-alt[@nonterm{one} @nonterm{two}]] is a choice
+between each part, separated by bars. Text like @nonterm{label:text} refers to
+@tech{game text}, while @nonterm{label:number} refers to an @tech{game number}.
+
+@section{Foe Specification by Example}
+
+Here's an example foe specification:
+
+@codeblock[#:line-numbers 1]|{
+#lang frosthaven-manager/foes
+
+import-monsters "sample-bestiary.rkt"
+
+begin-foe
+  "wyrmling archer"
+  <[2 absent] [3 normal] [4 elite]>
+  <[2 normal] [3 elite] [4 elite]>
+end-foe
+
+begin-foe
+  "hynox guard" ("guard") (random numbering)
+  <[2 elite] [3 elite] [4 elite]>
+end-foe
+}|
+
+This foe specification imports a sample bestiary and defines two groups of foes
+using syntax similar to that of @(hash-lang)
+@racketmodname[frosthaven-manager/bestiary]. One is for wyrmling archers and the
+other for hynox guards. For each group, we list whether a monster should be
+absent, normal, or elite for each of 2, 3, or 4 players. We can optionally
+specify how to number the monsters and what set the monster is in, if it cannot
+be inferred from the name.
+
+In this example, a 2-player game faces 1 normal wyrmling archer (numbered 1) and
+one randomly-numbered elite hynox guard; a 3-player game has one normal and one
+elite wyrmling archers (numbered 1 and 2, respectively) and one
+randomly-numbered elite hynox guard.
+
+@section{Foe Specification Format Reference}
+
+
+@defmodule[frosthaven-manager/foes #:lang]
+
+@margin-note{The @secref{Developer_Reference} for monster information documents the
+underlying data structures, like @racket[monster-group].}
+
+The grammar for the specification is as follows. Whitespace is ignored except in
+@tech{game text}.
+
+Any foe specification file that defines a monster is required to define an
+ability deck for that monster's set. Importing bestiaries that conflict with
+each other or with the current file is also an error. Cyclic imports are
+disallowed.
+
+The default numbering option is ordered.
+
+@(require scribble/bnf)
+
+@BNF[(list @nonterm{foes}
+           @kleenestar[@BNF-group[@BNF-alt[@nonterm{import}
+                                           @nonterm{monster}
+                                           @nonterm{ability deck}
+                                           @nonterm{foe}]]])
+
+     (list @nonterm{foe}
+           @BNF-seq-lines[(list @litchar{begin-foe})
+                          (list @nonterm{name:text}
+                                @optional[@BNF-seq[@litchar{(} @nonterm{set:text} @litchar{)}]])
+                          (list @optional[@BNF-seq[@litchar{(} @nonterm{how-to-number} @litchar{numbering} @litchar{)}]])
+                          (list @kleenerange[0 10 @nonterm{foe-spec}])
+                          (list @litchar{end-foe})])
+
+     (list @nonterm{how-to-number}
+           @BNF-alt[@litchar{ordered} @litchar{random}])
+
+     (list @nonterm{foe-spec}
+           @BNF-seq[@litchar{<}
+                     @litchar{[} @litchar{2} @nonterm{foe-type} @litchar{]}
+                     @litchar{[} @litchar{3} @nonterm{foe-type} @litchar{]}
+                     @litchar{[} @litchar{4} @nonterm{foe-type} @litchar{]}
+                    @litchar{>}])
+
+     (list @nonterm{foe-type}
+           @BNF-alt[@litchar{absent} @litchar{normal} @litchar{elite}])
 
      (list @nonterm{import}
            @BNF-seq[@litchar{import-monsters} @nonterm{file:text}])

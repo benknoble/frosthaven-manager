@@ -47,13 +47,15 @@ On the next screen, build the loot deck:
 
 @step[#:tag select-monster-db-tag]{Select a Bestiary}
 
-Click either the @onscreen{Open Monster DB} button or the @onscreen{Use Default
-Monster DB} button. Then use the viewer below to explore and confirm the monster
-information. @next
+Click either the @onscreen{Open Bestiary or Foes} button or the @onscreen{Use
+Default Bestiary} button. Then use the viewer below to explore and confirm the
+monster information. @next
 
 Opening a bestiary allows you to completely customize monster statistics and
 behavior so that you can enter the monsters needed for a specific scenario or
-game.
+game. Instead of a bestiary, you can open a foes specification which bundles a
+bestiary with a specification of which monsters will be present, normal or
+elite, for this scenario.
 
 Using the default bestiary loads a demo database that is useful for trying out
 Frosthaven Manager. In a real game of Frosthaven, you likely want to use a
@@ -63,6 +65,9 @@ Frosthaven Manager? Help me build a bestiary editor to make creating custom
 bestiaries easier!}
 
 @step{Add Monsters to the Scenario}
+
+@margin-note{If you opened a foes specification in
+@secref[select-monster-db-tag], you will skip this step.}
 
 Click the @onscreen{Add Monster} button to add a monster group to the scenario.
 Choose a set, like @onscreen{Archer}, and the select a more specific monster,
