@@ -4,7 +4,8 @@ SHELL = /bin/sh
 
 PKG = frosthaven-manager
 COLLECT = frosthaven-manager
-LANGS = ++lang frosthaven-manager/bestiary
+LANGS = ++lang frosthaven-manager/bestiary \
+        ++lang frosthaven-manager/foes
 
 EXES = FrosthavenManager.app/Contents/MacOS/FrosthavenManager \
        FrosthavenManager \
