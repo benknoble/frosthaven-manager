@@ -73,6 +73,8 @@ With these observations, we're ready to write a monster definition!
 
 We'll start with the monster information, which contains all the statistics
 needed for different levels of the monster. To begin, we write
+@margin-note{Don't forget to put @(hash-lang)
+@racketmodname[frosthaven-manager/bestiary] at the top of the file!}
 
 @codeblock|{begin-monster}|
 
@@ -252,8 +254,9 @@ each set, like so:
 
 @filebox["my_bestiary.rkt"]{
 @codeblock|{
+#lang frosthaven-manager/bestiary
+
 import-monsters "guards.rkt"
-…
 }|}
 
 An @hyperlink["https://github.com/benknoble/frosthaven-manager/tree/main/testfiles/sample-bestiary-import.rkt"]{example of this format can be found in the source}.
