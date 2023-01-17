@@ -1,7 +1,5 @@
 #lang racket
 
-;; TODO: GUI Integration
-
 (provide
   #%app #%datum #%top #%top-interaction
   (rename-out [mb #%module-begin]))

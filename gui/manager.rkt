@@ -83,12 +83,14 @@
     (hpanel
       #:stretch '(#t #f)
       (spacer)
-      (button "Open Bestiary"
+      (button "Open Bestiary or Foes"
               (thunk
-                (init-dbs (or (get-file/filter "Bestiary" '("Bestiary" "*.rkt")) default-monster-db) s)))
+                (init-dbs-and-foes (or (get-file/filter "Bestiary or Foes" '("Bestiary" "*.rkt"))
+                                       default-monster-db)
+                                   s)))
       (button "Use Default Bestiary" (thunk (init-dbs default-monster-db s)))
       (spacer))
-    (button "Next" (to-choose-monsters s) #:enabled? (@~> (state-@info-db s) (not hash-empty?)))))
+    (button "Next" (to-choose-monsters-or-play s) #:enabled? (@~> (state-@info-db s) (not hash-empty?)))))
 
 (define (choose-monsters-view s)
   (vpanel
@@ -241,6 +243,14 @@
   (:= (state-@mode s) 'choose-monster-db))
 (define ((to-choose-monsters s))
   (:= (state-@mode s) 'choose-monsters))
+
+(define ((to-choose-monsters-or-play s))
+  (define-flow creature-is-mg*? (~> creature-v monster-group*?))
+  (define-flow has-mg*? (~>> state-@creatures @! (memf creature-is-mg*?)))
+  ;; note parens around switch to invoke selected transition function
+  ((switch (s)
+     [has-mg*? to-play]
+     [else to-choose-monsters])))
 
 (define ((next-round s))
   ;; wane elements
