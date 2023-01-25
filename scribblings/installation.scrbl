@@ -50,6 +50,6 @@ In the @filepath{FrosthavenManager} directory, you will find the application
 @filepath{Applications} folder.
 
 To open the Frosthaven Manager for the first time, you will need to right-click
-the app and select "Open." After agreeing to trust the app by clicking "Open"
-again, you should see the application open. Next time, click on the app to
-launch it as normal!
+the app and select @onscreen{Open}. After agreeing to trust the app by clicking
+@onscreen{Open} again, you should see the application open. Next time, click on
+the app to launch it as normal!
