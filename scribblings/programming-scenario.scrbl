@@ -5,18 +5,35 @@
           racket/file
           (for-label frosthaven-manager/defns))
 
-@title{Editing Monster Information}
+@title{Programming a Scenario}
+
+There are many elements of a scenario, such as which characters are playing at
+what level, what the loot is, and which foes are involved. This document
+describes how you can program these elements so that the Frosthaven Manager can
+load a whole scenario without asking you to input this information every time
+you play.
 
 Monster information, including statistics and abilities is stored in a
 "bestiary." See @secref[select-monster-db-tag] for how the bestiary is loaded
-into the game.
+into the game. We'll cover how to write bestiaries in
+@secref{Bestiary_Format_by_Example}.
 
-@margin-note{Interested in contributing to Frosthaven Manager? Help me build a
-bestiary editor to make creating custom bestiaries easier!}
+Instead of a bestiary, you can use a foe specification, which describes what
+monsters you'll face in a scenario in addition to everything a bestiary
+describes. This can also be loaded into the game; see
+@secref[select-monster-db-tag]. You can use all the features of bestiaries to
+define or import monsters and abilities, and there are extra features to specify
+exactly what foes you'll face in the scenario. We'll cover writing foe
+specifications starting in @secref{Foe_Specification_by_Example}.
 
-This section covers where and how to edit a bestiary.
+A good pattern for personal organization is to use bestiaries to
+define a collection of monsters, and foe specifications to define
+scenario-specific foes by importing the bestiary.
 
-@section{Where Can I Store Monster Information?}
+@margin-note{Interested in contributing to Frosthaven Manager? Help me build
+editors to make creating custom bestiaries and scenarios easier!}
+
+@section{Where Can I Store Scenario Programs?}
 
 Simply: anywhere! Any plain-text file will do.
 
@@ -26,20 +43,13 @@ TextEdit.app---it has options to edit rich-text format (RTF) files, which should
 be avoided when working with plain text.}
 
 Since the contents of the file will be a program in a Racket dialect, the
-traditional suffix is @tt{rkt}. So you might create a plain-text file named
-@tt{my_bestiary.rkt} to contain your bestiary. We'll cover the exact
-format in the next sections, starting with @secref{Monster_Information_Format_by_Example}.
+traditional suffix is @filepath{rkt}. So you might create a plain-text file
+named @filepath{my_bestiary.rkt} to contain your bestiary or
+@filepath{scenario_123_foes.rkt} for the foes specification for a scenario.
+We'll cover the exact formats of various scenario programs in the next sections,
+starting with @secref{Bestiary_Format_by_Example}.
 
-Instead of a bestiary, you can use a foe specification. These tend to be
-scenario-specific, rather than a general collection of monsters. You can use all
-the things you learn about bestiaries to define or import monsters and
-abilities, and you will use a few new things to specify what foes you'll face in
-the scenario. A good pattern for personal organization is to use bestiaries to
-define a collection of monsters, and foe specifications to define
-scenario-specific foes by importing the bestiary. We'll cover this part starting
-in @secref{Foe_Specification_by_Example}.
-
-@section{Monster Information Format by Example}
+@section{Bestiary Format by Example}
 
 Let's start with an example bestiary. This is the one that comes with
 Frosthaven Manager to try things out:
@@ -51,7 +61,7 @@ Frosthaven Manager to try things out:
 This is a bit long, but we can already identify several distinct components:
 @itemlist[#:style 'ordered
           @item{Line 1 marks the file as containing a bestiary.}
-          @item{Lines 2, 38, and 60 begin monsters.}
+          @item{Lines 3, 38, and 60 begin monsters.}
           @item{Monsters have names and many stats, like on lines 4--22.}
           @item{Lines 25 and 82 begin ability decks.}
           @item{Ability decks have ability cards, lik on lines 28--35.}
@@ -239,11 +249,11 @@ import-monsters "guards.rkt"
 would import all the monsters and ability decks in the file
 @filepath{guards.rkt} for use in the current bestiary.
 
-Use the @tt{/} slash character to separate folders and directories from
+Use the @filepath{/} slash character to separate folders and directories from
 filenames. If there is no slash, the bestiary from which to import is assumed to
 be in the same folder or directory as the bestiary containing the import
-command. Use @tt{..} to mean the folder or directory containing the bestiary
-with the import command, so that the following command imports
+command. Use @filepath{..} to mean the folder or directory containing the
+bestiary with the import command, so that the following command imports
 @filepath{monsters.rkt} in the current bestiary's containing folder or
 directory:
 
@@ -266,12 +276,14 @@ each set, like so:
 import-monsters "guards.rkt"
 }|}
 
-An @hyperlink["https://github.com/benknoble/frosthaven-manager/tree/main/testfiles/sample-bestiary-import.rkt"]{example of this format can be found in the source}.
+An
+@hyperlink["https://github.com/benknoble/frosthaven-manager/tree/main/testfiles/sample-bestiary-import.rkt"]{example
+of this format can be found in the source}.
 
 You've now seen everything you need to write your own bestiary. Below,
 you'll find a succint reference for the format.
 
-@section{Monster Information Format Reference}
+@section{Bestiary Format Reference}
 
 @defmodule[frosthaven-manager/bestiary #:lang]
 
@@ -384,7 +396,6 @@ elite wyrmling archers (numbered 1 and 2, respectively) and one
 randomly-numbered elite hynox guard.
 
 @section{Foe Specification Format Reference}
-
 
 @defmodule[frosthaven-manager/foes #:lang]
 

@@ -6,6 +6,12 @@
 
 @title{How to Play}
 
+Many of the elements of playing a scenario can be programmed, to be saved and
+re-used for later play or to save you the tedium of clicking through screens in
+the Frosthaven Manager. See @secref{Programming_a_Scenario} for more details.
+Each step that allows loading scenario programs will explicitly mention that in
+this guide.
+
 @(define step
    (let ([n (box 1)])
      (λ (name #:tag [tag #f])
@@ -58,11 +64,12 @@ bestiary with a specification of which monsters will be present, normal or
 elite, for this scenario.
 
 Using the default bestiary loads a demo database that is useful for trying out
-Frosthaven Manager. In a real game of Frosthaven, you likely want to use a
-custom bestiary. See @secref{Editing_Monster_Information} for more information
-on how to create a custom bestiary. @margin-note{Interested in contributing to
-Frosthaven Manager? Help me build a bestiary editor to make creating custom
-bestiaries easier!}
+Frosthaven Manager.
+
+In a real game of Frosthaven, you likely want to use a custom bestiary. See
+@secref{Programming_a_Scenario} for more information on how to create a custom
+bestiary. @margin-note{Interested in contributing to Frosthaven Manager? Help me
+build a bestiary editor to make creating custom bestiaries easier!}
 
 @step{Add Monsters to the Scenario}
 

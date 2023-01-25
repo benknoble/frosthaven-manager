@@ -12,7 +12,7 @@
 @include-section{installation.scrbl}
 @include-section{how-to-play.scrbl}
 @include-section{troubleshooting.scrbl}
-@include-section{monster-db.scrbl}
+@include-section{programming-scenario.scrbl}
 @include-section{contributing.scrbl}
 @include-section{reference.scrbl}
 

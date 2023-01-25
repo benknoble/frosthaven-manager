@@ -22,7 +22,7 @@ For help with installation, see @secref{Installing_Frosthaven_Manager}.
 
 For help using Frosthaven Manager, see @secref{How_to_Play}.
 
-For help with Monster Databases, such as when they won't load, see
-@secref{Editing_Monster_Information}.
+For help with bestiaries and scenario programs, such as when they won't load,
+see @secref{Programming_a_Scenario}.
 
 @section{FAQs}

@@ -1415,13 +1415,13 @@ provided as @racket[widths].
 @section{@tt{bestiary}}
 
 This module implements the bestiary language. See
-@secref{Editing_Monster_Information} and
+@secref{Programming_a_Scenario} and
 @racketmodname[frosthaven-manager/bestiary] for more information.
 
 @section{@tt{monster-db}}
 @defmodule[frosthaven-manager/monster-db]
 
-See @secref{Editing_Monster_Information} for more information on custom monster
+See @secref{Programming_a_Scenario} for more information on custom monster
 databases.
 
 @deftogether[(
@@ -1454,7 +1454,7 @@ The demo, default monster database included with Frosthaven Manager.
 
 This module contains parsers for @(hash-lang)
 @racketmodname[frosthaven-manager/foes]. See
-@secref{Editing_Monster_Information} for more details.
+@secref{Programming_a_Scenario} for more details.
 
 @defproc[(parse-foes [src any/c] [in input-port?] [#:syntax? syn? any/c])
          (or/c syntax? foes/pc)]{
@@ -1480,7 +1480,7 @@ Textual parsers for parts of the foes language.
 
 This module contains parsers for @(hash-lang)
 @racketmodname[frosthaven-manager/bestiary]. See
-@secref{Editing_Monster_Information} for more details.
+@secref{Programming_a_Scenario} for more details.
 
 @defproc[(parse-bestiary [src any/c] [in input-port?] [#:syntax? syn? any/c])
          (or/c syntax? bestiary/c)]{
