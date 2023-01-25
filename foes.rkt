@@ -114,9 +114,9 @@
   (define (read-syntax src in)
     (port-count-lines! in)
     (parse-foes src in #:syntax? #t))
-  (define (read src in)
+  (define (read in)
     (port-count-lines! in)
-    (parse-foes src in #:syntax? #f)))
+    (parse-foes (object-name in) in #:syntax? #f)))
 
 (module+ debug
   (provide view-foes
