@@ -10,7 +10,7 @@
 @(define racket-lang.org "https://racket-lang.org/index.html")
 @(define benknoble/frosthaven-manager "https://github.com/benknoble/frosthaven-manager")
 
-@margin-note{On Windows without make, I recommend @tt|{choco instally make}|.}
+@margin-note{On Windows without make, I recommend @tt|{choco install make}|.}
 
 @itemlist[#:style 'ordered
           @item{Install @link[racket-lang.org]{Racket}. For example, on macOS with homebrew you might run @terminal|{brew install --cask racket}|}
