@@ -24,8 +24,8 @@ uncompress into a directory of your choosing by right-clicking and selecting the
 appropriate option.
 
 Among the uncompressed files you will find the application
-@tt{FrosthavenManager.exe} and @tt{lib} folder needed by the program. Click the
-@tt{FrosthavenManager.exe} to play.
+@filepath{FrosthavenManager.exe} and @filepath{lib} folder needed by the
+program. Click the @filepath{FrosthavenManager.exe} to play.
 
 @section{Linux}
 
@@ -42,10 +42,12 @@ libraries. Run the program to play.
 @section{macOS}
 
 First, open the downloaded archive in Finder. Double-click the archive to open
-it, which should uncompress files into a directory named @tt{FrosthavenManager}.
+it, which should uncompress files into a directory named
+@filepath{FrosthavenManager}.
 
-In the @tt{FrosthavenManager} directory, you will find the application
-@tt{FrosthavenManager.app}, which you can drag to your @tt{Applications} folder.
+In the @filepath{FrosthavenManager} directory, you will find the application
+@filepath{FrosthavenManager.app}, which you can drag to your
+@filepath{Applications} folder.
 
 To open the Frosthaven Manager for the first time, you will need to right-click
 the app and select "Open." After agreeing to trust the app by clicking "Open"
