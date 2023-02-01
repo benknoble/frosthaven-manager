@@ -63,19 +63,20 @@
 (define-flow stats-labels (map labelled-label _))
 (define-flow stats-labels-sufficient (subset? (hash-keys required-stat/ps) _))
 
+(define (stats-values->monster-stats label-values)
+  (define lookup-table
+    (list->hash label-values #:->key labelled-label #:->value labelled-v))
+  (define (lookup key def)
+    (if def
+      (hash-ref lookup-table key def)
+      (hash-ref lookup-table key)))
+  (apply monster-stats
+         (map lookup
+              (list  "HP"  "Move"  "Attack"  "Bonuses"  "Effects"  "Immunities")
+              (list  #f    #f      #f        empty      empty      empty))))
+
 (define stats/p
-  (fmap (λ (label-values)
-          (define lookup-table
-            (for/hash ([lv (in-list label-values)])
-              (values (labelled-label lv) (labelled-v lv))))
-          (define (lookup key def)
-            (if def
-              (hash-ref lookup-table key def)
-              (hash-ref lookup-table key)))
-          (apply monster-stats
-                 (map lookup
-                      (list  "HP"  "Move"  "Attack"  "Bonuses"  "Effects"  "Immunities")
-                      (list  #f    #f      #f        empty      empty      empty))))
+  (fmap stats-values->monster-stats
         (guard/p
           (many+/p (apply or/p (map try/p stat/ps)) #:sep skip-ws)
           (flow (~> stats-labels (and (not check-duplicates) stats-labels-sufficient)))
