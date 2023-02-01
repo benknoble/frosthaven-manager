@@ -45,15 +45,16 @@
              (string-ci/p "numbering") skip-ws
              (pure option))))
 
-(define spec/pc (hash/c (or/c 2 3 4) monster-type/pc #:immutable #t))
+(define spec/pc (hash/c num-players/c monster-type/pc #:immutable #t))
+(define valid-player-nums (inclusive-range 2 max-players))
 (define spec/p
   (guard/p
     (fmap
       (flow (hash-map/copy (flow (== (~> string string->number) _))))
       (map/p (char-in/p "234") monster-type/p))
-    (flow (~> hash-keys (set=? '(2 3 4))))
+    (flow (~> hash-keys (set=? valid-player-nums)))
     "entries for each of 2, 3, and 4 players"
-    (flow (~>> hash-keys (set-subtract '(2 3 4))
+    (flow (~>> hash-keys (set-subtract valid-player-nums)
                (map ~a) (string-join _ ", " #:before-first "missing ")))))
 
 (define foe/pc (list/c string? string? numbering/pc (listof spec/pc)))
