@@ -2,8 +2,8 @@
 ; vim: lw-=do
 
 (provide
-  bestiary/c
   (contract-out
+    [bestiary/c flat-contract?]
     [parse-bestiary (-> any/c input-port? #:syntax? any/c
                         (or/c syntax? bestiary/c))]
     [monster/p (parser/c char? monster-info?)]

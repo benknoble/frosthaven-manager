@@ -2,12 +2,12 @@
 ; vim: lw-=do
 
 (provide
-  foes/pc
-  foe/pc
-  spec/pc
-  numbering/pc
-  monster-type/pc
   (contract-out
+    [foes/pc flat-contract?]
+    [foe/pc flat-contract?]
+    [spec/pc flat-contract?]
+    [numbering/pc flat-contract?]
+    [monster-type/pc flat-contract?]
     [parse-foes (-> any/c input-port? #:syntax? any/c
                     (or/c syntax? foes/pc))]
     [foes/p (parser/c char? foes/pc)]

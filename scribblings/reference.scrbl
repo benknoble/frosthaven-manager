@@ -1462,11 +1462,11 @@ The result is @racket[syntax?] with source @racket[src] if @racket[syn?] is
 true, and the datum it contains matches @racket[foes/pc].
 }
 
-@deftogether[(@defthing[foes/pc contract? #:value (listof (or/c (list/c 'import string?) monster-info? (listof monster-ability?) foe/pc))]
-              @defthing[foe/pc contract? #:value (list/c string? string? numbering/pc (listof spec/pc))]
-              @defthing[spec/pc contract? #:value (hash/c (or/c 2 3 4) monster-type/pc #:immutable #t)]
-              @defthing[numbering/pc contract? #:value (or/c "ordered" "random" #f)]
-              @defthing[monster-type/pc contract? #:value (or/c "absent" "normal" "elite")])]{
+@deftogether[(@defthing[foes/pc flat-contract? #:value (listof (or/c (list/c 'import string?) monster-info? (listof monster-ability?) foe/pc))]
+              @defthing[foe/pc flat-contract? #:value (list/c string? string? numbering/pc (listof spec/pc))]
+              @defthing[spec/pc flat-contract? #:value (hash/c (or/c 2 3 4) monster-type/pc #:immutable #t)]
+              @defthing[numbering/pc flat-contract? #:value (or/c "ordered" "random" #f)]
+              @defthing[monster-type/pc flat-contract? #:value (or/c "absent" "normal" "elite")])]{
 Contracts for foes values.
 }
 
@@ -1488,7 +1488,7 @@ The result is @racket[syntax?] with source @racket[src] if @racket[syn?] is
 true, and the datum it contains matches @racket[bestiary/c].
 }
 
-@defthing[bestiary/c contract?
+@defthing[bestiary/c flat-contract?
                      #:value
                      (listof (or/c (list/c 'import string?)
                                    monster-info?
