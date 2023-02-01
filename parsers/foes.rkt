@@ -72,10 +72,19 @@
                 (listof monster-ability?)
                 foe/pc)))
 
+(define-flow foe-dupes
+  (~> sep (partition
+            [foe/pc (~> (>< second) collect check-duplicates)])))
+
 (define foes/p
-  (ws-separated-whole-file/p (or/p import-monsters/p
-                                   (try/p monster/p)
-                                   (try/p ability-deck/p)
-                                   foe/p)))
+  (guard/p
+    (ws-separated-whole-file/p (or/p import-monsters/p
+                                     (try/p monster/p)
+                                     (try/p ability-deck/p)
+                                     foe/p))
+    (flow (and (~> bestiary-dupes none?)
+               (~> foe-dupes none?)))
+    "no duplicate monsters, ability decks, or foes"
+    (flow (~> (-< bestiary-dupes foe-dupes) (pass _) collect (string-join ",")))))
 
 (define parse-foes (make-reader-like foes/p))

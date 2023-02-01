@@ -9,7 +9,9 @@
     [monster/p (parser/c char? monster-info?)]
     [ability-deck/p (parser/c char? (listof monster-ability?))]
     [import-monsters/p (parser/c char? (list/c 'import string?))]
-    [bestiary/p (parser/c char? bestiary/c)]))
+    [bestiary/p (parser/c char? bestiary/c)]
+    [bestiary-dupes (-> (listof any/c) (values (or/c #f (listof string?))
+                                               (or/c #f (listof string?))))]))
 
 (require frosthaven-manager/parsers/base)
 

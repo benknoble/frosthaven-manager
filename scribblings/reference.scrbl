@@ -1503,6 +1503,14 @@ A contract for bestiary values.
 Textual parsers for parts of the bestiary language.
 }
 
+@defproc[(bestiary-dupes [xs (listof any/c)])
+         (values (or/c #f (listof string?))
+                 (or/c #f (listof string?)))]{
+Returns duplicate monster names from bestiaries and ability decks in
+@racket[xs]. The first value is based on any @racket[monster-info]s and the
+second on @racket[monster-ability] decks.
+}
+
 @section{@tt{observable-operator}}
 @defmodule[frosthaven-manager/observable-operator]
 
