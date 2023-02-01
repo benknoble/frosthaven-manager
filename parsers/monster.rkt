@@ -159,7 +159,7 @@
   (guard/p
     (ws-separated-whole-file/p (or/p import-monsters/p (try/p monster/p) ability-deck/p))
     (flow (~> bestiary-dupes none?))
-    "no duplicate monsters or ability-decks"
+    "no duplicate monsters or ability decks"
     (flow (~> bestiary-dupes (pass _) collect (string-join ",")))))
 
 (define parse-bestiary (make-reader-like bestiary/p))
