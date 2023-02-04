@@ -12,12 +12,8 @@
          (for-syntax syntax/parse
                      racket/list
                      racket/set
-                     racket/string
                      racket/syntax
-                     frosthaven-manager/defns
-                     frosthaven-manager/qi
-                     frosthaven-manager/monster-db
-                     frosthaven-manager/parsers/foes))
+                     frosthaven-manager/syntax/monsters))
 
 ;; e ::= '(import "path") | <monster-info> | listof <monster-ability> | <foe>
 (define-syntax-parse-rule (mb e:expr ...)
@@ -28,41 +24,21 @@
           (infos ...)
           ((actions ...) ...)
           (foes ...))
-  (~> ((attribute e))
-      sep
-      (partition
-        [(~> syntax->datum (and list? (~> first (equal? 'import)))) collect]
-        [(~> syntax->datum monster-info?) collect]
-        [(~> syntax->datum (and list? (andmap monster-ability? _))) collect]
-        [(~> syntax->datum foe/pc) collect]) collect)
+  (syntaxes->bestiary-parts (attribute e))
   #:do [(define-values (imported-info-dbs imported-ability-dbs)
-          (for/fold ([info-dbs empty]
-                     [ability-dbs empty])
-            ([import (in-list (syntax->datum #'(imports ...)))])
-            (define-values (imported-info-db imported-ability-db)
-              (get-dbs import))
-            (values (cons imported-info-db info-dbs)
-                    (cons imported-ability-db ability-dbs))))
+          (imports->dbs (syntax->datum #'(imports ...))))
         (define sets
-          (apply set-union
-                 (list->set (map monster-info-set-name (syntax->datum #'(infos ...))))
-                 (map (flow (~> hash-keys list->set)) imported-info-dbs)))
+          (set-names-from-infos imported-info-dbs (syntax->datum #'(infos ...))))
         (define ability-sets
-          (apply set-union
-                 (list->set (map monster-ability-set-name (syntax->datum #'(actions ... ...))))
-                 (map (flow (~> hash-keys list->set)) imported-ability-dbs)))
+          (ability-set-names-from-abilities imported-ability-dbs (syntax->datum #'(actions ... ...))))
         (define monster-names
-          (apply set-union
-                 (list->set (map monster-info-name (syntax->datum #'(infos ...))))
-                 (map (flow (~>> hash-values (append-map hash-keys) list->set)) imported-info-dbs)))
+          (monster-names-from-infos imported-info-dbs (syntax->datum #'(infos ...))))
         (define foe-names
           (list->set (map second (syntax->datum #'(foes ...)))))]
   #:fail-unless (subset? sets ability-sets)
-  (format "these monster sets have no ability decks: ~a"
-          (~> (sets ability-sets) set-subtract set->list (string-join ",")))
+  (subset-error-message "monster sets" "ability decks" sets ability-sets)
   #:fail-unless (subset? foe-names monster-names)
-  (format "these foes have no monster definitions: ~a"
-          (~> (foe-names monster-names) set-subtract set->list (string-join ",")))
+  (subset-error-message "foes" "monster definition" foe-names monster-names)
   #:with (imported-info-db ...) (generate-temporaries #'(imports ...))
   #:with (imported-ability-db ...) (generate-temporaries #'(imports ...))
   ;;=>
