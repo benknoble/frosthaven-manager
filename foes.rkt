@@ -81,18 +81,9 @@
         [("random") (take (shuffle (inclusive-range 1 10)) (length monster-types))]))
     (make-monster-group info level (map cons numbers monster-types))))
 
-(module reader syntax/module-reader
+(module reader frosthaven-manager/syntax/module-reader
   frosthaven-manager/foes
-  #:whole-body-readers? #t
-  #:read-syntax read-syntax
-  #:read read
-  (require frosthaven-manager/parsers/foes)
-  (define (read-syntax src in)
-    (port-count-lines! in)
-    (parse-foes src in #:syntax? #t))
-  (define (read in)
-    (port-count-lines! in)
-    (parse-foes (object-name in) in #:syntax? #f)))
+  [parse-foes from frosthaven-manager/parsers/foes])
 
 (module+ debug
   (provide view-foes

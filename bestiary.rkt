@@ -52,15 +52,6 @@
                  (λ (k _as1 _as2)
                    (error 'import-monsters "duplicate ability decks for set ~e" k))))))
 
-(module reader syntax/module-reader
+(module reader frosthaven-manager/syntax/module-reader
   frosthaven-manager/bestiary
-  #:whole-body-readers? #t
-  #:read-syntax read-syntax
-  #:read read
-  (require frosthaven-manager/parsers/monster)
-  (define (read-syntax src in)
-    (port-count-lines! in)
-    (parse-bestiary src in #:syntax? #t))
-  (define (read in)
-    (port-count-lines! in)
-    (parse-bestiary (object-name in) in #:syntax? #f)))
+  [parse-bestiary from frosthaven-manager/parsers/monster])
