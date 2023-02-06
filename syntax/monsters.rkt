@@ -1,4 +1,5 @@
 #lang racket
+; vim: lw+=define/ability-sets,define/monster-names
 
 (provide
   make-dbs
@@ -67,26 +68,28 @@
           who what
           (~> (should-be-smaller should-be-larger) set-subtract set->list (string-join ","))))
 
-(define (check-monsters-have-abilities imported-info-dbs imported-ability-dbs
-                                       infos actions)
-  (define sets (set-names-from-infos imported-info-dbs infos))
-  (define ability-sets (ability-set-names-from-abilities imported-ability-dbs actions))
+(define-syntax-parse-rule (define/ability-sets (f sets ability-sets) body ...+)
+  (define (f imported-info-dbs imported-ability-dbs infos actions)
+    (define sets (set-names-from-infos imported-info-dbs infos))
+    (define ability-sets (ability-set-names-from-abilities imported-ability-dbs actions))
+    body ...))
+
+(define/ability-sets (check-monsters-have-abilities sets ability-sets)
   (subset? sets ability-sets))
 
-(define (check-monsters-have-abilities-message imported-info-dbs imported-ability-dbs
-                                               infos actions)
-  (define sets (set-names-from-infos imported-info-dbs infos))
-  (define ability-sets (ability-set-names-from-abilities imported-ability-dbs actions))
+(define/ability-sets (check-monsters-have-abilities-message sets ability-sets)
   (subset-error-message "monster sets" "ability decks" sets ability-sets))
 
-(define (check-foes-have-monsters imported-info-dbs infos foes)
-  (define monster-names (monster-names-from-infos imported-info-dbs infos))
-  (define foe-names (list->set (map second foes)))
+(define-syntax-parse-rule (define/monster-names (f monster-names foe-names) body ...+)
+  (define (f imported-info-dbs infos foes)
+    (define monster-names (monster-names-from-infos imported-info-dbs infos))
+    (define foe-names (list->set (map second foes)))
+    body ...))
+
+(define/monster-names (check-foes-have-monsters monster-names foe-names)
   (subset? foe-names monster-names))
 
-(define (check-foes-have-monsters-message imported-info-dbs infos foes)
-  (define monster-names (monster-names-from-infos imported-info-dbs infos))
-  (define foe-names (list->set (map second foes)))
+(define/monster-names (check-foes-have-monsters-message monster-names foe-names)
   (subset-error-message "foes" "monster definition" foe-names monster-names))
 
 (define-syntax-parse-rule (make-dbs ({~datum provide} info-db ability-db)
