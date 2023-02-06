@@ -8,10 +8,9 @@
          racket/hash
          frosthaven-manager/defns
          frosthaven-manager/qi
-         frosthaven-manager/monster-db
-         (for-syntax syntax/parse
+         frosthaven-manager/syntax/monsters
+         (for-syntax racket/set
                      racket/list
-                     racket/set
                      racket/syntax
                      frosthaven-manager/syntax/monsters))
 
@@ -39,28 +38,13 @@
   (subset-error-message "monster sets" "ability decks" sets ability-sets)
   #:fail-unless (subset? foe-names monster-names)
   (subset-error-message "foes" "monster definition" foe-names monster-names)
-  #:with (imported-info-db ...) (generate-temporaries #'(imports ...))
-  #:with (imported-ability-db ...) (generate-temporaries #'(imports ...))
   ;;=>
   (#%module-begin
-   (provide info-db ability-db make-foes)
-   (require (rename-in imports
-                       [info-db imported-info-db]
-                       [ability-db imported-ability-db]) ...)
-   (define-values (original-info-db original-ability-db)
-     (datums->dbs (list infos ... actions ... ...)))
-   (define info-db
-     (hash-union original-info-db imported-info-db ...
-                 #:combine
-                 (λ (ms1 ms2)
-                   (hash-union ms1 ms2
-                               #:combine/key
-                               (λ (k _m1 _m2) (error 'import-monsters "duplicate definitions for monster ~e" k))))))
-   (define ability-db
-     (hash-union original-ability-db imported-ability-db ...
-                 #:combine/key
-                 (λ (k _as1 _as2)
-                   (error 'import-monsters "duplicate ability decks for set ~e" k))))
+   (make-dbs (provide info-db ability-db)
+             (import imports ...)
+             (info infos ...)
+             (ability (actions ...) ...))
+   (provide make-foes)
    (define make-foes (make-foes-maker '(foes ...) info-db))))
 
 (define ((make-foes-maker foes info-db) level number-of-players)
