@@ -5,13 +5,10 @@
   (rename-out [mb #%module-begin]))
 
 (require syntax/parse/define
-         racket/hash
          frosthaven-manager/defns
          frosthaven-manager/qi
          frosthaven-manager/syntax/monsters
-         (for-syntax racket/set
-                     racket/list
-                     racket/syntax
+         (for-syntax racket/syntax
                      frosthaven-manager/syntax/monsters))
 
 ;; e ::= '(import "path") | <monster-info> | listof <monster-ability> | <foe>

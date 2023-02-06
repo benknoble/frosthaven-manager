@@ -6,8 +6,7 @@
 
 (require syntax/parse/define
          frosthaven-manager/syntax/monsters
-         (for-syntax racket/set
-                     racket/syntax
+         (for-syntax racket/syntax
                      frosthaven-manager/syntax/monsters))
 
 ;; e ::= '(import "path") | <monster-info> | listof <monster-ability>
