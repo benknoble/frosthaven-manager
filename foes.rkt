@@ -25,19 +25,19 @@
           (foes ...))
   (syntaxes->bestiary-parts (attribute e))
   #:do [(define-values (imported-info-dbs imported-ability-dbs)
-          (imports->dbs (syntax->datum #'(imports ...))))
-        (define monster-names
-          (monster-names-from-infos imported-info-dbs (syntax->datum #'(infos ...))))
-        (define foe-names
-          (list->set (map second (syntax->datum #'(foes ...)))))]
+          (imports->dbs (syntax->datum #'(imports ...))))]
   #:fail-unless (check-monsters-have-abilities imported-info-dbs imported-ability-dbs
                                                (syntax->datum #'(infos ...))
                                                (syntax->datum #'(actions ... ...)))
   (check-monsters-have-abilities-message imported-info-dbs imported-ability-dbs
                                          (syntax->datum #'(infos ...))
                                          (syntax->datum #'(actions ... ...)))
-  #:fail-unless (subset? foe-names monster-names)
-  (subset-error-message "foes" "monster definition" foe-names monster-names)
+  #:fail-unless (check-foes-have-monsters imported-info-dbs
+                                          (syntax->datum #'(infos ...))
+                                          (syntax->datum #'(foes ...)))
+  (check-foes-have-monsters-message imported-info-dbs
+                                    (syntax->datum #'(infos ...))
+                                    (syntax->datum #'(foes ...)))
   ;;=>
   (#%module-begin
    (make-dbs (provide info-db ability-db)

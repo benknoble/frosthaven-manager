@@ -14,9 +14,10 @@
     [check-monsters-have-abilities-message (-> (listof info-db/c) (listof ability-db/c)
                                                (listof monster-info?) (listof monster-ability?)
                                                string?)]
-    [monster-names-from-infos (-> (listof info-db/c) (listof monster-info?)
-                                  (set/c string?))]
-    [subset-error-message (-> string? string? set? set? string?)]))
+    [check-foes-have-monsters (-> (listof info-db/c) (listof monster-info?) (listof foe/pc)
+                                  boolean?)]
+    [check-foes-have-monsters-message (-> (listof info-db/c) (listof monster-info?) (listof foe/pc)
+                                          string?)]))
 
 (require syntax/parse/define
          racket/hash
@@ -77,6 +78,16 @@
   (define sets (set-names-from-infos imported-info-dbs infos))
   (define ability-sets (ability-set-names-from-abilities imported-ability-dbs actions))
   (subset-error-message "monster sets" "ability decks" sets ability-sets))
+
+(define (check-foes-have-monsters imported-info-dbs infos foes)
+  (define monster-names (monster-names-from-infos imported-info-dbs infos))
+  (define foe-names (list->set (map second foes)))
+  (subset? foe-names monster-names))
+
+(define (check-foes-have-monsters-message imported-info-dbs infos foes)
+  (define monster-names (monster-names-from-infos imported-info-dbs infos))
+  (define foe-names (list->set (map second foes)))
+  (subset-error-message "foes" "monster definition" foe-names monster-names))
 
 (define-syntax-parse-rule (make-dbs ({~datum provide} info-db ability-db)
                                     ({~literal import} imports ...)
