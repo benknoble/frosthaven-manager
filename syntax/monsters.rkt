@@ -55,17 +55,9 @@
     (define-values (original-info-db original-ability-db)
       (datums->dbs (list infos ... actions ... ...)))
     (define info-db
-      (hash-union original-info-db imported-info-db ...
-                  #:combine
-                  (λ (ms1 ms2)
-                    (hash-union ms1 ms2
-                                #:combine/key
-                                (λ (k _m1 _m2) (error 'import-monsters "duplicate definitions for monster ~e" k))))))
+      (combine-infos original-info-db imported-info-db ...))
     (define ability-db
-      (hash-union original-ability-db imported-ability-db ...
-                  #:combine/key
-                  (λ (k _as1 _as2)
-                    (error 'import-monsters "duplicate ability decks for set ~e" k))))))
+      (combine-abilities original-ability-db imported-ability-db ...))))
 
 ;; -> imports monster-infos ability-decks foes
 (define-flow (syntaxes->bestiary-parts syntaxes)
@@ -120,3 +112,17 @@
   (format "these ~a have no ~a: ~a"
           who what
           (~> (should-be-smaller should-be-larger) set-subtract set->list (string-join ","))))
+
+(define (combine-infos base . extra)
+  (apply hash-union base extra
+         #:combine
+         (λ (ms1 ms2)
+           (hash-union ms1 ms2
+                       #:combine/key
+                       (λ (k _m1 _m2) (error 'import-monsters "duplicate definitions for monster ~e" k))))))
+
+(define (combine-abilities base . extra)
+  (apply hash-union base extra
+         #:combine/key
+         (λ (k _as1 _as2)
+           (error 'import-monsters "duplicate ability decks for set ~e" k))))
