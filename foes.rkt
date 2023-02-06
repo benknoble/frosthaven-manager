@@ -26,16 +26,16 @@
   (syntaxes->bestiary-parts (attribute e))
   #:do [(define-values (imported-info-dbs imported-ability-dbs)
           (imports->dbs (syntax->datum #'(imports ...))))
-        (define sets
-          (set-names-from-infos imported-info-dbs (syntax->datum #'(infos ...))))
-        (define ability-sets
-          (ability-set-names-from-abilities imported-ability-dbs (syntax->datum #'(actions ... ...))))
         (define monster-names
           (monster-names-from-infos imported-info-dbs (syntax->datum #'(infos ...))))
         (define foe-names
           (list->set (map second (syntax->datum #'(foes ...)))))]
-  #:fail-unless (subset? sets ability-sets)
-  (subset-error-message "monster sets" "ability decks" sets ability-sets)
+  #:fail-unless (check-monsters-have-abilities imported-info-dbs imported-ability-dbs
+                                               (syntax->datum #'(infos ...))
+                                               (syntax->datum #'(actions ... ...)))
+  (check-monsters-have-abilities-message imported-info-dbs imported-ability-dbs
+                                         (syntax->datum #'(infos ...))
+                                         (syntax->datum #'(actions ... ...)))
   #:fail-unless (subset? foe-names monster-names)
   (subset-error-message "foes" "monster definition" foe-names monster-names)
   ;;=>

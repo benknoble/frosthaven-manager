@@ -20,13 +20,13 @@
           _)
   (syntaxes->bestiary-parts (attribute e))
   #:do [(define-values (imported-info-dbs imported-ability-dbs)
-          (imports->dbs (syntax->datum #'(imports ...))))
-        (define sets
-          (set-names-from-infos imported-info-dbs (syntax->datum #'(infos ...))))
-        (define ability-sets
-          (ability-set-names-from-abilities imported-ability-dbs (syntax->datum #'(actions ... ...))))]
-  #:fail-unless (subset? sets ability-sets)
-  (subset-error-message "monster sets" "ability decks" sets ability-sets)
+          (imports->dbs (syntax->datum #'(imports ...))))]
+  #:fail-unless (check-monsters-have-abilities imported-info-dbs imported-ability-dbs
+                                               (syntax->datum #'(infos ...))
+                                               (syntax->datum #'(actions ... ...)))
+  (check-monsters-have-abilities-message imported-info-dbs imported-ability-dbs
+                                         (syntax->datum #'(infos ...))
+                                         (syntax->datum #'(actions ... ...)))
   ;;=>
   (#%module-begin
    (make-dbs (provide info-db ability-db)

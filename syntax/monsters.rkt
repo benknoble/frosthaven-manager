@@ -8,10 +8,12 @@
           (list/c (listof syntax?) (listof syntax?) (listof syntax?) (listof syntax?)))]
     [imports->dbs (-> (listof string?)
                       (values (listof info-db/c) (listof ability-db/c)))]
-    [set-names-from-infos (-> (listof info-db/c) (listof monster-info?)
-                              (set/c string?))]
-    [ability-set-names-from-abilities (-> (listof ability-db/c) (listof monster-ability?)
-                                          (set/c string?))]
+    [check-monsters-have-abilities (-> (listof info-db/c) (listof ability-db/c)
+                                       (listof monster-info?) (listof monster-ability?)
+                                       boolean?)]
+    [check-monsters-have-abilities-message (-> (listof info-db/c) (listof ability-db/c)
+                                               (listof monster-info?) (listof monster-ability?)
+                                               string?)]
     [monster-names-from-infos (-> (listof info-db/c) (listof monster-info?)
                                   (set/c string?))]
     [subset-error-message (-> string? string? set? set? string?)]))
@@ -63,6 +65,18 @@
   (format "these ~a have no ~a: ~a"
           who what
           (~> (should-be-smaller should-be-larger) set-subtract set->list (string-join ","))))
+
+(define (check-monsters-have-abilities imported-info-dbs imported-ability-dbs
+                                       infos actions)
+  (define sets (set-names-from-infos imported-info-dbs infos))
+  (define ability-sets (ability-set-names-from-abilities imported-ability-dbs actions))
+  (subset? sets ability-sets))
+
+(define (check-monsters-have-abilities-message imported-info-dbs imported-ability-dbs
+                                               infos actions)
+  (define sets (set-names-from-infos imported-info-dbs infos))
+  (define ability-sets (ability-set-names-from-abilities imported-ability-dbs actions))
+  (subset-error-message "monster sets" "ability decks" sets ability-sets))
 
 (define-syntax-parse-rule (make-dbs ({~datum provide} info-db ability-db)
                                     ({~literal import} imports ...)
