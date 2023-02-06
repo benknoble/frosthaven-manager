@@ -20,6 +20,7 @@
     [check-foes-have-monsters-message (-> (listof info-db/c) (listof monster-info?) (listof foe/pc)
                                           string?)]))
 
+;;;; requires and implementation macros
 (require syntax/parse/define
          racket/hash
          frosthaven-manager/qi
@@ -27,58 +28,11 @@
          frosthaven-manager/monster-db
          frosthaven-manager/parsers/foes)
 
-(define (syntaxish? p)
-  (flow (~> syntax->datum p)))
-
-(define-qi-syntax-parser collect-matching
-  [(_ p-flo:expr ...) #'(partition [p-flo collect] ...)])
-
-(define-qi-syntax-parser collect-matching/stx
-  [(_ p-flo:expr ...) #'(collect-matching (syntaxish? p-flo) ...)])
-
-;; -> imports monster-infos ability-decks foes
-(define-flow (syntaxes->bestiary-parts syntaxes)
-  (~> sep (collect-matching/stx (list/c 'import string?)
-                                monster-info?
-                                (listof monster-ability?)
-                                foe/pc) collect))
-
-(define (imports->dbs imports)
-  (for/fold ([info-dbs empty]
-             [ability-dbs empty])
-    ([import (in-list imports)])
-    (~> (import) get-dbs (== (cons info-dbs) (cons ability-dbs)))))
-
-(define-flow hash-keys/set (~> hash-keys list->set))
-
-(define ((make-set-names get-set-name) dbs xs)
-  (apply set-union
-         (~>> (xs) (map get-set-name) list->set)
-         (map hash-keys/set dbs)))
-
-(define set-names-from-infos (make-set-names monster-info-set-name))
-(define ability-set-names-from-abilities (make-set-names monster-ability-set-name))
-(define (monster-names-from-infos info-dbs infos)
-  (apply set-union
-         (~>> (infos) (map monster-info-name) list->set)
-         (map (flow (~>> hash-values (append-map hash-keys) list->set)) info-dbs)))
-
-(define (subset-error-message who what should-be-smaller should-be-larger)
-  (format "these ~a have no ~a: ~a"
-          who what
-          (~> (should-be-smaller should-be-larger) set-subtract set->list (string-join ","))))
-
 (define-syntax-parse-rule (define/ability-sets (f sets ability-sets) body ...+)
   (define (f imported-info-dbs imported-ability-dbs infos actions)
     (define sets (set-names-from-infos imported-info-dbs infos))
     (define ability-sets (ability-set-names-from-abilities imported-ability-dbs actions))
     body ...))
-
-(define/ability-sets (check-monsters-have-abilities sets ability-sets)
-  (subset? sets ability-sets))
-
-(define/ability-sets (check-monsters-have-abilities-message sets ability-sets)
-  (subset-error-message "monster sets" "ability decks" sets ability-sets))
 
 (define-syntax-parse-rule (define/monster-names (f monster-names foe-names) body ...+)
   (define (f imported-info-dbs infos foes)
@@ -86,12 +40,7 @@
     (define foe-names (list->set (map second foes)))
     body ...))
 
-(define/monster-names (check-foes-have-monsters monster-names foe-names)
-  (subset? foe-names monster-names))
-
-(define/monster-names (check-foes-have-monsters-message monster-names foe-names)
-  (subset-error-message "foes" "monster definition" foe-names monster-names))
-
+;;;; exports
 (define-syntax-parse-rule (make-dbs ({~datum provide} info-db ability-db)
                                     ({~literal import} imports ...)
                                     ({~literal info} infos ...)
@@ -117,3 +66,57 @@
                   #:combine/key
                   (λ (k _as1 _as2)
                     (error 'import-monsters "duplicate ability decks for set ~e" k))))))
+
+;; -> imports monster-infos ability-decks foes
+(define-flow (syntaxes->bestiary-parts syntaxes)
+  (~> sep (collect-matching/stx (list/c 'import string?)
+                                monster-info?
+                                (listof monster-ability?)
+                                foe/pc) collect))
+
+(define (imports->dbs imports)
+  (for/fold ([info-dbs empty]
+             [ability-dbs empty])
+    ([import (in-list imports)])
+    (~> (import) get-dbs (== (cons info-dbs) (cons ability-dbs)))))
+
+(define/ability-sets (check-monsters-have-abilities sets ability-sets)
+  (subset? sets ability-sets))
+
+(define/ability-sets (check-monsters-have-abilities-message sets ability-sets)
+  (subset-error-message "monster sets" "ability decks" sets ability-sets))
+
+(define/monster-names (check-foes-have-monsters monster-names foe-names)
+  (subset? foe-names monster-names))
+
+(define/monster-names (check-foes-have-monsters-message monster-names foe-names)
+  (subset-error-message "foes" "monster definition" foe-names monster-names))
+
+;;;; helper definitions
+(define (syntaxish? p)
+  (flow (~> syntax->datum p)))
+
+(define-qi-syntax-parser collect-matching
+  [(_ p-flo:expr ...) #'(partition [p-flo collect] ...)])
+
+(define-qi-syntax-parser collect-matching/stx
+  [(_ p-flo:expr ...) #'(collect-matching (syntaxish? p-flo) ...)])
+
+(define-flow hash-keys/set (~> hash-keys list->set))
+
+(define ((make-set-names get-set-name) dbs xs)
+  (apply set-union
+         (~>> (xs) (map get-set-name) list->set)
+         (map hash-keys/set dbs)))
+
+(define set-names-from-infos (make-set-names monster-info-set-name))
+(define ability-set-names-from-abilities (make-set-names monster-ability-set-name))
+(define (monster-names-from-infos info-dbs infos)
+  (apply set-union
+         (~>> (infos) (map monster-info-name) list->set)
+         (map (flow (~>> hash-values (append-map hash-keys) list->set)) info-dbs)))
+
+(define (subset-error-message who what should-be-smaller should-be-larger)
+  (format "these ~a have no ~a: ~a"
+          who what
+          (~> (should-be-smaller should-be-larger) set-subtract set->list (string-join ","))))
