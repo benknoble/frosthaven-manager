@@ -2,23 +2,18 @@
 ; vim: lw-=do
 
 (provide
-  bestiary/c
   (contract-out
+    [bestiary/c flat-contract?]
     [parse-bestiary (-> any/c input-port? #:syntax? any/c
                         (or/c syntax? bestiary/c))]
     [monster/p (parser/c char? monster-info?)]
     [ability-deck/p (parser/c char? (listof monster-ability?))]
     [import-monsters/p (parser/c char? (list/c 'import string?))]
-    [bestiary/p (parser/c char? bestiary/c)]))
+    [bestiary/p (parser/c char? bestiary/c)]
+    [bestiary-dupes (-> (listof any/c) (values (or/c #f (listof string?))
+                                               (or/c #f (listof string?))))]))
 
-(require megaparsack
-         megaparsack/text
-         data/monad
-         data/applicative
-         (rename-in data/functor
-                    [map fmap])
-         frosthaven-manager/qi
-         frosthaven-manager/defns)
+(require frosthaven-manager/parsers/base)
 
 (define bestiary/c
   (listof (or/c (list/c 'import string?)
@@ -46,53 +41,11 @@
   ( "[" <card-name:text> <initiative:number> "shuffle"? "{" <text>+ "}" "]" )8
 "end-ability-deck" |#
 
-;; megaparsack's string-ci/p is broken
-;; (https://github.com/lexi-lambda/megaparsack/issues/24)
-(define (string-ci/p s)
-  (if (zero? (string-length s))
-    (pure "")
-    (label/p s (do (char-ci/p (string-ref s 0))
-                   (string-ci/p (substring s 1))
-                   (pure s)))))
-
-(define skip-ws
-  (do (many/p space/p)
-      void/p))
-
-(define (list-value/p p)
-  (do (char/p #\{) skip-ws
-      [v <- (many/p p #:sep skip-ws)] skip-ws
-      (char/p #\})
-      (pure v)))
-
-(struct labelled [label v])
-(define (value/p label p)
-  (do (char/p #\[) skip-ws
-      (string-ci/p label) skip-ws
-      [v <- p] skip-ws
-      (char/p #\])
-      (pure (labelled label v))))
-
 (define monster-type/p
   (or/p (string-ci/p "normal") (string-ci/p "elite")))
 
-(define text/p
-  (label/p "text"
-           (do (char/p #\")
-               [text <- (fmap list->string (many/p (char-not/p #\")))]
-               (char/p #\")
-               (pure text))))
-
-(define number/p
-  (label/p "number"
-           (do [sign <- (or/p (fmap (const -) (char/p #\-))
-                              (pure +))]
-               [number <- integer/p]
-               (pure (sign number)))))
-
-(define non-empty-string? (not/c (string-len/c 1)))
-(define (non-empty-text/p why)
-  (guard/p text/p non-empty-string? why))
+(define (value/p s p)
+  (labelled/p (string-ci/p s) p))
 
 (define hp/p (value/p "HP" (guard/p number/p positive-integer? "positive maximum health")))
 (define move/p (value/p "Move" (guard/p number/p natural-number/c "base move value at least 0")))
@@ -112,32 +65,33 @@
 (define-flow stats-labels (map labelled-label _))
 (define-flow stats-labels-sufficient (subset? (hash-keys required-stat/ps) _))
 
+(define (stats-values->monster-stats label-values)
+  (define lookup-table
+    (list->hash label-values #:->key labelled-label #:->value labelled-v))
+  (define (lookup key def)
+    (if def
+      (hash-ref lookup-table key def)
+      (hash-ref lookup-table key)))
+  (apply monster-stats
+         (map lookup
+              (list  "HP"  "Move"  "Attack"  "Bonuses"  "Effects"  "Immunities")
+              (list  #f    #f      #f        empty      empty      empty))))
+
 (define stats/p
-  (fmap (λ (label-values)
-          (define lookup-table
-            (for/hash ([lv (in-list label-values)])
-              (values (labelled-label lv) (labelled-v lv))))
-          (define (lookup key def)
-            (if def
-              (hash-ref lookup-table key def)
-              (hash-ref lookup-table key)))
-          (apply monster-stats
-                 (map lookup
-                      (list  "HP"  "Move"  "Attack"  "Bonuses"  "Effects"  "Immunities")
-                      (list  #f    #f      #f        empty      empty      empty))))
+  (fmap stats-values->monster-stats
         (guard/p
           (many+/p (apply or/p (map try/p stat/ps)) #:sep skip-ws)
           (flow (~> stats-labels (and (not check-duplicates) stats-labels-sufficient)))
           "exactly one each of HP, Move, Attack, and up to one each of Bonuses, Effects, and Immunities"
           stats-labels)))
 
+(define cons-label (flow (~> (-< labelled-label labelled-v) cons)))
+
+;; (list level type stats)
 (define full-stats/p
-  (do (char/p #\[) skip-ws
-      [level <- (guard/p number/p (flow (<= 0 _ 7)) "level between 0 and 7")] skip-ws
-      [type <- monster-type/p] skip-ws
-      [stats <- stats/p] skip-ws
-      (char/p #\])
-      (pure (list level type stats))))
+  (fmap cons-label (labelled/p
+                     (guard/p number/p (flow (<= 0 _ 7)) "level between 0 and 7")
+                     (list/p monster-type/p stats/p #:sep skip-ws))))
 
 (define level-x-type
   (for*/set ([level (in-inclusive-range 0 7)]
@@ -147,20 +101,10 @@
 (define-flow level-x-type-dupes (~> check-duplicates (and _ (take 2))))
 (define-flow level-x-type-set (~> (sep (take 2)) set))
 
-(define-flow name->set (~> string-split (and (~> length (> 1)) last)))
-
 (define monster/p
   (do (string/p "begin-monster") skip-ws
       [name <- (non-empty-text/p "non-empty monster name")] skip-ws
-      [set-name <- (or/p (do (char/p #\() skip-ws
-                             [set <- (non-empty-text/p "non-empty set name")] skip-ws
-                             (char/p #\))
-                             (pure set))
-                         (guard/p
-                           (~> (name) name->set pure)
-                           (flow (and _ (~> string-length (not zero?))))
-                           "name with monster set"
-                           (const name)))] skip-ws
+      [set-name <- (set-name?/p name)] skip-ws
       [stats <- (guard/p (repeat/p (set-count level-x-type) (do [s <- full-stats/p] skip-ws (pure s)))
                          (flow (and (not level-x-type-dupes) (~> level-x-type-set (set=? level-x-type))))
                          "exactly one set of stats for each level (0–7) and type (normal or elite)"
@@ -178,17 +122,18 @@
                     (if (~> 1> first second (equal? "normal")) _ X)
                     (>< (map third _)) collect)))))
 
+;; (list card initiative shuffle? abilities)
 (define ability-card/p
   (label/p
     "ability card"
-    (do (char/p #\[) skip-ws
-        [card <- (non-empty-text/p "non-empty card name")] skip-ws
-        [initiative <- (guard/p number/p (flow (<= 0 _ 99)) "valid initiative between 0 and 99")] skip-ws
-        [shuffle? <- (or/p (try/p (fmap (const #t) (string/p "shuffle")))
-                           (pure #f))] skip-ws
-        [abilities <- (guard/p (list-value/p text/p) (flow (not empty?)) "non-empty list of card abilities")] skip-ws
-        (char/p #\])
-        (pure (list card initiative shuffle? abilities)))))
+    (fmap cons-label
+          (labelled/p
+            (non-empty-text/p "non-empty card name")
+            (list/p (guard/p number/p (flow (<= 0 _ 99)) "valid initiative between 0 and 99")
+                    (or/p (try/p (fmap (const #t) (string/p "shuffle")))
+                          (pure #f))
+                    (guard/p (list-value/p text/p) (flow (not empty?)) "non-empty list of card abilities")
+                    #:sep skip-ws)))))
 
 (define ability-deck/p
   (do (string/p "begin-ability-deck") skip-ws
@@ -215,15 +160,9 @@
 
 (define bestiary/p
   (guard/p
-    (fmap first
-          (do skip-ws
-              (many-until/p (or/p import-monsters/p (try/p monster/p) ability-deck/p)
-                            #:sep skip-ws
-                            #:end (try/p (do skip-ws eof/p)))))
+    (ws-separated-whole-file/p (or/p import-monsters/p (try/p monster/p) ability-deck/p))
     (flow (~> bestiary-dupes none?))
-    "no duplicate monsters or ability-decks"
+    "no duplicate monsters or ability decks"
     (flow (~> bestiary-dupes (pass _) collect (string-join ",")))))
 
-(define (parse-bestiary src in #:syntax? syntax?)
-  (define wrapper (if syntax? syntax/p identity))
-  (parse-result! (parse-string (wrapper bestiary/p) (port->string in) src)))
+(define parse-bestiary (make-reader-like bestiary/p))

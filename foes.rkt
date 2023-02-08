@@ -5,19 +5,11 @@
   (rename-out [mb #%module-begin]))
 
 (require syntax/parse/define
-         racket/hash
          frosthaven-manager/defns
          frosthaven-manager/qi
-         frosthaven-manager/monster-db
-         (for-syntax syntax/parse
-                     racket/list
-                     racket/set
-                     racket/string
-                     racket/syntax
-                     frosthaven-manager/defns
-                     frosthaven-manager/qi
-                     frosthaven-manager/monster-db
-                     frosthaven-manager/parsers/foes))
+         frosthaven-manager/syntax/monsters
+         (for-syntax racket/syntax
+                     frosthaven-manager/syntax/monsters))
 
 ;; e ::= '(import "path") | <monster-info> | listof <monster-ability> | <foe>
 (define-syntax-parse-rule (mb e:expr ...)
@@ -28,63 +20,28 @@
           (infos ...)
           ((actions ...) ...)
           (foes ...))
-  (~> ((attribute e))
-      sep
-      (partition
-        [(~> syntax->datum (and list? (~> first (equal? 'import)))) collect]
-        [(~> syntax->datum monster-info?) collect]
-        [(~> syntax->datum (and list? (andmap monster-ability? _))) collect]
-        [(~> syntax->datum foe/pc) collect]) collect)
+  (syntaxes->bestiary-parts (attribute e))
   #:do [(define-values (imported-info-dbs imported-ability-dbs)
-          (for/fold ([info-dbs empty]
-                     [ability-dbs empty])
-            ([import (in-list (syntax->datum #'(imports ...)))])
-            (define-values (imported-info-db imported-ability-db)
-              (get-dbs import))
-            (values (cons imported-info-db info-dbs)
-                    (cons imported-ability-db ability-dbs))))
-        (define sets
-          (apply set-union
-                 (list->set (map monster-info-set-name (syntax->datum #'(infos ...))))
-                 (map (flow (~> hash-keys list->set)) imported-info-dbs)))
-        (define ability-sets
-          (apply set-union
-                 (list->set (map monster-ability-set-name (syntax->datum #'(actions ... ...))))
-                 (map (flow (~> hash-keys list->set)) imported-ability-dbs)))
-        (define monster-names
-          (apply set-union
-                 (list->set (map monster-info-name (syntax->datum #'(infos ...))))
-                 (map (flow (~>> hash-values (append-map hash-keys) list->set)) imported-info-dbs)))
-        (define foe-names
-          (list->set (map second (syntax->datum #'(foes ...)))))]
-  #:fail-unless (subset? sets ability-sets)
-  (format "these monster sets have no ability decks: ~a"
-          (~> (sets ability-sets) set-subtract set->list (string-join ",")))
-  #:fail-unless (subset? foe-names monster-names)
-  (format "these foes have no monster definitions: ~a"
-          (~> (foe-names monster-names) set-subtract set->list (string-join ",")))
-  #:with (imported-info-db ...) (generate-temporaries #'(imports ...))
-  #:with (imported-ability-db ...) (generate-temporaries #'(imports ...))
+          (imports->dbs (syntax->datum #'(imports ...))))]
+  #:fail-unless (check-monsters-have-abilities imported-info-dbs imported-ability-dbs
+                                               (syntax->datum #'(infos ...))
+                                               (syntax->datum #'(actions ... ...)))
+  (check-monsters-have-abilities-message imported-info-dbs imported-ability-dbs
+                                         (syntax->datum #'(infos ...))
+                                         (syntax->datum #'(actions ... ...)))
+  #:fail-unless (check-foes-have-monsters imported-info-dbs
+                                          (syntax->datum #'(infos ...))
+                                          (syntax->datum #'(foes ...)))
+  (check-foes-have-monsters-message imported-info-dbs
+                                    (syntax->datum #'(infos ...))
+                                    (syntax->datum #'(foes ...)))
   ;;=>
   (#%module-begin
-   (provide info-db ability-db make-foes)
-   (require (rename-in imports
-                       [info-db imported-info-db]
-                       [ability-db imported-ability-db]) ...)
-   (define-values (original-info-db original-ability-db)
-     (datums->dbs (list infos ... actions ... ...)))
-   (define info-db
-     (hash-union original-info-db imported-info-db ...
-                 #:combine
-                 (λ (ms1 ms2)
-                   (hash-union ms1 ms2
-                               #:combine/key
-                               (λ (k _m1 _m2) (error 'import-monsters "duplicate definitions for monster ~e" k))))))
-   (define ability-db
-     (hash-union original-ability-db imported-ability-db ...
-                 #:combine/key
-                 (λ (k _as1 _as2)
-                   (error 'import-monsters "duplicate ability decks for set ~e" k))))
+   (make-dbs (provide info-db ability-db)
+             (import imports ...)
+             (info infos ...)
+             (ability (actions ...) ...))
+   (provide make-foes)
    (define make-foes (make-foes-maker '(foes ...) info-db))))
 
 (define ((make-foes-maker foes info-db) level number-of-players)
@@ -105,18 +62,9 @@
         [("random") (take (shuffle (inclusive-range 1 10)) (length monster-types))]))
     (make-monster-group info level (map cons numbers monster-types))))
 
-(module reader syntax/module-reader
+(module reader frosthaven-manager/syntax/module-reader
   frosthaven-manager/foes
-  #:whole-body-readers? #t
-  #:read-syntax read-syntax
-  #:read read
-  (require frosthaven-manager/parsers/foes)
-  (define (read-syntax src in)
-    (port-count-lines! in)
-    (parse-foes src in #:syntax? #t))
-  (define (read in)
-    (port-count-lines! in)
-    (parse-foes (object-name in) in #:syntax? #f)))
+  [parse-foes from frosthaven-manager/parsers/foes])
 
 (module+ debug
   (provide view-foes
@@ -133,3 +81,47 @@
       (window
         (apply vpanel
                (map (flow (~> @ simple-monster-group-view)) foes))))))
+
+(module+ test
+  (require racket/runtime-path rackunit)
+  (define-runtime-path test-foes.rkt "testfiles/sample-foes.rkt")
+  (define make-foes (dynamic-require test-foes.rkt 'make-foes))
+  ;; > (random-seed 0)
+  ;; > (for/list ([_ 3])
+  ;;     (first (shuffle (inclusive-range 1 10))))
+  ;; '(3 10 10)
+  (random-seed 0)
+  (check-equal? (make-foes 4 2)
+                (list
+                  (monster-group "archer" "wyrmling archer" 4
+                                 #s(monster-stats 5 5 5 () () ())
+                                 #s(monster-stats 7 5 6 ("shield 2") () ())
+                                 (list (monster 1 #f 5 empty)))
+                  (monster-group "guard" "hynox guard" 4
+                                 #s(monster-stats 6 6 6 () () ())
+                                 #s(monster-stats 8 6 7 ("shield 2") () ())
+                                 (list (monster 3 #t 8 empty)))))
+  (check-equal? (make-foes 5 3)
+                (list
+                  (monster-group "archer" "wyrmling archer" 5
+                                 #s(monster-stats 6 6 6 () () ())
+                                 #s(monster-stats 8 6 7 ("shield 2") () ())
+                                 (list
+                                   (monster 2 #t 8 empty)
+                                   (monster 1 #f 6 empty)))
+                  (monster-group "guard" "hynox guard" 5
+                                 #s(monster-stats 7 7 7 () () ())
+                                 #s(monster-stats 9 7 8 ("shield 2") () ())
+                                 (list (monster 10 #t 9 empty)))))
+  (check-equal? (make-foes 6 4)
+                (list
+                  (monster-group "archer" "wyrmling archer" 6
+                                 #s(monster-stats 7 7 7 () () ())
+                                 #s(monster-stats 9 7 8 ("shield 3") () ())
+                                 (list
+                                   (monster 1 #t 9 empty)
+                                   (monster 2 #t 9 empty)))
+                  (monster-group "guard" "hynox guard" 6
+                                 #s(monster-stats 8 8 8 () () ())
+                                 #s(monster-stats 10 8 9 ("shield 3") () ())
+                                 (list (monster 10 #t 10 empty))))))

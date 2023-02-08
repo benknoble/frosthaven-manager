@@ -44,6 +44,8 @@
             frosthaven-manager/observable-operator
             frosthaven-manager/qi
             frosthaven-manager/qi/list2hash
+            (only-in frosthaven-manager/syntax/module-reader)
+            frosthaven-manager/syntax/monsters
             ))
 
 @title{Developer Reference}
@@ -1462,11 +1464,11 @@ The result is @racket[syntax?] with source @racket[src] if @racket[syn?] is
 true, and the datum it contains matches @racket[foes/pc].
 }
 
-@deftogether[(@defthing[foes/pc contract? #:value (listof (or/c (list/c 'import string?) monster-info? (listof monster-ability?) foe/pc))]
-              @defthing[foe/pc contract? #:value (list/c string? string? numbering/pc (listof spec/pc))]
-              @defthing[spec/pc contract? #:value (hash/c (or/c 2 3 4) monster-type/pc #:immutable #t)]
-              @defthing[numbering/pc contract? #:value (or/c "ordered" "random" #f)]
-              @defthing[monster-type/pc contract? #:value (or/c "absent" "normal" "elite")])]{
+@deftogether[(@defthing[foes/pc flat-contract? #:value (listof (or/c (list/c 'import string?) monster-info? (listof monster-ability?) foe/pc))]
+              @defthing[foe/pc flat-contract? #:value (list/c string? string? numbering/pc (listof spec/pc))]
+              @defthing[spec/pc flat-contract? #:value (hash/c num-players/c monster-type/pc #:immutable #t)]
+              @defthing[numbering/pc flat-contract? #:value (or/c "ordered" "random" #f)]
+              @defthing[monster-type/pc flat-contract? #:value (or/c "absent" "normal" "elite")])]{
 Contracts for foes values.
 }
 
@@ -1488,7 +1490,7 @@ The result is @racket[syntax?] with source @racket[src] if @racket[syn?] is
 true, and the datum it contains matches @racket[bestiary/c].
 }
 
-@defthing[bestiary/c contract?
+@defthing[bestiary/c flat-contract?
                      #:value
                      (listof (or/c (list/c 'import string?)
                                    monster-info?
@@ -1501,6 +1503,14 @@ A contract for bestiary values.
               @defthing[import-monsters/p (parser/c char? (list/c 'import string?))]
               @defthing[bestiary/p (parser/c char? bestiary/c)])]{
 Textual parsers for parts of the bestiary language.
+}
+
+@defproc[(bestiary-dupes [xs (listof any/c)])
+         (values (or/c #f (listof string?))
+                 (or/c #f (listof string?)))]{
+Returns duplicate monster names from bestiaries and ability decks in
+@racket[xs]. The first value is based on any @racket[monster-info]s and the
+second on @racket[monster-ability] decks.
 }
 
 @section{@tt{observable-operator}}
@@ -1562,4 +1572,130 @@ of the list is mapped into a key via @racket[->key-flo] and a value via
          hash?]{
 Transforms @racket[xs] to a hash by mapping each element into a key via
 @racket[->key] and a value via @racket[->value].
+}
+
+@section{@tt{syntax}}
+
+The modules in this collection provide helpers for macros, syntax, and
+languages.
+
+@subsection{@tt{syntax/module-reader}}
+@defmodule[frosthaven-manager/syntax/module-reader]
+
+This expander language wraps @racketmodname[syntax/module-reader] by assuming a
+specific reading protocol.
+
+This module does not have a reader of its own, so should be used with
+@racket[module] or @(hash-lang) @racketmodname[s-exp].
+
+@defform[#:literals (from)
+         (#%module-begin expander-mod-path
+          [parser-id from parser-mod-path])]{
+The following example demonstrates the entire grammer of the expander language:
+@codeblock|{
+#lang s-exp frosthaven-manager/syntax/module-reader
+frosthaven-manager/foes
+[parse-foes from frosthaven-manager/parsers/foes]
+}|
+
+Or with @racket[module]:
+@codeblock|{
+#lang racket
+(module reader frosthaven-manager/syntax/module-reader
+  frosthaven-manager/foes
+  [parse-foes from frosthaven-manager/parsers/foes])
+}|
+
+The semantics are as follows. The resulting module satisfies the language reader
+extension protocol from @secref["parse-reader" #:doc '(lib "scribblings/reference/reference.scrbl")]
+via @racketmodname[syntax/module-reader] with a few specifications. The
+@racket[expander-mod-path] is used as in @racketmodname[syntax/module-reader] to
+determine the module-path for the initial bindings of modules produced by the
+reader. The @racket[parser-id], which must be provided by
+@racket[parser-mod-path], is assumed to parse the whole body as with the
+@racket[#:whole-body-readers?] keyword for @racketmodname[syntax/module-reader].
+In addition, it should support the following protocol: the parser accepts 2
+positional arguments. The first is the same name-value as @racket[read-syntax];
+the second is the same input port as for @racket[read] and @racket[read-syntax]
+with line-counting enabled. Then it must accept a keyword option
+@racket[#:syntax?], whose value is a boolean indicating whether or not to
+produce a syntax object.
+
+Examples of valid parsers include @racket[parse-foes] and
+@racket[parse-bestiary].
+}
+
+@subsection{@tt{syntax/monsters}}
+@defmodule[frosthaven-manager/syntax/monsters]
+
+@defform[#:literals (provide import info ability)
+         (make-dbs (provide info-db-id ability-db-id)
+                   (import import-mod-path ...)
+                   (info monster-info ...)
+                   (ability (monster-ability ...) ...))
+         #:contracts ([monster-info monster-info?]
+                      [monster-ability monster-ability?])]{
+Binds and provides @racket[info-db-id] and @racket[ability-db-id] to
+@racket[info-db/c] and @racket[ability-db/c] values, respectively, by importing
+all the monster information from each @racket[import-mod-path] and merging it
+with the provided @racket[monster-info] and @racket[monster-ability].
+
+Each @racket[import-mod-path] is expected to provide the same
+@racket[info-db-id] and @racket[ability-db-id].
+
+The @racket[provide] keyword in the provide specification is recognized by
+binding and must be the same as the one from @racketmodname[racket/base]. The
+@racket[import], @racket[info], and @racket[ability] keywords are recognized by
+datum identity.
+}
+
+@defproc[(syntaxes->bestiary-parts [syntaxes (listof syntax?)])
+         (list/c (listof syntax?) (listof syntax?) (listof syntax?) (listof syntax?))]{
+Separates the input @racket[syntaxes] into 4 categories: imports whose datum
+matches @racket[(list/c 'import string?)], monster information matching
+@racket[monster-info?], ability decks matching @racket[(listof monster-ability?)],
+and foes matching @racket[foe/pc].
+}
+
+@defproc[(imports->dbs [import-paths (listof string?)])
+         (values (listof info-db/c) (listof ability-db/c))]{
+Produces all the monster information databases, one for each import in
+@racket[import-paths], using @racket[get-dbs].
+}
+
+@defproc[(check-monsters-have-abilities
+           [imported-info-dbs (listof info-db/c)]
+           [imported-ability-dbs (listof ability-db/c)]
+           [infos (listof monster-info?)]
+           [actions (listof monster-ability?)])
+         boolean?]{
+True iff the set names among all the given @racket[imported-info-dbs] and
+@racket[infos] is a subset of those among all the given
+@racket[imported-ability-dbs] and @racket[actions].
+}
+
+@defproc[(check-monsters-have-abilities-message
+           [imported-info-dbs (listof info-db/c)]
+           [imported-ability-dbs (listof ability-db/c)]
+           [infos (listof monster-info?)]
+           [actions (listof monster-ability?)])
+         string?]{
+An error message for when @racket[check-monsters-have-abilities] fails.
+}
+
+@defproc[(check-foes-have-monsters
+           [imported-info-dbs (listof info-db/c)]
+           [infos (listof monster-info?)]
+           [foes (listof foe/pc)])
+         boolean?]{
+True iff the foe names among all the given @racket[foes] is a subset of the
+monster names among all the given @racket[imported-info-dbs] and @racket[infos].
+}
+
+@defproc[(check-foes-have-monsters-message
+           [imported-info-dbs (listof info-db/c)]
+           [infos (listof monster-info?)]
+           [foes (listof foe/pc)])
+         string?]{
+An error message for when @racket[check-foes-have-monsters] fails.
 }
