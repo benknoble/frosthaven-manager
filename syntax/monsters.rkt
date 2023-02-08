@@ -41,10 +41,10 @@
     body ...))
 
 ;;;; exports
-(define-syntax-parse-rule (make-dbs ({~datum provide} info-db ability-db)
-                                    ({~literal import} imports ...)
-                                    ({~literal info} infos ...)
-                                    ({~literal ability} (actions ...) ...))
+(define-syntax-parse-rule (make-dbs ({~literal provide} info-db ability-db)
+                                    ({~datum import} imports ...)
+                                    ({~datum info} infos ...)
+                                    ({~datum ability} (actions ...) ...))
   #:with (imported-info-db ...) (generate-temporaries #'(imports ...))
   #:with (imported-ability-db ...) (generate-temporaries #'(imports ...))
   (begin
