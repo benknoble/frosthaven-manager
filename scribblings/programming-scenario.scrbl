@@ -439,55 +439,8 @@ The default numbering option is ordered.
                     @litchar{>}])
 
      (list @nonterm{foe-type}
-           @BNF-alt[@litchar{absent} @litchar{normal} @litchar{elite}])
+           @BNF-alt[@litchar{absent} @litchar{normal} @litchar{elite}])]
 
-     (list @nonterm{import}
-           @BNF-seq[@litchar{import-monsters} @nonterm{file:text}])
-
-     (list @nonterm{monster}
-           @BNF-seq-lines[(list @litchar{begin-monster})
-                          (list @nonterm{name:text}
-                                @optional[@BNF-seq[@litchar{(} @nonterm{set:text} @litchar{)}]])
-                          (list @kleenerange[16 16 @nonterm{stats}])
-                          (list @litchar{end-monster})])
-
-     (list @nonterm{stats}
-           @BNF-seq[@litchar{[} @nonterm{level:number}
-                                @BNF-group[@BNF-alt[@litchar{normal} @litchar{elite}]]
-                                @nonterm{stat-block} @litchar{]}])
-
-     (list @nonterm{stat-block}
-           @BNF-seq[@nonterm{hp} @nonterm{move} @nonterm{attack}
-                    @optional{@nonterm{bonuses}}
-                    @optional{@nonterm{effects}}
-                    @optional{@nonterm{immunities}}])
-
-     (list @nonterm{hp} @BNF-seq[@litchar{[} @litchar{HP} @nonterm{number} @litchar{]}])
-     (list @nonterm{move} @BNF-seq[@litchar{[} @litchar{Move} @nonterm{number} @litchar{]}])
-     (list @nonterm{attack} @BNF-seq[@litchar{[} @litchar{Attack} @nonterm{number} @litchar{]}])
-     (list @nonterm{bonuses} @BNF-seq[@litchar{[} @litchar{Bonuses} @nonterm{text-list} @litchar{]}])
-     (list @nonterm{effects} @BNF-seq[@litchar{[} @litchar{Effects} @nonterm{text-list} @litchar{]}])
-     (list @nonterm{immunities} @BNF-seq[@litchar{[} @litchar{Immunities} @nonterm{text-list} @litchar{]}])
-
-     (list @nonterm{ability deck}
-           @BNF-seq-lines[(list @litchar{begin-ability-deck})
-                          (list @nonterm{set:text})
-                          (list @kleenerange[8 8 @nonterm{card}])
-                          (list @litchar{end-ability-deck})])
-
-     (list @nonterm{card}
-           @BNF-seq[@litchar{[} @litchar{name:text}
-                                @litchar{initiative:number}
-                                @optional{@litchar{shuffle}}
-                                @nonterm{text-list} @litchar{]}])
-
-     (list @nonterm{text-list} @BNF-seq[@litchar["{"] @kleenestar[@nonterm{text}] @litchar["}"]])]
-
-Text like @nonterm{nonterminals} should be replaced with their right-hand-sides.
-Text like @litchar{literal} should be typed exactly. Text like
-@optional{@nonterm{optional}} is optional. Text like
-@kleenestar{@nonterm{repeat}} can be repeated 0 or more times, while
-@kleenerange['n 'n]{@nonterm{repeat}} should be repeated exactly @italic{n}
-times. Text like @BNF-group[@BNF-alt[@nonterm{one} @nonterm{two}]] is a choice
-between each part, separated by bars. Text like @nonterm{label:text} refers to
-@tech{game text}, while @nonterm{label:number} refers to an @tech{game number}.
+See @secref{Bestiary_Format_Reference} for information on @nonterm{import},
+@nonterm{monster}, and @nonterm{ability deck}, as well as how to read this
+grammar.
