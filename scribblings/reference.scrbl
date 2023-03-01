@@ -1189,10 +1189,13 @@ The callbacks function as follows:
 }
 
 @defproc[(db-view [|@info-db| (obs/c info-db/c)]
-                  [|@ability-db| (obs/c ability-db/c)])
+                  [|@ability-db| (obs/c ability-db/c)]
+                  [|@monster-groups| (obs/c (listof monster-group?))])
          (is-a?/c view<%>)]{
 A GUI view to display the hierarchical monster database, separated by
 @racket[monster-info] and @racket[monster-ability].
+
+Any pre-set monster groups will also be shown.
 }
 
 @subsection{@tt{gui/player-info}}

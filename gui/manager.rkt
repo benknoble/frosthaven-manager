@@ -86,7 +86,10 @@
   (define-syntax-rule (with-error-text e ...)
     (call-with-error-text (thunk e ...)))
   (vpanel
-    (db-view (state-@info-db s) (state-@ability-db s))
+    (db-view (state-@info-db s)
+             (state-@ability-db s)
+             (@~> (state-@creatures s) (~> sep (pass creature-is-mg*?)
+                                           (>< (~> creature-v monster-group*-mg)) collect)))
     (vpanel #:stretch '(#f #f)
             (hpanel #:stretch '(#t #f)
                     (button "Open Bestiary or Foes"
@@ -258,8 +261,8 @@
 (define ((to-choose-monsters s))
   (:= (state-@mode s) 'choose-monsters))
 
+(define-flow creature-is-mg*? (~> creature-v monster-group*?))
 (define ((to-choose-monsters-or-play s))
-  (define-flow creature-is-mg*? (~> creature-v monster-group*?))
   (define-flow has-mg*? (~>> state-@creatures @! (memf creature-is-mg*?)))
   ;; note parens around switch to invoke selected transition function
   ((switch (s)

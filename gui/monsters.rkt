@@ -28,7 +28,7 @@
             #:on-new (-> monster-number/c boolean? any)
             #:on-select (-> (or/c #f monster-number/c) any))
            (is-a?/c view<%>))]
-    [db-view (-> (obs/c info-db/c) (obs/c ability-db/c) (is-a?/c view<%>)) ]))
+    [db-view (-> (obs/c info-db/c) (obs/c ability-db/c) (obs/c (listof monster-group?)) (is-a?/c view<%>)) ]))
 
 (require racket/gui/easy
          racket/gui/easy/contract
@@ -400,12 +400,15 @@
       "Normal")
     (~a (monster-current-hp monster))))
 
-(define (db-view @info-db @ability-db)
+(define (db-view @info-db @ability-db @monster-groups)
   (define/obs @tab "Stats")
   (group
     "Monster DB"
     (tabs
-      '("Stats" "Abilities")
+      (@~> @monster-groups
+           (switch
+             [empty? '("Stats" "Abilities")]
+             [_ '("Stats" "Abilities" "Foes")]))
       #:selection @tab
       (λ (e _choices current)
         (case e
@@ -413,6 +416,7 @@
       (case-view @tab
         [("Stats") (info-view @info-db)]
         [("Abilities") (ability-view @ability-db)]
+        [("Foes") (foes-view @monster-groups)]
         [else (spacer)]))))
 
 (define (info-view @info-db)
@@ -499,6 +503,10 @@
     ["Shuffle?" ,(flow (if monster-ability-shuffle? "Yes" "No"))]
     ["Abilities:" ,(flow (~> monster-ability-abilities (string-join "\n")))]))
 
+(define (foes-view @monster-groups)
+  (list-view @monster-groups
+    (λ (_k @e) (simple-monster-group-view @e))))
+
 (define-flow take-first (~> hash-keys car))
 (define (initial-set+info info-db)
   (define set (take-first info-db))
@@ -524,7 +532,7 @@
       (render/eventspace
         #:eventspace closing-eventspace
         (window #:mixin close-custodian-mixin
-                (db-view (@ info-db) (@ ability-db))))))
+                (db-view (@ info-db) (@ ability-db) (@ (list)))))))
   (define-values (set info) (initial-set+info info-db))
   (define/obs @state
     ;; 0: set
