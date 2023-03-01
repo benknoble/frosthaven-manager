@@ -7,7 +7,7 @@
     [remove-monster-event/c contract?]
     [single-monster-picker (->* (info-db/c (obs/c level/c))
                                 (#:on-change (-> single-monster-event/c any)
-                                 #:unavailable (set/c string?))
+                                 #:unavailable (set/c string? #:cmp 'dont-care #:kind 'dont-care))
                                 (is-a?/c view<%>))]
     [simple-monster-group-view (-> (obs/c monster-group?)
                                    (is-a?/c view<%>))]
