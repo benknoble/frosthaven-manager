@@ -28,7 +28,10 @@
             #:on-new (-> monster-number/c boolean? any)
             #:on-select (-> (or/c #f monster-number/c) any))
            (is-a?/c view<%>))]
-    [db-view (-> (obs/c info-db/c) (obs/c ability-db/c) (obs/c (listof monster-group?)) (is-a?/c view<%>)) ]))
+    [db-view (-> (obs/c info-db/c) (obs/c ability-db/c) (obs/c (listof monster-group?)) (is-a?/c view<%>))]
+    [longest-set-length (-> info-db/c natural-number/c)]
+    [longest-name-length (-> info-db/c natural-number/c)]
+    [initial-set+info (-> info-db/c (values string? monster-info?))]))
 
 (require racket/gui/easy
          racket/gui/easy/contract

@@ -27,7 +27,8 @@
          (only-in frosthaven-manager/elements elements)
          frosthaven-manager/gui/elements
          frosthaven-manager/monster-db
-         frosthaven-manager/gui/monsters)
+         frosthaven-manager/gui/monsters
+         frosthaven-manager/gui/mixins)
 
 (define (manager)
   (define s (make-state))
@@ -128,7 +129,76 @@
         (list-view (state-@creatures s)
           #:min-size (@~> (state-@creatures s) (~>> length (* 100) (list #f)))
           #:key creature-id
-          (make-creature-view s)))
+          (make-creature-view s))
+        (button "Add Monster Group"
+                (thunk
+                  (define info-db (@! (state-@info-db s)))
+                  (define @monster-names
+                    (@~> (state-@creatures s)
+                         (~> sep (pass creature-is-mg*?)
+                             (>< (~> creature-v monster-group*-mg monster-group-name)) collect)))
+                  ;; 0: set
+                  ;; 1: info
+                  ;; 2: hash number -> elite
+                  ;; 3: level
+                  ;; Peeking @initial-level is valid because inside a button
+                  ;; handler: the value isn't accessed until after it is
+                  ;; correctly set. Peeking @info-db is valid because it is
+                  ;; inside a button handler.
+                  (define-values (set info) (initial-set+info info-db))
+                  (define new-group (vector set info (hash) (@! (state-@level s))))
+                  (define (finish)
+                    (match-define (vector set info num->elite level) new-group)
+                    (when (and set info
+                               (not (or (hash-empty? num->elite)
+                                        ;; valid because inside a dialog-closer:
+                                        ;; @monster-names won't update until the
+                                        ;; end of this form
+                                        (set-member? (@! @monster-names) (monster-info-name info)))))
+                      (define the-group
+                        (make-monster-group
+                          info level
+                          (hash->list num->elite)))
+                      ((add-or-remove-monster-group s) `(add ,the-group))))
+                  (define (on-single-change e)
+                    ;; update internal state
+                    (match e
+                      [`(set from ,_old to ,new) (vector-set! new-group 0 new)]
+                      [`(monster from ,_old to ,new) (vector-set! new-group 1 new)]
+                      [`(include? ,n to #t)
+                        (vector-update! new-group 2 (flow (hash-update n values #f)))]
+                      [`(include? ,n to #f)
+                        (vector-update! new-group 2 (flow (hash-remove n)))]
+                      [`(elite? ,n to ,elite?)
+                        ;; looks like hash-set, but I want the missing-key semantics of
+                        ;; hash-update with no failure-result as a guard against bugs
+                        (vector-update! new-group 2 (flow (hash-update n (const elite?))))]
+                      [`(level ,level) (vector-set! new-group 3 level)]))
+                  (define close! (box #f))
+                  (define (set-close! c) (set-box! close! c))
+                  (define-flow mixin
+                    (~> (make-closing-proc-mixin set-close!)
+                        (make-on-close-mixin finish)))
+                  ;; not setting current renderer, nor using an eventspace: dialog
+                  (render
+                    (dialog
+                      #:mixin mixin
+                      #:title "Pick a Monster"
+                      ;; valid because inside a thunk: need to fix value
+                      #:min-size (~> (info-db)
+                                     (-< longest-name-length longest-set-length)
+                                     + (* 10) (max 400) (list #f))
+                      (single-monster-picker
+                        info-db
+                        (state-@level s)
+                        ;; valid because inside a dialog: state-@creatures won't
+                        ;; update until the dialog is closed
+                        #:unavailable (@! @monster-names)
+                        #:on-change on-single-change)
+                      ;; On η-expansion of close!: close! can be #f until it is
+                      ;; set, so expand the call to close! (by the time it is
+                      ;; called it should have the correct value, a procedure).
+                      (button "Add" (λ () ((unbox close!)))))))))
       ;; right
       (vpanel
         #:stretch '(#f #t)
