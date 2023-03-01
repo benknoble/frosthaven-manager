@@ -404,7 +404,6 @@
   (define/obs @tab "Stats")
   (group
     "Monster DB"
-    (text "If the Monster DB appears empty, then the provided file probably failed to load.")
     (tabs
       '("Stats" "Abilities")
       #:selection @tab

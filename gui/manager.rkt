@@ -78,18 +78,31 @@
     (button "Next" (to-choose-monster-db s))))
 
 (define (choose-monster-db-view s)
+  (define/obs @error-text "")
+  (define (call-with-error-text th)
+    (:= @error-text "")
+    (with-handlers ([exn:fail? (λ (e) (:= @error-text (exn-message e)))])
+      (th)))
+  (define-syntax-rule (with-error-text e ...)
+    (call-with-error-text (thunk e ...)))
   (vpanel
     (db-view (state-@info-db s) (state-@ability-db s))
-    (hpanel
-      #:stretch '(#t #f)
-      (spacer)
-      (button "Open Bestiary or Foes"
-              (thunk
-                (init-dbs-and-foes (or (get-file/filter "Bestiary or Foes" '("Bestiary" "*.rkt"))
-                                       default-monster-db)
-                                   s)))
-      (button "Use Default Bestiary" (thunk (init-dbs default-monster-db s)))
-      (spacer))
+    (vpanel #:stretch '(#f #f)
+            (hpanel #:stretch '(#t #f)
+                    (spacer)
+                    (button "Open Bestiary or Foes"
+                            (thunk
+                              (with-error-text
+                                (init-dbs-and-foes
+                                  (or (get-file/filter "Bestiary or Foes" '("Bestiary" "*.rkt")) default-monster-db)
+                                  s))))
+                    (button "Use Default Bestiary"
+                            (thunk (with-error-text (init-dbs default-monster-db s))))
+                    (spacer))
+            (cond-view
+              [(@> @error-text non-empty-string?)
+               (hpanel (text "Error message: ") (text @error-text #:color "red"))]
+              [else (spacer)]))
     (button "Next" (to-choose-monsters-or-play s) #:enabled? (@~> (state-@info-db s) (not hash-empty?)))))
 
 (define (choose-monsters-view s)
