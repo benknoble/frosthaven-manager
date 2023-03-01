@@ -303,7 +303,11 @@ The grammar for the bestiary is as follows. Whitespace is ignored except in
 
 Any bestiary file that defines a monster is required to define an ability deck
 for that monster's set. Importing bestiaries that conflict with each other or
-with the current bestiary is also an error. Cyclic imports are disallowed.
+with the current bestiary is also an error. Cyclic imports are disallowed. Due
+to a bug that I don't currently understand, all ability cards must have unqiue
+names. In case of duplicate cards, like multiple copies of "Nothing Special," I
+recommend disambiguating them by appending a number. For example, you might have
+"Nothing Special 1" and "Nothing Special 2."
 
 @(require scribble/bnf)
 
