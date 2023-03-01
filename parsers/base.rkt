@@ -95,7 +95,7 @@
 (define (non-empty-text/p why)
   (guard/p text/p non-empty-string? why))
 
-(define-flow name->set (~> string-split (and (~> length (> 1)) last)))
+(define-flow name->set (~> string-split (and (~> length (> 0)) last)))
 
 (define (set-name?/p name)
   (or/p (opt/p (non-empty-text/p "non-empty set name"))
