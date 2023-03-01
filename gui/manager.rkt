@@ -89,7 +89,6 @@
     (db-view (state-@info-db s) (state-@ability-db s))
     (vpanel #:stretch '(#f #f)
             (hpanel #:stretch '(#t #f)
-                    (spacer)
                     (button "Open Bestiary or Foes"
                             (thunk
                               (with-error-text
@@ -97,8 +96,7 @@
                                   (or (get-file/filter "Bestiary or Foes" '("Bestiary" "*.rkt")) default-monster-db)
                                   s))))
                     (button "Use Default Bestiary"
-                            (thunk (with-error-text (init-dbs default-monster-db s))))
-                    (spacer))
+                            (thunk (with-error-text (init-dbs default-monster-db s)))))
             (cond-view
               [(@> @error-text non-empty-string?)
                (hpanel (text "Error message: ") (text @error-text #:color "red"))]
