@@ -429,7 +429,7 @@ The default numbering option is ordered.
                           (list @nonterm{name:text}
                                 @optional[@BNF-seq[@litchar{(} @nonterm{set:text} @litchar{)}]])
                           (list @optional[@BNF-seq[@litchar{(} @nonterm{how-to-number} @litchar{numbering} @litchar{)}]])
-                          (list @kleenerange[0 10 @nonterm{foe-spec}])
+                          (list @kleenerange[1 10 @nonterm{foe-spec}])
                           (list @litchar{end-foe})])
 
      (list @nonterm{how-to-number}
