@@ -163,7 +163,7 @@
         (list-view (@~> @ability (if _
                                    monster-ability-abilities
                                    (gen empty)))
-          (λ (k @e) (text (@~> @e (format "· ~a" _))))))))
+          (λ (_k @e) (text (@~> @e (format "· ~a" _))))))))
   (define stats-panel
     (hpanel
       (group "Normal" (stats-view (@> @mg monster-group-normal-stats))
@@ -199,7 +199,7 @@
       #:selection @monster
       #:choice=? (flow (~> (>< monster-number) =))
       #:choice->label (flow (~> (-< monster-number make-label-stats) ~a))
-      (λ (e ms m)
+      (λ (e _ms m)
         (case e
           ;; no close: cannot close
           ;; no reorder: cannot reorder
@@ -295,7 +295,7 @@
   (define/obs @next-id
     (@~> @monster-groups
          (~> (sep car) (rectify -1) max add1)))
-  (define (make-simple-monster-group-view k @e)
+  (define (make-simple-monster-group-view _k @e)
     (define @m (@> @e cdr))
     (define @name (@> @m monster-group-name))
     (define (remove-group)
@@ -332,8 +332,8 @@
     (define (on-single-change e)
       ;; update internal state
       (match e
-        [`(set from ,old to ,new) (vector-set! new-group 0 new)]
-        [`(monster from ,old to ,new) (vector-set! new-group 1 new)]
+        [`(set from ,_old to ,new) (vector-set! new-group 0 new)]
+        [`(monster from ,_old to ,new) (vector-set! new-group 1 new)]
         [`(include? ,n to #t)
           (vector-update! new-group 2 (flow (hash-update n values #f)))]
         [`(include? ,n to #f)
@@ -407,7 +407,7 @@
     (tabs
       '("Stats" "Abilities")
       #:selection @tab
-      (λ (e choices current)
+      (λ (e _choices current)
         (case e
           [(select) (:= @tab current)]))
       (case-view @tab
@@ -469,7 +469,7 @@
      (~> (ss)
          (map fmt-stat _)
          (string-join "; "))]
-    [else (~a s)]))
+    [_ (~a s)]))
 
 (define (ability-view @ability-db)
   (apply stacked-tables
