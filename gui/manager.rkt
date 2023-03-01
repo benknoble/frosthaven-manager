@@ -104,6 +104,7 @@
       (let* ([es (elements)]
              [@elements (state-@elements s)])
         (vpanel
+          #:stretch '(#f #f)
           (elements-cycler @elements es vpanel)
           (button "Infuse All" (thunk (infuse-all @elements)))
           (button "Consume All" (thunk (consume-all @elements)))))
