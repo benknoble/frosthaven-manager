@@ -69,9 +69,9 @@
     [max-material-cards natural-number/c]
     [max-herb-cards natural-number/c]
     [max-random-item-cards natural-number/c]
-    [money-deck (listof money?)]
-    [material-decks (hash/c material-kind? (listof material?))]
-    [herb-decks (hash/c herb-kind? (listof herb?))]
+    [money-deck (apply list/c (make-list max-money-cards money?))]
+    [material-decks (hash/c material-kind? (apply list/c (make-list max-material-cards material?)))]
+    [herb-decks (hash/c herb-kind? (apply list/c (make-list max-herb-cards herb?)))]
     [material-kinds (listof material-kind?)]
     [herb-kinds (listof herb-kind?)])
 
@@ -296,16 +296,19 @@
 
 ;; placeholders
 (define money-deck
-  (build-list
-    max-money-cards
-    (thunk* (money (random 1 4)))))
-(define (make-material-deck m)
-  (build-list
-    max-material-cards
-    (thunk* (material m (build-list (sub1 max-players) (thunk* (random 1 3)))))))
+  (append
+    (build-list 12 (const (money 1)))
+    (build-list 06 (const (money 2)))
+    (build-list 02 (const (money 3)))))
 (define material-decks
-  (for/hash ([m (in-list material-kinds)])
-    (values m (make-material-deck m))))
+  (let* ([amounts '(
+                    (1 1 1) (1 1 1)
+                    (2 2 1) (2 2 1) (2 2 1)
+                    (2 1 1) (2 1 1) (2 1 1))]
+         [make-deck (λ (m) (map (λ (amount) (material m amount)) amounts))])
+    (hash lumber (make-deck lumber)
+          metal (make-deck metal)
+          hide (make-deck hide))))
 (define herb-decks
   (for/hash ([h (in-list herb-kinds)])
     (values h (build-list max-herb-cards (thunk* (herb h))))))

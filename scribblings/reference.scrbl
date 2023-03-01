@@ -316,14 +316,14 @@ Constants designating the maximum number of certain kinds of cards.
 }
 
 @deftogether[(
-    @defthing[money-deck (listof money?)]
-    @defthing[material-decks (hash/c material-kind? (listof material?))]
-    @defthing[herb-decks (hash/c herb-kind? (listof herb?))]
+    @defthing[money-deck (apply list/c (make-list max-money-cards money?))]
+    @defthing[material-decks (hash/c material-kind? (apply list/c (make-list max-material-cards material?)))]
+    @defthing[herb-decks (hash/c herb-kind? (apply list/c (make-list max-herb-cards herb?)))]
 )]{
 Decks of loot cards from which you draw to make the loot deck.
 
-Current values of some cards are random and will be adjusted when they are
-known. Modifications via stickers are not yet supported.
+Current values are the standard loot cards. Modifications via stickers are not
+yet supported.
 }
 
 @subsection{Scenario}
