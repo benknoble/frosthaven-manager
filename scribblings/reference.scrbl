@@ -398,7 +398,7 @@ A full deck of 20 monster modifier cards.
 
 @deftogether[(
               @defthing[monster-curse-deck (listof monster-modifier?)]
-              @defthing[monster-bless-deck (listof monster-modifier?)]
+              @defthing[bless-deck (listof monster-modifier?)]
 )]{
 Full decks of 10 monster curse and bless cards.
 }
@@ -673,6 +673,7 @@ Serializable.
               [|@|round (obs/c natural-number/c)]
               [|@|monster-modifier-deck (obs/c (listof monster-modifier?))]
               [|@|monster-discard (obs/c (listof monster-modifier?))]
+              [|@|player-blesses (obs/c (listof monster-modifier?))]
               [|@|curses (obs/c (listof monster-modifier?))]
               [|@|blesses (obs/c (listof monster-modifier?))]
               [|@|modifier (obs/c (or/c #f monster-modifier?))]
@@ -696,8 +697,9 @@ All of the "global" manager state.
            [|@|round (maybe-obs/c natural-number/c) (|@| 1)]
            [|@|monster-modifier-deck (maybe-obs/c (listof monster-modifier?)) (|@| (shuffle monster-modifier-deck))]
            [|@|monster-discard (maybe-obs/c (listof monster-modifier?)) (|@| empty)]
+           [|@|player-blesses (maybe-obs/c (listof monster-modifier?)) (|@| empty)]
            [|@|curses (maybe-obs/c (listof monster-modifier?)) (|@| monster-curse-deck)]
-           [|@|blesses (maybe-obs/c (listof monster-modifier?)) (|@| monster-bless-deck)]
+           [|@|blesses (maybe-obs/c (listof monster-modifier?)) (|@| bless-deck)]
            [|@|modifier (maybe-obs/c (or/c #f monster-modifier?)) (|@| #f)]
            [|@|monster-prev-discard (maybe-obs/c (or/c #f monster-modifier?)) (|@| #f)]
            [|@|info-db (maybe-obs/c info-db/c) (|@| (hash))]
@@ -821,8 +823,10 @@ Draws two modifier cards and discards them with the kept card on top.
 }
 
 @deftogether[(@defproc[(do-curse-monster [s state?]) (-> any)]
-              @defproc[(do-bless-monster [s state?]) (-> any)])]{
-Add a curse or bless to the deck.
+              @defproc[(do-bless-monster [s state?]) (-> any)]
+              @defproc[(do-bless-player [s state?]) (-> any)]
+              @defproc[(do-unbless-player [s state?]) (-> any)])]{
+Add a curse or bless to the appropriate deck.
 }
 
 @subsection{@tt{manager/db}}

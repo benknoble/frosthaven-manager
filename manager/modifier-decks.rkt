@@ -9,7 +9,9 @@
                          ((-> monster-modifier? monster-modifier? monster-modifier?))
                          (-> any))]
     [do-curse-monster (-> state? (-> any))]
-    [do-bless-monster (-> state? (-> any))]))
+    [do-bless-monster (-> state? (-> any))]
+    [do-bless-player (-> state? (-> any))]
+    [do-unbless-player (-> state? (-> any))]))
 
 (require frosthaven-manager/observable-operator
          frosthaven-manager/qi
@@ -73,3 +75,17 @@
 
 (define do-curse-monster (deck-adder state-@curses))
 (define do-bless-monster (deck-adder state-@blesses))
+
+(define ((do-bless-player s))
+  (define @cards (state-@blesses s))
+  (unless (empty? (@! @cards))
+    (define card (first (@! @cards)))
+    (<@ @cards rest)
+    (<~@ (state-@player-blesses s) (cons card _))))
+
+(define ((do-unbless-player s))
+  (define @cards (state-@player-blesses s))
+  (unless (empty? (@! @cards))
+    (define card (first (@! @cards)))
+    (<@ @cards rest)
+    (discard s card)))

@@ -88,7 +88,7 @@
     [better-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
     [worse-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
     [monster-curse-deck (listof monster-modifier?)]
-    [monster-bless-deck (listof monster-modifier?)])
+    [bless-deck (listof monster-modifier?)])
 
   ;; monster cards
   (contract-out
@@ -329,7 +329,7 @@
           (build-list 5 (const plus1))
           (list minus2 plus2 null crit)))
 (define monster-curse-deck (build-list 10 (const curse)))
-(define monster-bless-deck (build-list 10 (const bless)))
+(define bless-deck (build-list 10 (const bless)))
 
 (define-flow (shuffle-modifier-deck? pulled-cards)
   (~> sep (any (one-of? null crit))))

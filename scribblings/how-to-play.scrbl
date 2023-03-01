@@ -137,6 +137,13 @@ At the top you will find buttons to add Curse and Bless cards to the monster
 decks. They also tell you how many Curse and Bless cards are left to be added.
 These buttons will not be active if there are no Curse or Bless cards left.
 
+You will also find buttons to add Bless cards to and from the player decks;
+these help track the remaining Bless cards for monsters and have no effect on
+players in the Frosthaven Manager. In actual table play, you should expect to
+manage the lone Bless deck and keep it in sync with the Frosthaven Manager's
+Bless deck. Click @onscreen{Bless Player} when giving a player a Bless; click
+@onscreen{Unbless Player} when a bless comes out of a player deck.
+
 @subsubsection{Drawing from the Monster Modifier Deck}
 
 Towards the middle of the right group of controls you will find a group of

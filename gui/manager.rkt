@@ -119,7 +119,9 @@
       (vpanel
         #:stretch '(#f #t)
         (deck-adder-button (state-@curses s) (do-curse-monster s) "Curse Monster" monster-curse-deck)
-        (deck-adder-button (state-@blesses s) (do-bless-monster s) "Bless Monster" monster-bless-deck)
+        (deck-adder-button (state-@blesses s) (do-bless-monster s) "Bless Monster" bless-deck)
+        (deck-adder-button (state-@blesses s) (do-bless-player s) "Bless Player" bless-deck)
+        (deck-adder-button (state-@player-blesses s) (do-unbless-player s) "Unbless Player" bless-deck)
         (spacer)
         (button (@~> (state-@monster-modifier-deck s) (~>> length (format "Draw Modifier (~a)")))
                 (draw-modifier s))

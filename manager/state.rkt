@@ -19,6 +19,7 @@
                    [@round (obs/c natural-number/c)]
                    [@monster-modifier-deck (obs/c (listof monster-modifier?))]
                    [@monster-discard (obs/c (listof monster-modifier?))]
+                   [@player-blesses (obs/c (listof monster-modifier?))]
                    [@curses (obs/c (listof monster-modifier?))]
                    [@blesses (obs/c (listof monster-modifier?))]
                    [@modifier (obs/c (or/c #f monster-modifier? ))]
@@ -38,6 +39,7 @@
              (listof (maybe-obs/c element-state/c))
              (maybe-obs/c boolean?)
              (maybe-obs/c natural-number/c)
+             (maybe-obs/c (listof monster-modifier?))
              (maybe-obs/c (listof monster-modifier?))
              (maybe-obs/c (listof monster-modifier?))
              (maybe-obs/c (listof monster-modifier?))
@@ -103,6 +105,7 @@
          @round
          @monster-modifier-deck
          @monster-discard
+         @player-blesses
          @curses
          @blesses
          @modifier
@@ -130,8 +133,9 @@
                     [@round (@ 1)]
                     [@monster-modifier-deck (@ (shuffle monster-modifier-deck))]
                     [@monster-discard (@ empty)]
+                    [@player-blesses (@ empty)]
                     [@curses (@ monster-curse-deck)]
-                    [@blesses (@ monster-bless-deck)]
+                    [@blesses (@ bless-deck)]
                     [@modifier (@ #f)]
                     [@monster-prev-discard (@ #f)]
                     [@info-db (@ (hash))]
@@ -149,6 +153,7 @@
          (@ @round)
          (@ @monster-modifier-deck)
          (@ @monster-discard)
+         (@ @player-blesses)
          (@ @curses)
          (@ @blesses)
          (@ @modifier)
@@ -174,6 +179,8 @@
   ;; dynamic-require: break module cycle
   ;; frosthaven-manager/manager/db -> frosthaven-manager/manager/state
   (define init-dbs (dynamic-require 'frosthaven-manager/manager/db 'init-dbs))
+  ;; frosthaven-manager/manager/modifier-decks -> frosthaven-manager/manager/state
+  (define do-bless-player (dynamic-require 'frosthaven-manager/manager/modifier-decks 'do-bless-player))
 
   (test-case
     "Serializable state"
@@ -184,7 +191,19 @@
     (thread (thunk (serialize-state s writable)))
     (define s* (deserialize-state readable))
 
-    (check-equal? (s@->v s*) (s@->v s))))
+    (check-equal? (s@->v s*) (s@->v s)))
+
+  (test-case
+    "Copyable state"
+
+    (define s1 (make-state))
+    (define s2 (make-state))
+    (void (init-dbs default-monster-db s1)
+          ((do-bless-player s1))
+          ;;
+          (copy-state s1 s2))
+
+    (check-equal? (s@->v s2) (s@->v s1))))
 
 (define (copy-state from to)
   (:=     (state-@mode to)
@@ -213,6 +232,8 @@
       (@! (state-@monster-modifier-deck from)))
   (:=     (state-@monster-discard to)
       (@! (state-@monster-discard from)))
+  (:=     (state-@player-blesses to)
+      (@! (state-@player-blesses from)))
   (:=     (state-@curses to)
       (@! (state-@curses from)))
   (:=     (state-@blesses to)
