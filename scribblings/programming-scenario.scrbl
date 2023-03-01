@@ -252,10 +252,10 @@ would import all the monsters and ability decks in the file
 Use the @filepath{/} slash character to separate folders and directories from
 filenames. If there is no slash, the bestiary from which to import is assumed to
 be in the same folder or directory as the bestiary containing the import
-command. Use @filepath{..} to mean the folder or directory containing the
-bestiary with the import command, so that the following command imports
-@filepath{monsters.rkt} in the current bestiary's containing folder or
-directory:
+command. Use @filepath{..} to mean one level above the folder or directory
+containing the bestiary with the import command, so that the following command
+imports @filepath{monsters.rkt} from one directory above the current bestiary's
+containing folder or directory:
 
 @codeblock|{
 import-monsters "../monsters.rkt"
