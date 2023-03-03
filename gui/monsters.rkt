@@ -29,9 +29,11 @@
             #:on-select (-> (or/c #f monster-number/c) any))
            (is-a?/c view<%>))]
     [db-view (-> (obs/c info-db/c) (obs/c ability-db/c) (obs/c (listof monster-group?)) (is-a?/c view<%>))]
-    [longest-set-length (-> info-db/c natural-number/c)]
-    [longest-name-length (-> info-db/c natural-number/c)]
-    [initial-set+info (-> info-db/c (values string? monster-info?))]))
+    [add-monster-group (->* ((obs/c info-db/c)
+                             (obs/c level/c)
+                             (obs/c (set/c string? #:cmp 'dont-care #:kind 'dont-care)))
+                            (#:on-group (-> monster-group? any))
+                            any)]))
 
 (require racket/gui/easy
          racket/gui/easy/contract
@@ -288,9 +290,7 @@
 (define remove-monster-event/c
   (list/c 'remove monster-group?))
 
-(define (multi-monster-picker @info-db
-                              @initial-level
-                              #:on-change [on-change void])
+(define (multi-monster-picker @info-db @initial-level #:on-change [on-change void])
   (define/obs @monster-groups empty)
   (define @monster-names
     (@~> @monster-groups
@@ -309,69 +309,6 @@
               (button (@~> @name (~a "Remove " _)) remove-group)
               (spacer))
       (simple-monster-group-view @m)))
-  (define (add-monster-group)
-    ;; 0: set
-    ;; 1: info
-    ;; 2: hash number -> elite
-    ;; 3: level
-    ;; Peeking @initial-level is valid because inside a button handler: the
-    ;; value isn't accessed until after it is correctly set.
-    ;; Peeking @info-db is valid because it is inside a button handler.
-    (define-values (set info) (initial-set+info (@! @info-db)))
-    (define new-group (vector set info (hash) (@! @initial-level)))
-    (define (finish)
-      (match-define (vector set info num->elite level) new-group)
-      (when (and set info
-                 (not (or (hash-empty? num->elite)
-                          ;; valid because inside a dialog-closer: @monster-names won't
-                          ;; update until the end of this form
-                          (set-member? (@! @monster-names) (monster-info-name info)))))
-        (define the-group
-          (make-monster-group
-            info level
-            (hash->list num->elite)))
-        (on-change `(add ,the-group))
-        (<~@ @monster-groups (append (list (cons (@! @next-id) the-group))))))
-    (define (on-single-change e)
-      ;; update internal state
-      (match e
-        [`(set from ,_old to ,new) (vector-set! new-group 0 new)]
-        [`(monster from ,_old to ,new) (vector-set! new-group 1 new)]
-        [`(include? ,n to #t)
-          (vector-update! new-group 2 (flow (hash-update n values #f)))]
-        [`(include? ,n to #f)
-          (vector-update! new-group 2 (flow (hash-remove n)))]
-        [`(elite? ,n to ,elite?)
-          ;; looks like hash-set, but I want the missing-key semantics of
-          ;; hash-update with no failure-result as a guard against bugs
-          (vector-update! new-group 2 (flow (hash-update n (const elite?))))]
-        [`(level ,level) (vector-set! new-group 3 level)]))
-    (define close! (box #f))
-    (define (set-close! c) (set-box! close! c))
-    (define-flow mixin
-      (~> (make-closing-proc-mixin set-close!)
-          (make-on-close-mixin finish)))
-    ;; not setting current renderer, nor using an eventspace: dialog
-    (render
-      (dialog
-        #:mixin mixin
-        #:title "Pick a Monster"
-        ;; valid because inside a thunk: need to fix value
-        #:min-size (~> (@info-db) @!
-                       (-< longest-name-length longest-set-length)
-                       + (* 10) (max 400) (list #f))
-        (single-monster-picker
-          ;; valid because inside a thunk: need to fix value
-          (@! @info-db)
-          @initial-level
-          ;; valid because inside a dialog: @monster-names won't update until
-          ;; the dialog is closed
-          #:unavailable (@! @monster-names)
-          #:on-change on-single-change)
-        ;; On η-expansion of close!: close! can be #f until it is set, so
-        ;; expand the call to close! (by the time it is called it should
-        ;; have the correct value, a procedure).
-        (button "Add" (λ () ((unbox close!)))))))
   (vpanel
     (list-view @monster-groups
       #:key car
@@ -380,7 +317,75 @@
     (hpanel
       #:stretch '(#t #f)
       (spacer)
-      (button "Add Monster" add-monster-group))))
+      (button
+        "Add Monster"
+        (thunk
+          (add-monster-group
+            @info-db
+            @initial-level
+            @monster-names
+            #:on-group (λ (g)
+                         (on-change `(add ,g))
+                         (<~@ @monster-groups (append (list (cons (@! @next-id) g)))))))))))
+
+
+(define (add-monster-group @info-db @initial-level @monster-names #:on-group [on-group void])
+  ;; 0: set
+  ;; 1: info
+  ;; 2: hash number -> elite
+  ;; 3: level
+  ;; Peeking @initial-level is valid because inside a button handler: the value
+  ;; isn't accessed until after it is correctly set. Peeking @info-db is valid
+  ;; because it is inside a button handler.
+  (define-values (set info) (initial-set+info (@! @info-db)))
+  (define new-group (vector set info (hash) (@! @initial-level)))
+  (define (finish)
+    (match-define (vector set info num->elite level) new-group)
+    (when (and set info
+               (not (or (hash-empty? num->elite)
+                        ;; valid because inside a dialog-closer: @monster-names
+                        ;; won't update until the end of this form
+                        (set-member? (@! @monster-names) (monster-info-name info)))))
+      (define the-group (make-monster-group info level (hash->list num->elite)))
+      (on-group the-group)))
+  (define (on-single-change e)
+    ;; update internal state
+    (match e
+      [`(set from ,_old to ,new) (vector-set! new-group 0 new)]
+      [`(monster from ,_old to ,new) (vector-set! new-group 1 new)]
+      [`(include? ,n to #t) (vector-update! new-group 2 (flow (hash-update n values #f)))]
+      [`(include? ,n to #f) (vector-update! new-group 2 (flow (hash-remove n)))]
+      [`(elite? ,n to ,elite?)
+        ;; looks like hash-set, but I want the missing-key semantics of
+        ;; hash-update with no failure-result as a guard against bugs
+        (vector-update! new-group 2 (flow (hash-update n (const elite?))))]
+      [`(level ,level) (vector-set! new-group 3 level)]))
+  (define close! (box #f))
+  (define (set-close! c) (set-box! close! c))
+  (define-flow mixin
+    (~> (make-closing-proc-mixin set-close!)
+        (make-on-close-mixin finish)))
+  ;; not setting current renderer, nor using an eventspace: dialog
+  (render
+    (dialog
+      #:mixin mixin
+      #:title "Pick a Monster"
+      ;; valid because inside a thunk: need to fix value
+      #:min-size (~> (@info-db) @!
+                     (-< longest-name-length longest-set-length)
+                     + (* 10) (max 400) (list #f))
+      (single-monster-picker
+        ;; valid because inside a thunk: need to fix value
+        (@! @info-db)
+        @initial-level
+        ;; valid because inside a dialog: @monster-names won't update until the
+        ;; dialog is closed
+        #:unavailable (@! @monster-names)
+        #:on-change on-single-change)
+      ;; On η-expansion of close!: close! can be #f until it is set, so expand
+      ;; the call to close! (by the time it is called it should have the correct
+      ;; value, a procedure).
+      (button "Add" (λ () ((unbox close!)))))))
 
 (define (simple-monster-group-view @monster-group)
   (vpanel

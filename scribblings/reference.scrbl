@@ -1198,6 +1198,21 @@ A GUI view to display the hierarchical monster database, separated by
 Any pre-set monster groups will also be shown.
 }
 
+@defproc[(add-monster-group [|@info-db| (obs/c info-db/c)]
+                            [|@initial-level| (obs/c level/c)]
+                            [|@monster-names| (obs/c (set/c string? #:cmp 'dont-care #:kind 'dont-care))]
+                            [#:on-group on-group (-> monster-group? any) void])
+         any]{
+Renders a dialog to add a monster group by invoking the callback
+@racket[on-group] if one is selected. The value of @racket[|@initial-level|] is
+used for the initial level of the group, which can be adjusted in the dialog.
+Similarly, @racket[|@monster-names|] specifies which names are not available for
+the new group.
+
+Originally an internal part of the implementation of
+@racket[multi-monster-picker] until it had uses in the main playing view.
+}
+
 @subsection{@tt{gui/player-info}}
 @defmodule[frosthaven-manager/gui/player-info]
 
