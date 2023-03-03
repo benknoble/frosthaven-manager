@@ -127,7 +127,6 @@
       (group
         "Creatures"
         (list-view (state-@creatures s)
-          #:min-size (@~> (state-@creatures s) (~>> length (* 100) (list #f)))
           #:key creature-id
           (make-creature-view s))
         (button "Add Monster Group"
