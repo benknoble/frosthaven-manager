@@ -86,7 +86,8 @@
           on-initiative
           #:min-value 0
           #:max-value 99
-          #:label @init-label))))
+          #:label @init-label
+          #:min-size '(700 #f)))))
   (define name-initiative-panel
     (group
       "Initiative"
