@@ -289,7 +289,7 @@
     (if (> 1) "s" ""))
   (match-lambda
     [(money amount) (format "~a gold coin~a" amount (s? amount))]
-    [(material name (app (flow (list-ref (sub1 num-players))) amount))
+    [(material name (app (flow (list-ref (- num-players 2))) amount))
      (format "~a ~a~a" amount name (s? amount))]
     [(herb name) (format "1 ~a" name)]
     [(== random-item) "The random item!"]))
