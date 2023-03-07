@@ -3,9 +3,14 @@
 (module+ main
   ;; (require racket/gui/easy/debugger)
   ;; (start-debugger)
-  (void (render/eventspace
-          ;; no separate eventspace: block main until this window closed
-          (manager))))
+  (define s (make-state))
+  (command-line
+    #:args ([save #f])
+    (when (and save (file-exists? save))
+      ((load-game s) save))
+    (void (render/eventspace
+            ;; no separate eventspace: block main until this window closed
+            (manager s)))))
 
 (provide manager)
 
@@ -29,8 +34,7 @@
          frosthaven-manager/gui/monsters
          frosthaven-manager/gui/render)
 
-(define (manager)
-  (define s (make-state))
+(define (manager s)
   (application-about-handler do-about)
   (window
     #:title "Frosthaven Manager"
