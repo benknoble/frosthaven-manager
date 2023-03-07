@@ -23,7 +23,8 @@
          racket/gui/easy/contract
          frosthaven-manager/defns
          frosthaven-manager/gui/counter
-         frosthaven-manager/gui/render)
+         frosthaven-manager/gui/render
+         frosthaven-manager/gui/mixins)
 
 (define (player-input-views @num-players
                             #:on-name [on-name void]
@@ -74,15 +75,20 @@
   (define @init (@> @player player-initiative))
   (define @init-label (@~> @player (~>> player-name (~a "Initiative for "))))
   (define (show-initiative-slider)
+    (define close! (box #f))
+    (define (set-close! p) (set-box! close! p))
     (with-closing-custodian/eventspace
       (render/eventspace
         #:eventspace closing-eventspace
         (window
-          #:mixin close-custodian-mixin
+          #:mixin (flow (~> close-custodian-mixin
+                            (make-closing-proc-mixin set-close!)))
           #:title @init-label
           (input
             (@> @init ~a)
-            (λ (_event init-str)
+            (λ (event init-str)
+              (when (equal? event 'return)
+                ((unbox close!)))
               (cond
                 [(string->number init-str)
                  =>
