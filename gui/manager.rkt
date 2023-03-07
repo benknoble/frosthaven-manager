@@ -27,7 +27,6 @@
          frosthaven-manager/gui/elements
          frosthaven-manager/monster-db
          frosthaven-manager/gui/monsters
-         frosthaven-manager/gui/mixins
          frosthaven-manager/gui/render)
 
 (define (manager)
