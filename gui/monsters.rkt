@@ -143,14 +143,14 @@
           ;; expand the call to close! (by the time it is called it should
           ;; have the correct value, a procedure).
           (button "Add" (λ () ((unbox close!))))))))
+  (define name-panel (text (@> @mg monster-group-name)))
+  (define add-monster-button (button "Add Monster" do-new))
   (define name-initiative-panel
     (group
       "Initiative"
-      (text (@> @mg monster-group-name))
-      (text (@~> @ability (if monster-ability?
-                            (~> monster-ability-initiative ~a)
-                            "??")))
-      (button "Add Monster" do-new)))
+      name-panel
+      (text (@~> @ability (if monster-ability? (~> monster-ability-initiative ~a) "??")))
+      add-monster-button))
   (define ability-panel
     (group
       "Ability"
@@ -222,13 +222,14 @@
   (group
     "Monster"
     #:stretch '(#t #f)
-    (hpanel
-      #:alignment '(center center)
-      #:margin '(20 0)
-      name-initiative-panel
-      ability-panel
-      stats-panel)
-    monsters))
+    (cond-view
+      [(@> @monsters empty?) (hpanel name-panel add-monster-button)]
+      [else (vpanel (hpanel #:alignment '(center center)
+                            #:margin '(20 0)
+                            name-initiative-panel
+                            ability-panel
+                            stats-panel)
+                    monsters)])))
 
 ;; TODO: should be able to manipulate individual HP (? dialog with counter)
 ;; Takes a non-observable info-db b/c instantiated by a thunk in
