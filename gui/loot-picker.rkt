@@ -110,7 +110,6 @@
   (dialog
     #:mixin mixin
     #:title "Loot card"
-    #:size '(250 100)
     #:style empty
     (text (obs-combine card-text @num-players @loot-deck))
     (apply hpanel
