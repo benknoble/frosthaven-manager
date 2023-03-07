@@ -355,7 +355,8 @@
   (regenerate ward invisible strengthen wound brittle bane poison immobilize disarm impair stun muddle)
   #:property-maker make-property-maker-that-displays-as-constant-names)
 (define conditions
-  (list regenerate ward invisible strengthen wound brittle bane poison immobilize disarm impair stun muddle))
+  (sort (list regenerate ward invisible strengthen wound brittle bane poison immobilize disarm impair stun muddle)
+        string<=? #:key ~a))
 
 ;; monster cards
 
