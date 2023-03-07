@@ -80,13 +80,14 @@
         (window
           #:mixin close-custodian-mixin
           #:title @init-label
-          (slider
-            @init
-            on-initiative
-            #:min-value 0
-            #:max-value 99
-            #:label @init-label
-            #:min-size '(700 #f))))))
+          (input
+            (@> @init ~a)
+            (λ (_event init-str)
+              (cond
+                [(string->number init-str)
+                 =>
+                 (λ (init) (when (<= 0 init 99) (on-initiative init)))]))
+            #:label @init-label)))))
   (define name-initiative-panel
     (group
       "Initiative"
