@@ -72,8 +72,7 @@
     (group "Stats"
            #:alignment '(center center)
            #:stretch '(#f #t)
-           hp-panel
-           xp-panel))
+           (vpanel hp-panel xp-panel)))
   (define @init (@> @player player-initiative))
   (define @init-label (@~> @player (~>> player-name (~a "Initiative for "))))
   (define (show-initiative-slider)
@@ -92,8 +91,9 @@
     (group
       "Initiative"
       #:stretch '(#f #t)
-      (text (@> @player player-name))
-      (text (@> @init ~a))
+      (hpanel #:alignment '(center center)
+              (text (@> @player player-name))
+              (text (@~> @init (format "(~a)" _))))
       (button "Edit Initiative" show-initiative-slider)))
   (define (show-conditions)
     ;; not setting current renderer, nor using an eventspace: dialog

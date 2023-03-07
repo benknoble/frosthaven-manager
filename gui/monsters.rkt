@@ -58,9 +58,18 @@
   (vpanel
     (text (@~> @stats (~> monster-stats-move ~a)))
     (text (@~> @stats (~> monster-stats-attack ~a)))
-    (text (@~> @stats (~> monster-stats-bonuses (string-join ", "))))
-    (text (@~> @stats (~> monster-stats-effects (string-join ", "))))
-    (text (@~> @stats (~> monster-stats-immunities (string-join ", "))))
+    (cond-view
+      [(@~> @stats (~> monster-stats-bonuses (not empty?)))
+       (text (@~> @stats (~> monster-stats-bonuses (string-join ", "))))]
+      [else (spacer)])
+    (cond-view
+      [(@~> @stats (~> monster-stats-effects (not empty?)))
+       (text (@~> @stats (~> monster-stats-effects (string-join ", "))))]
+      [else (spacer)])
+    (cond-view
+      [(@~> @stats (~> monster-stats-immunities (not empty?)))
+       (text (@~> @stats (~> monster-stats-immunities (string-join ", "))))]
+      [else (spacer)])
     (text (@~> @stats (~> monster-stats-max-hp ~a)))))
 
 (define (monster-view @mg @monster
@@ -93,8 +102,8 @@
     (group
       "Stats"
       #:stretch '(#f #t)
-      (text (@~> @monster (~>> monster-number (format "# ~a"))))
-      (text (@~> @monster (if monster-elite? "Elite" "Normal")))
+      (hpanel (text (@~> @monster (~>> monster-number (format "# ~a"))))
+              (text (@~> @monster (if monster-elite? "Elite" "Normal"))))
       (counter
         (obs-combine
           (flow (~>> (== monster-current-hp monster-stats-max-hp) (format "HP: ~a/~a")))
@@ -148,9 +157,10 @@
   (define name-initiative-panel
     (group
       "Initiative"
-      name-panel
-      (text (@~> @ability (if monster-ability? (~> monster-ability-initiative ~a) "??")))
-      add-monster-button))
+      (vpanel #:alignment '(center center)
+              name-panel
+              (text (@~> @ability (if monster-ability? (~> monster-ability-initiative ~a) "??")))
+              add-monster-button)))
   (define ability-panel
     (group
       "Ability"
@@ -176,9 +186,24 @@
       (group "Stats"
              (text "Move")
              (text "Attack")
-             (text "Bonuses")
-             (text "Effects")
-             (text "Immunities")
+             (cond-view
+               [(obs-combine (flow (~> (>< monster-stats-bonuses) (not (all empty?))))
+                             (@> @mg monster-group-normal-stats)
+                             (@> @mg monster-group-elite-stats))
+                (text "Bonuses")]
+               [else (spacer)])
+             (cond-view
+               [(obs-combine (flow (~> (>< monster-stats-effects) (not (all empty?))))
+                             (@> @mg monster-group-normal-stats)
+                             (@> @mg monster-group-elite-stats))
+                (text "Effects")]
+               [else (spacer)])
+             (cond-view
+               [(obs-combine (flow (~> (>< monster-stats-immunities) (not (all empty?))))
+                             (@> @mg monster-group-normal-stats)
+                             (@> @mg monster-group-elite-stats))
+                (text "Immunities")]
+               [else (spacer)])
              (text "Max HP"))
       (group "Elite" (stats-view (@> @mg monster-group-elite-stats))
              #:min-size (list (* 10 (string-length "Elite")) #f))))
@@ -224,12 +249,10 @@
     #:stretch '(#t #f)
     (cond-view
       [(@> @monsters empty?) (hpanel name-panel add-monster-button)]
-      [else (vpanel (hpanel #:alignment '(center center)
-                            #:margin '(20 0)
-                            name-initiative-panel
-                            ability-panel
-                            stats-panel)
-                    monsters)])))
+      [else (hpanel #:alignment '(center center)
+                    name-initiative-panel
+                    (vpanel (hpanel ability-panel stats-panel)
+                            monsters))])))
 
 ;; TODO: should be able to manipulate individual HP (? dialog with counter)
 ;; Takes a non-observable info-db b/c instantiated by a thunk in
