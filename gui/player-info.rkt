@@ -10,8 +10,7 @@
                               #:names (listof string?)
                               #:hps (listof positive-integer?))
                              (is-a?/c view<%>))]
-    [player-view (->* ((obs/c player?)
-                       (obs/c num-players/c))
+    [player-view (->* ((obs/c player?))
                       (#:on-condition (-> (list/c condition? boolean?) any)
                        #:on-hp (-> (-> number? number?) any)
                        #:on-xp (-> (-> number? number?) any)
@@ -44,7 +43,6 @@
     make-input-view))
 
 (define (player-view @player
-                     @num-players
                      #:on-condition [on-condition void]
                      #:on-hp [on-hp void]
                      #:on-xp [on-xp void]
@@ -180,7 +178,6 @@
               (<~@ @players (update-players k proc)))
             (player-view
               (@> @e cdr)
-              (@> @players length)
               #:on-condition (flow (~> player-condition-handler update))
               #:on-hp (flow (~> player-act-on-hp update))
               #:on-xp (flow (~> player-act-on-xp update))

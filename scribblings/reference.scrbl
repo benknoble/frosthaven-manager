@@ -1232,7 +1232,6 @@ via @racket[names] and @racket[hps].
 
 @defproc[(player-view
            [|@player| (obs/c player?)]
-           [|@num-players| (obs/c num-players/c)]
            [#:on-condition on-condition (-> (list/c condition? boolean?) any) void]
            [#:on-hp on-hp (-> (-> number? number?) any) void]
            [#:on-xp on-xp (-> (-> number? number?) any) void]

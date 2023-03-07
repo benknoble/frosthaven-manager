@@ -197,7 +197,6 @@
     (update (flow (player-set-initiative i))))
   (player-view
     (@> @e creature-v)
-    (state-@num-players s)
     #:on-condition update-player-condition
     #:on-hp update-player-hp
     #:on-xp update-player-xp
