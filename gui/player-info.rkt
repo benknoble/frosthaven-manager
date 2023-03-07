@@ -109,27 +109,6 @@
                                   (sep ~a) collect
                                   (string-join ", " #:before-last " and "))))
            (button "Edit Conditions" show-conditions)))
-  (define (make-loot-list p)
-    (for/list ([(loot i) (in-indexed (player-loot p))])
-      (cons i loot)))
-  (define (make-loot-view k @e)
-    (text (@~> @e (~> cdr (format-loot-card (@! @num-players))))))
-  (define (show-loot)
-    (with-closing-custodian/eventspace
-      (render/eventspace
-        #:eventspace closing-eventspace
-        (window
-          #:mixin close-custodian-mixin
-          #:title (@~> @player (~> player-name (~a "'s Loot")))
-          #:min-size (list 200 40)
-          (list-view (@> @player make-loot-list)
-            #:key car
-            make-loot-view
-            #:min-size (@~> @player
-                            (~> (-< #f (~> player-loot length (* 40)))
-                                list)))))))
-  (define loot-panel
-    (button "Show Loot" show-loot))
   ;; final view
   (group
     "Player"
@@ -138,9 +117,7 @@
             #:margin '(20 0)
             name-initiative-panel
             hp-xp
-            (vpanel
-              conditions-panel
-              loot-panel))))
+            conditions-panel)))
 
 (define (player-input-view
           #:on-name [on-name void]

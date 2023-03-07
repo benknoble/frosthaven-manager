@@ -197,10 +197,9 @@ player's initiative.
 To the right of the initiative controls are the health and experience controls.
 @counter{current HP and XP}
 
-Right of the HP and XP controls are conditions and loot. Click @onscreen{Edit
-Conditions} to toggle conditions on and off for a player. Close the window of
-conditions when finished. Click @onscreen{Show Loot} to show all loot a player
-currently has. This is especially useful when a scenario is completed.
+Right of the HP and XP controls are conditions. Click @onscreen{Edit Conditions}
+to toggle conditions on and off for a player. Close the window of conditions
+when finished.
 
 @subsubsection{Monster Group Controls}
 
@@ -231,6 +230,9 @@ parentheses, and an asterisk (*) if the monster is affected by any conditions.
 
 Last but not least, at the bottom of the screen lie loot and information
 controls.
+
+Click @onscreen{Show Loot and XP} to show all loot and XP for every player. This
+is especially useful when a scenario is completed.
 
 Click the @onscreen{Loot!} button to draw a loot card; in the window that
 appears, click the name of a player to assign that loot card to the selected

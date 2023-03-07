@@ -1,7 +1,6 @@
 #lang racket
 
 (module+ main
-  (require frosthaven-manager/gui/render)
   ;; (require racket/gui/easy/debugger)
   ;; (start-debugger)
   (void (render/eventspace
@@ -28,7 +27,8 @@
          frosthaven-manager/gui/elements
          frosthaven-manager/monster-db
          frosthaven-manager/gui/monsters
-         frosthaven-manager/gui/mixins)
+         frosthaven-manager/gui/mixins
+         frosthaven-manager/gui/render)
 
 (define (manager)
   (define s (make-state))
@@ -160,6 +160,10 @@
         (button "Draw Abilities" #:enabled? (@> (state-@in-draw? s) not) (draw-abilities s))))
     ;; bottom
     (hpanel #:stretch '(#f #f)
+            (show-loot-and-xp (state-@num-players s)
+                              (state-@level s)
+                              (@~> (state-@creatures s)
+                                   (~> sep (pass (~> creature-v player?)) (>< creature-v) collect)))
             (loot-button (state-@loot-deck s)
                          (state-@num-loot-cards s)
                          (state-@num-players s)
@@ -245,6 +249,51 @@
       (spacer)
       (text (@~> (state-@monster-discard s) (~>> (map ~a) (string-join _ "\n"))))
       (spacer))))
+
+(define (show-loot-and-xp @num-players @level @players)
+  (define labels
+    (append (list "Player" "Random Item?" "XP" "Gold")
+            (map ~a material-kinds)
+            (map ~a herb-kinds)))
+  ;; accessing @level and @num-players: should not change by the time this
+  ;; button is available
+  (define (player->row p)
+    (define loots (player-loot p))
+    (apply vector
+           (player-name p)
+           (if (memf random-item? loots) "x" "")
+           (~a (player-xp p))
+           (~a (for/sum ([loot (in-list loots)] #:when (money? loot))
+                 (* (money-amount loot)
+                    (level-info-gold (get-level-info (@! @level))))))
+           (append
+             (for/list ([material material-kinds])
+               (~a (for/sum ([loot (in-list loots)]
+                             #:when (and (material? loot)
+                                         (equal? material (material-name loot))))
+                     (list-ref (material-amount loot) (- (@! @num-players) 2)))))
+             (for/list ([herb herb-kinds])
+               (~a (for/sum ([loot (in-list loots)]
+                             #:when (and (herb? loot)
+                                         (equal? herb (herb-name loot))))
+                     1))))))
+  (button
+    "Show Loot and XP"
+    (thunk
+      (with-closing-custodian/eventspace
+        (render/eventspace
+          #:eventspace closing-eventspace
+          (window
+            #:mixin close-custodian-mixin
+            #:title "Loot and XP"
+            #:size '(400 300)
+            (table labels
+                   (@> @players list->vector)
+                   #:entry->row player->row
+                   #:selection #f
+                   #:column-widths
+                   (for/list ([(label i) (in-indexed (in-list labels))])
+                     (list i (* 10 (string-length label)))))))))))
 
 ;;;; Transition functions
 
