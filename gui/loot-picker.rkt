@@ -81,22 +81,18 @@
   (define-flow (loot-text deck num-cards)
     (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
   (define (show-assigner)
-    (with-closing-custodian/eventspace
-      (render/eventspace #:eventspace closing-eventspace
-                         (loot-assigner @loot-deck @num-players @players on-player on-close
-                                        #:mixin close-custodian-mixin))))
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render (loot-assigner @loot-deck @num-players @players on-player on-close)))
   (button (obs-combine loot-text @loot-deck @num-loot-cards)
           #:enabled? (@~> @loot-deck (not empty?))
           show-assigner))
 
-(define (loot-assigner @loot-deck @num-players @players on-player on-close
-                       #:mixin [extra-mix values])
+(define (loot-assigner @loot-deck @num-players @players on-player on-close)
   (define close! (box #f))
   (define (set-close! c) (set-box! close! c))
   (define-flow mixin
     (~> (make-closing-proc-mixin set-close!)
-        (make-on-close-mixin on-close)
-        extra-mix))
+        (make-on-close-mixin on-close)))
   (define/match (make-player-button e)
     [{(cons p id)}
       (define (action)
