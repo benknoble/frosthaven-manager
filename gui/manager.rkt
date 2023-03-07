@@ -348,7 +348,24 @@
 
 (define ((draw-abilities s))
   ;; draw new monster cards
-  (<@ (state-@ability-decks s) (update-ability-decks ability-decks-draw-next))
+  (<@ (state-@ability-decks s)
+      (update-ability-decks
+        (λ (ad)
+          (define monster-set
+            (for/or ([ability (cons (ability-decks-current ad)
+                                    (append (ability-decks-draw ad)
+                                            (ability-decks-discard ad)))])
+              (and ability (monster-ability-set-name ability))))
+          (define monster-set-has-monsters?
+            (for/or ([creature (@! (state-@creatures s))]
+                     #:do [(define v (creature-v creature))]
+                     #:when (monster-group*? v)
+                     #:do [(define mg (monster-group*-mg v))]
+                     #:when (~> (mg) monster-group-set-name (equal? monster-set)))
+              (~> (mg) monster-group-monsters (not empty?))))
+          (cond
+            [monster-set-has-monsters? (ability-decks-draw-next ad)]
+            [else ad]))))
   ;; order creatures
   (<~@ (state-@creatures s) (sort < #:key (creature-initiative s)))
   ;; toggle state
