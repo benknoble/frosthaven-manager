@@ -74,17 +74,19 @@
   (define @init (@> @player player-initiative))
   (define @init-label (@~> @player (~>> player-name (~a "Initiative for "))))
   (define (show-initiative-slider)
-    ;; not setting current renderer, nor using an eventspace: dialog
-    (render
-      (dialog
-        #:title @init-label
-        (slider
-          @init
-          on-initiative
-          #:min-value 0
-          #:max-value 99
-          #:label @init-label
-          #:min-size '(700 #f)))))
+    (with-closing-custodian/eventspace
+      (render/eventspace
+        #:eventspace closing-eventspace
+        (window
+          #:mixin close-custodian-mixin
+          #:title @init-label
+          (slider
+            @init
+            on-initiative
+            #:min-value 0
+            #:max-value 99
+            #:label @init-label
+            #:min-size '(700 #f))))))
   (define name-initiative-panel
     (group
       "Initiative"
@@ -94,13 +96,14 @@
               (text (@~> @init (format "(~a)" _))))
       (button "Edit Initiative" show-initiative-slider)))
   (define (show-conditions)
-    ;; not setting current renderer, nor using an eventspace: dialog
-    (render
-      (apply dialog
-             #:title (@~> @player (~>> player-name (~a "Conditions for ")))
-             #:size '(200 #f)
-             #:style '(close-button resize-border)
-             (map make-condition-checkbox conditions))))
+    (with-closing-custodian/eventspace
+      (render/eventspace
+        #:eventspace closing-eventspace
+        (apply window
+               #:mixin close-custodian-mixin
+               #:title (@~> @player (~>> player-name (~a "Conditions for ")))
+               #:size '(200 #f)
+               (map make-condition-checkbox conditions)))))
   (define conditions-panel
     (group "Conditions"
            (text (@~> @player (~> player-conditions

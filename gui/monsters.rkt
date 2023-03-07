@@ -41,6 +41,7 @@
          frosthaven-manager/gui/mixins
          frosthaven-manager/gui/counter
          frosthaven-manager/gui/stacked-tables
+         frosthaven-manager/gui/render
 
          frosthaven-manager/qi
          frosthaven-manager/defns
@@ -82,16 +83,17 @@
               #:checked? (@~> @monster (~>> monster-conditions (member c) (not false?)))
               (flow (on-condition c _))))
   (define (show-conditions)
-    ;; not setting current renderer, nor using an eventspace: dialog
-    (render
-      (apply dialog
-             #:title (obs-combine
-                       (flow (~>> (== monster-group-name monster-number)
-                                  (format "Conditions for ~a (~a)")))
-                       @mg @monster)
-             #:size '(400 #f)
-             #:style '(close-button resize-border)
-             (map make-condition-checkbox conditions))))
+    (with-closing-custodian/eventspace
+      (render/eventspace
+        #:eventspace closing-eventspace
+        (apply window
+               #:mixin close-custodian-mixin
+               #:title (obs-combine
+                         (flow (~>> (== monster-group-name monster-number)
+                                    (format "Conditions for ~a (~a)")))
+                         @mg @monster)
+               #:size '(400 #f)
+               (map make-condition-checkbox conditions)))))
   (define (add-hp)
     (unless (@! (obs-combine monster-at-max-health? @monster @monster-stats))
       (on-hp add1)))

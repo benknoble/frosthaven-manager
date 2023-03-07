@@ -243,14 +243,17 @@
     [else (text "creature is neither player or monster-group*")]))
 
 (define ((show-discard-pile s))
-  (render
-    (dialog
-      #:title "Discard Pile"
-      #:min-size (@~> (state-@monster-discard s) (~>> length (* 30) (list 200)))
-      (text "(Most recent first)")
-      (spacer)
-      (text (@~> (state-@monster-discard s) (~>> (map ~a) (string-join _ "\n"))))
-      (spacer))))
+  (with-closing-custodian/eventspace
+    (render/eventspace
+      #:eventspace closing-eventspace
+      (window
+        #:mixin close-custodian-mixin
+        #:title "Discard Pile"
+        #:min-size (@~> (state-@monster-discard s) (~>> length (* 20) (list 200)))
+        (text "(Most recent first)")
+        (spacer)
+        (text (@~> (state-@monster-discard s) (~>> (map ~a) (string-join _ "\n"))))
+        (spacer)))))
 
 (define (show-loot-and-xp @num-players @level @players)
   (define labels
