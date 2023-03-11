@@ -42,6 +42,7 @@
          frosthaven-manager/gui/counter
          frosthaven-manager/gui/stacked-tables
          frosthaven-manager/gui/render
+         frosthaven-manager/gui/font
 
          frosthaven-manager/qi
          frosthaven-manager/defns
@@ -154,7 +155,7 @@
           ;; expand the call to close! (by the time it is called it should
           ;; have the correct value, a procedure).
           (button "Add" (λ () ((unbox close!))))))))
-  (define name-panel (text (@> @mg monster-group-name)))
+  (define name-panel (text (@> @mg monster-group-name) #:font big-control-font))
   (define add-monster-button (button "Add Monster" do-new))
   (define name-initiative-panel
     (group

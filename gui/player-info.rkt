@@ -24,7 +24,8 @@
          frosthaven-manager/defns
          frosthaven-manager/gui/counter
          frosthaven-manager/gui/render
-         frosthaven-manager/gui/mixins)
+         frosthaven-manager/gui/mixins
+         frosthaven-manager/gui/font)
 
 (define (player-input-views @num-players
                             #:on-name [on-name void]
@@ -99,7 +100,7 @@
       "Initiative"
       #:stretch '(#f #t)
       (hpanel #:alignment '(center center)
-              (text (@> @player player-name))
+              (text (@> @player player-name) #:font big-control-font)
               (text (@~> @init (format "(~a)" _))))
       (button "Edit Initiative" show-initiative-slider)))
   (define (show-conditions)
