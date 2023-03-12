@@ -102,11 +102,8 @@
     (unless (@! (@> @monster monster-dead?))
       (on-hp sub1)))
   (hpanel
-    (group
-      "Stats"
+    (vpanel
       #:stretch '(#f #t)
-      (hpanel (text (@~> @monster (~>> monster-number (format "# ~a"))))
-              (text (@~> @monster (if monster-elite? "Elite" "Normal"))))
       (counter
         (obs-combine
           (flow (~>> (== monster-current-hp monster-stats-max-hp) (format "HP: ~a/~a")))
@@ -114,8 +111,7 @@
         add-hp
         subtract-hp)
       (button "💀Kill💀" on-kill))
-    (group
-      "Conditions"
+    (vpanel
       (text (@~> @monster (~> monster-conditions
                               (sep ~a) collect
                               (string-join ", " #:before-last " and "))))
@@ -158,12 +154,11 @@
   (define name-panel (text (@> @mg monster-group-name) #:font big-control-font))
   (define add-monster-button (button "Add Monster" do-new))
   (define name-initiative-panel
-    (group
-      "Initiative"
-      (vpanel #:alignment '(center center)
-              name-panel
-              (text (@~> @ability (if monster-ability? (~> monster-ability-initiative ~a) "??")))
-              add-monster-button)))
+    (vpanel #:alignment '(center center)
+            #:stretch '(#f #t)
+            name-panel
+            (text (@~> @ability (if monster-ability? (~> monster-ability-initiative ~a) "??")))
+            add-monster-button))
   (define ability-panel
     (group
       "Ability"

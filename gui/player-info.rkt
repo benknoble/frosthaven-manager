@@ -69,10 +69,10 @@
   (define xp-panel
     (counter (@~> @player (~>> player-xp (~a "XP: "))) add-xp subtract-xp))
   (define hp-xp
-    (group "Stats"
-           #:alignment '(center center)
-           #:stretch '(#f #t)
-           (vpanel hp-panel xp-panel)))
+    (vpanel
+      #:alignment '(center center)
+      #:stretch '(#f #t)
+      hp-panel xp-panel))
   (define @init (@> @player player-initiative))
   (define @init-label (@~> @player (~>> player-name (~a "Initiative for "))))
   (define (show-initiative-slider)
@@ -96,8 +96,7 @@
                  (λ (init) (when (<= 0 init 99) (on-initiative init)))]))
             #:label @init-label)))))
   (define name-initiative-panel
-    (group
-      "Initiative"
+    (vpanel
       #:stretch '(#f #t)
       (hpanel #:alignment '(center center)
               (text (@> @player player-name) #:font big-control-font)
@@ -113,11 +112,11 @@
                #:size '(200 #f)
                (map make-condition-checkbox conditions)))))
   (define conditions-panel
-    (group "Conditions"
-           (text (@~> @player (~> player-conditions
-                                  (sep ~a) collect
-                                  (string-join ", " #:before-last " and "))))
-           (button "Edit Conditions" show-conditions)))
+    (vpanel
+      (text (@~> @player (~> player-conditions
+                             (sep ~a) collect
+                             (string-join ", " #:before-last " and "))))
+      (button "Edit Conditions" show-conditions)))
   ;; final view
   (group
     "Player"
