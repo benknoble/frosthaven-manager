@@ -65,7 +65,8 @@
     [update-player-name (-> state? (-> any/c string? any))]
     [update-player-max-hp (-> state? (-> any/c (-> natural-number/c natural-number/c) any))]
     [creature-initiative (-> state? (-> creature? (or/c +inf.0 initiative?)))]
-    [add-or-remove-monster-group (-> state? (-> (or/c add-monster-event/c remove-monster-event/c) any))]))
+    [add-or-remove-monster-group (-> state? (-> (or/c add-monster-event/c remove-monster-event/c) any))]
+    [draw-new-card-mid-round-if-needed (-> state? string? any)]))
 
 (require racket/serialize
          racket/fasl
@@ -328,3 +329,12 @@
       (define c (creature next-id (monster-group* selection mg)))
       (<~@ (state-@creatures s) (append (list c)))]
     [`(remove ,mg) (<~@ (state-@creatures s) (remf (creature-is-mg~? mg) _))]))
+
+(define (draw-new-card-mid-round-if-needed s set)
+  ;; mid-round, we've added a monster, and they didn't already have a card
+  ;; caller must check "added a monster" condition, which varies
+  (when (and (@! (state-@in-draw? s))
+             (@! (@~> (state-@ability-decks s)
+                      (~> (hash-ref set) (not ability-decks-current)))))
+    (<~@ (state-@ability-decks s) (hash-update set ability-decks-draw-next))
+    (<~@ (state-@creatures s) (sort < #:key (creature-initiative s)))))

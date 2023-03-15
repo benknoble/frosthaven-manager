@@ -775,6 +775,16 @@ Calculates a creature's initiative.
 Adds or removes a monster group based on the received event.
 }
 
+@defproc[(draw-new-card-mid-round-if-needed [s state?] [set string?])
+         any]{
+If it is mid-round per @racket[state-@in-draw?] and the ability deck for
+@racket[set] does not have a card per @racket[ability-decks-current], draw a
+card for @racket[set] and re-sort the creatures by initiative.
+
+It is the caller's responsibility to verify that a monster has been added and
+needs to potentially trigger a new card.
+}
+
 @subsection{@tt{manager/ability-decks}}
 @defmodule[frosthaven-manager/manager/ability-decks]
 

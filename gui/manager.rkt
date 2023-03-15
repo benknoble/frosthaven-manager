@@ -139,10 +139,14 @@
                     (@~> (state-@creatures s)
                          (~> sep (pass creature-is-mg*?)
                              (>< (~> creature-v monster-group*-mg monster-group-name)) collect)))
-                  (add-monster-group (state-@info-db s)
-                                     (state-@level s)
-                                     @monster-names
-                                     #:on-group (λ (g) ((add-or-remove-monster-group s) `(add ,g)))))))
+                  (add-monster-group
+                    (state-@info-db s)
+                    (state-@level s)
+                    @monster-names
+                    #:on-group
+                    (λ (g)
+                      ((add-or-remove-monster-group s) `(add ,g))
+                      (draw-new-card-mid-round-if-needed s (monster-group-set-name g)))))))
       ;; right
       (vpanel
         #:stretch '(#f #t)
@@ -220,7 +224,13 @@
             (flow (~> 2> monster-group-first-monster))))
   (define (new num elite?)
     (update (monster-group-add num elite?)
-            (const num)))
+            (const num))
+    ;; Probably this could be done unconditionally, since
+    ;; draw-new-card-mid-round-if-needed checks that there isn't already a card
+    ;; flipped. But this also probably doesn't hurt? Unless length becomes a
+    ;; perf. issue, which is unlikely.
+    (when (@! (@~> @mg (~> monster-group-monsters length (= 1))))
+      (draw-new-card-mid-round-if-needed s (@! (@> @mg monster-group-set-name)))))
   (define (select num) (update values (const num)))
   (define @ability
     (obs-combine
