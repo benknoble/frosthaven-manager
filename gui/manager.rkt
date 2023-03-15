@@ -131,7 +131,8 @@
         "Creatures"
         (list-view (state-@creatures s)
           #:key creature-id
-          (make-creature-view s))
+          (make-creature-view s)
+          #:style '(vertical vscroll))
         (button "Add Monster Group"
                 (thunk
                   (define @monster-names
