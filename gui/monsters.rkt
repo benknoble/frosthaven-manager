@@ -151,15 +151,15 @@
           ;; expand the call to close! (by the time it is called it should
           ;; have the correct value, a procedure).
           (button "Add" (λ () ((unbox close!))))))))
-  (define name-panel (text (@> @mg monster-group-name) #:font big-control-font))
-  (define add-monster-button (button "Add Monster" do-new))
-  (define name-initiative-panel
+  (define (name-panel) (text (@> @mg monster-group-name) #:font big-control-font))
+  (define (add-monster-button) (button "Add Monster" do-new))
+  (define (name-initiative-panel)
     (vpanel #:alignment '(center center)
             #:stretch '(#f #t)
-            name-panel
+            (name-panel)
             (text (@~> @ability (if monster-ability? (~> monster-ability-initiative ~a) "??")))
-            add-monster-button))
-  (define ability-panel
+            (add-monster-button)))
+  (define (ability-panel)
     (group
       "Ability"
       #:min-size (list 200 #f)
@@ -177,7 +177,7 @@
                                    monster-ability-abilities
                                    (gen empty)))
           (λ (_k @e) (text (@~> @e (format "· ~a" _))))))))
-  (define stats-panel
+  (define (stats-panel)
     (hpanel
       (group "Normal" (stats-view (@> @mg monster-group-normal-stats))
              #:min-size (list (* 10 (string-length "Normal")) #f))
@@ -221,7 +221,7 @@
     (on-hp (@! @monster-num) proc))
   (define (forward-kill)
     (on-kill (@! @monster-num)))
-  (define monsters
+  (define (monsters)
     (tabs
       @monsters
       #:selection @monster
@@ -246,11 +246,11 @@
     "Monster"
     #:stretch '(#t #f)
     (cond-view
-      [(@> @monsters empty?) (hpanel name-panel add-monster-button)]
+      [(@> @monsters empty?) (hpanel (name-panel) (add-monster-button))]
       [else (hpanel #:alignment '(center center)
-                    name-initiative-panel
-                    (vpanel (hpanel ability-panel stats-panel)
-                            monsters))])))
+                    (name-initiative-panel)
+                    (vpanel (hpanel (ability-panel) (stats-panel))
+                            (monsters)))])))
 
 ;; TODO: should be able to manipulate individual HP (? dialog with counter)
 ;; Takes a non-observable info-db b/c instantiated by a thunk in
