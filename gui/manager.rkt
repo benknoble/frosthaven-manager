@@ -211,7 +211,6 @@
   (define @mg* (@> @e creature-v))
   (define @mg (@> @mg* monster-group*-mg))
   (define @n (@> @mg* monster-group*-active))
-  (define @ms (@> @mg monster-group-monsters))
   (define (update-condition num c on?)
     (update-by-num num (monster-update-condition c on?)))
   (define (update-hp num proc)
