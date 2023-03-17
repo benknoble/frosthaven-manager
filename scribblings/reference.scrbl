@@ -6,7 +6,9 @@
                        null)
             racket/serialize
             racket/gui/base
-            (only-in pict pict?)
+            (only-in pict
+                     pict?
+                     cc-superimpose)
             (only-in xml xexpr?)
             rebellion/type/enum
             racket/gui/easy
@@ -16,6 +18,7 @@
             racket/gui/easy/contract
             qi
             megaparsack
+            frosthaven-manager/aoe-images
             frosthaven-manager/defns
             (only-in frosthaven-manager/elements
                      size
@@ -55,6 +58,38 @@ None of these APIs should be considered stable enough for use in projects other
 than Frosthaven Manager. They should be considered stable enough for use in
 Frosthaven Manager. Changes to an internally-used API should be made with care
 and compelling reason.
+
+@section{@tt{aoe-images}}
+@defmodule[frosthaven-manager/aoe-images]
+
+This module provides procedures for constructing area-of-effect diagrams.
+
+@defparam[hex-size size natural-number/c #:value 30]{
+The size of the hexes built from this module.
+}
+
+@defproc[(r) (and/c positive? number?)]{
+Returns the amount by which odd rows need shifted to align with even rows in a
+hex-grid (based on @racket[hex-size]).
+}
+
+@deftogether[(
+              @defproc[(S) pict?]
+              @defproc[(X) pict?]
+              @defproc[(O) pict?]
+              @defproc[(M) pict?]
+)]{
+Hexes for an area-of-effect diagram: respectively, spacers, attacks, allies, and
+the initiating figure.
+}
+
+@defproc[(border-size [max-row natural-number/c] [max-col natural-number/c])
+         (and/c positive? number?)]{
+Returns the side-length of a square rectangle which would encompass an
+area-of-effect diagram of @racket[max-row] rows and @racket[max-col] columns in
+a hex-grid, if the diagram were centered and superimposed on the rectangle à la
+@racket[cc-superimpose].
+}
 
 @section{@tt{defns}}
 @defmodule[frosthaven-manager/defns]
