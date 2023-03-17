@@ -19,7 +19,8 @@
                ("gui-easy-lib" #:version "0.5")
                "rebellion"
                "base"))
-(define build-deps '("pict-doc"
+(define build-deps '("draw-doc"
+                     "pict-doc"
                      "gui-doc"
                      "gui-easy"
                      "megaparsack-doc"
