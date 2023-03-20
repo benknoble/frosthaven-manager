@@ -8,7 +8,12 @@
     [X (-> pict?)]
     [O (-> pict?)]
     [M (-> pict?)]
-    [border-size (-> natural-number/c natural-number/c (and/c positive? number?))]))
+    [border-size (-> natural-number/c natural-number/c (and/c positive? number?))]
+    [spec-sym? flat-contract?]
+    [spec? flat-contract?]
+    [spec->shape (-> spec? pict?)]
+    [syntaxes-can-be-spec? predicate/c]
+    [syntaxes->spec (-> (and/c (listof syntax?) syntaxes-can-be-spec?) spec?)]))
 
 (require pict
          racket/draw)
@@ -69,3 +74,83 @@
 ;;                  #:scale 1))
 ;; (show-pict (cc-superimpose (rectangle (border-size 1 1) (border-size 1 1))
 ;;                            (X)))
+
+(define (fill-in-spec s)
+  (let loop ([s s]
+             [result null]
+             [last-line (match s
+                          ['() 0]
+                          [(cons `[,line ,_ ,_] _) (sub1 line)])])
+    (match s
+      [(cons `[,line ,dedent? ,columns] s)
+       (if (= line (add1 last-line))
+         (loop s (cons `[,line ,dedent? ,(fill-in-columns columns)] result) line)
+         (loop (cons `[,line ,dedent? ,columns] s)
+               (cons `[,(add1 last-line) #f ()] result)
+               (add1 last-line)))]
+      ['() (reverse result)])))
+
+(define (fill-in-columns cs)
+  (let loop ([cs cs]
+             [result null]
+             [last-column -1])
+    (match cs
+      [(cons `[,shape ,column] cs)
+       (if (= column (add1 last-column))
+         (loop cs (cons shape result) column)
+         (loop (cons `[,shape ,column] cs)
+               (cons 'g result)
+               (add1 last-column)))]
+      ['() (reverse result)])))
+
+(define spec-sym? (or/c 's 'x 'o 'm 'g))
+
+(define (sym->shape s)
+  (case s
+    [(s) (S)]
+    [(x) (X)]
+    [(o) (O)]
+    [(m) (M)]
+    [(g) (ghost (S))]))
+
+(define (row->shape r)
+  (match r
+    ['() (ghost (S))]
+    [(list sym ...) (apply hc-append (map sym->shape sym))]))
+
+(define (rows->shape rs)
+  (define max-row (length rs))
+  (define max-col
+    (apply max (map (match-lambda [`[,_ ,_ ,r] (length r)]) rs)))
+  (define frame-length (border-size max-row max-col))
+  (cc-superimpose
+    (rectangle frame-length frame-length)
+    (for/fold ([p (blank)])
+      ([row (in-list rs)])
+      (match-define `[,_line ,dedent? ,row-spec] row)
+      (define dx (if dedent? 0 (- (r))))
+      (vl-append p (translate (row->shape row-spec) dx 0)))))
+
+(define spec->shape (compose1 rows->shape fill-in-spec))
+
+(define (syntaxes->spec stxs)
+  (define groups (group-by syntax-line stxs))
+  (define line-with-least-column
+    (syntax-line (argmin syntax-column stxs)))
+  (define dedent? (if (even? line-with-least-column) odd? even?))
+  (for/list ([group (in-list groups)])
+    (define line (syntax-line (first group)))
+    (list line
+          (dedent? line)
+          (for/list ([stx (in-list group)])
+            (list (syntax-e stx)
+                  (exact-floor (/ (syntax-column stx) 2)))))))
+
+;; pre-condition: ((listof syntax?) stxs)
+(define (syntaxes-can-be-spec? stxs)
+  (for/and ([stx (in-list stxs)])
+    (and (syntax-line stx)
+         (spec-sym? (syntax-e stx)))))
+
+(define spec?
+  (listof (list/c exact-positive-integer? boolean? (listof (list/c spec-sym? natural-number/c)))))
