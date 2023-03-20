@@ -106,7 +106,8 @@
                              [name string?]
                              [initiative initiative?]
                              [abilities (listof string?)]
-                             [shuffle? boolean?])]
+                             [shuffle? boolean?]
+                             [location (or/c path? #f)])]
     [monster-number/c contract?]
     [struct monster ([number monster-number/c]
                      [elite? boolean?]
@@ -362,7 +363,7 @@
 
 (struct monster-stats [max-hp move attack bonuses effects immunities] #:prefab)
 (struct monster-info [set-name name normal-stats elite-stats] #:prefab)
-(struct monster-ability [set-name name initiative abilities shuffle?] #:prefab)
+(struct monster-ability [set-name name initiative abilities shuffle? location] #:prefab)
 (define monster-number/c (integer-in 1 10))
 (serializable-struct monster [number elite? current-hp conditions] #:transparent)
 (serializable-struct monster-group [set-name name level normal-stats elite-stats monsters] #:transparent)

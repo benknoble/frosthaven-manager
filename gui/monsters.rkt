@@ -35,7 +35,8 @@
                             (#:on-group (-> monster-group? any))
                             any)]))
 
-(require racket/gui/easy
+(require (only-in pict pict-width pict-height)
+         racket/gui/easy
          racket/gui/easy/contract
          frosthaven-manager/observable-operator
          frosthaven-manager/gui/mixins
@@ -176,7 +177,10 @@
         (list-view (@~> @ability (if _
                                    monster-ability-abilities
                                    (gen empty)))
-          (λ (_k @e) (text (@~> @e (format "· ~a" _))))))))
+          (λ (_k @e)
+            (apply hpanel
+                   (ability->text @mg @e)
+                   (ability->extras @mg @ability @e)))))))
   (define (stats-panel)
     (hpanel
       (group "Normal" (stats-view (@> @mg monster-group-normal-stats))
@@ -552,6 +556,40 @@
          (for*/list ([monster-name->monster-info (in-hash-values info-db)]
                      [monster-name (in-hash-keys monster-name->monster-info)])
            (string-length monster-name))))
+
+(define aoe-rx #rx"aoe\\(([^)]+)\\)")
+
+(define (ability->text @mg @ability)
+  (define aoe-replacement `(,aoe-rx ""))
+  (define bulleted '(#rx"^" "· "))
+  (define replacements
+    (list bulleted
+          aoe-replacement))
+  (text (@~> @ability (regexp-replaces replacements))))
+
+(define (ability->extras @mg @ability-card @ability-text)
+  (define @aoe
+    (@~> @ability-text (~> (regexp-match aoe-rx _)
+                           (and _ second))))
+  (define @base (@~> @ability-card
+                     (switch
+                       [monster-ability? monster-ability-location]
+                       [else "."])))
+  (list
+    (cond-view
+      [@aoe (button "AoE" (thunk
+                            (define pict
+                              ((dynamic-require (build-path (@! @base) (@! @aoe)) 'aoe)))
+                            (with-closing-custodian/eventspace
+                              (render/eventspace
+                                #:eventspace closing-eventspace
+                                (window
+                                  #:mixin close-custodian-mixin
+                                  #:title "AoE pattern"
+                                  #:size (list (exact-ceiling (pict-width pict))
+                                               (exact-ceiling (pict-height pict)))
+                                  (pict-canvas #f (const pict)))))))]
+      [else (spacer)])))
 
 (module+ main
   (require frosthaven-manager/gui/render)

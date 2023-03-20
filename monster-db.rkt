@@ -37,7 +37,11 @@
                                (list~>hash #:->key (~> car monster-ability-set-name)))])))
 
 (module+ test
-  (require rackunit)
+  (require rackunit
+           racket/path)
+  ;; append "." to account for (define-runtime-path here "."), which does not
+  ;; simplify as expected
+  (define base (build-path (path-only default-monster-db) "."))
   (define sample-info
     #hash(("archer"
            .
@@ -107,26 +111,28 @@
                        #s(monster-stats 10 8 9 ("shield 3") () ())
                        #s(monster-stats 11 9 10 ("shield 3") () ()))))))))
   (define sample-abilities
-    #hash(("archer"
-           .
-           (#s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
-            #s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
-            #s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
-            #s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
-            #s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
-            #s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
-            #s(monster-ability "archer" "double-shot" 25 ("attack +2, range 5" "attack +2, range 3, +1 if same target") #f)
-            #s(monster-ability "archer" "take aim" 80 ("move +2" "strengthen self") #t)))
-          ("guard"
-           .
-           (#s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
-            #s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
-            #s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
-            #s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
-            #s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
-            #s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
-            #s(monster-ability "guard" "rushing charge" 25 ("move +3" "attack +2 + number of spaces moved towards target") #f)
-            #s(monster-ability "guard" "stand tall" 80 ("shield 3") #t)))))
+    `#hash(("archer"
+            .
+            ,(list
+               (monster-ability "archer" "double-shot" 25 '("attack +2, range 5" "attack +2, range 3, +1 if same target") #f base)
+               (monster-ability "archer" "double-shot" 25 '("attack +2, range 5" "attack +2, range 3, +1 if same target") #f base)
+               (monster-ability "archer" "double-shot" 25 '("attack +2, range 5" "attack +2, range 3, +1 if same target") #f base)
+               (monster-ability "archer" "double-shot" 25 '("attack +2, range 5" "attack +2, range 3, +1 if same target") #f base)
+               (monster-ability "archer" "double-shot" 25 '("attack +2, range 5" "attack +2, range 3, +1 if same target") #f base)
+               (monster-ability "archer" "double-shot" 25 '("attack +2, range 5" "attack +2, range 3, +1 if same target") #f base)
+               (monster-ability "archer" "double-shot" 25 '("attack +2, range 5" "attack +2, range 3, +1 if same target") #f base)
+               (monster-ability "archer" "take aim" 80 '("move +2" "strengthen self") #t base)))
+           ("guard"
+            .
+            ,(list
+               (monster-ability "guard" "rushing charge" 25 '("move +3" "attack +2 + number of spaces moved towards target") #f base)
+               (monster-ability "guard" "rushing charge" 25 '("move +3" "attack +2 + number of spaces moved towards target") #f base)
+               (monster-ability "guard" "rushing charge" 25 '("move +3" "attack +2 + number of spaces moved towards target") #f base)
+               (monster-ability "guard" "rushing charge" 25 '("move +3" "attack +2 + number of spaces moved towards target") #f base)
+               (monster-ability "guard" "rushing charge" 25 '("move +3" "attack +2 + number of spaces moved towards target") #f base)
+               (monster-ability "guard" "rushing charge" 25 '("move +3" "attack +2 + number of spaces moved towards target") #f base)
+               (monster-ability "guard" "rushing charge" 25 '("move +3" "attack +2 + number of spaces moved towards target") #f base)
+               (monster-ability "guard" "stand tall" 80 '("shield 3") #t base)))))
   (let-values ([(info abilities) (get-dbs default-monster-db)])
     (check-equal? info sample-info)
     (check-equal? abilities sample-abilities))
