@@ -6,10 +6,10 @@ begin-ability-deck
     ["double-shot" 25 {"attack +2, range 5" "attack +2, range 3, +1 if same target"}]
     ["double-shot" 25 {"attack +2, range 5" "attack +2, range 3, +1 if same target"}]
     ["double-shot" 25 {"attack +2, range 5" "attack +2, range 3, +1 if same target"}]
-    ["double-shot" 25 {"attack +2, range 5" "attack +2, range 3, +1 if same target"}]
-    ["double-shot" 25 {"attack +2, range 5" "attack +2, range 3, +1 if same target"}]
-    ["double-shot" 25 {"attack +2, range 5" "attack +2, range 3, +1 if same target"}]
-    ["double-shot" 25 {"attack +2, range 5" "attack +2, range 3, +1 if same target"}]
+    ["explosive" 60 {"attack -1, range 3, aoe(aoes/ring1.rkt)"}]
+    ["explosive" 60 {"attack -1, range 3, aoe(aoes/ring1.rkt)"}]
+    ["explosive" 60 {"attack -1, range 3, aoe(aoes/ring1.rkt)"}]
+    ["explosive" 60 {"attack -1, range 3, aoe(aoes/ring1.rkt)"}]
     ["take aim" 80 shuffle {"move +2" "strengthen self"}]
 end-ability-deck
 

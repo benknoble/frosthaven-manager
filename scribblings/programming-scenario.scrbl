@@ -312,6 +312,11 @@ names. In case of duplicate cards, like multiple copies of "Nothing Special," I
 recommend disambiguating them by appending a number. For example, you might have
 "Nothing Special 1" and "Nothing Special 2."
 
+Any @nonterm{card}'s abilities in the @nonterm{text-list} can include a
+reference to an AoE pattern by using the function @racket[aoe], like in the
+following example: @racket["attack +1, aoe(path/to/triangle.rkt)"]. See
+@secref{Area-of-Effect_Specification_by_Example} for more details.
+
 @(require scribble/bnf)
 
 @BNF[(list @nonterm{bestiary}
@@ -381,7 +386,9 @@ between each part, separated by bars. Text like @nonterm{label:text} refers to
 
 When specifying a monster's abilities, sometimes you need to designate an
 Area-of-Effect (AoE, for short). Here we'll describe how to concisely describe
-the AoE pattern for use with the monster ability.
+the AoE pattern for use with the monster ability. See
+@secref{Bestiary_Format_Reference} for how to refer to an AoE pattern in a
+monster ability.
 
 As usual, we'll put the description in a file and start with the language, in
 this case @(hash-lang) @racketmodname[frosthaven-manager/aoe]. Then we describe
