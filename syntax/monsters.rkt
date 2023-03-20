@@ -23,6 +23,7 @@
 ;;;; requires and implementation macros
 (require syntax/parse/define
          racket/hash
+         racket/runtime-path
          frosthaven-manager/qi
          frosthaven-manager/defns
          frosthaven-manager/monster-db
@@ -47,15 +48,13 @@
                                     ({~datum ability} (actions ...) ...))
   #:with (imported-info-db ...) (generate-temporaries #'(imports ...))
   #:with (imported-ability-db ...) (generate-temporaries #'(imports ...))
-  #:with runtime-path-lib (datum->syntax #'info-db 'racket/runtime-path #'info-db)
-  #:with here (datum->syntax #'info-db 'here #'info-db)
-  #:with runtime-path-define (datum->syntax #'info-db (list 'define-runtime-path #'here ".") #'info-db)
+  ;; also binds `here` correctly
+  #:with runtime-path-define (datum->syntax #'info-db (syntax-e #'(define-runtime-path here ".")) #'info-db)
   (begin
     (provide info-db ability-db)
     (require (rename-in imports
                         [info-db imported-info-db]
-                        [ability-db imported-ability-db]) ...
-             runtime-path-lib)
+                        [ability-db imported-ability-db]) ...)
     runtime-path-define
     (define-values (original-info-db original-ability-db)
       (datums->dbs (list infos ... (struct-copy monster-ability actions [location here]) ... ...)))
