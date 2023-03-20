@@ -3,7 +3,10 @@
 @(require "common.rkt"
           "../monster-db.rkt"
           racket/file
-          (for-label frosthaven-manager/defns))
+          racket/port
+          pict
+          (for-label frosthaven-manager/defns)
+          frosthaven-manager/aoe-images)
 
 @title{Programming a Scenario}
 
@@ -364,6 +367,136 @@ Text like @litchar{literal} should be typed exactly. Text like
 times. Text like @BNF-group[@BNF-alt[@nonterm{one} @nonterm{two}]] is a choice
 between each part, separated by bars. Text like @nonterm{label:text} refers to
 @tech{game text}, while @nonterm{label:number} refers to an @tech{game number}.
+
+@section{Area-of-Effect Specification by Example}
+@defmodule[frosthaven-manager/aoe #:lang]
+
+@(define (aoe-example input)
+   (elem
+     (spec->shape
+       (syntaxes->spec
+         (port->list (λ (in) (read-syntax 'in in))
+                     (let ([ip (open-input-string input)])
+                       (begin0 ip (port-count-lines! ip))))))))
+
+When specifying a monster's abilities, sometimes you need to designate an
+Area-of-Effect (AoE, for short). Here we'll describe how to concisely describe
+the AoE pattern for use with the monster ability.
+
+As usual, we'll put the description in a file and start with the language, in
+this case @(hash-lang) @racketmodname[frosthaven-manager/aoe]. Then we describe
+the hexagonal layout using the symbols @tt{s}, @tt{x}, @tt{o}, @tt{m}, and
+@tt{g}. You must put a space between one symbol and the next, as some examples
+will show. These symbols correspond to the following hexagons in the resulting
+diagram:
+
+@(cc-superimpose
+   (rectangle (border-size 5 4) (border-size 5 4))
+   (apply vl-append
+          20
+          (for/list ([ss `((s ,S "Spacer") (x ,X "Attack/Effect") (o ,O "Ally in Position") (m ,M "Me: Creature Activating Ability"))])
+            (hc-append 10
+              ((cadr ss))
+              (text (symbol->string (car ss)))
+              (text (caddr ss))))))
+
+The symbol @tt{g} is an invisible "ghost" hex, and is useful when you need to
+manually force empty space between hexes. In most cases, however, this should be
+taken care of automatically. For example, the following two programs create the
+same diagram, shown below:
+
+@codeblock|{
+#lang frosthaven-manager/aoe
+x g x
+}|
+
+and
+
+@codeblock|{
+#lang frosthaven-manager/aoe
+x   x
+}|
+
+both render as follows:
+
+@filebox["x   x"]{@(aoe-example "x   x")}
+@filebox["x g x"]{@(aoe-example "x g x")}
+
+Here are some more examples, along with their results.
+
+@filebox["ring1.rkt"]{
+@codeblock|{
+#lang frosthaven-manager/aoe
+ x x
+x x x
+ x x
+}|
+}
+@(aoe-example " x x\nx x x\n x x")
+
+@filebox["drag-down.rkt"]{
+@codeblock|{
+#lang frosthaven-manager/aoe
+x x
+   x
+  m
+}|
+}
+@(aoe-example "x x\n   x\n  m")
+
+@filebox["unbreakable-wall.rkt"]{
+@codeblock|{
+#lang frosthaven-manager/aoe
+x x x
+ o m
+}|
+}
+@(aoe-example "x x x\n o m")
+
+@filebox["speartip.rkt"]{
+@codeblock|{
+#lang frosthaven-manager/aoe
+   x
+  x
+ m
+o
+}|
+}
+@(aoe-example "   x\n  x\n m\no")
+
+@section{Area-of-Effect Specification Reference}
+
+Space at the beginning of lines is significant, but not at the end. The line
+with the left-most character determines which rows are centered and which rows
+are offset: alternating rows are always offset relative to each other to create
+a hexagonal grid. It is not technically necessary to offset each line in the
+textual diagram to achieve correct results, but it is far more readable if you
+do so. Thus, we recommend starting alternating lines with either no spaces or 1
+space, to create a hex-like effect in the program text.
+
+Recall that all hexagons face North: that is, the top of the hexagon is a point
+and not a flat line.
+
+Space must separate hex descriptors to distinguish them.
+
+The following descriptors are available
+
+@(cc-superimpose
+   (rectangle (border-size 5 4) (border-size 5 4))
+   (apply vl-append
+          20
+          (for/list ([ss `((s ,S "Spacer") (x ,X "Attack/Effect") (o ,O "Ally in Position") (m ,M "Me: Creature Activating Ability"))])
+            (hc-append 10
+              ((cadr ss))
+              (text (symbol->string (car ss)))
+              (text (caddr ss))))))
+
+In addition, the descriptor @tt{g} places an invisible ghost hex; this is
+usually not necessary, since spacing takes care of the alignment automatically.
+
+If you have Racket installed, running the programs main module as in
+@commandline{racket my-aoe.rkt}
+will produce the image.
 
 @section{Foe Specification by Example}
 

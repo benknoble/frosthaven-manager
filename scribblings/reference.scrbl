@@ -60,6 +60,12 @@ than Frosthaven Manager. They should be considered stable enough for use in
 Frosthaven Manager. Changes to an internally-used API should be made with care
 and compelling reason.
 
+@section{@tt{aoe}}
+
+This module implements the Area-of-Effect (AoE) language. See
+@secref{Programming_a_Scenario} and @racketmodname[frosthaven-manager/aoe]
+for more information.
+
 @section{@tt{aoe-images}}
 @defmodule[frosthaven-manager/aoe-images]
 
