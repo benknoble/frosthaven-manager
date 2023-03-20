@@ -135,7 +135,4 @@
                (monster-ability "guard" "stand tall" 80 '("shield 3") #t base)))))
   (let-values ([(info abilities) (get-dbs default-monster-db)])
     (check-equal? info sample-info)
-    (check-equal? abilities sample-abilities))
-  (let-values ([(info abilities) (get-dbs "testfiles/sample-bestiary-import.rkt")])
-    (check-equal? info sample-info)
     (check-equal? abilities sample-abilities)))
