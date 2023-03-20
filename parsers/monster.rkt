@@ -142,7 +142,7 @@
       (string/p "end-ability-deck")
       (pure (map (match-lambda
                    [(list card-name initiative shuffle? abilities)
-                    (monster-ability set card-name initiative abilities shuffle?)])
+                    (monster-ability set card-name initiative abilities shuffle? #f)])
                  cards))))
 
 (define import-monsters/p

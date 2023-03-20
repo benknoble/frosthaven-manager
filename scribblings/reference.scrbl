@@ -515,9 +515,12 @@ The monster information representation, often for reading pre-fab structs.
               [name string?]
               [initiative initiative?]
               [abilities (listof string?)]
-              [shuffle? boolean?])
+              [shuffle? boolean?]
+              [location (or/c #f path?)])
              #:prefab]{
 The monster ability representation, often for reading pre-fab structs.
+
+Note that pre-fab syntax does not permit @racket[path?] objects.
 }
 
 @defthing[monster-number/c contract?]{
