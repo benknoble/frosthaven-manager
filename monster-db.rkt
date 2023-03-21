@@ -135,4 +135,7 @@
                (monster-ability "guard" "stand tall" 80 '("shield 3") #t base)))))
   (let-values ([(info abilities) (get-dbs default-monster-db)])
     (check-equal? info sample-info)
-    (check-equal? abilities sample-abilities)))
+    (check-equal? abilities sample-abilities))
+  ;; only check that it loads
+  (match-let-values ([(_ _) (get-dbs "testfiles/sample-bestiary-import.rkt")])
+    (void)))
