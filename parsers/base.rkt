@@ -6,7 +6,6 @@
                        data/monad
                        data/applicative
                        data/functor
-                       frosthaven-manager/defns
                        frosthaven-manager/qi)
          (contract-out
            [string-ci/p (-> string? (parser/c char? string?))]
@@ -35,7 +34,6 @@
          data/applicative
          (rename-in data/functor
                     [map fmap])
-         frosthaven-manager/defns
          frosthaven-manager/qi)
 
 ;; megaparsack's string-ci/p is broken

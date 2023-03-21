@@ -13,7 +13,8 @@
     [bestiary-dupes (-> (listof any/c) (values (or/c #f (listof string?))
                                                (or/c #f (listof string?))))]))
 
-(require frosthaven-manager/parsers/base)
+(require frosthaven-manager/parsers/base
+         frosthaven-manager/defns)
 
 (define bestiary/c
   (listof (or/c (list/c 'import string?)
