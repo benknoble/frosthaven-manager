@@ -11,7 +11,7 @@
                                 (is-a?/c view<%>))]
     [simple-monster-group-view (-> (obs/c monster-group?)
                                    (is-a?/c view<%>))]
-    [multi-monster-picker (->* ((obs/c info-db/c) (obs/c level/c))
+    [multi-monster-picker (->* ((obs/c info-db/c) (obs/c level/c) (obs/c env/c))
                                (#:on-change (-> (or/c add-monster-event/c
                                                       remove-monster-event/c)
                                                 any))
@@ -19,7 +19,8 @@
     [monster-group-view
       (->* ((obs/c monster-group?)
             (obs/c (or/c #f monster-ability?))
-            (obs/c (or/c #f monster-number/c)))
+            (obs/c (or/c #f monster-number/c))
+            (obs/c env/c))
            (#:on-condition (-> monster-number/c condition? boolean?
                                any)
             #:on-hp (-> monster-number/c (-> number? number?)
@@ -31,7 +32,8 @@
     [db-view (-> (obs/c info-db/c) (obs/c ability-db/c) (obs/c (listof monster-group?)) (is-a?/c view<%>))]
     [add-monster-group (->* ((obs/c info-db/c)
                              (obs/c level/c)
-                             (obs/c (set/c string? #:cmp 'dont-care #:kind 'dont-care)))
+                             (obs/c (set/c string? #:cmp 'dont-care #:kind 'dont-care))
+                             (obs/c env/c))
                             (#:on-group (-> monster-group? any))
                             any)]))
 
@@ -47,7 +49,8 @@
 
          frosthaven-manager/qi
          frosthaven-manager/defns
-         frosthaven-manager/monster-db)
+         frosthaven-manager/monster-db
+         frosthaven-manager/parsers/formula)
 
 (define single-monster-event/c
   (or/c
@@ -57,10 +60,10 @@
     (list/c 'elite? monster-number/c 'to boolean?)
     (list/c 'level level/c)))
 
-(define (stats-view @stats)
+(define (stats-view @stats @env)
   (vpanel
     (text (@~> @stats (~> monster-stats-move ~a)))
-    (text (@~> @stats (~> monster-stats-attack ~a)))
+    (text (obs-combine (flow (~> monster-stats-attack* ~a)) @stats @env))
     (cond-view
       [(@~> @stats (~> monster-stats-bonuses (not empty?)))
        (text (@~> @stats (~> monster-stats-bonuses (string-join ", "))))]
@@ -73,9 +76,9 @@
       [(@~> @stats (~> monster-stats-immunities (not empty?)))
        (text (@~> @stats (~> monster-stats-immunities (string-join ", "))))]
       [else (spacer)])
-    (text (@~> @stats (~> monster-stats-max-hp ~a)))))
+    (text (obs-combine (flow (~> monster-stats-max-hp* ~a)) @stats @env))))
 
-(define (monster-view @mg @monster
+(define (monster-view @mg @monster @env
                       #:on-condition [on-condition void]
                       #:on-hp [on-hp void]
                       #:on-kill [on-kill void])
@@ -97,7 +100,7 @@
                #:size '(400 #f)
                (map make-condition-checkbox conditions)))))
   (define (add-hp)
-    (unless (@! (obs-combine monster-at-max-health? @monster @monster-stats))
+    (unless (@! (obs-combine monster-at-max-health? @monster @monster-stats @env))
       (on-hp add1)))
   (define (subtract-hp)
     (unless (@! (@> @monster monster-dead?))
@@ -107,8 +110,8 @@
       #:stretch '(#f #t)
       (counter
         (obs-combine
-          (flow (~>> (== monster-current-hp monster-stats-max-hp) (format "HP: ~a/~a")))
-          @monster @monster-stats)
+          (flow (~>> (group 1 monster-current-hp monster-stats-max-hp*) (format "HP: ~a/~a")))
+          @monster @monster-stats @env)
         add-hp
         subtract-hp)
       (button "💀Kill💀" on-kill))
@@ -118,7 +121,7 @@
                               (string-join ", " #:before-last " and "))))
       (button "Edit Conditions" show-conditions))))
 
-(define (monster-group-view @mg @ability @monster-num
+(define (monster-group-view @mg @ability @monster-num @env
                             #:on-select [on-select void]
                             #:on-condition [on-condition void]
                             #:on-hp [on-hp void]
@@ -183,7 +186,7 @@
                    (ability->extras @mg @ability @e)))))))
   (define (stats-panel)
     (hpanel
-      (group "Normal" (stats-view (@> @mg monster-group-normal-stats))
+      (group "Normal" (stats-view (@> @mg monster-group-normal-stats) @env)
              #:min-size (list (* 10 (string-length "Normal")) #f))
       (group "Stats"
              (text "Move")
@@ -207,7 +210,7 @@
                 (text "Immunities")]
                [else (spacer)])
              (text "Max HP"))
-      (group "Elite" (stats-view (@> @mg monster-group-elite-stats))
+      (group "Elite" (stats-view (@> @mg monster-group-elite-stats) @env)
              #:min-size (list (* 10 (string-length "Elite")) #f))))
   ;; TODO: choice "hide"/"collapse" ?
   (define @monsters (@> @mg monster-group-monsters))
@@ -242,6 +245,7 @@
           (@~> @monster (or _
                             ;; use a fill-in monster if none
                             (gen (monster 1 #f 0 empty))))
+          @env
           #:on-condition forward-condition
           #:on-hp forward-hp
           #:on-kill forward-kill)
@@ -316,7 +320,7 @@
 (define remove-monster-event/c
   (list/c 'remove monster-group?))
 
-(define (multi-monster-picker @info-db @initial-level #:on-change [on-change void])
+(define (multi-monster-picker @info-db @initial-level @env #:on-change [on-change void])
   (define/obs @monster-groups empty)
   (define @monster-names
     (@~> @monster-groups
@@ -350,12 +354,13 @@
             @info-db
             @initial-level
             @monster-names
+            @env
             #:on-group (λ (g)
                          (on-change `(add ,g))
                          (<~@ @monster-groups (append (list (cons (@! @next-id) g)))))))))))
 
 
-(define (add-monster-group @info-db @initial-level @monster-names #:on-group [on-group void])
+(define (add-monster-group @info-db @initial-level @monster-names @env #:on-group [on-group void])
   ;; 0: set
   ;; 1: info
   ;; 2: hash number -> elite
@@ -372,7 +377,7 @@
                         ;; valid because inside a dialog-closer: @monster-names
                         ;; won't update until the end of this form
                         (set-member? (@! @monster-names) (monster-info-name info)))))
-      (define the-group (make-monster-group info level (hash->list num->elite)))
+      (define the-group (make-monster-group info level (hash->list num->elite) (@! @env)))
       (on-group the-group)))
   (define (on-single-change e)
     ;; update internal state
@@ -680,7 +685,7 @@
                         (:= @n (get-first-monster)))
                       #:on-new
                       (λ (n elite?)
-                        (<@ @mg (monster-group-add n elite?))
+                        (<@ @mg (monster-group-add n elite? (hash "C" 2 "L" 1)))
                         (:= @n n))
                       #:on-select (λ:= @n))
                     (hpanel

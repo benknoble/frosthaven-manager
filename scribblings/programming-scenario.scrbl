@@ -312,6 +312,13 @@ names. In case of duplicate cards, like multiple copies of "Nothing Special," I
 recommend disambiguating them by appending a number. For example, you might have
 "Nothing Special 1" and "Nothing Special 2."
 
+Any monster's attack or HP values can be specified as formulas, using the
+variables @tt{L} and @tt{C} to refer to the current level and number of
+characters, respectively. Formulas are written in @tech{game text}, like
+@racket["C + 2"] or @racket["L * 3"]. The available operators in formulas are
+the standard arithmetic operators @racket["+"], @racket["-"], @racket["*"], and
+@racket["/"]. Use parentheses to group expressions, like @racket["(C + 1) * 2"].
+
 Any @nonterm{card}'s abilities in the @nonterm{text-list} can include a
 reference to an AoE pattern by using the function @racket[aoe], like in the
 following example: @racket["attack +1, aoe(path/to/triangle.rkt)"]. See
@@ -343,9 +350,13 @@ following example: @racket["attack +1, aoe(path/to/triangle.rkt)"]. See
                     @optional{@nonterm{effects}}
                     @optional{@nonterm{immunities}}])
 
-     (list @nonterm{hp} @BNF-seq[@litchar{[} @litchar{HP} @nonterm{number} @litchar{]}])
+     (list @nonterm{hp} @BNF-seq[@litchar{[} @litchar{HP}
+                                             @BNF-group[@BNF-alt[@nonterm{number} @nonterm{formula:text}]]
+                                             @litchar{]}])
      (list @nonterm{move} @BNF-seq[@litchar{[} @litchar{Move} @nonterm{number} @litchar{]}])
-     (list @nonterm{attack} @BNF-seq[@litchar{[} @litchar{Attack} @nonterm{number} @litchar{]}])
+     (list @nonterm{attack} @BNF-seq[@litchar{[} @litchar{Attack}
+                                                 @BNF-group[@BNF-alt[@nonterm{number} @nonterm{formula:text}]]
+                                                 @litchar{]}])
      (list @nonterm{bonuses} @BNF-seq[@litchar{[} @litchar{Bonuses} @nonterm{text-list} @litchar{]}])
      (list @nonterm{effects} @BNF-seq[@litchar{[} @litchar{Effects} @nonterm{text-list} @litchar{]}])
      (list @nonterm{immunities} @BNF-seq[@litchar{[} @litchar{Immunities} @nonterm{text-list} @litchar{]}])

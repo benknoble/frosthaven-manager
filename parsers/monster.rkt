@@ -48,9 +48,15 @@
 (define (value/p s p)
   (labelled/p (string-ci/p s) p))
 
-(define hp/p (value/p "HP" (guard/p number/p positive-integer? "positive maximum health")))
+(define hp/p
+  (value/p "HP"
+           (or/p (non-empty-text/p "non-empty HP formula")
+                 (guard/p number/p positive-integer? "positive maximum health"))))
 (define move/p (value/p "Move" (guard/p number/p natural-number/c "base move value at least 0")))
-(define attack/p (value/p "Attack" (guard/p number/p natural-number/c "base attack at least 0")))
+(define attack/p
+  (value/p "Attack"
+           (or/p (non-empty-text/p "non-empty Attack formula")
+                 (guard/p number/p natural-number/c "base attack at least 0"))))
 (define bonuses/p (value/p "Bonuses" (list-value/p (non-empty-text/p "non-empty bonus text"))))
 (define effects/p (value/p "Effects" (list-value/p (non-empty-text/p "non-empty effect text"))))
 (define immunities/p (value/p "Immunities" (list-value/p (non-empty-text/p "non-empty immunity text"))))

@@ -45,6 +45,7 @@
             frosthaven-manager/gui/static-table
             frosthaven-manager/monster-db
             frosthaven-manager/parsers/foes
+            frosthaven-manager/parsers/formula
             frosthaven-manager/parsers/monster
             frosthaven-manager/observable-operator
             frosthaven-manager/qi
@@ -491,9 +492,9 @@ Returns the better or worse of the two modifier cards.
 @subsection{Monster Cards}
 
 @defstruct*[monster-stats
-             ([max-hp positive-integer?]
+             ([max-hp (or/c positive-integer? string?)]
               [move natural-number/c]
-              [attack natural-number/c]
+              [attack (or/c natural-number/c string?)]
               [bonuses (listof string?)]
               [effects (listof string?)]
               [immunities (listof string?)])
@@ -558,19 +559,31 @@ number.
 Serializable.
 }
 
+@defproc[(monster-stats-max-hp* [stats monster-stats?] [env env/c])
+         positive-integer?]{
+Calculates the maximum HP value of @racket[stats], which may be a formula.
+}
+
+@defproc[(monster-stats-attack* [stats monster-stats?] [env env/c])
+         positive-integer?]{
+Calculates the attack value of @racket[stats], which may be a formula.
+}
+
 @defproc[(make-monster [info monster-info?]
                        [level level/c]
                        [number monster-number/c]
-                       [elite? boolean?])
+                       [elite? boolean?]
+                       [env env/c])
          monster?]{
 Populates the resulting @racket[monster] based on the statistics from
-@racket[info] and @racket[elite?].
+@racket[info] and @racket[elite?]. Formulas are calculated using @racket[env].
 }
 
 @defproc[(make-monster-group [info monster-info?]
                              [level level/c]
                              [num+elite?s (and/c (listof (cons/c monster-number/c boolean?))
-                                                 (unique-with/c car any/c))])
+                                                 (unique-with/c car any/c))]
+                             [env env/c])
          monster-group?]{
 Creates a @racket[monter-group] at level @racket[level] based on the statistics
 from @racket[info].
@@ -578,6 +591,8 @@ from @racket[info].
 The @racket[num+elite?s] parameter provides a mapping from (unique) monster
 numbers to their elite status. Only monster numbers in the mapping are added to
 the @racket[monster-group].
+
+Formulas are calculated using @racket[env].
 }
 
 @defproc[(get-monster-stats [mg monster-group?] [m monster?]) monster-stats?]{
@@ -586,10 +601,10 @@ Retrieves the corresponding @racket[monster-group-normal-stats] or
 monster @racket[m] is assumed to be part of the group @racket[mg].
 }
 
-@defproc[(monster-at-max-health? [m monster?] [s monster-stats?]) boolean?]{
+@defproc[(monster-at-max-health? [m monster?] [s monster-stats?] [env env/c]) boolean?]{
 True if-and-only-if @racket[(monster-current-hp m)] is
-@racket[(monster-stats-max-hp s)]. The stats @racket[s] are assumed to correlate
-to the monster @racket[m].
+@racket[(monster-stats-max-hp* s env)]. The stats @racket[s] are assumed to
+correlate to the monster @racket[m].
 }
 
 @defproc[(monster-dead? [m monster?]) boolean?]{
@@ -625,7 +640,7 @@ numbered @racket[n] by @racket[f].
 Removes the monster numbered @racket[n] from @racket[(monster-group-monsters mg)].
 }
 
-@defproc[((monster-group-add [n monster-number/c] [elite? boolean?])
+@defproc[((monster-group-add [n monster-number/c] [elite? boolean?] [env env/c])
           [mg monster-group?])
           monster-group?]{
 Adds the monster numbered @racket[n] to @racket[(monster-group-monsters mg)]. It
@@ -780,6 +795,10 @@ All of the "global" manager state.
            [|@|ability-decks (maybe-obs/c (hash/c string? ability-decks?)) (|@| (hash))])
          state?]{
 Create an initial state.
+}
+
+@defproc[(state-|@|env [s state?]) (obs/c env/c)]{
+Derives a formula environment observable from pieces of @racket[s].
 }
 
 @deftogether[(@defproc[(serialize-state [s state?] [out output-port?]) any]
@@ -1267,6 +1286,7 @@ information about the group.
 @defproc[(multi-monster-picker
            [info-db info-db/c]
            [|@initial-level| (obs/c level/c)]
+           [|@env| (obs/c env/c)]
            [#:on-change on-change (-> (or/c add-monster-event/c
                                             remove-monster-event/c)
                                       any) void])
@@ -1282,6 +1302,7 @@ removal of a group. Other parameters are used as in
            [|@mg| (obs/c monster-group?)]
            [|@ability| (obs/c (or/c #f monster-ability?))]
            [|@monster-num| (obs/c (or/c #f monster-number/c))]
+           [|@env| (obs/c env/c)]
            [#:on-select on-select (-> (or/c #f monster-number/c) any) void]
            [#:on-condition on-condition (-> monster-number/c condition? boolean? any) void]
            [#:on-hp on-hp (-> monster-number/c (-> number? number?) any) void]
@@ -1316,6 +1337,7 @@ Any pre-set monster groups will also be shown.
 @defproc[(add-monster-group [|@info-db| (obs/c info-db/c)]
                             [|@initial-level| (obs/c level/c)]
                             [|@monster-names| (obs/c (set/c string? #:cmp 'dont-care #:kind 'dont-care))]
+                            [|@env| (obs/c env/c)]
                             [#:on-group on-group (-> monster-group? any) void])
          any]{
 Renders a dialog to add a monster group by invoking the callback
@@ -1611,6 +1633,28 @@ Contracts for foes values.
 @deftogether[(@defthing[foes/p (parser/c char? foes/pc)]
               @defthing[foe/p (parser/c char? foe/pc)])]{
 Textual parsers for parts of the foes language.
+}
+
+@subsection{@tt{parsers/formula}}
+@defmodule[frosthaven-manager/parsers/formula]
+
+This module contains parsers for arithmetic formulas over addition, subtraction,
+multiplication, division, and a limited set of variables. The parse result is a
+function from an environment of variables to a number.
+
+@deftogether[(
+              @defthing[env/c flat-contract? #:value (hash/c (or/c "L" "C") number? #:flat? #t)]
+              @defthing[expr/pc contract? #:value (-> env/c number?)]
+)]{
+Contracts for the parse results of formulas.
+}
+
+@defthing[expr/p (parser/c char? expr/pc)]{
+Textual parser for formulas.
+}
+
+@defproc[(parse-expr [in string?]) expr/pc]{
+Parses a string as a formula or fails.
 }
 
 @subsection{@tt{parsers/monster}}

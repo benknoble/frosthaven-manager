@@ -106,13 +106,17 @@
                             (thunk (with-error-text (init-dbs default-monster-db s)))))
             (cond-view
               [(@> @error-text non-empty-string?)
-               (hpanel (text "Error message: ") (text @error-text #:color "red"))]
+               (hpanel (text "Error message:" #:color "red")
+                       (input @error-text #:style '(multiple)))]
               [else (spacer)]))
     (button "Next" (to-choose-monsters-or-play s) #:enabled? (@~> (state-@info-db s) (not hash-empty?)))))
 
 (define (choose-monsters-view s)
   (vpanel
-    (multi-monster-picker (state-@info-db s) (state-@level s) #:on-change (add-or-remove-monster-group s))
+    (multi-monster-picker (state-@info-db s)
+                          (state-@level s)
+                          (state-@env s)
+                          #:on-change (add-or-remove-monster-group s))
     (button "Next" (to-play s))))
 
 (define (play-view s)
@@ -143,6 +147,7 @@
                     (state-@info-db s)
                     (state-@level s)
                     @monster-names
+                    (state-@env s)
                     #:on-group
                     (λ (g)
                       ((add-or-remove-monster-group s) `(add ,g))
@@ -208,6 +213,7 @@
     #:on-initiative update-player-initiative))
 
 (define ((make-monster-group-view s) k @e)
+  (define @env (state-@env s))
   (define (update proc [procn (flow 1>)])
     (<~@ (state-@creatures s) (update-monster-groups k proc procn)))
   (define (update-by-num num proc)
@@ -223,7 +229,7 @@
     (update (monster-group-remove num)
             (flow (~> 2> monster-group-first-monster))))
   (define (new num elite?)
-    (update (monster-group-add num elite?)
+    (update (monster-group-add num elite? (@! @env))
             (const num))
     ;; Probably this could be done unconditionally, since
     ;; draw-new-card-mid-round-if-needed checks that there isn't already a card
@@ -240,6 +246,7 @@
     @mg
     @ability
     @n
+    @env
     #:on-condition update-condition
     #:on-hp update-hp
     #:on-kill kill

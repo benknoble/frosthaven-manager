@@ -60,7 +60,8 @@
       (case numbering
         [(#f "ordered") (inclusive-range 1 (length monster-types))]
         [("random") (take (shuffle (inclusive-range 1 10)) (length monster-types))]))
-    (make-monster-group info level (map cons numbers monster-types))))
+    (make-monster-group info level (map cons numbers monster-types)
+                        (hash "C" number-of-players "L" level))))
 
 (module reader frosthaven-manager/syntax/module-reader
   frosthaven-manager/foes

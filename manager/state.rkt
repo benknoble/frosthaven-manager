@@ -50,6 +50,7 @@
              (maybe-obs/c ability-db/c)
              (maybe-obs/c (hash/c string? ability-decks?)))
            state?)]
+    [state-@env (-> state? (obs/c env/c))]
     [serialize-state (-> state? output-port? void?)]
     [deserialize-state (-> input-port? state?)]
     [copy-state (-> state? state? any)]
@@ -71,6 +72,7 @@
 (require racket/serialize
          racket/fasl
          racket/gui/easy/contract
+         racket/gui/easy/observable
          frosthaven-manager/observable-operator
          frosthaven-manager/qi
          frosthaven-manager/defns
@@ -81,7 +83,8 @@
          (only-in frosthaven-manager/gui/monsters
                   add-monster-event/c
                   remove-monster-event/c)
-         frosthaven-manager/manager/ability-decks)
+         frosthaven-manager/manager/ability-decks
+         frosthaven-manager/parsers/formula)
 
 (serializable-struct creature [id v] #:transparent)
 (serializable-struct monster-group* [active mg] #:transparent)
@@ -162,6 +165,11 @@
          (@ @info-db)
          (@ @ability-db)
          (@ @ability-decks)))
+
+(define (state-@env s)
+  (obs-combine (λ (c l) (hash "C" c "L" l))
+               (state-@num-players s)
+               (state-@level s)))
 
 (define state-deserialize-info
   (make-deserialize-info

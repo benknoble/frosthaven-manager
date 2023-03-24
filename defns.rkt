@@ -92,9 +92,9 @@
 
   ;; monster cards
   (contract-out
-    [struct monster-stats ([max-hp positive-integer?]
+    [struct monster-stats ([max-hp (or/c positive-integer? string?)]
                            [move natural-number/c]
-                           [attack natural-number/c]
+                           [attack (or/c natural-number/c string?)]
                            [bonuses (listof string?)]
                            [effects (listof string?)]
                            [immunities (listof string?)])]
@@ -119,15 +119,19 @@
                            [normal-stats monster-stats?]
                            [elite-stats monster-stats?]
                            [monsters (listof monster?)])]
+    [monster-stats-max-hp* (-> monster-stats? env/c positive-integer?)]
+    [monster-stats-attack* (-> monster-stats? env/c positive-integer?)]
     [make-monster (-> monster-info? level/c
                       monster-number/c boolean?
+                      env/c
                       monster?)]
     [make-monster-group (-> monster-info? level/c
                             (and/c (listof (cons/c monster-number/c boolean?))
                                    (unique-with/c car any/c))
+                            env/c
                             monster-group?)]
     [get-monster-stats (-> monster-group? monster? monster-stats?)]
-    [monster-at-max-health? (-> monster? monster-stats? boolean?)]
+    [monster-at-max-health? (-> monster? monster-stats? env/c boolean?)]
     [monster-dead? (-> monster? boolean?)]
     [monster-group-update-num
       (-> monster-number/c
@@ -139,16 +143,16 @@
                            (-> monster? monster?))]
     [monster-group-remove (-> monster-number/c
                               (-> monster-group? monster-group?))]
-    [monster-group-add (-> monster-number/c boolean?
+    [monster-group-add (-> monster-number/c boolean? env/c
                            (-> monster-group? monster-group?))]
     [monster-group-first-monster (-> monster-group? (or/c #f monster-number/c))]))
 
 (require
   racket/serialize
   rebellion/type/enum
-  rebellion/type/singleton
   frosthaven-manager/qi
-  frosthaven-manager/enum-helpers)
+  frosthaven-manager/enum-helpers
+  frosthaven-manager/parsers/formula)
 
 (define-flow no-duplicates?
   (not (and check-duplicates #t)))
@@ -368,18 +372,42 @@
 (serializable-struct monster [number elite? current-hp conditions] #:transparent)
 (serializable-struct monster-group [set-name name level normal-stats elite-stats monsters] #:transparent)
 
-(define (make-monster* stats number elite?)
-  (monster number elite? (monster-stats-max-hp stats) empty))
+(define (monster-stats-max-hp* stats env)
+  (match (monster-stats-max-hp stats)
+    [(? number? x) x]
+    [(? string? s)
+     (match ((parse-expr s) env)
+       [(? positive-integer? x) x]
+       [x (raise-arguments-error 'monster-stats-max-hp*
+                                 "Calculated max HP is not positive"
+                                 "Max HP" x
+                                 "formula" s
+                                 "environment" env)])]))
 
-(define (make-monster info level number elite?)
+(define (monster-stats-attack* stats env)
+  (match (monster-stats-attack stats)
+    [(? number? x) x]
+    [(? string? s)
+     (match ((parse-expr s) env)
+       [(? positive-integer? x) x]
+       [x (raise-arguments-error 'monster-stats-attack*
+                                 "Calculated attack is not positive"
+                                 "attack" x
+                                 "formula" s
+                                 "environment" env)])]))
+
+(define (make-monster* stats number elite? env)
+  (monster number elite? (monster-stats-max-hp* stats env) empty))
+
+(define (make-monster info level number elite? env)
   (define level-stats
     (list-ref (if elite?
                 (monster-info-elite-stats info)
                 (monster-info-normal-stats info))
               level))
-  (make-monster* level-stats number elite?))
+  (make-monster* level-stats number elite? env))
 
-(define (make-monster-group info level num+elite?s)
+(define (make-monster-group info level num+elite?s env)
   (define-values (normal elite)
     (~> (info)
         (-< monster-info-normal-stats
@@ -393,7 +421,7 @@
     (sort-monsters
       (map (match-lambda
              [(cons num elite?)
-              (make-monster* (if elite? elite normal) num elite?)])
+              (make-monster* (if elite? elite normal) num elite? env)])
            num+elite?s))))
 
 (define-switch (get-monster-stats mg m)
@@ -401,8 +429,8 @@
   [monster-elite? monster-group-elite-stats]
   [else monster-group-normal-stats])
 
-(define-flow (monster-at-max-health? m stats)
-  (~> (== monster-current-hp monster-stats-max-hp) >=))
+(define-flow (monster-at-max-health? m stats env)
+  (~> (group 1 monster-current-hp monster-stats-max-hp*) >=))
 
 (define-flow (monster-dead? m)
   (~> monster-current-hp zero?))
@@ -466,7 +494,7 @@
     (sort-monsters (remove the-monster old-monsters)))
   (struct-copy monster-group group [monsters new-monsters]))
 
-(define ((monster-group-add num elite?) group)
+(define ((monster-group-add num elite? env) group)
   (when (~>> (group) monster-group-monsters (map monster-number) (member num))
     (raise-arguments-error 'monster-group-add
                            (format "Monster ~a already exists in group" num)
@@ -477,7 +505,8 @@
                      (monster-group-elite-stats group)
                      (monster-group-normal-stats group))
                    num
-                   elite?))
+                   elite?
+                   env))
   (define new-monsters
     (sort-monsters (cons new-monster (monster-group-monsters group))))
   (struct-copy monster-group group [monsters new-monsters]))
