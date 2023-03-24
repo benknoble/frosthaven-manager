@@ -182,7 +182,7 @@
                                    (gen empty)))
           (λ (_k @e)
             (apply hpanel
-                   (ability->text @mg @e)
+                   (ability->text @mg @e @env)
                    (ability->extras @mg @ability @e)))))))
   (define (stats-panel)
     (hpanel
@@ -564,13 +564,31 @@
 
 (define aoe-rx #rx"aoe\\(([^)]+)\\)")
 
-(define (ability->text @mg @ability)
+(define ((keyword-sub stats-f mg) _match word +- amount)
+  (define op (eval (string->symbol +-) (make-base-namespace)))
+  (define amount* (string->number amount))
+  (define normal
+    (op (stats-f (monster-group-normal-stats mg)) amount*))
+  (define elite
+    (op (stats-f (monster-group-elite-stats mg)) amount*))
+  (format "~a ~a (E:~a)" word normal elite))
+
+(define (do-replacement mg ability env)
   (define aoe-replacement `(,aoe-rx ""))
   (define bulleted '(#rx"^" "· "))
+  (define attack
+    (list #px"((?i:attack))\\s+([+-])(\\d+)" (keyword-sub (λ (s) (monster-stats-attack* s env)) mg)))
+  (define move
+    (list #px"((?i:move))\\s+([+-])(\\d+)" (keyword-sub monster-stats-move mg)))
   (define replacements
     (list bulleted
-          aoe-replacement))
-  (text (@~> @ability (regexp-replaces replacements))))
+          aoe-replacement
+          attack
+          move))
+  (regexp-replaces ability replacements))
+
+(define (ability->text @mg @ability @env)
+  (text (obs-combine do-replacement @mg @ability @env)))
 
 (define (ability->extras @mg @ability-card @ability-text)
   (define @aoe
