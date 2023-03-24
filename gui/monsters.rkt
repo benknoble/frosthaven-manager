@@ -62,7 +62,6 @@
 
 (define (stats-view @stats @env)
   (vpanel
-    (text (@~> @stats (~> monster-stats-move ~a)))
     (text (obs-combine (flow (~> monster-stats-attack* ~a)) @stats @env))
     (cond-view
       [(@~> @stats (~> monster-stats-bonuses (not empty?)))
@@ -189,7 +188,6 @@
       (group "Normal" (stats-view (@> @mg monster-group-normal-stats) @env)
              #:min-size (list (* 10 (string-length "Normal")) #f))
       (group "Stats"
-             (text "Move")
              (text "Attack")
              (cond-view
                [(obs-combine (flow (~> (>< monster-stats-bonuses) (not (all empty?))))
