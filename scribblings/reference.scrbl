@@ -301,6 +301,10 @@ Transforms @racket[(player-loot p)] by adding @racket[card].
 Formats the string @racket["HP: current/max"] for the player @racket[p].
 }
 
+@defproc[(player-conditions* [p player?]) (listof condition?)]{
+Same as @racket[(player-conditions p)] but sorted.
+}
+
 @subsection{Loot Deck}
 
 @deftogether[(

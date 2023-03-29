@@ -61,3 +61,17 @@
 
 (define (how-to-play-menu-item)
   (menu-item "How to Play" (thunk (send-url "https://benknoble.github.io/frosthaven-manager/How_to_Play.html"))))
+
+(module+ main
+  (render
+    (window
+      (text "Check menus")
+      (menu-bar
+        (menu "Help"
+              (about-menu-item)
+              (how-to-play-menu-item)
+              (menu-item-separator)
+              (send-feedback-menu-item)
+              (issue-menu-item)
+              (feature-menu-item)
+              (contribute-menu-item))))))

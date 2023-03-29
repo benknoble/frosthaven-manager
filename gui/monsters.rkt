@@ -621,6 +621,7 @@
       (render/eventspace
         #:eventspace closing-eventspace
         (window #:mixin close-custodian-mixin
+                #:title "Info DB"
                 (db-view (@ info-db) (@ ability-db) (@ (list)))))))
   (define-values (set info) (initial-set+info info-db))
   (define/obs @state
@@ -629,41 +630,47 @@
     ;; 2: hash number -> elite
     (list set info (hash)))
 
-  ;; (void
-  ;;   (render
-  ;;     (window
-  ;;       (single-monster-picker
-  ;;         info-db
-  ;;         #:on-change
-  ;;         (match-lambda
-  ;;           [`(set from ,old to ,new) (<~@ @state (list-set 0 new))]
-  ;;           [`(monster from ,old to ,new) (<~@ @state (list-set 1 new))]
-  ;;           [`(include? ,n to #t)
-  ;;             (<~@ @state (list-update 2 (flow (hash-update n values #f))))]
-  ;;           [`(include? ,n to #f)
-  ;;             (<~@ @state (list-update 2 (flow (hash-remove n))))]
-  ;;           [`(elite? ,n to ,elite?)
-  ;;             ;; looks like hash-set, but I want the missing-key semantics of
-  ;;             ;; hash-update with no failure-result as a guard against bugs
-  ;;             (<~@ @state (list-update 2 (flow (hash-update n (const elite?)))))])))))
+  (void
+    (with-closing-custodian/eventspace
+      (render/eventspace
+        #:eventspace closing-eventspace
+        (window
+          #:title "Simple picker"
+          #:mixin close-custodian-mixin
+          (single-monster-picker
+            info-db (@ 3)
+            #:on-change
+            (match-lambda
+              [`(set from ,_old to ,new) (<~@ @state (list-set 0 new))]
+              [`(monster from ,_old to ,new) (<~@ @state (list-set 1 new))]
+              [`(include? ,n to #t)
+                (<~@ @state (list-update 2 (flow (hash-update n values #f))))]
+              [`(include? ,n to #f)
+                (<~@ @state (list-update 2 (flow (hash-remove n))))]
+              [`(elite? ,n to ,elite?)
+                ;; looks like hash-set, but I want the missing-key semantics of
+                ;; hash-update with no failure-result as a guard against bugs
+                (<~@ @state (list-update 2 (flow (hash-update n (const elite?)))))])))))
 
-  ;; (void
-  ;;   (render
-  ;;     (window
-  ;;       (simple-monster-group-view
-  ;;         (@> @state
-  ;;             (match-lambda
-  ;;               [(list set info num->elite?)
-  ;;                (make-monster-group
-  ;;                  info 3
-  ;;                  (hash->list num->elite?))]))))))
+    (with-closing-custodian/eventspace
+      (render/eventspace
+        #:eventspace closing-eventspace
+        (window
+          #:title "Simple picker view"
+          #:mixin close-custodian-mixin
+          (simple-monster-group-view
+            (@> @state
+                (match-lambda
+                  [(list _set info num->elite?)
+                   (make-monster-group info 3 (hash->list num->elite?) #hash())])))))))
 
   (void
     ;; no separate eventspace: block main until this window closed
     (render/eventspace
       (window
+        #:title "Multi Picker"
         (multi-monster-picker
-          (@ info-db) (@ 3)
+          (@ info-db) (@ 3) (@ #hash())
           #:on-change
           (match-lambda
             [`(add ,mg)
@@ -682,13 +689,15 @@
               (define/obs @deck (shuffle abilities-for-group))
               (define/obs @discard empty)
               (define/obs @ability #f)
+              (define/obs @draw? #t)
               (with-closing-custodian/eventspace
                 (render/eventspace
                   #:eventspace closing-eventspace
                   (window
+                    #:title "Monster view"
                     #:mixin close-custodian-mixin
                     (monster-group-view
-                      @mg @ability @n
+                      @mg @ability @n (@ #hash())
                       #:on-condition
                       (λ (num c on?)
                         (<@ @mg (monster-group-update-num num (monster-update-condition c on?))))
@@ -701,7 +710,7 @@
                         (:= @n (get-first-monster)))
                       #:on-new
                       (λ (n elite?)
-                        (<@ @mg (monster-group-add n elite? (hash "C" 2 "L" 1)))
+                        (<@ @mg (monster-group-add n elite? #hash()))
                         (:= @n n))
                       #:on-select (λ:= @n))
                     (hpanel
@@ -714,7 +723,9 @@
                               ;; or there _must_ be cards to draw from
                               (~> (@deck) @! (and (not empty?) first)))
                           ;; update the deck
-                          (<~@ @deck (switch [(not empty?) rest]))))
+                          (<~@ @deck (switch [(not empty?) rest]))
+                          (<@ @draw? not))
+                        #:enabled? @draw?)
                       (button
                         "Next Round"
                         (thunk
@@ -732,5 +743,7 @@
                                   (append (@! @deck) (@! @discard))))
                             (:= @discard empty))
                           ;; hide current ability
-                          (:= @ability #f)))))))]
+                          (:= @ability #f)
+                          (<@ @draw? not))
+                        #:enabled? (@> @draw? not))))))]
             [_ (void)]))))))

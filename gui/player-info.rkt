@@ -75,7 +75,7 @@
       hp-panel xp-panel))
   (define @init (@> @player player-initiative))
   (define @init-label (@~> @player (~>> player-name (~a "Initiative for "))))
-  (define (show-initiative-slider)
+  (define (input-initiative)
     (define close! (box #f))
     (define (set-close! p) (set-box! close! p))
     (with-closing-custodian/eventspace
@@ -101,7 +101,7 @@
       (hpanel #:alignment '(center center)
               (text (@> @player player-name) #:font big-control-font)
               (text (@~> @init (format "(~a)" _))))
-      (button "Edit Initiative" show-initiative-slider)))
+      (button "Edit Initiative" input-initiative)))
   (define (show-conditions)
     (with-closing-custodian/eventspace
       (render/eventspace
@@ -113,7 +113,7 @@
                (map make-condition-checkbox conditions)))))
   (define conditions-panel
     (vpanel
-      (text (@~> @player (~> player-conditions
+      (text (@~> @player (~> player-conditions*
                              (sep ~a) collect
                              (string-join ", " #:before-last " and "))))
       (button "Edit Conditions" show-conditions)))

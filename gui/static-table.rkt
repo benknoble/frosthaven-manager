@@ -54,3 +54,8 @@
     #:column-widths column-widths
     #:stretch '(#f #f)
     #:entry->row make-row))
+
+(module+ main
+  ;; level-table uses static-table
+  ;; dynamic-require breaks the cycle
+  (dynamic-require '(submod frosthaven-manager/gui/level-info main) #f))

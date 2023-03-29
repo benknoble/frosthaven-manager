@@ -52,7 +52,8 @@
     [player-set-initiative (-> player? initiative? player?)]
     [player-clear-initiative (-> player? player?)]
     [player-add-loot (-> loot-card? (-> player? player?))]
-    [player->hp-text (-> player? string?)])
+    [player->hp-text (-> player? string?)]
+    [player-conditions* (-> player? (listof condition?))])
 
   ;; loot deck
   (enum-out material-kind)
@@ -261,6 +262,9 @@
     [(struct* player ([max-hp max] [current-hp current]))
       (~a "HP: " current "/" max)]))
 
+(define (player-conditions* p)
+  (sort (player-conditions p) string<=? #:key ~a))
+
 ;; loot deck
 
 (serializable-struct money [amount] #:transparent)
@@ -302,9 +306,9 @@
 ;; placeholders
 (define money-deck
   (append
-    (build-list 12 (const (money 1)))
-    (build-list 06 (const (money 2)))
-    (build-list 02 (const (money 3)))))
+    (build-list 12 (thunk* (money 1)))
+    (build-list 06 (thunk* (money 2)))
+    (build-list 02 (thunk* (money 3)))))
 (define material-decks
   (let* ([amounts '(
                     (1 1 1) (1 1 1)
