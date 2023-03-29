@@ -52,7 +52,8 @@
     [player-set-initiative (-> player? initiative? player?)]
     [player-clear-initiative (-> player? player?)]
     [player-add-loot (-> loot-card? (-> player? player?))]
-    [player->hp-text (-> player? string?)])
+    [player->hp-text (-> player? string?)]
+    [player-conditions* (-> player? (listof condition?))])
 
   ;; loot deck
   (enum-out material-kind)
@@ -260,6 +261,9 @@
   (match p
     [(struct* player ([max-hp max] [current-hp current]))
       (~a "HP: " current "/" max)]))
+
+(define (player-conditions* p)
+  (sort (player-conditions p) string<=? #:key ~a))
 
 ;; loot deck
 

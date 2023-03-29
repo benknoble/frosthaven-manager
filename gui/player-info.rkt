@@ -113,7 +113,7 @@
                (map make-condition-checkbox conditions)))))
   (define conditions-panel
     (vpanel
-      (text (@~> @player (~> player-conditions
+      (text (@~> @player (~> player-conditions*
                              (sep ~a) collect
                              (string-join ", " #:before-last " and "))))
       (button "Edit Conditions" show-conditions)))
