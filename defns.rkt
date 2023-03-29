@@ -302,9 +302,9 @@
 ;; placeholders
 (define money-deck
   (append
-    (build-list 12 (const (money 1)))
-    (build-list 06 (const (money 2)))
-    (build-list 02 (const (money 3)))))
+    (build-list 12 (thunk* (money 1)))
+    (build-list 06 (thunk* (money 2)))
+    (build-list 02 (thunk* (money 3)))))
 (define material-decks
   (let* ([amounts '(
                     (1 1 1) (1 1 1)
