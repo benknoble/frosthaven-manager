@@ -270,6 +270,7 @@
   ;; no separate eventspace: block main until this window closed
   (render/eventspace
     (window
+      #:size '(400 300)
       (markdown-text
         (string-join
           '("This is a text which contains a **bold section**, an *italic section* and a"
@@ -296,10 +297,10 @@
             ""
             "1. first item"
             "1. second item"
-            "* first sub item"
-            "1. first sub-sub item"
-            "1. second sub-sub item"
-            "* second sub item"
+            "    * first sub item"
+            "        1. first sub-sub item"
+            "        1. second sub-sub item"
+            "    * second sub item"
             "1. third item"
             ""
             "# Overview"
@@ -311,7 +312,7 @@
             ""
             "1. first step"
             "2. second step"
-            "- substep one"
-            "- substep two"
+            "    - substep one"
+            "    - substep two"
             "3. third step")
           "\n")))))
