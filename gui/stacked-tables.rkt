@@ -75,24 +75,9 @@
            frosthaven-manager/observable-operator
            frosthaven-manager/qi)
 
-  ;; (define-flow range/vector (~> range list->vector))
-  ;; (render/eventspace
-  ;;   (window
-  ;;     (stacked-tables (@ (list->vector (range 10)))
-  ;;                     (λ (@n?) (text (@~> @n? (or _ "N/A"))))
-  ;;                     (column "Number 1" number->string range/vector)
-  ;;                     (column "Number 2" number->string range/vector)
-  ;;                     (column "Number 3" number->string range/vector)
-  ;;                     (column "Number 4" number->string ~a)
-  ;;                     ;; #:topleft? #f
-  ;;                     ;; #:panel vpanel
-  ;;                     )))
-
-  #|---|#
-
   (require frosthaven-manager/monster-db
            frosthaven-manager/defns)
-  (define-values (info-db ability-db) (get-dbs default-monster-db))
+  (define-values (info-db _ability-db) (get-dbs default-monster-db))
   (render/eventspace
     (window
       (stacked-tables
@@ -111,8 +96,9 @@
         (column "Level"
                 (match-lambda [(list* level elite? _) (~a "Level " level (if elite? " (Elite)" ""))])
                 (match-lambda
-                  [(list level elite? name set info name->info)
+                  [(list level elite? _name _set info _name->info)
                    (define ->stats (if elite? monster-info-elite-stats monster-info-normal-stats))
-                   (~> (info) ->stats (list-ref level))])))))
-
-  )
+                   (~> (info) ->stats (list-ref level))]))
+        ;; #:topleft? #f
+        ;; #:panel vpanel
+        ))))
