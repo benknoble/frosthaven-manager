@@ -13,6 +13,11 @@ jobs:
         include:
           - racket-version: current
             experimental: true
+        exclude:
+          # CI failing on BC stable lately, possible TR bug:
+          # https://github.com/bennn/rackunit-abbrevs/issues/6
+          - racket-variant: BC
+            racket-version: stable
     steps:
       - uses: actions/checkout@v3.1.0
       - uses: Bogdanp/setup-racket@v1.9.1
