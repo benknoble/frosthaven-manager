@@ -16,7 +16,8 @@
     [syntaxes->spec (-> (and/c (listof syntax?) syntaxes-can-be-spec?) spec?)]))
 
 (require pict
-         racket/draw)
+         racket/draw
+         frosthaven-manager/qi)
 
 (define (custom-hex s)
   (define h (* (sqrt 3) s))
@@ -59,8 +60,10 @@
   (colorize (S) "gray"))
 
 (define (border-size max-row max-col)
-  (* 3/2 (max (* (pict-height (S)) max-row)
-              (* (pict-width (S)) max-col))))
+  (~> ((S))
+      (-< (~> pict-height (* max-row))
+          (~> pict-width (* max-col)))
+      max (* 3/2)))
 
 ;; (define top (hc-append (X) (X)))
 ;; (define middle (translate (hc-append (X) (X) (X) (M) (O)) (- (r)) 0))
@@ -131,7 +134,7 @@
       (define dx (if dedent? 0 (- (r))))
       (vl-append p (translate (row->shape row-spec) dx 0)))))
 
-(define spec->shape (compose1 rows->shape fill-in-spec))
+(define-flow spec->shape (~> fill-in-spec rows->shape))
 
 (define (syntaxes->spec stxs)
   (define groups (group-by syntax-line stxs))
