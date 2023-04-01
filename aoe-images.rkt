@@ -13,7 +13,8 @@
     [spec? flat-contract?]
     [spec->shape (-> spec? pict?)]
     [syntaxes-can-be-spec? predicate/c]
-    [syntaxes->spec (-> (and/c (listof syntax?) syntaxes-can-be-spec?) spec?)]))
+    [syntaxes->spec (-> (and/c (listof syntax?) syntaxes-can-be-spec?) spec?)]
+    [string->spec (-> string? spec?)]))
 
 (require pict
          racket/draw
@@ -157,3 +158,9 @@
 
 (define spec?
   (listof (list/c exact-positive-integer? boolean? (listof (list/c spec-sym? natural-number/c)))))
+
+(define-flow (string->spec s)
+  (~>> open-input-string
+       (ε port-count-lines!)
+       (port->list (flow (read-syntax #f _)))
+       syntaxes->spec))

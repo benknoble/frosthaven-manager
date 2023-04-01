@@ -126,6 +126,12 @@ The symbols represent the corresponding shapes, with @racket['g] a
 Convert a list of syntax objects to a @racket[spec?].
 }
 
+@defproc[(string->spec [s string?]) spec?]{
+Uses @racket[syntaxes->spec] on syntax read from @racket[s] by
+@racket[read-syntax] to produce an AoE spec. Fails if the resulting syntaxes
+cannot be a spec, as defined by @racket[syntaxes-can-be-spec?].
+}
+
 @section{@tt{defns}}
 @defmodule[frosthaven-manager/defns]
 
