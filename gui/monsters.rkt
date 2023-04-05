@@ -255,8 +255,8 @@
       [(@> @monsters empty?) (hpanel (name-panel) (add-monster-button))]
       [else (hpanel #:alignment '(center center)
                     (name-initiative-panel)
-                    (vpanel (hpanel (ability-panel) (stats-panel))
-                            (monsters)))])))
+                    (vpanel (stats-panel)
+                            (hpanel (ability-panel) (monsters))))])))
 
 ;; TODO: should be able to manipulate individual HP (? dialog with counter)
 ;; Takes a non-observable info-db b/c instantiated by a thunk in
