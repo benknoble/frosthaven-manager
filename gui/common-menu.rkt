@@ -8,13 +8,16 @@
     [feature-menu-item (-> (is-a?/c view<%>))]
     [contribute-menu-item (-> (is-a?/c view<%>))]
     [send-feedback-menu-item (-> (is-a?/c view<%>))]
-    [how-to-play-menu-item (-> (is-a?/c view<%>))]))
+    [how-to-play-menu-item (-> (is-a?/c view<%>))]
+    [launch-server-menu-item (-> state? (is-a?/c view<%>))]))
 
 (require racket/runtime-path
          net/sendurl
          racket/gui/easy
          frosthaven-manager/gui/markdown
-         frosthaven-manager/gui/render)
+         frosthaven-manager/gui/render
+         frosthaven-manager/gui/server
+         frosthaven-manager/manager)
 
 (begin-for-syntax
   (require setup/getinfo)
@@ -61,6 +64,9 @@
 
 (define (how-to-play-menu-item)
   (menu-item "How to Play" (thunk (send-url "https://benknoble.github.io/frosthaven-manager/How_to_Play.html"))))
+
+(define (launch-server-menu-item s)
+  (menu-item "Launch Server" (thunk (launch-server s))))
 
 (module+ main
   (render

@@ -44,6 +44,7 @@
       (menu "File"
             (menu-item "&Save Game" (thunk (do-save-game s)))
             (menu-item "L&oad Game" (thunk (do-load-game s)))
+            (launch-server-menu-item s)
             (formula-menu-item (state-@env s)))
       (menu "Help"
             (about-menu-item)

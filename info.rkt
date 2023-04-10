@@ -5,7 +5,10 @@
 (define racket-launcher-libraries '("gui/manager"))
 (define gracket-launcher-names '("FrosthavenManager"))
 (define gracket-launcher-libraries '("gui/manager"))
-(define deps '("functional-lib"
+(define deps '("alexis-multicast"
+               "nat-traversal"
+               "web-server-lib"
+               "functional-lib"
                "megaparsack-lib"
                "reprovide-lang-lib"
                "draw-lib"
