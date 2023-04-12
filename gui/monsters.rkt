@@ -176,13 +176,18 @@
                                 "")))
                       (format "~a~a"))
                  "")))
-        (list-view (@~> @ability (if _
-                                   monster-ability-abilities
-                                   (gen empty)))
+        (list-view (@~> @ability
+                        (if _
+                          (~>> monster-ability-abilities
+                               ;; generated unique ID for each ability
+                               (map (λ (v) (cons v (gensym)))))
+                          (gen empty)))
+          #:key cdr
           (λ (_k @e)
+            (define @ability-text (@> @e car))
             (apply hpanel
-                   (ability->text @mg @e @env)
-                   (ability->extras @mg @ability @e)))))))
+                   (ability->text @mg @ability-text @env)
+                   (ability->extras @mg @ability @ability-text)))))))
   (define (stats-panel)
     (hpanel
       (group "Normal" (stats-view (@> @mg monster-group-normal-stats) @env)
