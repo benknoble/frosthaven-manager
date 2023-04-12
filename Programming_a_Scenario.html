@@ -94,11 +94,7 @@ underlying data structures, like <span class="RktSym"><a href="Developer_Referen
 and <span class="RktSym"><a href="Developer_Reference.html#%28def._%28%28lib._frosthaven-manager%2Fdefns..rkt%29._monster-ability%29%29" class="RktValLink" data-pltdoc="x">monster-ability</a></span>.</p></blockquote></blockquote></blockquote><p>The following terms are used both in the explanation by example:</p><ul><li><p><a name="(tech._game._text)"></a><span style="font-style: italic">Game text</span> is any non-quote contained in <span class="RktVal">"double quotes"</span>.</p></li><li><p>A <a name="(tech._game._number)"></a><span style="font-style: italic">game number</span> is a positive or negative number with no extra decoration.</p></li></ul><p>The grammar for the bestiary is as follows. Whitespace is ignored except in
 <a href="Programming_a_Scenario.html#%28tech._game._text%29" class="techoutside" data-pltdoc="x"><span class="techinside">game text</span></a>.</p><p>Any bestiary file that defines a monster is required to define an ability deck
 for that monster&rsquo;s set. Importing bestiaries that conflict with each other or
-with the current bestiary is also an error. Cyclic imports are disallowed. Due
-to a bug that I don&rsquo;t currently understand, all ability cards must have unqiue
-names. In case of duplicate cards, like multiple copies of "Nothing Special," I
-recommend disambiguating them by appending a number. For example, you might have
-"Nothing Special 1" and "Nothing Special 2."</p><p>Any monster&rsquo;s attack or HP values can be specified as formulas, using the
+with the current bestiary is also an error. Cyclic imports are disallowed.</p><p>Any monster&rsquo;s attack or HP values can be specified as formulas, using the
 variables <span class="stt">L</span> and <span class="stt">C</span> to refer to the current level and number of
 characters, respectively. Formulas are written in <a href="Programming_a_Scenario.html#%28tech._game._text%29" class="techoutside" data-pltdoc="x"><span class="techinside">game text</span></a>, like
 <span class="RktVal">"C + 2"</span> or <span class="RktVal">"L * 3"</span>. The available operators in formulas are
