@@ -583,10 +583,26 @@
     (list #px"((?i:attack))\\s+([+-])(\\d+)" (keyword-sub (λ (s) (monster-stats-attack* s env)) mg)))
   (define move
     (list #px"((?i:move))\\s+([+-])(\\d+)" (keyword-sub monster-stats-move mg)))
+  (define effects
+    (list #px"(?i:attack).*"
+          (λ (match)
+            (define-values (effects elite-effects)
+              (~> (mg)
+                  (-< monster-group-normal-stats monster-group-elite-stats)
+                  (>< (~> monster-stats-effects (string-join ", ")))))
+            (format "~a ~a~a"
+                    match
+                    (switch (effects)
+                      [non-empty-string? (format "(N:~a)" _)]
+                      [else ""])
+                    (switch (elite-effects)
+                      [non-empty-string? (format "(E:~a)" _)]
+                      [else ""])))))
   (define replacements
     (list bulleted
           aoe-replacement
           attack
+          effects
           move))
   (regexp-replaces ability replacements))
 
