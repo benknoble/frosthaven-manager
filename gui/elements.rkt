@@ -10,7 +10,8 @@
     [make-states (-> (listof any/c) (listof (obs/c element-state/c)))]
     [infuse-all (-> (listof (obs/c element-state/c)) any)]
     [consume-all (-> (listof (obs/c element-state/c)) any)]
-    [wane-element (-> element-state/c element-state/c)]))
+    [wane-element (-> element-state/c element-state/c)]
+    [transition-element-state (-> element-state/c element-state/c)]))
 
 (define element-state/c (or/c 'unfused 'infused 'waning))
 

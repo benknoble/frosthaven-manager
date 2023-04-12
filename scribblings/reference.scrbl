@@ -1044,6 +1044,11 @@ respectively.
 Returns the new element state after waning for one cycle.
 }
 
+@defproc[(transition-element-state [state element-state/c]) element-state/c]{
+Returns the new element state after cycling once, with unfused wrapping around
+to infused.
+}
+
 @subsection{@tt{gui/font}}
 @defmodule[frosthaven-manager/gui/font]
 
