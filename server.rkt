@@ -38,21 +38,25 @@
 
 (define-runtime-path static "static")
 
-(define (launch-server s send-event)
+(define s (make-parameter #f))
+(define reverse-uri (make-parameter #f))
+(define send-event (make-parameter #f))
+
+(define (launch-server an-s a-send-event)
   ;; each request thread get its own receiver, so that they can all see the
   ;; updates
   (define ch (make-multicast-channel))
   (for ([e (elements)]
-        [@e-state (state-@elements s)])
+        [@e-state (state-@elements an-s)])
     (obs-observe!
       @e-state
       (λ (new-e-state)
         (multicast-channel-put ch `(element ,(element-pics-name e) ,new-e-state)))))
 
-  (define-values (app reverse-uri)
+  (define-values (app the-reverse-uri)
     (dispatch-rules
+      [("") overview]
       [("events") (event-source ch)]
-      [("elements") (elements-page s reverse-uri send-event)]
       [("element-pics" (element-name-arg) (element-style-arg)) element-pic]
       [else not-found]))
 
@@ -68,32 +72,40 @@
   (define manager (make-threshold-LRU-manager expired-page (* 64 1024 1024)))
   (values
     (~a "http://" (best-interface-ip-address) ":" port)
-    (serve
-      #:dispatch (sequencer:make
-                   (filter:make #rx"^/static/" static-dispatcher)
-                   (dispatch/servlet app #:manager manager))
-      #:port port)))
+    (parameterize ([s an-s]
+                   [reverse-uri the-reverse-uri]
+                   [send-event a-send-event])
+      (serve
+        #:dispatch (sequencer:make
+                     (filter:make #rx"^/static/" static-dispatcher)
+                     (dispatch/servlet app #:manager manager))
+        #:port port))))
 
-(define/page ((elements-page s reverse-uri send-event))
+(define/page (overview)
   (response/xexpr
     `(html
        (head
-         (title "Elements")
+         (title "Frosthaven Manager")
          (script ([src "/static/events.js"]))
          ,@common-heads)
        (body
-         (h1 "Elements")
-         ,@(for/list ([e (list 'Fire 'Ice 'Air 'Earth 'Light 'Dark)]
-                      [@e-state (state-@elements s)])
-             `(a ([href
-                    ,(embed/url
-                       (λ (_req)
-                         (send-event
-                           (λ ()
-                             (<@ @e-state transition-element-state)))
-                         (redirect-to "/elements" see-other)))])
-                 (img ([id ,(symbol->string e)]
-                       [src ,(reverse-uri element-pic e (@! @e-state))]))))))))
+         (h1 "Frosthaven Manager")
+         ,@(elements-body embed/url)
+         ))))
+
+(define (elements-body embed/url)
+  `((h2 "Elements")
+    ,@(for/list ([e (list 'Fire 'Ice 'Air 'Earth 'Light 'Dark)]
+                 [@e-state (state-@elements (s))])
+        `(a ([href
+               ,(embed/url
+                  (λ (_req)
+                    ((send-event)
+                      (λ ()
+                        (<@ @e-state transition-element-state)))
+                    (redirect-to "/" see-other)))])
+            (img ([id ,(symbol->string e)]
+                  [src ,((reverse-uri) element-pic e (@! @e-state))]))))))
 
 (define (get-pic name style)
   ((hash-ref (hasheq 'infused element-pics-infused
