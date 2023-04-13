@@ -128,31 +128,27 @@
                    #:when (player? (creature-v c)))
           (define p (creature-v c))
           `(li ([id ,(~a "player-" (creature-id c))])
-               (span
-                 ([class "player-name"])
-                 ,(player-name p))
+               (span ([class "player-name"])
+                     ,(player-name p))
                ": "
                ,(action-button
                   (list "player" "hp" "-")
                   (list (list "'id'" (format "'~a'" (creature-id c))))
                   "-")
-               (span
-                 ([class "player-HP"])
-                 ,(player->hp-text p))
+               (span ([class "player-HP"])
+                     ,(player->hp-text p))
                ,(action-button
                   (list "player" "hp" "+")
                   (list (list "'id'" (format "'~a'" (creature-id c))))
                   "+")
                ", "
                "XP: "
-               (span
-                 ([class "player-XP"])
-                 ,(~a (player-xp p)))
+               (span ([class "player-XP"])
+                     ,(~a (player-xp p)))
                ", "
-               (span
-                 ([class "player-conditions"])
-                 ,(~> (p) player-conditions* (map ~a _)
-                      (string-join ", " #:before-last " and "))))))))
+               (span ([class "player-conditions"])
+                     ,(~> (p) player-conditions* (map ~a _)
+                          (string-join ", " #:before-last " and "))))))))
 
 (define (get-pic name style)
   ((hash-ref (hasheq 'infused elements:element-pics-infused
