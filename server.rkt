@@ -31,6 +31,7 @@
   web-server/dispatch/extend
   web-server/dispatchers/filesystem-map
   web-server/http
+  web-server/http/bindings
   web-server/managers/lru
   web-server/page
   web-server/servlet-dispatch
@@ -64,6 +65,7 @@
   (define-values (app the-reverse-uri)
     (dispatch-rules
       [("") overview]
+      [("player-hp-increment") #:method "post" increment-player-hp]
       [("events") (event-source ch)]
       [("element-pics" (element-name-arg) (element-style-arg)) element-pic]
       [else not-found]))
@@ -131,6 +133,11 @@
                (span
                  ([class "player-HP"])
                  ,(player->hp-text p))
+               (button ([type "button"]
+                        [onclick
+                          ,(format "fetch('/player-hp-increment', {method: 'POST', body: new URLSearchParams([['id', '~a']])})"
+                                   (creature-id c))])
+                       "+")
                ", "
                "XP: "
                (span
@@ -245,3 +252,16 @@
 
 (define (path/param-sans-param pp)
   (struct-copy path/param pp [param empty]))
+
+(define -increment-player-hp (player-act-on-hp add1))
+(define (increment-player-hp req)
+  (match (assq 'id (request-bindings req))
+    [`(id . ,(app string->number (? number? id)))
+      ((send-event)
+       (λ ()
+         (<~@ (state-@creatures (s))
+              (update-players id (flow (switch
+                                         [player-at-max-health? _]
+                                         [else -increment-player-hp]))))))]
+    [#f (void)])
+  (response/empty))
