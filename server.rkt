@@ -82,7 +82,7 @@
                               (url->path/static
                                 (struct-copy url u [path (cdr (url-path u))])))))
 
-  (define port 8001)
+  (define port 8000)
   (define manager (make-threshold-LRU-manager expired-page (* 64 1024 1024)))
   (values
     (~a "http://" (best-interface-ip-address) ":" port)
@@ -130,33 +130,30 @@
           `(li ([id ,(~a "player-" (creature-id c))])
                (span ([class "player-name"])
                      ,(player-name p))
-               ": "
-               ,(action-button
-                  (list "player" "hp" "-")
-                  (list (list "'id'" (format "'~a'" (creature-id c))))
-                  "-")
-               (span ([class "player-HP"])
-                     ,(player->hp-text p))
-               ,(action-button
-                  (list "player" "hp" "+")
-                  (list (list "'id'" (format "'~a'" (creature-id c))))
-                  "+")
-               ", "
-               "XP: "
-               ,(action-button
-                  (list "player" "xp" "-")
-                  (list (list "'id'" (format "'~a'" (creature-id c))))
-                  "-")
-               (span ([class "player-XP"])
-                     ,(~a (player-xp p)))
-               ,(action-button
-                  (list "player" "xp" "+")
-                  (list (list "'id'" (format "'~a'" (creature-id c))))
-                  "+")
-               ", "
-               (span ([class "player-conditions"])
-                     ,(~> (p) player-conditions* (map ~a _)
-                          (string-join ", " #:before-last " and "))))))))
+               (p ,(action-button
+                     (list "player" "hp" "-")
+                     (list (list "'id'" (format "'~a'" (creature-id c))))
+                     "-")
+                  (span ([class "player-HP"])
+                        ,(player->hp-text p))
+                  ,(action-button
+                     (list "player" "hp" "+")
+                     (list (list "'id'" (format "'~a'" (creature-id c))))
+                     "+")
+                  ,(action-button
+                     (list "player" "xp" "-")
+                     (list (list "'id'" (format "'~a'" (creature-id c))))
+                     "-")
+                  "XP: "
+                  (span ([class "player-XP"])
+                        ,(~a (player-xp p)))
+                  ,(action-button
+                     (list "player" "xp" "+")
+                     (list (list "'id'" (format "'~a'" (creature-id c))))
+                     "+"))
+               (p (span ([class "player-conditions"])
+                        ,(~> (p) player-conditions* (map ~a _)
+                             (string-join ", " #:before-last " and ")))))))))
 
 (define (get-pic name style)
   ((hash-ref (hasheq 'infused elements:element-pics-infused
