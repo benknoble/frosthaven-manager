@@ -45,6 +45,10 @@
 (define reverse-uri (make-parameter #f))
 (define send-event (make-parameter #f))
 
+(define-syntax-rule (do e ...)
+  ((send-event)
+   (thunk e ...)))
+
 (define (launch-server an-s a-send-event)
   ;; each request thread get its own receiver, so that they can all see the
   ;; updates
@@ -111,9 +115,7 @@
         `(a ([href
                ,(embed/url
                   (λ (_req)
-                    ((send-event)
-                      (λ ()
-                        (<@ @e-state transition-element-state)))
+                    (do (<@ @e-state transition-element-state))
                     (redirect-to "/" see-other)))])
             (img ([id ,(symbol->string e)]
                   [src ,((reverse-uri) element-pic e (@! @e-state))]))))))
@@ -257,11 +259,9 @@
 (define (increment-player-hp req)
   (match (assq 'id (request-bindings req))
     [`(id . ,(app string->number (? number? id)))
-      ((send-event)
-       (λ ()
-         (<~@ (state-@creatures (s))
-              (update-players id (flow (switch
-                                         [player-at-max-health? _]
-                                         [else -increment-player-hp]))))))]
+      (do (<~@ (state-@creatures (s))
+               (update-players id (flow (switch
+                                          [player-at-max-health? _]
+                                          [else -increment-player-hp])))))]
     [#f (void)])
   (response/empty))
