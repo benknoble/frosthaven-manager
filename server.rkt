@@ -14,14 +14,16 @@
   (prefix-in sequencer: web-server/dispatchers/dispatch-sequencer)
   alexis/multicast
   file/convertible
-  frosthaven-manager/elements
+  frosthaven-manager/defns
+  (prefix-in elements: frosthaven-manager/elements)
   frosthaven-manager/gui/elements
   frosthaven-manager/manager
   frosthaven-manager/observable-operator
+  frosthaven-manager/qi
   json
   nat-traversal
   net/url
-  racket/gui
+  (except-in racket/gui null)
   racket/gui/easy
   racket/runtime-path
   web-server/dispatch/syntax
@@ -46,12 +48,18 @@
   ;; each request thread get its own receiver, so that they can all see the
   ;; updates
   (define ch (make-multicast-channel))
-  (for ([e (elements)]
+  (for ([e (elements:elements)]
         [@e-state (state-@elements an-s)])
     (obs-observe!
       @e-state
       (λ (new-e-state)
-        (multicast-channel-put ch `(element ,(element-pics-name e) ,new-e-state)))))
+        (multicast-channel-put ch `(element ,(elements:element-pics-name e) ,new-e-state)))))
+  (obs-observe!
+    (state-@creatures an-s)
+    (λ (creatures)
+      (for ([c creatures])
+        (cond
+          [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]))))
 
   (define-values (app the-reverse-uri)
     (dispatch-rules
@@ -91,6 +99,7 @@
        (body
          (h1 "Frosthaven Manager")
          ,@(elements-body embed/url)
+         ,@(creatures-body embed/url)
          ))))
 
 (define (elements-body embed/url)
@@ -107,13 +116,39 @@
             (img ([id ,(symbol->string e)]
                   [src ,((reverse-uri) element-pic e (@! @e-state))]))))))
 
+(define (creatures-body embed/url)
+  `((h2 "Players")
+    (ul
+      ([class "players"])
+      ,@(for/list ([c (@! (state-@creatures (s)))]
+                   #:when (player? (creature-v c)))
+          (define p (creature-v c))
+          `(li ([id ,(~a "player-" (creature-id c))])
+               (span
+                 ([class "player-name"])
+                 ,(player-name p))
+               ": "
+               (span
+                 ([class "player-HP"])
+                 ,(player->hp-text p))
+               ", "
+               "XP: "
+               (span
+                 ([class "player-XP"])
+                 ,(~a (player-xp p)))
+               ", "
+               (span
+                 ([class "player-conditions"])
+                 ,(~> (p) player-conditions* (map ~a _)
+                      (string-join ", " #:before-last " and "))))))))
+
 (define (get-pic name style)
-  ((hash-ref (hasheq 'infused element-pics-infused
-                     'waning element-pics-waning
-                     'unfused element-pics-unfused)
+  ((hash-ref (hasheq 'infused elements:element-pics-infused
+                     'waning elements:element-pics-waning
+                     'unfused elements:element-pics-unfused)
              style)
-   ((hash-ref (hasheq 'Fire fire 'Ice ice 'Air air
-                      'Earth earth 'Light light 'Dark dark)
+   ((hash-ref (hasheq 'Fire elements:fire 'Ice elements:ice 'Air elements:air
+                      'Earth elements:earth 'Light elements:light 'Dark elements:dark)
               name))))
 
 (define (element-pic _req name style)
@@ -162,7 +197,23 @@
       (define data (hash 'name name 'state (symbol->string state)))
       (displayln "event: element" out)
       (display (format "data: ~a" (jsexpr->string data)) out)
-      (display "\n\n" out)]))
+      (display "\n\n" out)]
+    [`(player ,c)
+      (define p (creature-v c))
+      (define id (creature-id c))
+      (define css-id (~a "player-" id))
+      (define data
+        (hash 'id css-id
+              'data (hash
+                      'player-name (player-name p)
+                      'player-HP (player->hp-text p)
+                      'player-XP (~a (player-xp p))
+                      'player-conditions
+                      (~> (p) player-conditions* (map ~a _)
+                          (string-join ", " #:before-last " and ")))))
+      (displayln "event: player" out)
+      (display (format "data: ~a" (jsexpr->string data)) out)
+      (displayln "\n\n" out)]))
 
 (define (not-found _req)
   (response/xexpr

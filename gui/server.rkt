@@ -38,7 +38,12 @@
   (evt))
 
 (module+ main
+  (require frosthaven-manager/defns)
   (define manager (dynamic-require 'frosthaven-manager/gui/manager 'manager))
   (define s (make-state (@ 'play)))
+  (:= (state-@num-players s) 2)
+  (:= (state-@creatures s)
+      (list (creature 0 (make-player "Jack Skellington" 8))
+            (creature 1 (player "Frigg" 12 10 3 (list muddle ward) 67 empty))))
   (launch-server s)
   (render/eventspace (manager s)))
