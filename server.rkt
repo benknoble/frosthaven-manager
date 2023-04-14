@@ -127,29 +127,30 @@
       ,@(for/list ([c (@! (state-@creatures (s)))]
                    #:when (player? (creature-v c)))
           (define p (creature-v c))
+          (define id-binding (list (~s "id") (~s (~s (creature-id c)))))
           `(li ([id ,(~a "player-" (creature-id c))])
                (span ([class "player-name"])
                      ,(player-name p))
                (p ,(action-button
                      (list "player" "hp" "-")
-                     (list (list (~s "id") (~s (~s (creature-id c)))))
+                     (list id-binding)
                      "-")
                   (span ([class "player-HP"])
                         ,(player->hp-text p))
                   ,(action-button
                      (list "player" "hp" "+")
-                     (list (list (~s "id") (~s (~s (creature-id c)))))
+                     (list id-binding)
                      "+")
                   ,(action-button
                      (list "player" "xp" "-")
-                     (list (list (~s "id") (~s (~s (creature-id c)))))
+                     (list id-binding)
                      "-")
                   "XP: "
                   (span ([class "player-XP"])
                         ,(~a (player-xp p)))
                   ,(action-button
                      (list "player" "xp" "+")
-                     (list (list (~s "id") (~s (~s (creature-id c)))))
+                     (list id-binding)
                      "+"))
                (p (span ([class "player-conditions"])
                         ,(~> (p) player-conditions* (map ~a _)
