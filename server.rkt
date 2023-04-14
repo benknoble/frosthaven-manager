@@ -37,6 +37,7 @@
   web-server/servlet-dispatch
   #;web-server/servlet/web
   web-server/web-server
+  (only-in xml xexpr->string)
   )
 
 (define-runtime-path static "static")
@@ -152,9 +153,11 @@
                      (list "player" "xp" "+")
                      (list id-binding)
                      "+"))
-               (p (span ([class "player-conditions"])
-                        ,@(~> (p) player-conditions* (map condition->xexpr _)
-                              (add-between ", " #:before-last " and ")))))))))
+               (p (span
+                    ([class "player-conditions"])
+                    (span
+                      ,@(~> (p) player-conditions* (map condition->xexpr _)
+                            (add-between ", " #:before-last " and "))))))))))
 
 (define (get-pic name style)
   ((hash-ref (hasheq 'infused elements:element-pics-infused
@@ -223,8 +226,10 @@
                       'player-HP (player->hp-text p)
                       'player-XP (~a (player-xp p))
                       'player-conditions
-                      (~> (p) player-conditions* (map ~a _)
-                          (string-join ", " #:before-last " and ")))))
+                      (~> (p) player-conditions* (map condition->xexpr _)
+                          (add-between ", " #:before-last " and ")
+                          (cons 'span _)
+                          xexpr->string))))
       (displayln "event: player" out)
       (display (format "data: ~a" (jsexpr->string data)) out)
       (displayln "\n\n" out)]))
