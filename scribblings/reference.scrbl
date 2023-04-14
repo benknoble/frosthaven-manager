@@ -466,6 +466,16 @@ listed here.
 Serializable.
 }
 
+@deftogether[(
+              @defproc[(discriminator:condition [c condition?]) integer?]
+              @defproc[(selector:condition [i integer?]) condition?]
+)]{
+@tech[#:doc '(lib "rebellion/main.scrbl")]{Enum discriminator} and
+@tech[#:doc '(lib "rebellion/main.scrbl")]{enum selector} for
+@racket[condition?] values. Both contract error when the argument is outside the
+appropriate domain.
+}
+
 @defproc[(initiative? [v any/c]) boolean?]{
 A predicate recognizing valid initiative values.
 }

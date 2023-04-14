@@ -84,6 +84,8 @@
     [initiative? predicate/c]
     [ability? predicate/c]
     [conditions (listof condition?)]
+    [discriminator:condition (-> condition? integer?)]
+    [selector:condition (-> integer? condition?)]
     [monster-modifier-deck (listof monster-modifier?)]
     [shuffle-modifier-deck? (-> (listof monster-modifier?) boolean?)]
     [better-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
