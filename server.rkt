@@ -153,6 +153,18 @@
                      (list "player" "xp" "+")
                      (list id-binding)
                      "+"))
+               (p (select ([id ,(~a "select-conditions-" (creature-id c))])
+                          ,@(for/list ([c conditions])
+                              `(option ([value ,(~a (discriminator:condition c))])
+                                       ,(~a c))))
+                  ,(action-button
+                     (list "player" "condition" "add")
+                     (list id-binding
+                           (list (~s "condition")
+                                 (~a "document.querySelector("
+                                     (~s (~a "#select-conditions-" (creature-id c)))
+                                     ").value")))
+                     "Add Condition"))
                (p (span
                     ([class "player-conditions"])
                     (span
@@ -276,6 +288,7 @@
       ['("xp" "+") (increment-player-xp req)]
       ['("xp" "-") (decrement-player-xp req)]
       ['("condition" "remove") (remove-player-condition req)]
+      ['("condition" "add") (add-player-condition req)]
       [_ (return (not-found req))])
     (response/empty)))
 
@@ -303,14 +316,21 @@
   (do-player req (flow (~> player-xp zero?)) (player-act-on-xp sub1)))
 
 (define selector:condition? (make-coerce-safe? selector:condition))
-(define (remove-player-condition req)
+(define (do-player-condition req add-or-remove)
   (define binds (request-bindings req))
   (match (~> (binds) (-< (assq 'id _) (assq 'condition _)) collect)
     [`((id . ,(app string->number (? number? id)))
        (condition . ,(app string->number (? selector:condition? (app selector:condition c)))))
+      (define c? (list c add-or-remove))
       (do (<~@ (state-@creatures (s))
-               (update-players id (player-remove-condition c))))]
+               (update-players id (player-condition-handler c?))))]
     [_ (void)]))
+
+(define-flow remove-player-condition
+  (do-player-condition #f))
+
+(define-flow add-player-condition
+  (do-player-condition #t))
 
 (define (do-player req guard action)
   (match (assq 'id (request-bindings req))
