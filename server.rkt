@@ -153,8 +153,8 @@
                      (list id-binding)
                      "+"))
                (p (span ([class "player-conditions"])
-                        ,(~> (p) player-conditions* (map ~a _)
-                             (string-join ", " #:before-last " and ")))))))))
+                        ,@(~> (p) player-conditions* (map condition->xexpr _)
+                              (add-between ", " #:before-last " and ")))))))))
 
 (define (get-pic name style)
   ((hash-ref (hasheq 'infused elements:element-pics-infused
@@ -316,3 +316,6 @@
       ","))
   `[onclick ,(format "fetch('~a', {method: 'POST', body: new URLSearchParams([~a])})"
                      URL params)])
+
+(define (condition->xexpr c)
+  (~a c))
