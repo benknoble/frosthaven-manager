@@ -70,6 +70,7 @@
     (dispatch-rules
       [("") overview]
       [("action" "player" (string-arg) (string-arg) ...) #:method "post" player-action]
+      [("action" "element" "transition") #:method "post" element-transition]
       [("events") (event-source ch)]
       [("element-pics" (element-name-arg) (element-style-arg)) element-pic]
       [else not-found]))
@@ -113,13 +114,11 @@
   `((h2 "Elements")
     ,@(for/list ([e (list 'Fire 'Ice 'Air 'Earth 'Light 'Dark)]
                  [@e-state (state-@elements (s))])
-        `(a ([href
-               ,(embed/url
-                  (λ (_req)
-                    (do (<@ @e-state transition-element-state))
-                    (redirect-to "/" see-other)))])
-            (img ([id ,(symbol->string e)]
-                  [src ,((reverse-uri) element-pic e (@! @e-state))]))))))
+        `(img ([id ,(symbol->string e)]
+               [src ,((reverse-uri) element-pic e (@! @e-state))]
+               ,(action-click
+                  (list "element" "transition")
+                  (list (list "'id'" (~s (symbol->string e))))))))))
 
 (define (creatures-body embed/url)
   `((h2 "Players")
@@ -270,6 +269,17 @@
       [_ (return (not-found req))])
     (response/empty)))
 
+(define (element-transition req)
+  (match (assq 'id (request-bindings req))
+    [`(id . ,(element-name-arg e))
+      (define @e-state
+        (~>> ((list 'Fire 'Ice 'Air 'Earth 'Light 'Dark)
+              (state-@elements (s)))
+             (map cons) (assq e) cdr))
+      (do (<@ @e-state transition-element-state))
+      (response/empty)]
+    [(or `(id . ,_) #f) (not-found req)]))
+
 (define (increment-player-hp req)
   (do-player req player-at-max-health? (player-act-on-hp add1)))
 
@@ -290,6 +300,12 @@
     [#f (void)]))
 
 (define (action-button actions bindings body [attrs empty])
+  `(button ([type "button"]
+            ,(action-click actions bindings)
+            ,@attrs)
+           ,body))
+
+(define (action-click actions bindings)
   (define URL (string-join (cons "action" actions) "/" #:before-first "/"))
   (define params
     (string-join
@@ -297,10 +313,5 @@
         (match-define (list key value) b)
         (format "[~a, ~a]" key value))
       ","))
-  `(button
-     ([type "button"]
-      [onclick
-        ,(format "fetch('~a', {method: 'POST', body: new URLSearchParams([~a])})"
-                 URL params)]
-      ,@attrs)
-     ,body))
+  `[onclick ,(format "fetch('~a', {method: 'POST', body: new URLSearchParams([~a])})"
+                     URL params)])
