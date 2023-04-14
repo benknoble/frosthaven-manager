@@ -80,7 +80,8 @@
   (define static-dispatcher
     (files:make #:url->path (λ (u)
                               (url->path/static
-                                (struct-copy url u [path (cdr (url-path u))])))))
+                                (struct-copy url u [path (cdr (url-path u))])))
+                #:cache-no-cache #t))
 
   (define port 8000)
   (define manager (make-threshold-LRU-manager expired-page (* 64 1024 1024)))
