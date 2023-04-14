@@ -118,7 +118,7 @@
                [src ,((reverse-uri) element-pic e (@! @e-state))]
                ,(action-click
                   (list "element" "transition")
-                  (list (list "'id'" (~s (symbol->string e))))))))))
+                  (list (list (~s "id") (~s (symbol->string e))))))))))
 
 (define (creatures-body embed/url)
   `((h2 "Players")
@@ -132,24 +132,24 @@
                      ,(player-name p))
                (p ,(action-button
                      (list "player" "hp" "-")
-                     (list (list "'id'" (format "'~a'" (creature-id c))))
+                     (list (list (~s "id") (~s (~s (creature-id c)))))
                      "-")
                   (span ([class "player-HP"])
                         ,(player->hp-text p))
                   ,(action-button
                      (list "player" "hp" "+")
-                     (list (list "'id'" (format "'~a'" (creature-id c))))
+                     (list (list (~s "id") (~s (~s (creature-id c)))))
                      "+")
                   ,(action-button
                      (list "player" "xp" "-")
-                     (list (list "'id'" (format "'~a'" (creature-id c))))
+                     (list (list (~s "id") (~s (~s (creature-id c)))))
                      "-")
                   "XP: "
                   (span ([class "player-XP"])
                         ,(~a (player-xp p)))
                   ,(action-button
                      (list "player" "xp" "+")
-                     (list (list "'id'" (format "'~a'" (creature-id c))))
+                     (list (list (~s "id") (~s (~s (creature-id c)))))
                      "+"))
                (p (span ([class "player-conditions"])
                         ,(~> (p) player-conditions* (map ~a _)
