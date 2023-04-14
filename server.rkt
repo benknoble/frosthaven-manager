@@ -157,7 +157,7 @@
                     ([class "player-conditions"])
                     (span
                       ,@(~> (p) player-conditions*
-                            (map (flow (condition->xexpr id-binding)) _)
+                            (map (flow (active-condition->xexpr id-binding)) _)
                             (add-between ", " #:before-last " and "))))))))))
 
 (define (get-pic name style)
@@ -229,7 +229,7 @@
                       'player-XP (~a (player-xp p))
                       'player-conditions
                       (~> (p) player-conditions*
-                          (map (flow (condition->xexpr id-binding)) _)
+                          (map (flow (active-condition->xexpr id-binding)) _)
                           (add-between ", " #:before-last " and ")
                           (cons 'span _)
                           xexpr->string))))
@@ -336,7 +336,7 @@
   `[onclick ,(format "fetch('~a', {method: 'POST', body: new URLSearchParams([~a])})"
                      URL params)])
 
-(define (condition->xexpr c id-binding)
+(define (active-condition->xexpr c id-binding)
   `(span ([class "condition"])
          ,(~a c)
          ,(action-button
