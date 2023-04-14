@@ -303,17 +303,24 @@
       (response/empty)]
     [(or `(id . ,_) #f) (not-found req)]))
 
-(define (increment-player-hp req)
-  (do-player req player-at-max-health? (player-act-on-hp add1)))
+(define (do-player req guard action)
+  (match (assq 'id (request-bindings req))
+    [`(id . ,(app string->number (? number? id)))
+      (do (<~@ (state-@creatures (s))
+               (update-players id (flow (switch [(not guard) action])))))]
+    [_ (void)]))
 
-(define (decrement-player-hp req)
-  (do-player req player-dead? (player-act-on-hp sub1)))
+(define-flow increment-player-hp
+  (do-player player-at-max-health? (player-act-on-hp add1)))
 
-(define (increment-player-xp req)
-  (do-player req (const #f) (player-act-on-xp add1)))
+(define-flow decrement-player-hp
+  (do-player player-dead? (player-act-on-hp sub1)))
 
-(define (decrement-player-xp req)
-  (do-player req (flow (~> player-xp zero?)) (player-act-on-xp sub1)))
+(define-flow increment-player-xp
+  (do-player (const #f) (player-act-on-xp add1)))
+
+(define-flow decrement-player-xp
+  (do-player (flow (~> player-xp zero?)) (player-act-on-xp sub1)))
 
 (define selector:condition? (make-coerce-safe? selector:condition))
 (define (do-player-condition req add-or-remove)
@@ -331,13 +338,6 @@
 
 (define-flow add-player-condition
   (do-player-condition #t))
-
-(define (do-player req guard action)
-  (match (assq 'id (request-bindings req))
-    [`(id . ,(app string->number (? number? id)))
-      (do (<~@ (state-@creatures (s))
-               (update-players id (flow (switch [(not guard) action])))))]
-    [_ (void)]))
 
 (define (action-button actions bindings body [attrs empty])
   `(button ([type "button"]
