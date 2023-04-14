@@ -156,7 +156,8 @@
                (p (span
                     ([class "player-conditions"])
                     (span
-                      ,@(~> (p) player-conditions* (map condition->xexpr _)
+                      ,@(~> (p) player-conditions*
+                            (map (flow (condition->xexpr id-binding)) _)
                             (add-between ", " #:before-last " and "))))))))))
 
 (define (get-pic name style)
@@ -218,6 +219,7 @@
     [`(player ,c)
       (define p (creature-v c))
       (define id (creature-id c))
+      (define id-binding (list (~s "id") (~s (~s id))))
       (define css-id (~a "player-" id))
       (define data
         (hash 'id css-id
@@ -226,7 +228,8 @@
                       'player-HP (player->hp-text p)
                       'player-XP (~a (player-xp p))
                       'player-conditions
-                      (~> (p) player-conditions* (map condition->xexpr _)
+                      (~> (p) player-conditions*
+                          (map (flow (condition->xexpr id-binding)) _)
                           (add-between ", " #:before-last " and ")
                           (cons 'span _)
                           xexpr->string))))
@@ -272,6 +275,7 @@
       ['("hp" "-") (decrement-player-hp req)]
       ['("xp" "+") (increment-player-xp req)]
       ['("xp" "-") (decrement-player-xp req)]
+      ['("condition" "remove") (remove-player-condition req)]
       [_ (return (not-found req))])
     (response/empty)))
 
@@ -298,12 +302,22 @@
 (define (decrement-player-xp req)
   (do-player req (flow (~> player-xp zero?)) (player-act-on-xp sub1)))
 
+(define selector:condition? (make-coerce-safe? selector:condition))
+(define (remove-player-condition req)
+  (define binds (request-bindings req))
+  (match (~> (binds) (-< (assq 'id _) (assq 'condition _)) collect)
+    [`((id . ,(app string->number (? number? id)))
+       (condition . ,(app string->number (? selector:condition? (app selector:condition c)))))
+      (do (<~@ (state-@creatures (s))
+               (update-players id (player-remove-condition c))))]
+    [_ (void)]))
+
 (define (do-player req guard action)
   (match (assq 'id (request-bindings req))
     [`(id . ,(app string->number (? number? id)))
       (do (<~@ (state-@creatures (s))
                (update-players id (flow (switch [(not guard) action])))))]
-    [#f (void)]))
+    [_ (void)]))
 
 (define (action-button actions bindings body [attrs empty])
   `(button ([type "button"]
@@ -322,5 +336,11 @@
   `[onclick ,(format "fetch('~a', {method: 'POST', body: new URLSearchParams([~a])})"
                      URL params)])
 
-(define (condition->xexpr c)
-  (~a c))
+(define (condition->xexpr c id-binding)
+  `(span ([class "condition"])
+         ,(~a c)
+         ,(action-button
+            (list "player" "condition" "remove")
+            (list id-binding
+                  (list (~s "condition") (~s (~s (discriminator:condition c)))))
+            "X")))
