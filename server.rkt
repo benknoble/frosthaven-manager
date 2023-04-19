@@ -76,6 +76,12 @@
             [f (list level-info-trap-damage level-info-hazardous-terrain level-info-gold level-info-exp)])
         (define n (~> (level) get-level-info f))
         (multicast-channel-put ch `(number ,id ,n)))))
+  (obs-observe!
+    (state-@in-draw? an-s)
+    (λ (_in-draw?)
+      (for ([c (@! (state-@creatures an-s))])
+        (cond
+          [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]))))
 
   (define-values (app the-reverse-uri)
     (dispatch-rules
@@ -172,6 +178,12 @@
           `(li ([id ,(~a "player-" (creature-id c))])
                (span ([class "player-name"])
                      ,(player-name p))
+               " ("
+               (span ([class "player-initiative"])
+                     ,(if (initiative-public? (@! (state-@in-draw? (s))))
+                        (~a (player-initiative p))
+                        "??"))
+               ")"
                (p ,(action-button
                      (list "player" "hp" "-")
                      (list id-binding)
@@ -277,6 +289,9 @@
         (hash 'id css-id
               'data (hash
                       'player-name (player-name p)
+                      'player-initiative (if (initiative-public? (@! (state-@in-draw? (s))))
+                                           (~a (player-initiative p))
+                                           "??")
                       'player-HP (player->hp-text p)
                       'player-XP (~a (player-xp p))
                       'player-conditions
