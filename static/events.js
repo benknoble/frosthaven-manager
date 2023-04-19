@@ -14,9 +14,9 @@ evtSource.addEventListener('player', (event) => {
   }
 });
 
-evtSource.addEventListener('round', (event) => {
-  const round = parseInt(event.data);
-  if (!isNaN(round)) {
-    document.querySelector('#round').innerHTML = round
-  }
+evtSource.addEventListener('number', (event) => {
+  const data = JSON.parse(event.data);
+  const id = data.id
+  const number = data.n
+  document.querySelector(`#${id}`).innerHTML = number;
 });

@@ -66,7 +66,16 @@
       (for ([c creatures])
         (cond
           [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]))))
-  (obs-observe! (state-@round an-s) (λ (r) (multicast-channel-put ch `(round ,r))))
+  (obs-observe! (state-@round an-s) (λ (r) (multicast-channel-put ch `(number round ,r))))
+  (obs-observe! (state-@num-players an-s)
+                (λ (n) (multicast-channel-put ch `(number inspiration ,(inspiration-reward n)))))
+  (obs-observe!
+    (state-@level an-s)
+    (λ (level)
+      (for ([id '(trap hazardous-terrain gold xp)]
+            [f (list level-info-trap-damage level-info-hazardous-terrain level-info-gold level-info-exp)])
+        (define n (~> (level) get-level-info f))
+        (multicast-channel-put ch `(number ,id ,n)))))
 
   (define-values (app the-reverse-uri)
     (dispatch-rules
@@ -111,12 +120,36 @@
          ,@(top-info-body embed/url)
          ,@(elements-body embed/url)
          ,@(creatures-body embed/url)
+         ,@(bottom-info-body embed/url)
          ))))
 
 (define (top-info-body embed/url)
   `((p "Round "
        (span ([id "round"])
              ,(number->string (@! (state-@round (s))))))))
+
+(define (bottom-info-body embed/url)
+  (define level-info (@! (@> (state-@level (s)) get-level-info)))
+  (define num-players (@! (state-@num-players (s))))
+  `((p "Trap: "
+       (span ([id "trap"])
+             ,(number->string (level-info-trap-damage level-info)))
+       (br)
+       "Hazardous Terrain: "
+       (span ([id "hazardous-terrain"])
+             ,(number->string (level-info-hazardous-terrain level-info)))
+       (br)
+       "Gold: "
+       (span ([id "gold"])
+             ,(number->string (level-info-gold level-info)))
+       (br)
+       "Bonus XP: "
+       (span ([id "xp"])
+             ,(number->string (level-info-exp level-info)))
+       (br)
+       "Inspiration: "
+       (span ([id "inspiration"])
+             ,(number->string (inspiration-reward num-players))))))
 
 (define (elements-body embed/url)
   `((h2 "Elements")
@@ -255,9 +288,10 @@
       (displayln "event: player" out)
       (display (format "data: ~a" (jsexpr->string data)) out)
       (displayln "\n\n" out)]
-    [`(round ,r)
-      (displayln "event: round" out)
-      (displayln (~a "data: " r) out)
+    [`(number ,id ,(? number? n))
+      (define data (hash 'id (~a id) 'n n))
+      (displayln "event: number" out)
+      (display (format "data: ~a" (jsexpr->string data)) out)
       (displayln "\n\n" out)]))
 
 (define (not-found _req)
