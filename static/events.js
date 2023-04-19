@@ -1,22 +1,19 @@
 const evtSource = new EventSource("events");
 
 evtSource.addEventListener("element", (event) => {
-  const data = JSON.parse(event.data);
-  const element = document.getElementById(data.name);
-  element.src = `/element-pics/${data.name}/${data.state}`;
+  const {name, state} = JSON.parse(event.data);
+  const element = document.getElementById(name);
+  element.src = `/element-pics/${name}/${state}`;
 });
 
 evtSource.addEventListener('player', (event) => {
-  const data = JSON.parse(event.data);
-  const id = data.id;
-  for (const css_class in data.data) {
-    document.querySelector(`#${id} .${css_class}`).innerHTML = data.data[css_class];
+  const {id, data} = JSON.parse(event.data);
+  for (const css_class in data) {
+    document.querySelector(`#${id} .${css_class}`).innerHTML = data[css_class];
   }
 });
 
 evtSource.addEventListener('number', (event) => {
-  const data = JSON.parse(event.data);
-  const id = data.id
-  const number = data.n
-  document.querySelector(`#${id}`).innerHTML = number;
+  const {id, n} = JSON.parse(event.data);
+  document.querySelector(`#${id}`).innerHTML = n;
 });
