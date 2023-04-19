@@ -13,3 +13,10 @@ evtSource.addEventListener('player', (event) => {
     document.querySelector(`#${id} .${css_class}`).innerHTML = data.data[css_class];
   }
 });
+
+evtSource.addEventListener('round', (event) => {
+  const round = parseInt(event.data);
+  if (!isNaN(round)) {
+    document.querySelector('#round').innerHTML = round
+  }
+});

@@ -66,6 +66,7 @@
       (for ([c creatures])
         (cond
           [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]))))
+  (obs-observe! (state-@round an-s) (λ (r) (multicast-channel-put ch `(round ,r))))
 
   (define-values (app the-reverse-uri)
     (dispatch-rules
@@ -107,9 +108,15 @@
          ,@common-heads)
        (body
          (h1 "Frosthaven Manager")
+         ,@(top-info-body embed/url)
          ,@(elements-body embed/url)
          ,@(creatures-body embed/url)
          ))))
+
+(define (top-info-body embed/url)
+  `((p "Round "
+       (span ([id "round"])
+             ,(number->string (@! (state-@round (s))))))))
 
 (define (elements-body embed/url)
   `((h2 "Elements")
@@ -247,6 +254,10 @@
                           xexpr->string))))
       (displayln "event: player" out)
       (display (format "data: ~a" (jsexpr->string data)) out)
+      (displayln "\n\n" out)]
+    [`(round ,r)
+      (displayln "event: round" out)
+      (displayln (~a "data: " r) out)
       (displayln "\n\n" out)]))
 
 (define (not-found _req)
