@@ -184,6 +184,22 @@
                         (~a (player-initiative p))
                         "??"))
                ")"
+               (input ([class "player-initiative-slider"]
+                       [type "range"]
+                       [min "0"]
+                       [max "99"]
+                       [value ,(if (initiative-public? (@! (state-@in-draw? (s))))
+                                 (~a (player-initiative p))
+                                 "0")]
+                       ;; TODO
+                       ;; - update slider values when player init changes, when
+                       ;; init revealed
+                       ;; - when init dragged, reveal ONLY current init (so that dragging works)
+                       [oninput
+                         ,(~a "for (element of document.querySelectorAll(\".player-initiative-slider\")) { if (element !== this) { element.disabled = true; } }"
+                              (action-script (list "player" "initiative")
+                                             (list id-binding
+                                                   (list (~s "initiative") "this.value"))))]))
                (p ,(action-button
                      (list "player" "hp" "-")
                      (list id-binding)
@@ -350,6 +366,7 @@
       ['("xp" "-") (decrement-player-xp req)]
       ['("condition" "remove") (remove-player-condition req)]
       ['("condition" "add") (add-player-condition req)]
+      ['("initiative") (set-player-initiative req)]
       [_ (return (not-found req))])
     (response/empty)))
 
@@ -399,6 +416,15 @@
 
 (define-flow add-player-condition
   (do-player-condition #t))
+
+(define (set-player-initiative req)
+  (define binds (request-bindings req))
+  (match (~> (binds) (-< (assq 'id _) (assq 'initiative _)) collect)
+    [`((id . ,(app string->number (? number? id)))
+       (initiative . ,(app string->number (? number? init))))
+      (do (<~@ (state-@creatures (s))
+               (update-players id (flow (player-set-initiative init)))))]
+    [_ (void)]))
 
 (define (action-button actions bindings body [attrs empty])
   `(button ([type "button"]
