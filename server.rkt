@@ -406,7 +406,7 @@
             ,@attrs)
            ,body))
 
-(define (action-click actions bindings)
+(define (action-script actions bindings)
   (define URL (string-join (cons "action" actions) "/" #:before-first "/"))
   (define params
     (string-join
@@ -414,8 +414,11 @@
         (match-define (list key value) b)
         (format "[~a, ~a]" key value))
       ","))
-  `[onclick ,(format "fetch('~a', {method: 'POST', body: new URLSearchParams([~a])})"
-                     URL params)])
+  (format "fetch('~a', {method: 'POST', body: new URLSearchParams([~a])});"
+          URL params))
+
+(define (action-click actions bindings)
+  `[onclick ,(action-script actions bindings)])
 
 (define (active-condition->xexpr c id-binding)
   `(span ([class "condition"])
