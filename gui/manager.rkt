@@ -277,9 +277,8 @@
     (append (list "Player" "Random Item?" "XP" "Gold")
             (map ~a material-kinds)
             (map ~a herb-kinds)))
-  ;; accessing @level and @num-players: should not change by the time this
-  ;; button is available
-  (define (player->row p)
+  (define (entry->row e)
+    (match-define (list p num-players level) e)
     (define loots (player-loot p))
     (apply vector
            (player-name p)
@@ -287,13 +286,13 @@
            (~a (player-xp p))
            (~a (for/sum ([loot (in-list loots)] #:when (money? loot))
                  (* (money-amount loot)
-                    (level-info-gold (get-level-info (@! @level))))))
+                    (level-info-gold (get-level-info level)))))
            (append
              (for/list ([material material-kinds])
                (~a (for/sum ([loot (in-list loots)]
                              #:when (and (material? loot)
                                          (equal? material (material-name loot))))
-                     (list-ref (material-amount loot) (- (@! @num-players) 2)))))
+                     (list-ref (material-amount loot) (- num-players 2)))))
              (for/list ([herb herb-kinds])
                (~a (for/sum ([loot (in-list loots)]
                              #:when (and (herb? loot)
@@ -310,8 +309,12 @@
             #:title "Loot and XP"
             #:size '(400 300)
             (table labels
-                   (@> @players list->vector)
-                   #:entry->row player->row
+                   (obs-combine
+                     (λ (players num-players level)
+                       (for/vector #:length (length players) ([p players])
+                         (list p num-players level)))
+                     @players @num-players @level)
+                   #:entry->row entry->row
                    #:selection #f
                    #:column-widths
                    (for/list ([(label i) (in-indexed (in-list labels))])
