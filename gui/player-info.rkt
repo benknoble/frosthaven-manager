@@ -136,8 +136,9 @@
   (define/obs @hp hp)
   (define (subtract-hp)
     (on-hp sub1)
-    (unless (<= (@! @hp) 1)
-      (<@ @hp sub1)))
+    (<~@ @hp (switch
+               [(<= 1) _]
+               [else sub1])))
   (define (add-hp)
     (on-hp add1)
     (<@ @hp add1))
