@@ -32,7 +32,8 @@
            (λ (_action _entries selection) (:= @selection1 selection))
            #:entry->row (flow (~> entry->label vector))
            #:selection @selection1
-           #:min-size (list (* 10 (string-length title)) (~> (@data) @! vector-length (* 23)))))
+           #:min-size (@~> @data (~>> vector-length (* 23)
+                                      (list (* 10 (string-length title)))))))
   (define-values (r-tables last-@selection last-@data last-entry->next)
     (make-tables @data @selection1 entry->next t1 columns))
   (define @selected
