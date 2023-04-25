@@ -110,10 +110,7 @@
     #:title "Loot card"
     #:style empty
     (text (obs-combine card-text @num-players @loot-deck))
-    (apply hpanel
-           ;; valid because only called inside a thunk, and part of a dialog;
-           ;; doesn't need to react to adding/subtracting players
-           (map make-player-button (@! @players)))))
+    (observable-view @players (flow (~> (sep make-player-button) hpanel)))))
 
 (module+ main
   (define/match (find-deck card)
