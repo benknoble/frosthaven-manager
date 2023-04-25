@@ -117,16 +117,16 @@
     [{(money _)} "Money"]
     [{(or (material kind _) (herb kind))} (~a kind)]
     [{(== random-item)} "Random Item"])
-  (define (render-table-with-actual-loot-deck)
-    (define deck (~> (@cards-per-loot-deck) @! build-loot-deck))
+  (define (table-with-actual-loot-deck)
+    (define @deck (@> @cards-per-loot-deck build-loot-deck))
     ;; not setting current renderer, nor using an eventspace: dialog
-    (render
-      (dialog
-        (hpanel (text "Duplicates?") (text (~a (check-duplicates (map eq-hash-code deck)))))
-        (table '("ID" "Cards")
-               (list->vector deck)
-               #:entry->row (flow (~> (-< eq-hash-code _) (>< ~a) vector))
-               #:min-size '(250 300)))))
+    (vpanel
+      (hpanel (text "Duplicates?")
+              (text (@~> @deck (~>> (map eq-hash-code) check-duplicates ~a))))
+      (table '("ID" "Cards")
+             (@> @deck list->vector)
+             #:entry->row (flow (~> (-< eq-hash-code _) (>< ~a) vector))
+             #:min-size '(250 300))))
   (define-flow count+decks->row (~> (-< (~> car car find-deck) (~> cdr ~a)) vector))
   (define/obs @cards-per-loot-deck (hash))
   (void (render/eventspace
@@ -136,4 +136,4 @@
                                  (@~> @cards-per-loot-deck (~> hash->list list->vector))
                                  #:entry->row count+decks->row
                                  #:min-size '(250 #f))
-                          (button "Make Loot Deck" render-table-with-actual-loot-deck))))))
+                          (table-with-actual-loot-deck))))))
