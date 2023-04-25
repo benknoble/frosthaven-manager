@@ -335,9 +335,7 @@
   (:= (state-@mode s) 'build-loot-deck))
 
 (define ((to-play s))
-  (:= (state-@mode s) 'play)
-  ;; HACK: trigger updates in (state-@creatures s) to re-render list-view (?)
-  (:= (state-@creatures s) (@! (state-@creatures s))))
+  (:= (state-@mode s) 'play))
 
 (define ((to-choose-monster-db s))
   (:= (state-@loot-deck s) (build-loot-deck (@! (state-@cards-per-deck s))))
