@@ -31,14 +31,16 @@
 (define (loot-picker #:on-card [on-card void])
   (define (make-cards-picker! label max-cards deck)
     (define/obs @n 0)
+    (define ((send-event event) . _flow-args)
+      (on-card event))
     (define (subtract-card)
-      (unless (@! (@> @n zero?))
-        (<@ @n sub1)
-        (on-card `(remove ,deck))))
+      (<~@ @n (switch
+                [zero? _]
+                [else (ε (send-event `(remove ,deck)) sub1)])))
     (define (add-card)
-      (unless (>= (@! @n) max-cards)
-        (<@ @n add1)
-        (on-card `(add ,deck))))
+      (<~@ @n (switch
+                [(>= max-cards) _]
+                [else (ε (send-event `(add ,deck)) add1)])))
     (hpanel (spacer) (counter (@~> @n (~a label _)) add-card subtract-card) (spacer)))
   (define money-view (make-cards-picker! "Money Cards: " max-money-cards money-deck))
   (define material-views
