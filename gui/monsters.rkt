@@ -620,17 +620,20 @@
   (list
     (cond-view
       [@aoe (button "AoE" (thunk
-                            (define pict
-                              ((dynamic-require (build-path (@! @base) (@! @aoe)) 'aoe)))
+                            (define @pict
+                              (obs-combine
+                                (λ (base aoe)
+                                  ((dynamic-require (build-path base aoe) 'aoe)))
+                                @base @aoe))
                             (with-closing-custodian/eventspace
                               (render/eventspace
                                 #:eventspace closing-eventspace
                                 (window
                                   #:mixin close-custodian-mixin
                                   #:title "AoE pattern"
-                                  #:size (list (exact-ceiling (pict-width pict))
-                                               (exact-ceiling (pict-height pict)))
-                                  (pict-canvas #f (const pict)))))))]
+                                  #:size (@~> @pict (~> (-< pict-width pict-height)
+                                                        (>< exact-ceiling) list))
+                                  (pict-canvas @pict values))))))]
       [else (spacer)])))
 
 (module+ main
