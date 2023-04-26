@@ -342,8 +342,9 @@
 (define (draw-new-card-mid-round-if-needed s set)
   ;; mid-round, we've added a monster, and they didn't already have a card
   ;; caller must check "added a monster" condition, which varies
-  (when (and (@! (state-@in-draw? s))
-             (@! (@~> (state-@ability-decks s)
-                      (~> (hash-ref set) (not ability-decks-current)))))
-    (<~@ (state-@ability-decks s) (hash-update set ability-decks-draw-next))
-    (<~@ (state-@creatures s) (sort < #:key (creature-initiative s)))))
+  (<@ (state-@ability-decks s)
+      (λ (ads)
+        (when (and (@! (state-@in-draw? s))
+                   (~> (ads) (hash-ref set) (not ability-decks-current)))
+          (hash-update ads set ability-decks-draw-next))))
+  (<~@ (state-@creatures s) (sort < #:key (creature-initiative s))))
