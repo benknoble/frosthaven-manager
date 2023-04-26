@@ -865,7 +865,8 @@ Updates all players or monster-groups in @racket[creatures] via @racket[f].
 Updates player @racket[k]s name to @racket[name] or max health via @racket[f].
 }
 
-@defproc[(creature-initiative [s state?]) (-> creature? (or/c +inf.0 initiative?))]{
+@defproc[(creature-initiative [ads (hash/c string? ability-decks?)])
+         (-> creature? (or/c +inf.0 initiative?))]{
 Calculates a creature's initiative.
 }
 
@@ -880,7 +881,7 @@ Adds or removes a monster group based on the received event.
          any]{
 If it is mid-round per @racket[state-@in-draw?] and the ability deck for
 @racket[set] does not have a card per @racket[ability-decks-current], draw a
-card for @racket[set] and re-sort the creatures by initiative.
+card for @racket[set].
 
 It is the caller's responsibility to verify that a monster has been added and
 needs to potentially trigger a new card.

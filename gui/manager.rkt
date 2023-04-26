@@ -133,7 +133,9 @@
       ;; main
       (group
         "Creatures"
-        (list-view (state-@creatures s)
+        (list-view
+          (obs-combine (λ (cs ads) (sort cs < #:key (creature-initiative ads)))
+                       (state-@creatures s) (state-@ability-decks s))
           #:key creature-id
           (make-creature-view s)
           #:style '(vertical vscroll))
@@ -359,8 +361,6 @@
   ;; discard monster cards
   (<@ (state-@ability-decks s)
       (update-ability-decks ability-decks-discard-and-maybe-shuffle))
-  ;; order creatures
-  (<~@ (state-@creatures s) (sort < #:key (creature-initiative s)))
   ;; shuffle modifiers if required
   (when (shuffle-modifier-deck? (@! (state-@monster-discard s)))
     (reshuffle-modifier-deck s))
@@ -389,8 +389,6 @@
           (cond
             [monster-set-has-monsters? (ability-decks-draw-next ad)]
             [else ad]))))
-  ;; order creatures
-  (<~@ (state-@creatures s) (sort < #:key (creature-initiative s)))
   ;; toggle state
   (<@ (state-@in-draw? s) not))
 

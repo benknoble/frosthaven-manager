@@ -65,7 +65,7 @@
     [update-all-monster-groups (-> (listof creature?) (-> monster-group? monster-group?) (listof creature?))]
     [update-player-name (-> state? (-> any/c string? any))]
     [update-player-max-hp (-> state? (-> any/c (-> natural-number/c natural-number/c) any))]
-    [creature-initiative (-> state? (-> creature? (or/c +inf.0 initiative?)))]
+    [creature-initiative (-> (hash/c string? ability-decks?) (-> creature? (or/c +inf.0 initiative?)))]
     [add-or-remove-monster-group (-> state? (-> (or/c add-monster-event/c remove-monster-event/c) any))]
     [draw-new-card-mid-round-if-needed (-> state? string? any)]))
 
@@ -303,23 +303,23 @@
 (define ((update-player-max-hp s) k f)
   (<~@ (state-@creatures s) (update-players k (player-act-on-max-hp f))))
 
-(define ((monster-group-initiative s) mg)
-  (~> ((state-@ability-decks s) mg)
-      (== @! monster-group-set-name)
+(define ((monster-group-initiative ads) mg)
+  (~> (ads mg)
+      (== _ monster-group-set-name)
       hash-ref
       ability-decks-current
       (switch
         [monster-ability? monster-ability-initiative]
         [else +inf.0])))
 
-(define (monster-group*-initiative s)
-  (flow (~> monster-group*-mg (monster-group-initiative s))))
+(define (monster-group*-initiative ads)
+  (flow (~> monster-group*-mg (monster-group-initiative ads))))
 
-(define (creature-initiative s)
+(define (creature-initiative ads)
   (flow (~> creature-v
             (switch
               [player? player-initiative]
-              [monster-group*? (esc (monster-group*-initiative s))]))))
+              [monster-group*? (esc (monster-group*-initiative ads))]))))
 
 ;; (-> mg (-> creature bool))
 (define-flow creature-is-mg~?
@@ -346,5 +346,4 @@
       (λ (ads)
         (when (and (@! (state-@in-draw? s))
                    (~> (ads) (hash-ref set) (not ability-decks-current)))
-          (hash-update ads set ability-decks-draw-next))))
-  (<~@ (state-@creatures s) (sort < #:key (creature-initiative s))))
+          (hash-update ads set ability-decks-draw-next)))))
