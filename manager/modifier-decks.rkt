@@ -20,7 +20,7 @@
 
 (define (reshuffle-modifier-deck s)
   (define-values (@deck @discard) (on (s) (-< state-@monster-modifier-deck state-@monster-discard)))
-  (:= @deck (shuffle (append (@! @deck) (@! @discard))))
+  (<@ @deck (λ (d) (shuffle (append d (@! @discard)))))
   (:= @discard empty))
 
 (define (discard s card)
@@ -63,29 +63,29 @@
   (discard s keep-card))
 
 (define (shuffle-modifier-deck s)
-  (:= (state-@monster-modifier-deck s) (shuffle (@! (state-@monster-modifier-deck s)))))
+  (<@ (state-@monster-modifier-deck s) shuffle))
 
 (define (((deck-adder state->@cards) s))
   (define @cards (state->@cards s))
-  (unless (empty? (@! @cards))
-    (define card (first (@! @cards)))
-    (<@ @cards rest)
-    (<~@ (state-@monster-modifier-deck s) (cons card _))
-    (shuffle-modifier-deck s)))
+  (<@ @cards (match-lambda
+               [(cons card cards) (<~@ (state-@monster-modifier-deck s) (cons card _))
+                                  (shuffle-modifier-deck s)
+                                  cards]
+               ['() '()])))
 
 (define do-curse-monster (deck-adder state-@curses))
 (define do-bless-monster (deck-adder state-@blesses))
 
 (define ((do-bless-player s))
   (define @cards (state-@blesses s))
-  (unless (empty? (@! @cards))
-    (define card (first (@! @cards)))
-    (<@ @cards rest)
-    (<~@ (state-@player-blesses s) (cons card _))))
+  (<@ @cards (match-lambda
+               [(cons card cards) (<~@ (state-@player-blesses s) (cons card _))
+                                  cards]
+               ['() '()])))
 
 (define ((do-unbless-player s))
   (define @cards (state-@player-blesses s))
-  (unless (empty? (@! @cards))
-    (define card (first (@! @cards)))
-    (<@ @cards rest)
-    (discard s card)))
+  (<@ @cards (match-lambda
+               [(cons card cards) (discard s card)
+                                  cards]
+               ['() '()])))
