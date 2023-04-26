@@ -319,7 +319,7 @@
   (flow (~> creature-v
             (switch
               [player? player-initiative]
-              [monster-group*? (esc (monster-group*-initiative ads))]))))
+              [monster-group*? (monster-group*-initiative ads)]))))
 
 ;; (-> mg (-> creature bool))
 (define-flow creature-is-mg~?
