@@ -24,6 +24,7 @@
          frosthaven-manager/defns
          frosthaven-manager/manager
          frosthaven-manager/gui/common-menu
+         frosthaven-manager/gui/formula-editor
          frosthaven-manager/gui/start
          frosthaven-manager/gui/player-info
          frosthaven-manager/gui/level-info
@@ -42,7 +43,8 @@
     (menu-bar
       (menu "File"
             (menu-item "&Save Game" (thunk (do-save-game s)))
-            (menu-item "L&oad Game" (thunk (do-load-game s))))
+            (menu-item "L&oad Game" (thunk (do-load-game s)))
+            (formula-menu-item (state-@env s)))
       (menu "Help"
             (about-menu-item)
             (how-to-play-menu-item)

@@ -31,6 +31,7 @@
             frosthaven-manager/gui/counter
             frosthaven-manager/gui/elements
             frosthaven-manager/gui/font
+            frosthaven-manager/gui/formula-editor
             frosthaven-manager/gui/helpers
             frosthaven-manager/gui/level-info
             frosthaven-manager/gui/loot-picker
@@ -1080,6 +1081,19 @@ modified values via the keyword arguments.
 @defthing[big-control-font (is-a?/c font%)]{
 A font bigger than @racket[normal-control-font] and italic, but otherwise the
 same.
+}
+
+@subsection{@tt{gui/formula-editor}}
+@defmodule[frosthaven-manager/gui/formula-editor]
+
+This module provides GUI objects for interactive formula editing.
+
+@defproc[(formula-editor [|@|env env/c]) (is-a?/c view<%>)]{
+A window containing an interactive formula editor.
+}
+
+@defproc[(formula-menu-item [|@|env env/c]) (is-a?/c view<%>)]{
+A menu item that displays an interactive formula editor.
 }
 
 @subsection{@tt{gui/helpers}}
