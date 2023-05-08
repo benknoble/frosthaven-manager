@@ -244,10 +244,17 @@ scenario. The @onscreen{Level Table} and @onscreen{Inspiration Table} buttons
 show tables for the scenario statistics by level and inspiration by number of
 players, respectively.
 
-@subsection{Saving and Loading a Game}
+And that's it! Now you know how to play!
+
+@section{Saving and Loading a Game}
 
 At any time, you can save the state of the game using the @onscreen{Save Game}
 button in the @onscreen{File} menu. You can also load a saved game using the
 @onscreen{Load Game} button in the same menu.
 
-And that's it! Now you know how to play!
+@section{Other Utilities}
+
+In the @onscreen{File} menu, you will also find the following utilities:
+@itemlist[
+    @item{Formula editor. Evaluates formulas as specified in @secref{Bestiary_Format_Reference} without the @tech{game text} quotes.}
+]
