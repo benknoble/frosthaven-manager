@@ -314,6 +314,8 @@ characters, respectively. Formulas are written in @tech{game text}, like
 @racket["C + 2"] or @racket["L * 3"]. The available operators in formulas are
 the standard arithmetic operators @racket["+"], @racket["-"], @racket["*"], and
 @racket["/"]. Use parentheses to group expressions, like @racket["(C + 1) * 2"].
+The functions @code{up} and @code{down} round up or down and are written
+@racket["up(3/2)"] or @racket["down(L/3)"].
 
 Any @nonterm{card}'s abilities in the @nonterm{text-list} can include a
 reference to an AoE pattern by using the function @racket[aoe], like in the

@@ -1669,8 +1669,8 @@ Textual parsers for parts of the foes language.
 @defmodule[frosthaven-manager/parsers/formula]
 
 This module contains parsers for arithmetic formulas over addition, subtraction,
-multiplication, division, and a limited set of variables. The parse result is a
-function from an environment of variables to a number.
+multiplication, division, rounding, and a limited set of variables. The parse
+result is a function from an environment of variables to a number.
 
 @deftogether[(
               @defthing[env/c flat-contract? #:value (hash/c (or/c "L" "C") number? #:flat? #t)]

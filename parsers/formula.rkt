@@ -14,7 +14,7 @@
 
 <expr> ::= product ([+-] product)*
 <product> ::= term ([*/] term)*
-<term> ::= "(" <expr> ")" | <number> | <var>
+<term> ::= "up(" <expr> ") | "down(" <expr> ")" | "(" <expr> ")" | <number> | <var>
 <var> ::= "L" | "C" |#
 
 (define env/c (hash/c (or/c "L" "C") number? #:flat? #t))
@@ -33,8 +33,20 @@
         (list/p (char/p #\() (delay/p expr/p) (char/p #\))
                 #:sep skip-ws)))
 
+(define up/p
+  (do (string/p "up(")
+      [e <- expr/p]
+      (string/p ")")
+      (pure (λ (env) (exact-ceiling (e env))))))
+
+(define down/p
+  (do (string/p "down(")
+      [e <- expr/p]
+      (string/p ")")
+      (pure (λ (env) (exact-floor (e env))))))
+
 (define term/p
-  (or/p var/p num/p bracketed-expr/p))
+  (or/p var/p num/p up/p down/p bracketed-expr/p))
 
 (define product/p
   (do [p <- term/p] skip-ws
