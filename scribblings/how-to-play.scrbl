@@ -257,4 +257,5 @@ button in the @onscreen{File} menu. You can also load a saved game using the
 In the @onscreen{File} menu, you will also find the following utilities:
 @itemlist[
     @item{Formula editor. Evaluates formulas as specified in @secref{Bestiary_Format_Reference} without the @tech{game text} quotes.}
+    @item{Launch server. Launches a local server. Have your players open the address shown in their web browsers and enjoy interacting with the app!}
 ]
