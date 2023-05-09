@@ -41,6 +41,7 @@
             frosthaven-manager/gui/monsters
             frosthaven-manager/gui/player-info
             frosthaven-manager/gui/render
+            frosthaven-manager/gui/server
             frosthaven-manager/gui/stacked-tables
             frosthaven-manager/gui/start
             frosthaven-manager/gui/static-table
@@ -51,6 +52,7 @@
             frosthaven-manager/observable-operator
             frosthaven-manager/qi
             frosthaven-manager/qi/list2hash
+            (prefix-in server: frosthaven-manager/server)
             (only-in frosthaven-manager/syntax/module-reader)
             frosthaven-manager/syntax/monsters
             ))
@@ -1002,6 +1004,7 @@ The following sections describe modules under @tt{frosthaven-manager/gui}.
     @defthing[contribute-menu-item (-> (is-a?/c view<%>))]
     @defthing[send-feedback-menu-item (-> (is-a?/c view<%>))]
     @defthing[how-to-play-menu-item (-> (is-a?/c view<%>))]
+    @defthing[launch-server-menu-item (-> (is-a?/c view<%>))]
 )]{
 Menu items for Frosthaven Manager.
 }
@@ -1500,6 +1503,15 @@ on whether window A or window B was closed first. Note also the use of
 }
 }
 
+@subsection{@tt{gui/server}}
+@defmodule[frosthaven-manager/gui/server]
+
+@defproc[(launch-server [s state?]) renderer?]{
+Renders a window in a new closing eventspace with server information, and
+launches a server. See @racket[with-closing-custodian/eventspace] and
+@racket[server:launch-server].
+}
+
 @subsection{@tt{gui/stacked-tables}}
 @defmodule[frosthaven-manager/gui/stacked-tables]
 
@@ -1792,6 +1804,18 @@ of the list is mapped into a key via @racket[->key-flo] and a value via
          hash?]{
 Transforms @racket[xs] to a hash by mapping each element into a key via
 @racket[->key] and a value via @racket[->value].
+}
+
+@section{@tt{server}}
+@defmodule[frosthaven-manager/server]
+
+@defproc[(launch-server [s state?] [send-event procedure?])
+         (values string? (-> any))]{
+Launches the actual web server for @racket[s]. The callback protocol for
+@racket[send-event] is not yet formalized and very unstable.
+
+Returns the server address (on a best-guess basis) and a @code{stop} procedure
+that stops the server when called.
 }
 
 @section{@tt{syntax}}
