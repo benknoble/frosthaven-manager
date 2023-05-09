@@ -622,18 +622,17 @@
                      (switch
                        [monster-ability? monster-ability-location]
                        [else "."])))
+  (define-flow base->pict
+    (~> (build-path aoe)
+        (switch
+          [file-exists?
+           (~> (dynamic-require 'aoe (thunk (const (pict:text "Not an AoE module"))))
+               apply)]
+          [else (gen (pict:text "AoE File Not Found"))])))
   (list
    (cond
      [aoe (button "AoE" (thunk
-                          (define @pict
-                            (@~> @base
-                                 (~> (build-path aoe)
-                                     (switch
-                                       [file-exists?
-                                        (~>
-                                         (dynamic-require 'aoe (thunk (const (pict:text "Not an AoE module"))))
-                                         apply)]
-                                       [else (gen (pict:text "AoE File Not Found"))]))))
+                          (define @pict (@> @base base->pict))
                           (with-closing-custodian/eventspace
                            (render/eventspace
                             #:eventspace closing-eventspace
