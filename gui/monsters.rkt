@@ -138,7 +138,9 @@
     (define (set-close! p) (set-box! close! p))
     (define (on-close)
       ;; valid because called when the dialog that changes @choice is closed
-      (on-new (@! @choice) (@! @elite?)))
+      (define choice (@! @choice))
+      (when choice
+        (on-new choice (@! @elite?))))
     (define-flow mixin (~> (make-closing-proc-mixin set-close!)
                            (make-on-close-mixin on-close)))
     ;; not setting current renderer, nor using an eventspace: dialog
@@ -155,7 +157,13 @@
           ;; have the correct value, a procedure).
           (button "Add" (λ () ((unbox close!))))))))
   (define (name-panel) (text (@> @mg monster-group-name) #:font big-control-font))
-  (define (add-monster-button) (button "Add Monster" do-new))
+  (define (add-monster-button)
+    (button "Add Monster" do-new
+            #:enabled?
+            (@~> @mg (~>> monster-group-monsters
+                          (map monster-number)
+                          (set-subtract (inclusive-range 1 10))
+                          (not empty?)))))
   (define (name-initiative-panel)
     (vpanel #:alignment '(center center)
             #:stretch '(#f #t)
@@ -225,12 +233,14 @@
     (-< (if monster-elite? " (E)" "")
         " (HP: " monster-current-hp ")"
         (if (~> monster-conditions empty?) "" "*")))
-  (define (forward-condition c on?)
-    (on-condition (@! @monster-num) c on?))
-  (define (forward-hp proc)
-    (on-hp (@! @monster-num) proc))
-  (define (forward-kill)
-    (on-kill (@! @monster-num)))
+  (define-syntax-rule (define/forward/guard-monster-num f g args ...)
+    (define (f args ...)
+      (let ([n (@! @monster-num)])
+        (when n
+          (g n args ...)))))
+  (define/forward/guard-monster-num forward-condition on-condition c on?)
+  (define/forward/guard-monster-num forward-hp on-hp proc)
+  (define/forward/guard-monster-num forward-kill on-kill)
   (define (monsters)
     (tabs
       @monsters
