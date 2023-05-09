@@ -335,7 +335,8 @@
             (define next-id (~> (creatures) (sep creature-id) max add1))
             (define selection
               (~> (mg) monster-group-monsters
-                  (and (not empty?) (~> first monster-number)))) (define c (creature next-id (monster-group* selection mg)))
+                  (and (not empty?) (~> first monster-number))))
+            (define c (creature next-id (monster-group* selection mg)))
             (append creatures (list c))))]
     [`(remove ,mg) (<~@ (state-@creatures s) (remf (creature-is-mg~? mg) _))]))
 
