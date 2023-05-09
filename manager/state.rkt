@@ -3,6 +3,7 @@
 (provide
   state-deserialize-info
   (contract-out
+    #:unprotected-submodule unsafe
     [struct creature ([id any/c]
                       [v (or/c player? monster-group*?)])]
     [struct monster-group* ([active (or/c #f monster-number/c)]
