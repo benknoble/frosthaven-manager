@@ -37,7 +37,7 @@
                             (#:on-group (-> monster-group? any))
                             any)]))
 
-(require (only-in pict pict-width pict-height)
+(require (only-in pict pict-width pict-height [text pict:text])
          racket/gui/easy
          racket/gui/easy/contract
          frosthaven-manager/observable-operator
@@ -184,18 +184,14 @@
                                 "")))
                       (format "~a~a"))
                  "")))
-        (list-view (@~> @ability
-                        (if _
-                          (~>> monster-ability-abilities
-                               ;; generated unique ID for each ability
-                               (map (λ (v) (cons v (gensym)))))
-                          (gen empty)))
-          #:key cdr
-          (λ (_k @e)
-            (define @ability-text (@> @e car))
-            (apply hpanel
-                   (ability->text @mg @ability-text @env)
-                   (ability->extras @mg @ability @ability-text)))))))
+        (observable-view
+         @ability
+         (λ (ability)
+           (apply vpanel
+                  (for/list ([ability-text (if ability (monster-ability-abilities ability) empty)])
+                    (apply hpanel
+                           (ability->text @mg ability-text @env)
+                           (ability->extras @mg @ability ability-text)))))))))
   (define (stats-panel)
     (hpanel
       (group "Normal" (stats-view (@> @mg monster-group-normal-stats) @env)
@@ -586,7 +582,7 @@
     (op (stats-f (monster-group-elite-stats mg)) amount*))
   (format "~a ~a (E:~a)" word normal elite))
 
-(define (do-replacement mg ability env)
+(define ((do-replacement ability) mg env)
   (define aoe-replacement `(,aoe-rx ""))
   (define bulleted '(#rx"^" "· "))
   (define attack
@@ -616,35 +612,38 @@
           move))
   (regexp-replaces ability replacements))
 
-(define (ability->text @mg @ability @env)
-  (text (obs-combine do-replacement @mg @ability @env)))
+(define (ability->text @mg ability @env)
+  (text (obs-combine (do-replacement ability) @mg @env)))
 
-(define (ability->extras @mg @ability-card @ability-text)
-  (define @aoe
-    (@~> @ability-text (~> (regexp-match aoe-rx _)
-                           (and _ second))))
+(define (ability->extras @mg @ability-card ability-text)
+  (define aoe
+    (~> (ability-text) (regexp-match aoe-rx _) (and _ second)))
   (define @base (@~> @ability-card
                      (switch
                        [monster-ability? monster-ability-location]
                        [else "."])))
   (list
-    (cond-view
-      [@aoe (button "AoE" (thunk
-                            (define @pict
-                              (obs-combine
-                                (λ (base aoe)
-                                  ((dynamic-require (build-path base aoe) 'aoe)))
-                                @base @aoe))
-                            (with-closing-custodian/eventspace
-                              (render/eventspace
-                                #:eventspace closing-eventspace
-                                (window
-                                  #:mixin close-custodian-mixin
-                                  #:title "AoE pattern"
-                                  #:size (@~> @pict (~> (-< pict-width pict-height)
-                                                        (>< exact-ceiling) list))
-                                  (pict-canvas @pict values))))))]
-      [else (spacer)])))
+   (cond
+     [aoe (button "AoE" (thunk
+                          (define @pict
+                            (@~> @base
+                                 (~> (build-path aoe)
+                                     (switch
+                                       [file-exists?
+                                        (~>
+                                         (dynamic-require 'aoe (thunk (const (pict:text "Not an AoE module"))))
+                                         apply)]
+                                       [else (gen (pict:text "AoE File Not Found"))]))))
+                          (with-closing-custodian/eventspace
+                           (render/eventspace
+                            #:eventspace closing-eventspace
+                            (window
+                             #:mixin close-custodian-mixin
+                             #:title "AoE pattern"
+                             #:size (@~> @pict (~> (-< pict-width pict-height)
+                                                   (>< exact-ceiling) list))
+                             (pict-canvas @pict values))))))]
+     [else (spacer)])))
 
 (module+ main
   (require frosthaven-manager/gui/render)
