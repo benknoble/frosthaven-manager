@@ -344,6 +344,8 @@
   ;; caller must check "added a monster" condition, which varies
   (<@ (state-@ability-decks s)
       (λ (ads)
-        (when (and (@! (state-@in-draw? s))
-                   (~> (ads) (hash-ref set) (not ability-decks-current)))
-          (hash-update ads set ability-decks-draw-next)))))
+        (cond
+          [(and (@! (state-@in-draw? s))
+                (~> (ads) (hash-ref set) (not ability-decks-current)))
+           (hash-update ads set ability-decks-draw-next)]
+          [else ads]))))
