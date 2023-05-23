@@ -132,30 +132,35 @@
                     (map monster-number)
                     (set-subtract (inclusive-range 1 10))
                     (sort _ <))))
-    (define/obs @choice (~> (@available-numbers) @! (and (not empty?) first)))
-    (define/obs @elite? #f)
+    (define/obs @number->elite (hash))
+    (define/match (on-change e)
+      [{`(include? ,num to #t)} (<~@ @number->elite (hash-update num values #f))]
+      [{`(include? ,num to #f)} (<~@ @number->elite (hash-remove num))]
+      [{`(elite? ,num to ,elite?)}
+       ;; looks like hash-set, but I want the missing-key semantics of
+       ;; hash-update with no failure-result as a guard against bugs
+       (<~@ @number->elite (hash-update num (const elite?)))])
     (define close! (box #f))
     (define (set-close! p) (set-box! close! p))
     (define (on-close)
-      ;; valid because called when the dialog that changes @choice is closed
-      (define choice (@! @choice))
-      (when choice
-        (on-new choice (@! @elite?))))
+      ;; valid because called when the dialog that changes @number->elite is closed
+      (for ([(num elite?) (in-hash (@! @number->elite))])
+        (on-new num elite?)))
     (define-flow mixin (~> (make-closing-proc-mixin set-close!)
                            (make-on-close-mixin on-close)))
     ;; not setting current renderer, nor using an eventspace: dialog
     (render
-      (dialog
-        #:mixin mixin
-        #:title "Add Monster"
-        #:style '(close-button resize-border)
-        (hpanel
-          (choice @available-numbers #:choice->label ~a (λ:= @choice))
-          (checkbox #:label "Elite?" (λ:= @elite?))
-          ;; On η-expansion of close!: close! can be #f until it is set, so
-          ;; expand the call to close! (by the time it is called it should
-          ;; have the correct value, a procedure).
-          (button "Add" (λ () ((unbox close!))))))))
+     (dialog
+      #:mixin mixin
+      #:title "Add Monster"
+      #:style '(close-button resize-border)
+      (observable-view @available-numbers
+                       (flow (~> sep (>< (make-monster-selector on-change))
+                                 vpanel)))
+      ;; On η-expansion of close!: close! can be #f until it is set, so
+      ;; expand the call to close! (by the time it is called it should
+      ;; have the correct value, a procedure).
+      (button "Add" (λ () ((unbox close!)))))))
   (define (name-panel) (text (@> @mg monster-group-name) #:font big-control-font))
   (define (add-monster-button)
     (button "Add Monster" do-new
@@ -325,7 +330,8 @@
     (:= @included? included?))
   (define (set-elite elite?)
     (on-change `(elite? ,num to ,elite?)))
-  (hpanel (checkbox set-included #:label (~a num))
+  (hpanel #:alignment '(center top)
+          (checkbox set-included #:label (~a num))
           (checkbox set-elite #:label "Elite?" #:enabled? @included?)))
 
 (define add-monster-event/c
