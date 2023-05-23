@@ -304,15 +304,6 @@
             #:min-size (~> (info-db "Monster")
                            (== longest-name-length string-length)
                            + (* 10) (max 50) (list #f))))
-  (define (make-monster-selector num)
-    (define/obs @included? #f)
-    (define (set-included included?)
-      (on-change `(include? ,num to ,included?))
-      (:= @included? included?))
-    (define (set-elite elite?)
-      (on-change `(elite? ,num to ,elite?)))
-    (hpanel (checkbox set-included #:label (~a num))
-            (checkbox set-elite #:label "Elite?" #:enabled? @included?)))
   (vpanel (hpanel set-picker monster-picker
                   #:alignment '(center top)
                   #:stretch '(#f #f))
@@ -321,8 +312,21 @@
                   #:label "Level"
                   #:min-value 0
                   #:max-value max-level)
-          (hpanel (apply vpanel (map make-monster-selector (inclusive-range 1 5)))
-                  (apply vpanel (map make-monster-selector (inclusive-range 6 10))))))
+          (hpanel (apply vpanel (map (flow (make-monster-selector on-change)) (inclusive-range 1 5)))
+                  (apply vpanel (map (flow (make-monster-selector on-change)) (inclusive-range 6 10))))))
+
+;; on-change accepts
+;; - `(include? ,num to ,included?)
+;; - `(elite? ,num to ,elite?)
+(define (make-monster-selector num [on-change void])
+  (define/obs @included? #f)
+  (define (set-included included?)
+    (on-change `(include? ,num to ,included?))
+    (:= @included? included?))
+  (define (set-elite elite?)
+    (on-change `(elite? ,num to ,elite?)))
+  (hpanel (checkbox set-included #:label (~a num))
+          (checkbox set-elite #:label "Elite?" #:enabled? @included?)))
 
 (define add-monster-event/c
   (list/c 'add monster-group?))
