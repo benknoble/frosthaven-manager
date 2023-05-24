@@ -192,6 +192,8 @@
                                  (~a (player-initiative p))
                                  "0")]
                        ;; TODO
+                       ;; - probably requires restructure: got to "pick" a
+                       ;; player
                        ;; - update slider values when player init changes, when
                        ;; init revealed
                        ;; - when init dragged, reveal ONLY current init (so that dragging works)
