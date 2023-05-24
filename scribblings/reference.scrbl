@@ -1369,6 +1369,12 @@ Produces a @tech[#:doc ref-doc]{mixin} that @racket[augment]s @racket[on-close]
 to call @racket[proc].
 }
 
+@defform[(define-close! close!-id set-close-mixin-id)]{
+If the mixin @racket[set-close-mixin-id] is applied to a
+@racket[top-level-window<%>] then @racket[close!-id] is a nullary procedure that
+closes it.
+}
+
 @subsection{@tt{gui/monsters}}
 @defmodule[frosthaven-manager/gui/monsters]
 

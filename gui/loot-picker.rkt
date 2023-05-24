@@ -90,16 +90,13 @@
           show-assigner))
 
 (define (loot-assigner @loot-deck @num-players @players on-player on-close)
-  (define close! (box #f))
-  (define (set-close! c) (set-box! close! c))
-  (define-flow mixin
-    (~> (make-closing-proc-mixin set-close!)
-        (make-on-close-mixin on-close)))
+  (define-close! close! closing-mixin)
+  (define-flow mixin (~> closing-mixin (make-on-close-mixin on-close)))
   (define/match (make-player-button e)
     [{(cons p id)}
       (define (action)
         (on-player id)
-        ((unbox close!)))
+        (close!))
       (button (player-name p) action)])
   (define-flow (card-text num-players deck)
     (if (~> 2> (not empty?))

@@ -84,20 +84,18 @@
   (define @init (@> @player player-initiative))
   (define @init-label (@~> @player (~>> player-name (~a "Initiative for "))))
   (define (input-initiative)
-    (define close! (box #f))
-    (define (set-close! p) (set-box! close! p))
+    (define-close! close! closing-mixin)
     (with-closing-custodian/eventspace
       (render/eventspace
         #:eventspace closing-eventspace
         (window
-          #:mixin (flow (~> close-custodian-mixin
-                            (make-closing-proc-mixin set-close!)))
+          #:mixin (flow (~> close-custodian-mixin closing-mixin))
           #:title @init-label
           (input
             (@> @init ~a)
             (λ (event init-str)
               (when (equal? event 'return)
-                ((unbox close!)))
+                (close!))
               (cond
                 [(string->number init-str)
                  =>
@@ -188,25 +186,21 @@
 (define (do-summon add-summon)
   (define/obs @name "")
   (define/obs @hp 1)
-  (define close! (box #f))
-  (define (set-close! c) (set-box! close! c))
+  (define-close! close! closing-mixin)
   (render
    (dialog
     #:title "Summon"
-    #:mixin (flow (~> (make-closing-proc-mixin set-close!)
+    #:mixin (flow (~> closing-mixin
                       (make-on-close-mixin
                        (thunk
                         (add-summon (@! @name) (@! @hp))))))
-    ;; on η-expansion of close!: close! can be #f until it is set, so
-    ;; expand the call to close! (by the time it is called it should
-    ;; have the correct value, a procedure).
     (hpanel (input @name (match-lambda**
                            [{'input s} (:= @name s)]
-                           [{'return s} (:= @name s) ((unbox close!))]))
+                           [{'return s} (:= @name s) (close!)]))
             (counter (@~> @hp (~a "Max HP: " _))
                      (thunk (<@ @hp add1))
                      (thunk (<~@ @hp (switch [(<= 1) _] [else sub1]))))
-            (button "Summon" (thunk ((unbox close!))))))))
+            (button "Summon" close!)))))
 
 (define (player-input-view
           #:on-name [on-name void]
