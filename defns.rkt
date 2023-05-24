@@ -75,7 +75,8 @@
     [summon-conditions* (-> summon? (listof condition?))]
     [player-summon (-> player? string? positive-integer? player?)]
     [update-player-summon (-> natural-number/c (-> summon? summon?)
-                              (-> player? player?))])
+                              (-> player? player?))]
+    [player-kill-summon (-> natural-number/c (-> player? player?))])
 
   ;; loot deck
   (enum-out material-kind)
@@ -344,6 +345,10 @@
 (define ((update-player-summon i f) p)
   (struct-copy player p
                [summons (list-update (player-summons p) i f)]))
+
+(define ((player-kill-summon i) p)
+  (struct-copy player p
+               [summons (~> (p) player-summons (split-at i) (== _ cdr) append)]))
 
 ;; loot deck
 

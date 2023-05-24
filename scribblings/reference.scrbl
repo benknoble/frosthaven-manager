@@ -396,6 +396,10 @@ Adds a @racket[summon] to @racket[p].
 Update the @racket[i]th @racket[summon] via @racket[f].
 }
 
+@defproc[((player-kill-summon [i natural-number/c]) [p player?]) player?]{
+Kill the @racket[i]th @racket[summon].
+}
+
 @subsection{Loot Deck}
 
 @deftogether[(
