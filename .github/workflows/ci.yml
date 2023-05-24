@@ -27,7 +27,7 @@ jobs:
           variant: ${{ matrix.racket-variant }}
           version: ${{ matrix.racket-version }}
       - name: Installing frosthaven-manager and its dependencies
-        run: make install RACO_INSTALL_ARGS=--no-docs
+        run: make install
       - name: Compiling frosthaven-manager and building its docs
         run: make check-deps RACO_SETUP_ARGS=--unused-pkg-deps
       - name: Install xvfb to run headless tests
