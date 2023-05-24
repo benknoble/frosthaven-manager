@@ -14,7 +14,11 @@
                       (#:on-condition (-> (list/c condition? boolean?) any)
                        #:on-hp (-> (-> number? number?) any)
                        #:on-xp (-> (-> number? number?) any)
-                       #:on-initiative (-> number? any))
+                       #:on-initiative (-> number? any)
+                       #:on-summon (-> string? positive-integer? any)
+                       #:on-summon-hp (-> natural-number/c (-> number? number?) any)
+                       #:on-summon-condition (-> natural-number/c (list/c condition? boolean?) any)
+                       #:kill-summon (-> natural-number/c any))
                       (is-a?/c view<%>))]))
 
 (require racket/gui/easy
@@ -48,7 +52,11 @@
                      #:on-condition [on-condition void]
                      #:on-hp [on-hp void]
                      #:on-xp [on-xp void]
-                     #:on-initiative [on-initiative void])
+                     #:on-initiative [on-initiative void]
+                     #:on-summon [add-summon void]
+                     #:on-summon-hp [on-summon-hp void]
+                     #:on-summon-condition [on-summon-condition void]
+                     #:kill-summon [kill-summon void])
   (define (make-condition-checkbox c)
     (checkbox #:label (~a c)
               #:checked? (@> @player (player-afflicted-by? c))
@@ -117,6 +125,32 @@
                              (sep ~a) collect
                              (string-join ", " #:before-last " and "))))
       (button "Edit Conditions" show-conditions)))
+  (define add-summon-button
+    (button "Summon" (thunk (do-summon add-summon))))
+  (define ((summon-condition i) evt)
+    (on-summon-condition i evt))
+  (define (summons-view)
+    (cond-view
+      [(@~> @player (~> player-summons (not empty?)))
+       (group
+        "Summons"
+        (observable-view
+         (@> @player player-summons)
+         (λ (summons)
+           (apply vpanel
+                  (for/list ([(s i) (in-indexed (in-list summons))])
+                    (define ((summon-add-hp i))
+                      (unless (summon-at-max-health? s)
+                        (on-summon-hp i add1)))
+                    (define ((summon-sub-hp i))
+                      (unless (summon-dead? s)
+                        (on-summon-hp i sub1)))
+                    (summon-view s
+                                 (thunk (kill-summon i))
+                                 (summon-add-hp i)
+                                 (summon-sub-hp i)
+                                 (summon-condition i)))))))]
+      [else (spacer)]))
   ;; final view
   (group
     "Player"
@@ -125,7 +159,54 @@
             #:margin '(20 0)
             name-initiative-panel
             hp-xp
-            conditions-panel)))
+            add-summon-button
+            conditions-panel)
+    (summons-view)))
+
+(define (summon-view s die add-hp subtract-hp on-condition)
+  (define (make-condition-checkbox c)
+    (checkbox #:label (~a c)
+              #:checked? (~> (s) (summon-afflicted-by? c))
+              (flow (~>> (list c) on-condition))))
+  (define (edit-conditions)
+    (with-closing-custodian/eventspace
+     (render/eventspace
+      #:eventspace closing-eventspace
+      (apply window
+             #:mixin close-custodian-mixin
+             #:title (~> (s) (~>> summon-name (~a "Conditions for ")))
+             #:size '(200 #f)
+             (map make-condition-checkbox conditions)))))
+  (hpanel
+   (button "💀Kill💀" die)
+   (text (summon-name s))
+   (counter (summon->hp-text s) add-hp subtract-hp)
+   (text (~> (s) summon-conditions* (sep ~a) collect
+             (string-join ", " #:before-last " and ")))
+   (button "Edit Conditions" edit-conditions)))
+
+(define (do-summon add-summon)
+  (define/obs @name "")
+  (define/obs @hp 1)
+  (define close! (box #f))
+  (define (set-close! c) (set-box! close! c))
+  (render
+   (dialog
+    #:title "Summon"
+    #:mixin (flow (~> (make-closing-proc-mixin set-close!)
+                      (make-on-close-mixin
+                       (thunk
+                        (add-summon (@! @name) (@! @hp))))))
+    ;; on η-expansion of close!: close! can be #f until it is set, so
+    ;; expand the call to close! (by the time it is called it should
+    ;; have the correct value, a procedure).
+    (hpanel (input @name (match-lambda**
+                           [{'input s} (:= @name s)]
+                           [{'return s} (:= @name s) ((unbox close!))]))
+            (counter (@~> @hp (~a "Max HP: " _))
+                     (thunk (<@ @hp add1))
+                     (thunk (<~@ @hp (switch [(<= 1) _] [else sub1]))))
+            (button "Summon" (thunk ((unbox close!))))))))
 
 (define (player-input-view
           #:on-name [on-name void]
@@ -194,4 +275,17 @@
               #:on-condition (flow (~> player-condition-handler update))
               #:on-hp (flow (~> player-act-on-hp update))
               #:on-xp (flow (~> player-act-on-xp update))
-              #:on-initiative (λ (i) (update (flow (player-set-initiative i)))))))))))
+              #:on-initiative (λ (i) (update (flow (player-set-initiative i))))
+              #:on-summon
+              (λ (name hp)
+                (update (flow (player-summon name hp))))
+              #:on-summon-hp
+              (λ (i proc)
+                (update
+                 (update-player-summon i (summon-act-on-hp proc))))
+              #:on-summon-condition
+              (λ (i c)
+                (update
+                 (update-player-summon i (summon-condition-handler c))))
+              #:kill-summon
+              (λ (i) (update (player-kill-summon i))))))))))

@@ -210,12 +210,20 @@
   (define-flow update-player-xp (~> player-act-on-xp update))
   (define (update-player-initiative i)
     (update (flow (player-set-initiative i))))
+  (define (update-summon-hp i proc)
+    (update (update-player-summon i (summon-act-on-hp proc))))
+  (define (update-summon-condition i c)
+    (update (update-player-summon i (summon-condition-handler c))))
   (player-view
     (@> @e creature-v)
     #:on-condition update-player-condition
     #:on-hp update-player-hp
     #:on-xp update-player-xp
-    #:on-initiative update-player-initiative))
+    #:on-initiative update-player-initiative
+    #:on-summon (flow (~>> (clos player-summon) update))
+    #:kill-summon (flow (~> player-kill-summon update))
+    #:on-summon-hp update-summon-hp
+    #:on-summon-condition update-summon-condition))
 
 (define ((make-monster-group-view s) k @e)
   (define @env (state-@env s))

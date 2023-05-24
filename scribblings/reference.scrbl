@@ -1501,7 +1501,11 @@ via @racket[names] and @racket[hps].
            [#:on-condition on-condition (-> (list/c condition? boolean?) any) void]
            [#:on-hp on-hp (-> (-> number? number?) any) void]
            [#:on-xp on-xp (-> (-> number? number?) any) void]
-           [#:on-initiative on-initiative (-> number? any) void])
+           [#:on-initiative on-initiative (-> number? any) void]
+           [#:on-summon add-summon (-> string? positive-integer? any)]
+           [#:on-summon-hp update-summon-hp (-> natural-number/c (-> number? number?) any)]
+           [#:on-summon-condition update-summon-condition (-> natural-number/c (list/c condition? boolean?) any)]
+           [#:kill-summon kill-summon (-> natural-number/c any)])
          (is-a?/c view<%>)]{
 A GUI view of a single player. See @secref{Player_Controls}. The callback
 @racket[on-condition] is given an condition and value that determines whether
@@ -1510,6 +1514,9 @@ The callbacks @racket[on-hp] and @racket[on-xp] are given procedures to modify
 @racket[player-current-hp] and @racket[player-xp], respectively. The callback
 @racket[on-initiative] is given a new initiative for @racket[player-initiative].
 The number of players is used to format the player's loot appropriately.
+
+The summon callbacks are given the summon number, a list index, to indicate
+which summon to update. Adding a summon is done by name and max HP.
 }
 
 @subsection{@tt{gui/render}}
