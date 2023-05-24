@@ -73,7 +73,9 @@
     [summon-at-max-health? (-> summon? boolean?)]
     [summon->hp-text (-> summon? string?)]
     [summon-conditions* (-> summon? (listof condition?))]
-    [player-summon (-> player? string? positive-integer? player?)])
+    [player-summon (-> player? string? positive-integer? player?)]
+    [update-player-summon (-> natural-number/c (-> summon? summon?)
+                              (-> player? player?))])
 
   ;; loot deck
   (enum-out material-kind)
@@ -338,6 +340,10 @@
   (struct-copy player p
                [summons (append (player-summons p)
                                 (list (summon name hp hp empty)))]))
+
+(define ((update-player-summon i f) p)
+  (struct-copy player p
+               [summons (list-update (player-summons p) i f)]))
 
 ;; loot deck
 

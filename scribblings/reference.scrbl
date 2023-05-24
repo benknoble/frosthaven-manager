@@ -390,6 +390,12 @@ Same as @racket[(summon-conditions s)] but sorted.
 Adds a @racket[summon] to @racket[p].
 }
 
+@defproc[((update-player-summon [i natural-number/c] [f (-> summon? summon?)])
+          [p player?])
+         player?]{
+Update the @racket[i]th @racket[summon] via @racket[f].
+}
+
 @subsection{Loot Deck}
 
 @deftogether[(
