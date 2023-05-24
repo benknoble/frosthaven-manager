@@ -72,7 +72,8 @@
     [summon-dead? (-> summon? boolean?)]
     [summon-at-max-health? (-> summon? boolean?)]
     [summon->hp-text (-> summon? string?)]
-    [summon-conditions* (-> summon? (listof condition?))])
+    [summon-conditions* (-> summon? (listof condition?))]
+    [player-summon (-> player? string? positive-integer? player?)])
 
   ;; loot deck
   (enum-out material-kind)
@@ -332,6 +333,11 @@
 
 (define (summon-conditions* s)
   (sort (summon-conditions s) string<=? #:key ~a))
+
+(define (player-summon p name hp)
+  (struct-copy player p
+               [summons (append (player-summons p)
+                                (list (summon name hp hp empty)))]))
 
 ;; loot deck
 

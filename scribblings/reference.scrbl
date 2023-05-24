@@ -385,6 +385,11 @@ Formats the string @racket["HP: current/max"] for the summon @racket[s].
 Same as @racket[(summon-conditions s)] but sorted.
 }
 
+@defproc[(player-summon [p player?] [name string?] [max-hp positive-integer?])
+         player?]{
+Adds a @racket[summon] to @racket[p].
+}
+
 @subsection{Loot Deck}
 
 @deftogether[(
