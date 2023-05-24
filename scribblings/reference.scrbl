@@ -217,7 +217,8 @@ how many players participated in the scenario.
               [xp natural-number/c]
               [conditions (listof condition?)]
               [initiative initiative?]
-              [loot (listof loot-card?)])
+              [loot (listof loot-card?)]
+              [summons (listof summon?)])
              #:transparent]{
 A @racket[player] captures everything about a player that Frosthaven Manager
 needs.
@@ -312,6 +313,76 @@ Formats the string @racket["HP: current/max"] for the player @racket[p].
 
 @defproc[(player-conditions* [p player?]) (listof condition?)]{
 Same as @racket[(player-conditions p)] but sorted.
+}
+
+@defstruct*[summon
+             ([name string?]
+              [max-hp positive-integer?]
+              [current-hp natural-number/c]
+              [conditions (listof condition?)])
+             #:transparent]{
+A player summon. Serializable.
+}
+
+@defproc[((summon-update-name [new-name string?])
+          [s summon?])
+         summon?]{
+Transforms @racket[s] to have @racket[summon-name] equal to @racket[new-name].
+}
+
+@defproc[((summon-act-on-hp [f (-> natural-number/c number?)])
+          [s summon?])
+         summon?]{
+Transforms @racket[(summon-current-hp s)] by @racket[f]. If the result is not
+@racket[positive?] the update is ignored.
+}
+
+@defproc[((summon-act-on-max-hp [f (-> natural-number/c number?)])
+          [s summon?])
+         summon?]{
+Similarly to @racket[summon-act-on-hp], transforms @racket[(summon-max-hp s)] by
+@racket[f]. If the result is not @racket[positive?] the update is ignored.
+}
+
+@deftogether[(
+              @defproc[((summon-add-condition [c condition?]) [s summon?]) summon?]
+              @defproc[((summon-remove-condition [c condition?]) [s summon?]) summon?]
+)]{
+Transforms @racket[(summon-conditions s)] by adding or removing condition
+@racket[c].
+}
+
+@defproc[((summon-condition-handler [c? (list/c condition? boolean?)])
+          [s summon?])
+          summon?]{
+Dispatches to @racket[summon-add-condition] or @racket[summon-remove-condition]
+based on @racket[(second c?)]: @racket[#true] means
+@racket[summon-add-condition]. The condition to be added or removed is
+@racket[(first c?)].
+}
+
+@defproc[((summon-afflicted-by? [c condition?])
+          [s summon?])
+         boolean?]{
+True if-and-only-if @racket[(summon-conditions c)] includes @racket[c].
+}
+
+@defproc[(summon-dead? [s summon?]) boolean?]{
+True if-and-only-if @racket[(summon-current-hp s)] is @racket[zero?].
+
+In practice, summon HP does not currently fall below 1. This may be a bug.
+}
+
+@defproc[(summon-at-max-health? [s summon?]) boolean?]{
+True if-and-only-if @racket[(summon-current-hp s)] is @racket[(summon-max-hp s)].
+}
+
+@defproc[(summon->hp-text [s summon?]) string?]{
+Formats the string @racket["HP: current/max"] for the summon @racket[s].
+}
+
+@defproc[(summon-conditions* [s summon?]) (listof condition?)]{
+Same as @racket[(summon-conditions s)] but sorted.
 }
 
 @subsection{Loot Deck}

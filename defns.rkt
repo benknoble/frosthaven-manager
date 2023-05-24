@@ -33,7 +33,8 @@
                     [xp natural-number/c]
                     [conditions (listof condition?)]
                     [initiative initiative?]
-                    [loot (listof loot-card?)])]
+                    [loot (listof loot-card?)]
+                    [summons (listof summon?)])]
     [make-player (-> string? positive-integer? player?)]
     [player-update-name (-> string? (-> player? player?))]
     [player-act-on-hp (-> (-> natural-number/c number?)
@@ -53,7 +54,25 @@
     [player-clear-initiative (-> player? player?)]
     [player-add-loot (-> loot-card? (-> player? player?))]
     [player->hp-text (-> player? string?)]
-    [player-conditions* (-> player? (listof condition?))])
+    [player-conditions* (-> player? (listof condition?))]
+    [struct summon ([name string?]
+                    [max-hp positive-integer?]
+                    [current-hp natural-number/c]
+                    [conditions (listof condition?)])]
+    [summon-update-name (-> string? (-> summon? summon?))]
+    [summon-act-on-hp (-> (-> natural-number/c number?)
+                          (-> summon? summon?))]
+    [summon-act-on-max-hp (-> (-> natural-number/c number?)
+                              (-> summon? summon?))]
+    [summon-remove-condition (-> condition? (-> summon? summon?))]
+    [summon-add-condition (-> condition? (-> summon? summon?))]
+    [summon-condition-handler (-> (list/c condition? boolean?)
+                                  (-> summon? summon?))]
+    [summon-afflicted-by? (-> condition? (-> summon? boolean?))]
+    [summon-dead? (-> summon? boolean?)]
+    [summon-at-max-health? (-> summon? boolean?)]
+    [summon->hp-text (-> summon? string?)]
+    [summon-conditions* (-> summon? (listof condition?))])
 
   ;; loot deck
   (enum-out material-kind)
@@ -202,9 +221,9 @@
 
 ;; players
 
-(serializable-struct player [name max-hp current-hp xp conditions initiative loot] #:transparent)
+(serializable-struct player [name max-hp current-hp xp conditions initiative loot summons] #:transparent)
 (define (make-player name max-hp)
-  (player name max-hp max-hp 0 empty 0 empty))
+  (player name max-hp max-hp 0 empty 0 empty empty))
 
 (define ((player-update-name name) p)
   (struct-copy player p [name name]))
@@ -266,6 +285,53 @@
 
 (define (player-conditions* p)
   (sort (player-conditions p) string<=? #:key ~a))
+
+(serializable-struct summon [name max-hp current-hp conditions] #:transparent)
+
+(define ((summon-update-name name) s)
+  (struct-copy summon s [name name]))
+
+(define ((summon-act-on-hp proc) s)
+  (define new-hp (proc (summon-current-hp s)))
+  (if (not (>= new-hp 0))
+    s
+    (struct-copy summon s [current-hp new-hp])))
+
+(define ((summon-act-on-max-hp proc) s)
+  (define new-max-hp (proc (summon-max-hp s)))
+  (if (not (positive? new-max-hp))
+    s
+    (struct-copy summon s [max-hp new-max-hp])))
+
+(define ((summon-remove-condition c) s)
+  (define new-conditions (remove* (list c) (summon-conditions s)))
+  (struct-copy summon s [conditions new-conditions]))
+
+(define ((summon-add-condition c) s)
+  (define new-conditions (cons c (remove* (list c) (summon-conditions s))))
+  (struct-copy summon s [conditions new-conditions]))
+
+(define summon-condition-handler
+  (match-lambda
+    [`(,c #f) (summon-remove-condition c)]
+    [`(,c #t) (summon-add-condition c)]))
+
+(define ((summon-afflicted-by? c) s)
+  (and (member c (summon-conditions s)) #t))
+
+(define (summon-dead? s)
+  (zero? (summon-current-hp s)))
+
+(define (summon-at-max-health? s)
+  (>= (summon-current-hp s) (summon-max-hp s)))
+
+(define (summon->hp-text s)
+  (match s
+    [(struct* summon ([max-hp max] [current-hp current]))
+      (~a "HP: " current "/" max)]))
+
+(define (summon-conditions* s)
+  (sort (summon-conditions s) string<=? #:key ~a))
 
 ;; loot deck
 
