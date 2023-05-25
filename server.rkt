@@ -180,17 +180,13 @@
                      ,(player-name p))
                " ("
                (span ([class "player-initiative"])
-                     ,(if (initiative-public? (@! (state-@in-draw? (s))))
-                        (~a (player-initiative p))
-                        "??"))
+                     ,(~a (player-initiative p)))
                ")"
                (input ([class "player-initiative-slider"]
                        [type "range"]
                        [min "0"]
                        [max "99"]
-                       [value ,(if (initiative-public? (@! (state-@in-draw? (s))))
-                                 (~a (player-initiative p))
-                                 "0")]
+                       [value ,(~a (player-initiative p))]
                        ;; TODO
                        ;; - probably requires restructure: got to "pick" a
                        ;; player
@@ -307,9 +303,7 @@
         (hash 'id css-id
               'data (hash
                       'player-name (player-name p)
-                      'player-initiative (if (initiative-public? (@! (state-@in-draw? (s))))
-                                           (~a (player-initiative p))
-                                           "??")
+                      'player-initiative (~a (player-initiative p))
                       'player-initiative-slider (hash 'value (~a (player-initiative p)))
                       'player-HP (player->hp-text p)
                       'player-XP (~a (player-xp p))
