@@ -310,6 +310,7 @@
                       'player-initiative (if (initiative-public? (@! (state-@in-draw? (s))))
                                            (~a (player-initiative p))
                                            "??")
+                      'player-initiative-slider (hash 'value (~a (player-initiative p)))
                       'player-HP (player->hp-text p)
                       'player-XP (~a (player-xp p))
                       'player-conditions
