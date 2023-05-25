@@ -76,6 +76,12 @@
             [f (list level-info-trap-damage level-info-hazardous-terrain level-info-gold level-info-exp)])
         (define n (~> (level) get-level-info f))
         (multicast-channel-put ch `(number ,id ,n)))))
+  (obs-observe!
+    (state-@in-draw? an-s)
+    (λ (_in-draw?)
+      (for ([c (@! (state-@creatures an-s))])
+        (cond
+          [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]))))
 
   (define-values (app the-reverse-uri)
     (dispatch-rules
@@ -172,6 +178,26 @@
           `(li ([id ,(~a "player-" (creature-id c))])
                (span ([class "player-name"])
                      ,(player-name p))
+               " ("
+               (span ([class "player-initiative"])
+                     ,(~a (player-initiative p)))
+               ")"
+               (input ([class "player-initiative-slider"]
+                       [type "range"]
+                       [min "0"]
+                       [max "99"]
+                       [value ,(~a (player-initiative p))]
+                       ;; TODO
+                       ;; - probably requires restructure: got to "pick" a
+                       ;; player
+                       ;; - update slider values when player init changes, when
+                       ;; init revealed
+                       ;; - when init dragged, reveal ONLY current init (so that dragging works)
+                       [oninput
+                         ,(~a "for (element of document.querySelectorAll(\".player-initiative-slider\")) { if (element !== this) { element.disabled = true; } }"
+                              (action-script (list "player" "initiative")
+                                             (list id-binding
+                                                   (list (~s "initiative") "this.value"))))]))
                (p ,(action-button
                      (list "player" "hp" "-")
                      (list id-binding)
@@ -277,6 +303,8 @@
         (hash 'id css-id
               'data (hash
                       'player-name (player-name p)
+                      'player-initiative (~a (player-initiative p))
+                      'player-initiative-slider (hash 'value (~a (player-initiative p)))
                       'player-HP (player->hp-text p)
                       'player-XP (~a (player-xp p))
                       'player-conditions
@@ -335,6 +363,7 @@
       ['("xp" "-") (decrement-player-xp req)]
       ['("condition" "remove") (remove-player-condition req)]
       ['("condition" "add") (add-player-condition req)]
+      ['("initiative") (set-player-initiative req)]
       [_ (return (not-found req))])
     (response/empty)))
 
@@ -385,13 +414,22 @@
 (define-flow add-player-condition
   (do-player-condition #t))
 
+(define (set-player-initiative req)
+  (define binds (request-bindings req))
+  (match (~> (binds) (-< (assq 'id _) (assq 'initiative _)) collect)
+    [`((id . ,(app string->number (? number? id)))
+       (initiative . ,(app string->number (? number? init))))
+      (do (<~@ (state-@creatures (s))
+               (update-players id (flow (player-set-initiative init)))))]
+    [_ (void)]))
+
 (define (action-button actions bindings body [attrs empty])
   `(button ([type "button"]
             ,(action-click actions bindings)
             ,@attrs)
            ,body))
 
-(define (action-click actions bindings)
+(define (action-script actions bindings)
   (define URL (string-join (cons "action" actions) "/" #:before-first "/"))
   (define params
     (string-join
@@ -399,8 +437,11 @@
         (match-define (list key value) b)
         (format "[~a, ~a]" key value))
       ","))
-  `[onclick ,(format "fetch('~a', {method: 'POST', body: new URLSearchParams([~a])})"
-                     URL params)])
+  (format "fetch('~a', {method: 'POST', body: new URLSearchParams([~a])});"
+          URL params))
+
+(define (action-click actions bindings)
+  `[onclick ,(action-script actions bindings)])
 
 (define (active-condition->xexpr c id-binding)
   `(span ([class "condition"])

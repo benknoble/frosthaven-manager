@@ -68,7 +68,8 @@
     [update-player-max-hp (-> state? (-> any/c (-> natural-number/c natural-number/c) any))]
     [creature-initiative (-> (hash/c string? ability-decks?) (-> creature? (or/c +inf.0 initiative?)))]
     [add-or-remove-monster-group (-> state? (-> (or/c add-monster-event/c remove-monster-event/c) any))]
-    [draw-new-card-mid-round-if-needed (-> state? string? any)]))
+    [draw-new-card-mid-round-if-needed (-> state? string? any)]
+    [initiative-public? (-> boolean? boolean?)]))
 
 (require racket/serialize
          racket/fasl
@@ -351,3 +352,6 @@
                 (~> (ads) (hash-ref set) (not ability-decks-current)))
            (hash-update ads set ability-decks-draw-next)]
           [else ads]))))
+
+(define (initiative-public? in-draw?)
+  in-draw?)

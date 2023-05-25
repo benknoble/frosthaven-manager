@@ -986,6 +986,11 @@ It is the caller's responsibility to verify that a monster has been added and
 needs to potentially trigger a new card.
 }
 
+@defproc[(initiative-public? [in-draw? boolean?]) boolean?]{
+True if, according to @racket[in-draw?], initiative values should be publicly
+revealed.
+}
+
 @subsection{@tt{manager/ability-decks}}
 @defmodule[frosthaven-manager/manager/ability-decks]
 

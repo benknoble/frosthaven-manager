@@ -9,7 +9,16 @@ evtSource.addEventListener("element", (event) => {
 evtSource.addEventListener('player', (event) => {
   const {id, data} = JSON.parse(event.data);
   for (const css_class in data) {
-    document.querySelector(`#${id} .${css_class}`).innerHTML = data[css_class];
+    const element = document.querySelector(`#${id} .${css_class}`);
+    const d = data[css_class];
+    const typ = typeof d;
+    if (typ === 'string') {
+      element.innerHTML = d;
+    } else if (typ === 'object') {
+      for (const attr in d) {
+        element[attr] = d[attr];
+      }
+    }
   }
 });
 
