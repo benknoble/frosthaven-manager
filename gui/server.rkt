@@ -44,6 +44,6 @@
   (:= (state-@num-players s) 2)
   (:= (state-@creatures s)
       (list (creature 0 (make-player "Jack Skellington" 8))
-            (creature 1 (player "Frigg" 12 10 3 (list muddle ward) 67 empty))))
+            (creature 1 (player "Frigg" 12 10 3 (list muddle ward) 67 empty empty))))
   (launch-server s)
   (render/eventspace (manager s)))
