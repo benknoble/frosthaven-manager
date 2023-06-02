@@ -182,19 +182,18 @@
                (span ([class "player-initiative"])
                      ,(~a (player-initiative p)))
                ")"
-               (input ([class "player-initiative-slider"]
-                       [type "range"]
-                       [min "0"]
-                       [max "99"]
+               (input ([class "player-initiative-input"]
+                       [type "text"]
+                       [inputmode "numeric"]
                        [value ,(~a (player-initiative p))]
                        ;; TODO
                        ;; - probably requires restructure: got to "pick" a
                        ;; player
-                       ;; - update slider values when player init changes, when
+                       ;; - update input values when player init changes, when
                        ;; init revealed
                        ;; - when init dragged, reveal ONLY current init (so that dragging works)
                        [oninput
-                         ,(~a "for (element of document.querySelectorAll(\".player-initiative-slider\")) { if (element !== this) { element.disabled = true; } }"
+                         ,(~a "for (element of document.querySelectorAll(\".player-initiative-input\")) { if (element !== this) { element.disabled = true; } }"
                               (action-script (list "player" "initiative")
                                              (list id-binding
                                                    (list (~s "initiative") "this.value"))))]))
@@ -304,7 +303,7 @@
               'data (hash
                       'player-name (player-name p)
                       'player-initiative (~a (player-initiative p))
-                      'player-initiative-slider (hash 'value (~a (player-initiative p)))
+                      'player-initiative-input (hash 'value (~a (player-initiative p)))
                       'player-HP (player->hp-text p)
                       'player-XP (~a (player-xp p))
                       'player-conditions
@@ -418,7 +417,7 @@
   (define binds (request-bindings req))
   (match (~> (binds) (-< (assq 'id _) (assq 'initiative _)) collect)
     [`((id . ,(app string->number (? number? id)))
-       (initiative . ,(app string->number (? number? init))))
+       (initiative . ,(app string->number (? (and/c number? initiative?) init))))
       (do (<~@ (state-@creatures (s))
                (update-players id (flow (player-set-initiative init)))))]
     [_ (void)]))
