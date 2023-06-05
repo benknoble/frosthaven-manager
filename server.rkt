@@ -463,11 +463,14 @@
      c]
     [_ #f]))
 
+(define (-do-summon req f)
+  (match/values (req->player-summon-id req)
+    [{#f #f} (void)]
+    [{pid sid} (f req pid sid)]))
+
 (define-syntax-parse-rule (define/summon name:id (req:id {~literal =>} [pid:id sid:id]) e:expr ...+)
   (define (name req)
-    (match/values (req->player-summon-id req)
-      [{#f #f} (void)]
-      [{pid sid} e ...])))
+    (-do-summon req (λ (req pid sid) e ...))))
 
 (define/summon kill-summon (_r => [pid sid])
   (do-player/id pid (const #f) (player-kill-summon sid)))
