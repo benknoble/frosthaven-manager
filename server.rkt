@@ -26,6 +26,7 @@
   (except-in racket/gui null)
   racket/gui/easy
   racket/runtime-path
+  syntax/parse/define
   web-server/dispatch/syntax
   web-server/dispatch/url-patterns
   web-server/dispatch/extend
@@ -46,7 +47,7 @@
 (define reverse-uri (make-parameter #f))
 (define send-event (make-parameter #f))
 
-(define-syntax-rule (do e ...)
+(define-syntax-parse-rule (do e:expr ...+)
   ((send-event)
    (thunk e ...)))
 
@@ -462,12 +463,11 @@
      c]
     [_ #f]))
 
-;; TODO: switcht to define-syntax-parse-rule
-(define-syntax-rule (define/summon name (req => [pid sid]) e0 e ...)
+(define-syntax-parse-rule (define/summon name:id (req:id {~literal =>} [pid:id sid:id]) e:expr ...+)
   (define (name req)
     (match/values (req->player-summon-id req)
       [{#f #f} (void)]
-      [{pid sid} e0 e ...])))
+      [{pid sid} e ...])))
 
 (define/summon kill-summon (_r => [pid sid])
   (do-player/id pid (const #f) (player-kill-summon sid)))
