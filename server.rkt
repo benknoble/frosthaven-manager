@@ -31,12 +31,13 @@
   web-server/dispatch/url-patterns
   web-server/dispatch/extend
   web-server/dispatchers/filesystem-map
+  (prefix-in form: web-server/formlets)
   web-server/http
   web-server/http/bindings
   web-server/managers/lru
   web-server/page
   web-server/servlet-dispatch
-  #;web-server/servlet/web
+  web-server/servlet/web
   web-server/web-server
   (only-in xml xexpr->string)
   )
@@ -238,6 +239,8 @@
                       ,@(~> (p) player-conditions*
                             (map (flow (active-condition->xexpr id-binding)) _)
                             (add-between ", " #:before-last " and ")))))
+               (p (a ([href ,(embed/url (flow (new-summon-form (creature-id c))))])
+                     "Summon"))
                (ol
                 ([class "summons"])
                 ,@(for/list ([(s i) (in-indexed (player-summons p))])
@@ -563,3 +566,32 @@
            ,@(~> (s) summon-conditions*
                  (map (flow (active-condition->xexpr id-binding "summon")) _)
                  (add-between ", " #:before-last " and ")))))))
+
+;; required => exn:fail if not present
+(define new-summon
+  (form:formlet
+   (form:#%#
+    "Name:" ,{=> form:input-string name}
+    "Max HP:" ,{=> form:input-int max-hp}
+    ,{=> (form:submit "Summon") _submit})
+   (list name max-hp)))
+
+(define/page (new-summon-form player-id)
+  (define (handle-form-response r)
+    (define form-response
+      (with-handlers ([exn:fail? values])
+        (form:formlet-process new-summon r)))
+    (match form-response
+      [(list name max-hp)
+       (do-player/id player-id
+                     (const #f)
+                     (flow (player-summon name max-hp)))]
+      [_ (void)])
+    (overview (redirect/get)))
+  (response/xexpr
+   `(html
+     (head (title "Summon") ,@common-heads)
+     (body
+      (form ([action ,(embed/url handle-form-response)]
+             [method "post"])
+            ,@(form:formlet-display new-summon))))))
