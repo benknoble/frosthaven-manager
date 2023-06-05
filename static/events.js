@@ -7,7 +7,7 @@ evtSource.addEventListener("element", (event) => {
 });
 
 evtSource.addEventListener('player', (event) => {
-  const {id, data} = JSON.parse(event.data);
+  const {id, data, summons} = JSON.parse(event.data);
   for (const css_class in data) {
     const element = document.querySelector(`#${id} .${css_class}`);
     const d = data[css_class];
@@ -20,6 +20,8 @@ evtSource.addEventListener('player', (event) => {
       }
     }
   }
+  summons_element = document.querySelector(`#${id} ol.summons`);
+  summons_element.innerHTML = summons.join('');
 });
 
 evtSource.addEventListener('number', (event) => {

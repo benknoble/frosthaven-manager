@@ -1,6 +1,6 @@
 #lang racket
 
-; vim: lw+=define-bidi-match-expander,define-bidi-match-expander/coercions,page,define/page,lambda/page
+; vim: lw+=define-bidi-match-expander,define-bidi-match-expander/coercions,page,define/page,lambda/page,define/summon
 
 (provide
   (contract-out
@@ -87,6 +87,7 @@
     (dispatch-rules
       [("") overview]
       [("action" "player" (string-arg) (string-arg) ...) #:method "post" player-action]
+      [("action" "summon" (string-arg) (string-arg) ...) #:method "post" summon-action]
       [("action" "element" "transition") #:method "post" element-transition]
       [("events") (event-source ch)]
       [("element-pics" (element-name-arg) (element-style-arg)) element-pic]
@@ -235,7 +236,12 @@
                     (span
                       ,@(~> (p) player-conditions*
                             (map (flow (active-condition->xexpr id-binding)) _)
-                            (add-between ", " #:before-last " and "))))))))))
+                            (add-between ", " #:before-last " and ")))))
+               (ol
+                ([class "summons"])
+                ,@(for/list ([(s i) (in-indexed (player-summons p))])
+                    (define id (~a "summon-" (creature-id c) "-" i))
+                    (summon-xexpr s id))))))))
 
 (define (get-pic name style)
   ((hash-ref (hasheq 'infused elements:element-pics-infused
@@ -311,7 +317,11 @@
                           (map (flow (active-condition->xexpr id-binding)) _)
                           (add-between ", " #:before-last " and ")
                           (cons 'span _)
-                          xexpr->string))))
+                          xexpr->string))
+              'summons (for/list ([(s i) (in-indexed (player-summons p))])
+                         (define summon-id (~a "summon-" id "-" i))
+                         (define x (summon-xexpr s summon-id))
+                         (xexpr->string x))))
       (displayln "event: player" out)
       (display (format "data: ~a" (jsexpr->string data)) out)
       (displayln "\n\n" out)]
@@ -366,6 +376,17 @@
       [_ (return (not-found req))])
     (response/empty)))
 
+(define (summon-action req what args)
+  (let/ec return
+    (match (cons what args)
+      ['("kill") (kill-summon req)]
+      ['("hp" "-") (decrement-summon-hp req)]
+      ['("hp" "+") (increment-summon-hp req)]
+      ['("condition" "add") (add-summon-condition req)]
+      ['("condition" "remove") (remove-summon-condition req)]
+      [_ (return (not-found req))])
+    (response/empty)))
+
 (define (element-transition req)
   (match (assq 'id (request-bindings req))
     [`(id . ,(element-name-arg e))
@@ -380,9 +401,12 @@
 (define (do-player req guard action)
   (match (assq 'id (request-bindings req))
     [`(id . ,(app string->number (? number? id)))
-      (do (<~@ (state-@creatures (s))
-               (update-players id (flow (switch [(not guard) action])))))]
+     (do-player/id id guard action)]
     [_ (void)]))
+
+(define (do-player/id id guard action)
+  (do (<~@ (state-@creatures (s))
+           (update-players id (flow (switch [(not guard) action]))))))
 
 (define-flow increment-player-hp
   (do-player player-at-max-health? (player-act-on-hp add1)))
@@ -422,6 +446,52 @@
                (update-players id (flow (player-set-initiative init)))))]
     [_ (void)]))
 
+(define (req->player-summon-id r)
+  (match (assq 'id (request-bindings r))
+    [(cons 'id (regexp #px"summon-(\\d+)-(\\d+)"
+                       (list _
+                             (app string->number (? number? player-id))
+                             (app string->number (? number? summon-id)))))
+     (values player-id summon-id)]
+    [_ (values #f #f)]))
+
+(define (req->condition r)
+  (match (assq 'condition (request-bindings r))
+    [(cons 'condition
+           (app string->number (? selector:condition? (app selector:condition c))))
+     c]
+    [_ #f]))
+
+;; TODO: switcht to define-syntax-parse-rule
+(define-syntax-rule (define/summon name (req => [pid sid]) e0 e ...)
+  (define (name req)
+    (match/values (req->player-summon-id req)
+      [{#f #f} (void)]
+      [{pid sid} e0 e ...])))
+
+(define/summon kill-summon (_r => [pid sid])
+  (do-player/id pid (const #f) (player-kill-summon sid)))
+
+(define/summon decrement-summon-hp (_r => [pid sid])
+  (do-player/id pid
+                (flow (~> player-summons (list-ref sid) summon-dead?))
+                (update-player-summon sid (summon-act-on-hp sub1))))
+
+(define/summon increment-summon-hp (_r => [pid sid])
+  (do-player/id pid
+                (flow (~> player-summons (list-ref sid) summon-at-max-health?))
+                (update-player-summon sid (summon-act-on-hp add1))))
+
+(define/summon add-summon-condition (req => [pid sid])
+  (match (req->condition req)
+    [#f (void)]
+    [c (do-player/id pid (const #f) (update-player-summon sid (summon-add-condition c)))]))
+
+(define/summon remove-summon-condition (req => [pid sid])
+  (match (req->condition req)
+    [#f (void)]
+    [c (do-player/id pid (const #f) (update-player-summon sid (summon-remove-condition c)))]))
+
 (define (action-button actions bindings body [attrs empty])
   `(button ([type "button"]
             ,(action-click actions bindings)
@@ -442,11 +512,51 @@
 (define (action-click actions bindings)
   `[onclick ,(action-script actions bindings)])
 
-(define (active-condition->xexpr c id-binding)
+(define (active-condition->xexpr c id-binding [who "player"])
   `(span ([class "condition"])
          ,(~a c)
          ,(action-button
-            (list "player" "condition" "remove")
+            (list who "condition" "remove")
             (list id-binding
                   (list (~s "condition") (~s (~s (discriminator:condition c)))))
             "X")))
+
+;; s: summon?
+;; id: string? unique to whole page
+(define (summon-xexpr s id)
+  (define id-binding (list (~s "id") (~s id)))
+  `(li ([id ,id])
+       ,(action-button
+         (list "summon" "kill")
+         (list id-binding)
+         "Kill")
+       (span ([class "summon-name"])
+             ,(summon-name s))
+       ,(action-button
+           (list "summon" "hp" "-")
+           (list id-binding)
+           "-")
+       (span ([class "summon-HP"])
+             ,(summon->hp-text s))
+       ,(action-button
+         (list "summon" "hp" "+")
+         (list id-binding)
+         "+")
+       (p (select ([id ,(~a "select-conditions-" id)])
+                  ,@(for/list ([c conditions])
+                      `(option ([value ,(~a (discriminator:condition c))])
+                               ,(~a c))))
+          ,(action-button
+            (list "summon" "condition" "add")
+            (list id-binding
+                  (list (~s "condition")
+                        (~a "document.querySelector("
+                            (~s (~a "#select-conditions-" id))
+                            ").value")))
+            "Add Condition"))
+       (p (span
+           ([class "summon-conditions"])
+           (span
+           ,@(~> (s) summon-conditions*
+                 (map (flow (active-condition->xexpr id-binding "summon")) _)
+                 (add-between ", " #:before-last " and ")))))))
