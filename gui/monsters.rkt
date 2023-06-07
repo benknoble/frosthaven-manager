@@ -266,10 +266,11 @@
     #:stretch '(#t #f)
     (cond-view
       [(@> @monsters empty?) (hpanel (name-panel) (add-monster-button))]
-      [else (hpanel #:alignment '(center center)
-                    (name-initiative-panel)
-                    (vpanel (stats-panel)
-                            (hpanel (ability-panel) (monsters))))])))
+      [else (vpanel (hpanel #:alignment '(center center)
+                            (name-initiative-panel)
+                            (stats-panel))
+                    (ability-panel)
+                    (monsters))])))
 
 ;; TODO: should be able to manipulate individual HP (? dialog with counter)
 ;; Takes a non-observable info-db b/c instantiated by a thunk in
