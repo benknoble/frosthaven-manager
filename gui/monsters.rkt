@@ -591,7 +591,7 @@
   (define bulleted '(#rx"^" "· "))
   (define attack
     (list #px"(.*)((?i:attack))\\s+([+-])(\\d+)"
-          (skip-if-grant-or-control (keyword-sub (λ (s) (monster-stats-attack* s env)) mg))))
+          (skip-if-grant-or-control (keyword-sub (flow (monster-stats-attack* env)) mg))))
   (define move
     (list #px"(.*)((?i:move))\\s+([+-])(\\d+)"
           (skip-if-grant-or-control (keyword-sub monster-stats-move mg))))
