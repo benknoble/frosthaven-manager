@@ -25,7 +25,7 @@ begin-monster
     [6 normal [hp 8] [move 8] [attack 8]]
     [7 normal [hp 9] [move 9] [attack 9]]
 
-    [0 elite [HP 4]  [Move 2] [Attack 3]  [Bonuses {"shield 1"}]]
+    [0 elite [HP 4]  [Move 2] [Attack 3]  [Bonuses {"shield 1"}] [effects {"wound"}]]
     [1 elite [HP 5]  [Move 3] [Attack 4]  [Bonuses {"shield 1"}]]
     [2 elite [HP 6]  [Move 4] [Attack 5]  [Bonuses {"shield 1"}]]
     [3 elite [HP 7]  [Move 5] [Attack 6]  [Bonuses {"shield 2"}]]
