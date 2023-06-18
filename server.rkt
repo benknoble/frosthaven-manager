@@ -241,11 +241,8 @@
                             (add-between ", " #:before-last " and ")))))
                (p (a ([href ,(embed/url (flow (new-summon-form (creature-id c))))])
                      "Summon"))
-               (ol
-                ([class "summons"])
-                ,@(for/list ([(s i) (in-indexed (player-summons p))])
-                    (define id (~a "summon-" (creature-id c) "-" i))
-                    (summon-xexpr s id))))))))
+               (ol ([class "summons"])
+                   ,@(summons->xexprs (creature-id c) (player-summons p))))))))
 
 (define (get-pic name style)
   ((hash-ref (hasheq 'infused elements:element-pics-infused
@@ -322,10 +319,7 @@
                           (add-between ", " #:before-last " and ")
                           (cons 'span _)
                           xexpr->string))
-              'summons (for/list ([(s i) (in-indexed (player-summons p))])
-                         (define summon-id (~a "summon-" id "-" i))
-                         (define x (summon-xexpr s summon-id))
-                         (xexpr->string x))))
+              'summons (map xexpr->string (summons->xexprs id (player-summons p)))))
       (displayln "event: player" out)
       (display (format "data: ~a" (jsexpr->string data)) out)
       (displayln "\n\n" out)]
@@ -595,3 +589,8 @@
       (form ([action ,(embed/url handle-form-response)]
              [method "post"])
             ,@(form:formlet-display new-summon))))))
+
+(define (summons->xexprs summoner-id ss)
+  (for/list ([(s i) (in-indexed ss)])
+    (define id (~a "summon-" summoner-id "-" i))
+    (summon-xexpr s id)))
