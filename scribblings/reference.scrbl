@@ -698,6 +698,17 @@ Formats a single ability on a monster ability card, as from
 with calculated text and values.
 }
 
+@defproc[(monster-ability-ability->extras [ability-card (or/c #f monster-ability?)]
+                                          [ability-text string?])
+         (listof (or/c (list/c 'aoe-pict pict:pict?)))]{
+Returns a list of ``extras'' for rendering a specific @racket[ability-text] from
+a @racket[monster-ability]. The meaning of each extra spec is as follows:
+
+@itemlist[
+          @item{an extra @racket[`(aoe-pict ,aoe-pict)] means the ability had an area of effect specified by the pict.}
+]
+}
+
 @defproc[(make-monster [info monster-info?]
                        [level level/c]
                        [number monster-number/c]

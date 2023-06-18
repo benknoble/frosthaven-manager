@@ -150,6 +150,9 @@
     [monster-ability-name->text (-> (or/c #f monster-ability?) string?)]
     [monster-ability-initiative->text (-> (or/c #f monster-ability?) string?)]
     [monster-ability-ability->text (-> string? (-> monster-group? env/c string?))]
+    [monster-ability-ability->extras (-> (or/c #f monster-ability?)
+                                         string?
+                                         (listof (or/c (list/c 'aoe-pict pict:pict?))))]
     [make-monster (-> monster-info? level/c
                       monster-number/c boolean?
                       env/c
@@ -177,6 +180,7 @@
     [monster-group-first-monster (-> monster-group? (or/c #f monster-number/c))]))
 
 (require
+  (prefix-in pict: pict)
   racket/serialize
   rebellion/type/enum
   frosthaven-manager/qi
@@ -575,6 +579,23 @@
   (test-equal? "Controlled Move"
                ((monster-ability-ability->text "Control Enemy: Move +1") mg env)
                "· Control Enemy: Move +1"))
+
+(define (monster-ability-ability->extras ability-card ability-text)
+  (define aoe
+    (~> (ability-text) (regexp-match aoe-rx _) (and _ second)))
+  (define base (switch (ability-card)
+                 [monster-ability? monster-ability-location]
+                 [else "."]))
+  (define aoe-pict
+    (and aoe (~> (base aoe)
+                 build-path
+                 (switch
+                   [file-exists?
+                    (~> (dynamic-require 'aoe (thunk (const (pict:text "Not an AoE module"))))
+                        apply)]
+                   [else (gen (pict:text "AoE File Not Found"))]))))
+  (filter values
+          (list (and aoe-pict `(aoe-pict ,aoe-pict)))))
 
 (define (make-monster* stats number elite? env)
   (monster number elite? (monster-stats-max-hp* stats env) empty))

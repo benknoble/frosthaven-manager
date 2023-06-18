@@ -182,9 +182,8 @@
          (λ (ability)
            (apply vpanel
                   (for/list ([ability-text (if ability (monster-ability-abilities ability) empty)])
-                    (apply hpanel
-                           (ability->text @mg ability-text @env)
-                           (ability->extras @mg @ability ability-text)))))))))
+                    (hpanel (ability->text @mg ability-text @env)
+                            (ability->extras @mg @ability ability-text)))))))))
   (define (stats-panel)
     (hpanel
       (group "Normal" (stats-view (@> @mg monster-group-normal-stats) @env)
@@ -570,34 +569,29 @@
 (define (ability->text @mg ability @env)
   (text (obs-combine (monster-ability-ability->text ability) @mg @env)))
 
+(define (aoe-button pict)
+  (button "AoE" (thunk
+                 (with-closing-custodian/eventspace
+                  (render/eventspace
+                   #:eventspace closing-eventspace
+                   (window
+                    #:mixin close-custodian-mixin
+                    #:title "AoE pattern"
+                    #:size (~> (pict)
+                               (-< pict-width pict-height)
+                               (>< exact-ceiling) list)
+                    (pict-canvas pict values)))))))
+
 (define (ability->extras @mg @ability-card ability-text)
-  (define aoe
-    (~> (ability-text) (regexp-match aoe-rx _) (and _ second)))
-  (define @base (@~> @ability-card
-                     (switch
-                       [monster-ability? monster-ability-location]
-                       [else "."])))
-  (define-flow base->pict
-    (~> (build-path aoe)
-        (switch
-          [file-exists?
-           (~> (dynamic-require 'aoe (thunk (const (pict:text "Not an AoE module"))))
-               apply)]
-          [else (gen (pict:text "AoE File Not Found"))])))
-  (list
-   (cond
-     [aoe (button "AoE" (thunk
-                          (define @pict (@> @base base->pict))
-                          (with-closing-custodian/eventspace
-                           (render/eventspace
-                            #:eventspace closing-eventspace
-                            (window
-                             #:mixin close-custodian-mixin
-                             #:title "AoE pattern"
-                             #:size (@~> @pict (~> (-< pict-width pict-height)
-                                                   (>< exact-ceiling) list))
-                             (pict-canvas @pict values))))))]
-     [else (spacer)])))
+  (define @extras
+    (@~> @ability-card (monster-ability-ability->extras ability-text)))
+  (observable-view
+   @extras
+   (λ (extras)
+     (apply hpanel
+            (for/list ([extra extras])
+              (match extra
+                [(list 'aoe-pict pict) (aoe-button pict)]))))))
 
 (module+ main
   (require frosthaven-manager/gui/render)
