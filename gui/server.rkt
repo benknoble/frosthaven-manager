@@ -39,14 +39,22 @@
 
 (module+ main
   (require frosthaven-manager/defns
-           frosthaven-manager/qi)
+           frosthaven-manager/qi
+           frosthaven-manager/monster-db)
   (define manager (dynamic-require 'frosthaven-manager/gui/manager 'manager))
+  (define-values (info _abilities) (get-dbs default-monster-db))
+  (define mg (make-monster-group (~> (info) (hash-ref "archer") (hash-ref "hynox archer"))
+                                 1
+                                 '([1 . #t] [2 . #f] [3 . #t])
+                                 (hash)))
   (define s (make-state (@ 'play)))
+  (init-dbs default-monster-db s)
   (:= (state-@num-players s) 2)
   (:= (state-@creatures s)
       (list (creature 0 (~> ((make-player "Jack Skellington" 8))
                             (player-summon "Corpse Bro" 4)))
             (creature 1 (~> ((player "Frigg" 12 10 3 (list muddle ward) 67 empty empty))
-                            (player-summon "Banner of Courage" 7)))))
+                            (player-summon "Banner of Courage" 7)))
+            (creature 2 (monster-group* 1 mg))))
   (launch-server s)
   (render/eventspace (manager s)))
