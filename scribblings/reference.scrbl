@@ -690,6 +690,14 @@ Returns a string suitable for display to indicate the initiative of a
 possibly-absent monster ability.
 }
 
+@defproc[((monster-ability-ability->text [ability string?])
+          [mg monster-group?] [env env/c])
+         string?]{
+Formats a single ability on a monster ability card, as from
+@racket[monster-ability-abilities], by replacing keywords like ``Attack +1''
+with calculated text and values.
+}
+
 @defproc[(make-monster [info monster-info?]
                        [level level/c]
                        [number monster-number/c]

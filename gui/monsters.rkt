@@ -567,83 +567,8 @@
 
 (define aoe-rx #rx"aoe\\(([^)]+)\\)")
 
-(define ((keyword-sub stats-f mg) _match word +- amount)
-  (define op (eval (string->symbol +-) (make-base-namespace)))
-  (define amount* (string->number amount))
-  (define normal
-    (op (stats-f (monster-group-normal-stats mg)) amount*))
-  (define elite
-    (op (stats-f (monster-group-elite-stats mg)) amount*))
-  (format "~a ~a (E:~a)" word normal elite))
-
-(define ((skip-if-grant-or-control f) match before . args)
-  (if (regexp-match #px"(?i:grant)|(?i:control)" before)
-    match
-    (format "~a~a" before (apply f (substring match (string-length before)) args))))
-
-(define ((do-replacement ability) mg env)
-  (define aoe-replacement `(,aoe-rx ""))
-  (define bulleted '(#rx"^" "· "))
-  (define attack
-    (list #px"(.*)((?i:attack))\\s+([+-])(\\d+)"
-          (skip-if-grant-or-control (keyword-sub (flow (monster-stats-attack* env)) mg))))
-  (define move
-    (list #px"(.*)((?i:move))\\s+([+-])(\\d+)"
-          (skip-if-grant-or-control (keyword-sub monster-stats-move mg))))
-  (define effects
-    (list #px"(.*)(?i:attack).*"
-          (skip-if-grant-or-control
-           (λ (match)
-             (define-values (effects elite-effects)
-               (~> (mg)
-                   (-< monster-group-normal-stats monster-group-elite-stats)
-                   (>< (~> monster-stats-effects (string-join ", ")))))
-             (format "~a ~a~a"
-                     match
-                     (switch (effects)
-                       [non-empty-string? (format "(N:~a)" _)]
-                       [else ""])
-                     (switch (elite-effects)
-                       [non-empty-string? (format "(E:~a)" _)]
-                       [else ""]))))))
-  (define replacements
-    (list bulleted
-          aoe-replacement
-          attack
-          effects
-          move))
-  (regexp-replaces ability replacements))
-
-(module+ test
-  (require rackunit)
-  (define env (hash))
-  (define mg
-    (match-let-values ([{info _} (get-dbs "../testfiles/sample-bestiary-import.rkt")])
-      (make-monster-group (~> (info) (hash-ref "archer") (hash-ref "hynox archer"))
-                          0
-                          empty
-                          env)))
-  (test-equal? "Simple Attack"
-               ((do-replacement "Attack +1") mg env)
-               "· Attack 3 (E:4) (E:wound)")
-  (test-equal? "Simple Move"
-               ((do-replacement "Move +1") mg env)
-               "· Move 3 (E:3)")
-  (test-equal? "Granted Attack"
-               ((do-replacement "Grant Piranha: Attack +1") mg env)
-               "· Grant Piranha: Attack +1")
-  (test-equal? "Granted Move"
-               ((do-replacement "Grant Piranha: Move +1") mg env)
-               "· Grant Piranha: Move +1")
-  (test-equal? "Controlled Attack"
-               ((do-replacement "Control Enemy: Attack +1") mg env)
-               "· Control Enemy: Attack +1")
-  (test-equal? "Controlled Move"
-               ((do-replacement "Control Enemy: Move +1") mg env)
-               "· Control Enemy: Move +1"))
-
 (define (ability->text @mg ability @env)
-  (text (obs-combine (do-replacement ability) @mg @env)))
+  (text (obs-combine (monster-ability-ability->text ability) @mg @env)))
 
 (define (ability->extras @mg @ability-card ability-text)
   (define aoe
