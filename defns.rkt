@@ -147,6 +147,8 @@
                            [monsters (listof monster?)])]
     [monster-stats-max-hp* (-> monster-stats? env/c positive-integer?)]
     [monster-stats-attack* (-> monster-stats? env/c positive-integer?)]
+    [monster-ability-name->text (-> (or/c #f monster-ability?) string?)]
+    [monster-ability-initiative->text (-> (or/c #f monster-ability?) string?)]
     [make-monster (-> monster-info? level/c
                       monster-number/c boolean?
                       env/c
@@ -484,6 +486,16 @@
                                  "attack" x
                                  "formula" s
                                  "environment" env)])]))
+
+(define-flow (monster-ability-name->text ability)
+  (if monster-ability?
+    (~>> (-< monster-ability-name
+             (~> (if monster-ability-shuffle? " (shuffle)" "")))
+         (format "~a~a"))
+    ""))
+
+(define-flow (monster-ability-initiative->text ability)
+  (if monster-ability? (~> monster-ability-initiative ~a) "??"))
 
 (define (make-monster* stats number elite? env)
   (monster number elite? (monster-stats-max-hp* stats env) empty))

@@ -678,6 +678,18 @@ Calculates the maximum HP value of @racket[stats], which may be a formula.
 Calculates the attack value of @racket[stats], which may be a formula.
 }
 
+@defproc[(monster-ability-name->text [ability (or/c #f monster-ability?)])
+         string?]{
+Returns a string suitable for display to indicate the name of a possibly-absent
+monster ability.
+}
+
+@defproc[(monster-ability-initiative->text [ability (or/c #f monster-ability?)])
+         string?]{
+Returns a string suitable for display to indicate the initiative of a
+possibly-absent monster ability.
+}
+
 @defproc[(make-monster [info monster-info?]
                        [level level/c]
                        [number monster-number/c]

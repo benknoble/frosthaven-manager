@@ -169,22 +169,14 @@
     (vpanel #:alignment '(center center)
             #:stretch '(#f #t)
             (name-panel)
-            (text (@~> @ability (if monster-ability? (~> monster-ability-initiative ~a) "??")))
+            (text (@~> @ability monster-ability-initiative->text))
             (add-monster-button)))
   (define (ability-panel)
     (group
       "Ability"
       #:min-size (list 200 #f)
       (vpanel
-        (text
-          (@~> @ability
-               (if monster-ability?
-                 (~>> (-< monster-ability-name
-                          (~> (if monster-ability-shuffle?
-                                " (shuffle)"
-                                "")))
-                      (format "~a~a"))
-                 "")))
+        (text (@~> @ability monster-ability-name->text))
         (observable-view
          @ability
          (λ (ability)
