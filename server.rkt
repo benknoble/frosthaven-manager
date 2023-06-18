@@ -172,77 +172,10 @@
 
 (define (creatures-body embed/url)
   `((h2 "Players")
-    (ul
-      ([class "players"])
-      ,@(for/list ([c (@! (state-@creatures (s)))]
-                   #:when (player? (creature-v c)))
-          (define p (creature-v c))
-          (define id-binding (list (~s "id") (~s (~s (creature-id c)))))
-          `(li ([id ,(~a "player-" (creature-id c))])
-               (span ([class "player-name"])
-                     ,(player-name p))
-               " ("
-               (span ([class "player-initiative"])
-                     ,(~a (player-initiative p)))
-               ")"
-               (input ([class "player-initiative-input"]
-                       [type "text"]
-                       [inputmode "numeric"]
-                       [value ,(~a (player-initiative p))]
-                       ;; TODO
-                       ;; - probably requires restructure: got to "pick" a
-                       ;; player
-                       ;; - update input values when player init changes, when
-                       ;; init revealed
-                       ;; - when init dragged, reveal ONLY current init (so that dragging works)
-                       [oninput
-                         ,(~a "for (element of document.querySelectorAll(\".player-initiative-input\")) { if (element !== this) { element.disabled = true; } }"
-                              (action-script (list "player" "initiative")
-                                             (list id-binding
-                                                   (list (~s "initiative") "this.value"))))]))
-               (p ,(action-button
-                     (list "player" "hp" "-")
-                     (list id-binding)
-                     "-")
-                  (span ([class "player-HP"])
-                        ,(player->hp-text p))
-                  ,(action-button
-                     (list "player" "hp" "+")
-                     (list id-binding)
-                     "+")
-                  ,(action-button
-                     (list "player" "xp" "-")
-                     (list id-binding)
-                     "-")
-                  "XP: "
-                  (span ([class "player-XP"])
-                        ,(~a (player-xp p)))
-                  ,(action-button
-                     (list "player" "xp" "+")
-                     (list id-binding)
-                     "+"))
-               (p (select ([id ,(~a "select-conditions-" (creature-id c))])
-                          ,@(for/list ([c conditions])
-                              `(option ([value ,(~a (discriminator:condition c))])
-                                       ,(~a c))))
-                  ,(action-button
-                     (list "player" "condition" "add")
-                     (list id-binding
-                           (list (~s "condition")
-                                 (~a "document.querySelector("
-                                     (~s (~a "#select-conditions-" (creature-id c)))
-                                     ").value")))
-                     "Add Condition"))
-               (p (span
-                    ([class "player-conditions"])
-                    (span
-                      ,@(~> (p) player-conditions*
-                            (map (flow (active-condition->xexpr id-binding)) _)
-                            (add-between ", " #:before-last " and ")))))
-               (p (a ([href ,(embed/url (flow (new-summon-form (creature-id c))))])
-                     "Summon"))
-               (ol ([class "summons"])
-                   ,@(summons->xexprs (creature-id c) (player-summons p))))))))
+    (ul ([class "players"])
+        ,@(for/list ([c (@! (state-@creatures (s)))]
+                     #:when (player? (creature-v c)))
+            (player-xexpr embed/url (creature-id c) (creature-v c))))))
 
 (define (get-pic name style)
   ((hash-ref (hasheq 'infused elements:element-pics-infused
@@ -520,6 +453,74 @@
             (list id-binding
                   (list (~s "condition") (~s (~s (discriminator:condition c)))))
             "X")))
+
+(define (player-xexpr embed/url id p)
+  (define id-binding (list (~s "id") (~s (~s id))))
+  `(li ([id ,(~a "player-" id)])
+       (span ([class "player-name"])
+             ,(player-name p))
+       " ("
+       (span ([class "player-initiative"])
+             ,(~a (player-initiative p)))
+       ")"
+       (input ([class "player-initiative-input"]
+               [type "text"]
+               [inputmode "numeric"]
+               [value ,(~a (player-initiative p))]
+               ;; TODO
+               ;; - probably requires restructure: got to "pick" a
+               ;; player
+               ;; - update input values when player init changes, when
+               ;; init revealed
+               ;; - when init dragged, reveal ONLY current init (so that dragging works)
+               [oninput
+                ,(~a "for (element of document.querySelectorAll(\".player-initiative-input\")) { if (element !== this) { element.disabled = true; } }"
+                     (action-script (list "player" "initiative")
+                                    (list id-binding
+                                          (list (~s "initiative") "this.value"))))]))
+       (p ,(action-button
+            (list "player" "hp" "-")
+            (list id-binding)
+            "-")
+          (span ([class "player-HP"])
+                ,(player->hp-text p))
+          ,(action-button
+            (list "player" "hp" "+")
+            (list id-binding)
+            "+")
+          ,(action-button
+            (list "player" "xp" "-")
+            (list id-binding)
+            "-")
+          "XP: "
+          (span ([class "player-XP"])
+                ,(~a (player-xp p)))
+          ,(action-button
+            (list "player" "xp" "+")
+            (list id-binding)
+            "+"))
+       (p (select ([id ,(~a "select-conditions-" id)])
+                  ,@(for/list ([c conditions])
+                      `(option ([value ,(~a (discriminator:condition c))])
+                               ,(~a c))))
+          ,(action-button
+            (list "player" "condition" "add")
+            (list id-binding
+                  (list (~s "condition")
+                        (~a "document.querySelector("
+                            (~s (~a "#select-conditions-" id))
+                            ").value")))
+            "Add Condition"))
+       (p (span
+           ([class "player-conditions"])
+           (span
+            ,@(~> (p) player-conditions*
+                  (map (flow (active-condition->xexpr id-binding)) _)
+                  (add-between ", " #:before-last " and ")))))
+       (p (a ([href ,(embed/url (flow (new-summon-form id)))])
+             "Summon"))
+       (ol ([class "summons"])
+           ,@(summons->xexprs id (player-summons p)))))
 
 ;; s: summon?
 ;; id: string? unique to whole page
