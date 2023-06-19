@@ -793,6 +793,11 @@ The number of the first monster in the monster group @racket[mg], or
 @racket[#false] if there are no such monsters.
 }
 
+@defproc[(monster->hp-text [m monster?] [ms monster-stats] [env env/c])
+         string?]{
+Formats the string @racket["HP: current/max"] for the monster @racket[m].
+}
+
 @section{@tt{elements}}
 @defmodule[frosthaven-manager/elements]
 

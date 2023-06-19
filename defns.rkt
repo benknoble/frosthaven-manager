@@ -177,7 +177,8 @@
                               (-> monster-group? monster-group?))]
     [monster-group-add (-> monster-number/c boolean? env/c
                            (-> monster-group? monster-group?))]
-    [monster-group-first-monster (-> monster-group? (or/c #f monster-number/c))]))
+    [monster-group-first-monster (-> monster-group? (or/c #f monster-number/c))]
+    [monster->hp-text (-> monster? monster-stats? env/c string?)]))
 
 (require
   (prefix-in pict: pict)
@@ -730,3 +731,7 @@
   (if (positive? new-hp)
     (struct-copy monster m [current-hp new-hp])
     m))
+
+(define-flow (monster->hp-text m ms env)
+  (~>> (group 1 monster-current-hp monster-stats-max-hp*)
+       (format "HP: ~a/~a")))

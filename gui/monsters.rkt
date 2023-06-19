@@ -108,12 +108,9 @@
   (hpanel
     (vpanel
       #:stretch '(#f #t)
-      (counter
-        (obs-combine
-          (flow (~>> (group 1 monster-current-hp monster-stats-max-hp*) (format "HP: ~a/~a")))
-          @monster @monster-stats @env)
-        add-hp
-        subtract-hp)
+      (counter (obs-combine monster->hp-text @monster @monster-stats @env)
+               add-hp
+               subtract-hp)
       (button "💀Kill💀" on-kill))
     (vpanel
       (text (@~> @monster (~> monster-conditions
