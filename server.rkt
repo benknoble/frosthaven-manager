@@ -1,6 +1,6 @@
 #lang racket
 
-; vim: lw+=define-bidi-match-expander,define-bidi-match-expander/coercions,page,define/page,lambda/page,define/summon
+; vim: lw+=define-bidi-match-expander,define-bidi-match-expander/coercions,page,define/page,lambda/page,define/summon,define/monster
 
 (provide
   (contract-out
@@ -39,8 +39,7 @@
   web-server/servlet-dispatch
   web-server/servlet/web
   web-server/web-server
-  (only-in xml xexpr->string)
-  )
+  (only-in xml xexpr->string string->xexpr))
 
 (define-runtime-path static "static")
 
@@ -65,9 +64,12 @@
   (obs-observe!
     (state-@creatures an-s)
     (λ (creatures)
+      (define env (@! (state-@env an-s)))
+      (define ads (@! (state-@ability-decks an-s)))
       (for ([c creatures])
         (cond
-          [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]))))
+          [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]
+          [(monster-group*? (creature-v c)) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))))
   (obs-observe! (state-@round an-s) (λ (r) (multicast-channel-put ch `(number round ,r))))
   (obs-observe! (state-@num-players an-s)
                 (λ (n) (multicast-channel-put ch `(number inspiration ,(inspiration-reward n)))))
@@ -81,15 +83,33 @@
   (obs-observe!
     (state-@in-draw? an-s)
     (λ (_in-draw?)
+      (define env (@! (state-@env an-s)))
+      (define ads (@! (state-@ability-decks an-s)))
       (for ([c (@! (state-@creatures an-s))])
         (cond
-          [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]))))
+          [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]
+          [(monster-group*? (creature-v c)) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))))
+  (obs-observe!
+   (state-@env an-s)
+   (λ (env)
+     (define ads (@! (state-@ability-decks an-s)))
+     (for ([c (@! (state-@creatures an-s))])
+       (cond
+         [(monster-group*? (creature-v c)) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))))
+  (obs-observe!
+   (state-@ability-decks an-s)
+   (λ (ads)
+     (define env (@! (state-@env an-s)))
+     (for ([c (@! (state-@creatures an-s))])
+       (cond
+         [(monster-group*? (creature-v c)) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))))
 
   (define-values (app the-reverse-uri)
     (dispatch-rules
       [("") overview]
       [("action" "player" (string-arg) (string-arg) ...) #:method "post" player-action]
       [("action" "summon" (string-arg) (string-arg) ...) #:method "post" summon-action]
+      [("action" "monster" (string-arg) (string-arg) ...) #:method "post" monster-action]
       [("action" "element" "transition") #:method "post" element-transition]
       [("events") (event-source ch)]
       [("element-pics" (element-name-arg) (element-style-arg)) element-pic]
@@ -175,7 +195,16 @@
     (ul ([class "players"])
         ,@(for/list ([c (@! (state-@creatures (s)))]
                      #:when (player? (creature-v c)))
-            (player-xexpr embed/url (creature-id c) (creature-v c))))))
+            (player-xexpr embed/url (creature-id c) (creature-v c))))
+    (h2 "Monsters")
+    (ul ([class "monsters"])
+        ,@(let ([env (@! (state-@env (s)))]
+                [ability-decks (@! (state-@ability-decks (s)))])
+            (for/list ([c (@! (state-@creatures (s)))]
+                       #:when (monster-group*? (creature-v c)))
+              (define mg (monster-group*-mg (creature-v c)))
+              (define ability (~>> (mg) monster-group-set-name (hash-ref ability-decks) ability-decks-current))
+              (monster-group-xexpr (creature-id c) mg ability env))))))
 
 (define (get-pic name style)
   ((hash-ref (hasheq 'infused elements:element-pics-infused
@@ -256,6 +285,27 @@
       (displayln "event: player" out)
       (display (format "data: ~a" (jsexpr->string data)) out)
       (displayln "\n\n" out)]
+    [(list 'monster-group* c env ads)
+     (define mg (monster-group*-mg (creature-v c)))
+     (define id (creature-id c))
+     (define id-binding (list (~s "id") (~s (~s id))))
+     (define css-id (~a "monster-group-" id))
+     (define ability (~>> (mg) monster-group-set-name (hash-ref ads) ability-decks-current))
+     (define data
+       (hash 'id css-id
+             'data (hash
+                    'monster-group-name (monster-group-name mg)
+                    'monster-group-initiative (monster-ability-initiative->text ability)
+                    'monster-ability-name (monster-ability-name->text ability)
+                    'monster-ability-abilities (~>> (mg ability env)
+                                                    monster-ability-xexpr
+                                                    (map xexpr->string))
+                    'monsters (~>> (id (monster-group-monsters mg) mg env)
+                                   monsters->xexprs
+                                   (map xexpr->string)))))
+     (displayln "event: monster-group" out)
+     (display (format "data: ~a" (jsexpr->string data)) out)
+     (displayln "\n\n" out)]
     [`(number ,id ,(? number? n))
       (define data (hash 'id (~a id) 'n n))
       (displayln "event: number" out)
@@ -315,6 +365,17 @@
       ['("hp" "+") (increment-summon-hp req)]
       ['("condition" "add") (add-summon-condition req)]
       ['("condition" "remove") (remove-summon-condition req)]
+      [_ (return (not-found req))])
+    (response/empty)))
+
+(define (monster-action req what args)
+  (let/ec return
+    (match (cons what args)
+      ['("kill") (kill-monster req)]
+      ['("hp" "-") (decrement-monster-hp req)]
+      ['("hp" "+") (increment-monster-hp req)]
+      ['("condition" "add") (add-monster-condition req)]
+      ['("condition" "remove") (remove-monster-condition req)]
       [_ (return (not-found req))])
     (response/empty)))
 
@@ -424,6 +485,60 @@
   (match (req->condition req)
     [#f (void)]
     [c (do-player/id pid (const #f) (update-player-summon sid (summon-remove-condition c)))]))
+
+(define (req->monster-ids r)
+  (match (assq 'id (request-bindings r))
+    [(cons 'id (regexp #px"monster-(\\d+)-(\\d+)"
+                       (list _
+                             (app string->number (? number? monster-group-id))
+                             (app string->number (? number? monster-number)))))
+     (values monster-group-id monster-number)]
+    [_ (values #f #f)]))
+
+(define (do-monster-group/mgid mgid action [action-n (flow 1>)])
+  (do (<~@ (state-@creatures (s))
+           (update-monster-groups mgid action action-n))))
+
+(define (do-monster-group/n mgid mn action)
+  (do-monster-group/mgid mgid (monster-group-update-num mn action)))
+
+(define (-do-monster req f)
+  (match/values (req->monster-ids req)
+    [{#f #f} (void)]
+    [{mgid mn} (f req mgid mn)]))
+
+(define-syntax-parse-rule (define/monster name:id (req:id {~literal =>} [monster-group-id:id monster-number:id])
+                                          e:expr ...+)
+  (define (name req)
+    (-do-monster req (λ (req monster-group-id monster-number) e ...))))
+
+(define/monster kill-monster (_r => [mgid mn])
+  (do-monster-group/mgid mgid (monster-group-remove mn) (flow (~> 2> monster-group-first-monster))))
+
+(define/monster decrement-monster-hp (_r => [mgid mn])
+  (do-monster-group/n mgid mn (flow (switch [(not monster-dead?) (monster-update-hp sub1)]))))
+
+(define/monster increment-monster-hp (_r => [mgid mn])
+  (define inc-hp (monster-update-hp add1))
+  (define ((inc-hp/mg mg) m)
+    (define stats (get-monster-stats mg m))
+    (cond
+      [(monster-at-max-health? m stats (@! (state-@env (s)))) m]
+      [else (inc-hp m)]))
+  (define (inc-hp/mg/n mg)
+    (define do-it (monster-group-update-num mn (inc-hp/mg mg)))
+    (do-it mg))
+  (do-monster-group/mgid mgid inc-hp/mg/n))
+
+(define/monster add-monster-condition (req => [mgid mn])
+  (match (req->condition req)
+    [#f (void)]
+    [c (do-monster-group/n mgid mn (monster-update-condition c #t))]))
+
+(define/monster remove-monster-condition (req => [mgid mn])
+  (match (req->condition req)
+    [#f (void)]
+    [c (do-monster-group/n mgid mn (monster-update-condition c #f))]))
 
 (define (action-button actions bindings body [attrs empty])
   `(button ([type "button"]
@@ -595,3 +710,74 @@
   (for/list ([(s i) (in-indexed ss)])
     (define id (~a "summon-" summoner-id "-" i))
     (summon-xexpr s id)))
+
+(define (monster-group-xexpr id mg ability env)
+  (define id-binding (list (~s "id") (~s (~s id))))
+  `(li ([id ,(~a "monster-group-" id)])
+       (span ([class "monster-group-name"])
+             ,(monster-group-name mg))
+       " ("
+       (span ([class "monster-group-initiative"])
+             ,(monster-ability-initiative->text ability))
+       ")"
+       ;; TODO: collapsible stats
+       (p ([class "monster-ability"])
+          (span ([class "monster-ability-name"]) ,(monster-ability-name->text ability))
+          ;; abuse of tables…
+          (table ([class "monster-ability-abilities"])
+                 ,@(monster-ability-xexpr mg ability env)))
+       ;; TODO Add Monster(s)
+       (div ([class "monsters"])
+            ,@(monsters->xexprs id (monster-group-monsters mg) mg env))))
+
+(define (monster-ability-xexpr mg ability env)
+  (for/list ([the-ability (if ability (monster-ability-abilities ability) empty)])
+    (define extras (monster-ability-ability->extras ability the-ability))
+    `(tr
+      (td ,((monster-ability-ability->text the-ability) mg env))
+      ,@(for/list ([extra extras])
+          (match extra
+            [(list 'aoe-pict pict)
+             (define svg
+               (string->xexpr (bytes->string/utf-8 (convert pict 'svg-bytes))))
+             `(td (span ([class "aoe"]) ,svg))])))))
+
+(define (monsters->xexprs group-id monsters mg env)
+  (for/list ([monster monsters])
+    (define id (~a "monster-" group-id "-" (monster-number monster)))
+    (monster-xexpr id monster mg env)))
+
+(define (monster-xexpr id m mg env)
+  (define id-binding (list (~s "id") (~s id)))
+  `(div ([id ,id])
+        ,(action-button (list "monster" "kill")
+                        (list id-binding)
+                        "Kill")
+        (span ([class "monster-number"])
+              ,(~a (monster-number m))
+              ,(if (monster-elite? m) "(E)" ""))
+        ,(action-button (list "monster" "hp" "-")
+                        (list id-binding)
+                        "-")
+        (span ([class "monster-HP"])
+              ,(monster->hp-text m (get-monster-stats mg m) env))
+        ,(action-button (list "monster" "hp" "+")
+                        (list id-binding)
+                        "+")
+        (p (select ([id ,(~a "select-conditions-" id)])
+                   ,@(for/list ([c conditions])
+                       `(option ([value ,(~a (discriminator:condition c))])
+                                ,(~a c))))
+           ,(action-button
+             (list "monster" "condition" "add")
+             (list id-binding
+                   (list (~s "condition")
+                         (~a "document.querySelector("
+                             (~s (~a "#select-conditions-" id))
+                             ").value")))
+             "Add Condition"))
+        (p (span ([class "monster-conditions"])
+                 (span
+                  ,@(~> (m) monster-conditions
+                        (map (flow (active-condition->xexpr id-binding "monster")) _)
+                        (add-between ", " #:before-last " and ")))))))
