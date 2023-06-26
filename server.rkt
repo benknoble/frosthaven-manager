@@ -41,15 +41,52 @@
   web-server/web-server
   (only-in xml xexpr->string string->xexpr))
 
+;;;; PREAMBLE
+;;;; Macros, parameters, other definitions
+
 (define-runtime-path static "static")
 
+;; simplify calling convention for server-generated pages
 (define s (make-parameter #f))
 (define reverse-uri (make-parameter #f))
 (define send-event (make-parameter #f))
 
+;; "do" e in a different context… (namely, the one which invoked the server)
 (define-syntax-parse-rule (do e:expr ...+)
   ((send-event)
    (thunk e ...)))
+
+(define-syntax-rule (define-bidi-match-expander/coercions id in-test? in out-test? out)
+  (begin
+    (define-coercion-match-expander in/m in-test? in)
+    (define-coercion-match-expander out/m out-test? out)
+    (define-bidi-match-expander id in/m out/m)))
+
+(define-bidi-match-expander/coercions element-name-arg
+  (or/c "Fire" "Ice" "Air" "Earth" "Light" "Dark") string->symbol
+  (or/c 'Fire 'Ice 'Air 'Earth 'Light 'Dark) symbol->string)
+
+(define-bidi-match-expander/coercions element-style-arg
+  (or/c "infused" "waning" "unfused") string->symbol
+  (or/c 'infused 'waning 'unfused) symbol->string)
+
+;; evaluates e if player id (pid) and summon id (sid) can be extracted from req
+(define-syntax-parse-rule (define/summon name:id (req:id {~literal =>} [pid:id sid:id]) e:expr ...+)
+  (define (name req)
+    (-do-summon req (λ (req pid sid) e ...))))
+
+;; evalutes e if monster group id and monster number can be extracted from req
+(define-syntax-parse-rule (define/monster name:id (req:id {~literal =>} [monster-group-id:id monster-number:id])
+                                          e:expr ...+)
+  (define (name req)
+    (-do-monster req (λ (req monster-group-id monster-number) e ...))))
+
+;; safe way to evaluate selector:condition, which contract errors when the
+;; input is outside the domain; if this produces #t, input is a valid condition
+;; number
+(define selector:condition? (make-coerce-safe? selector:condition))
+
+;;;; MAIN ENTRYPOINT
 
 (define (launch-server an-s a-send-event)
   ;; each request thread get its own receiver, so that they can all see the
@@ -137,6 +174,34 @@
                      (dispatch/servlet app #:manager manager))
         #:port port))))
 
+;;;; X-EXPRS
+
+(define common-heads
+  `((meta ([name "viewport"] [content "width=device-width, initial-scale=1.0"]))
+    (meta ([charset "UTF-8"]))))
+
+(define (expired-page req)
+  (response/xexpr
+    `(html
+       (head
+         (title "Page Has Expired.")
+         ,@common-heads)
+       (body
+         (p "Sorry, this page has expired."
+            (a ([href ,(url->string (url-sans-param (request-uri req)))])
+               "This page")
+            " may be the one you wanted.")))))
+
+(define (not-found _req)
+  (response/xexpr
+    #:code 404
+    `(html
+       (head
+         (title "Not Found")
+         ,@common-heads)
+       (body
+         (h1 "Not Found")))))
+
 (define/page (overview)
   (response/xexpr
     `(html
@@ -205,369 +270,6 @@
               (define mg (monster-group*-mg (creature-v c)))
               (define ability (~>> (mg) monster-group-set-name (hash-ref ability-decks) ability-decks-current))
               (monster-group-xexpr (creature-id c) mg ability env))))))
-
-(define (get-pic name style)
-  ((hash-ref (hasheq 'infused elements:element-pics-infused
-                     'waning elements:element-pics-waning
-                     'unfused elements:element-pics-unfused)
-             style)
-   ((hash-ref (hasheq 'Fire elements:fire 'Ice elements:ice 'Air elements:air
-                      'Earth elements:earth 'Light elements:light 'Dark elements:dark)
-              name))))
-
-(define (element-pic _req name style)
-  (response/output
-    (λ (o)
-      (write-bytes (convert (get-pic name style) 'svg-bytes) o))
-    #:mime-type #"image/svg+xml"))
-
-(define-syntax-rule (define-bidi-match-expander/coercions id in-test? in out-test? out)
-  (begin
-    (define-coercion-match-expander in/m in-test? in)
-    (define-coercion-match-expander out/m out-test? out)
-    (define-bidi-match-expander id in/m out/m)))
-
-(define-bidi-match-expander/coercions element-name-arg
-  (or/c "Fire" "Ice" "Air" "Earth" "Light" "Dark") string->symbol
-  (or/c 'Fire 'Ice 'Air 'Earth 'Light 'Dark) symbol->string)
-
-(define-bidi-match-expander/coercions element-style-arg
-  (or/c "infused" "waning" "unfused") string->symbol
-  (or/c 'infused 'waning 'unfused) symbol->string)
-
-(define ((event-source ch) _req)
-  (define receiver (make-multicast-receiver ch))
-  (response/output
-    #:headers (list (header #"Cache-Control" #"no-store")
-                    (header #"Content-Type" #"text/event-stream")
-                    ;; Don't use Connection in HTTP/2 or HTTP/3, but Racket's
-                    ;; web-server is HTTP/1.1 as confirmed by
-                    ;; `curl -vso /dev/null --http2 <addr>`.
-                    (header #"Connection" #"keep-alive")
-                    ;; Pairs with Connection; since our event source sends data
-                    ;; every 5 seconds at minimum, this 10s timeout should be
-                    ;; sufficient.
-                    (header #"Keep-Alive" #"timeout=10"))
-    (λ (out)
-      (let loop ()
-        (cond
-          [(sync/timeout 5 receiver) => (event-stream out)]
-          [else (displayln ":" out)])
-        (loop)))))
-
-(define (event-stream out)
-  (match-lambda
-    [`(element ,name ,state)
-      (define data (hash 'name name 'state (symbol->string state)))
-      (displayln "event: element" out)
-      (display (format "data: ~a" (jsexpr->string data)) out)
-      (display "\n\n" out)]
-    [`(player ,c)
-      (define p (creature-v c))
-      (define id (creature-id c))
-      (define id-binding (list (~s "id") (~s (~s id))))
-      (define css-id (~a "player-" id))
-      (define data
-        (hash 'id css-id
-              'data (hash
-                      'player-name (player-name p)
-                      'player-initiative (~a (player-initiative p))
-                      'player-initiative-input (hash 'value (~a (player-initiative p)))
-                      'player-HP (player->hp-text p)
-                      'player-XP (~a (player-xp p))
-                      'player-conditions
-                      (~> (p) player-conditions*
-                          (map (flow (active-condition->xexpr id-binding)) _)
-                          (add-between ", " #:before-last " and ")
-                          (cons 'span _)
-                          xexpr->string))
-              'summons (map xexpr->string (summons->xexprs id (player-summons p)))))
-      (displayln "event: player" out)
-      (display (format "data: ~a" (jsexpr->string data)) out)
-      (displayln "\n\n" out)]
-    [(list 'monster-group* c env ads)
-     (define mg (monster-group*-mg (creature-v c)))
-     (define id (creature-id c))
-     (define id-binding (list (~s "id") (~s (~s id))))
-     (define css-id (~a "monster-group-" id))
-     (define ability (~>> (mg) monster-group-set-name (hash-ref ads) ability-decks-current))
-     (define data
-       (hash 'id css-id
-             'data (hash
-                    'monster-group-name (monster-group-name mg)
-                    'monster-group-initiative (monster-ability-initiative->text ability)
-                    'monster-ability-name (monster-ability-name->text ability)
-                    'monster-ability-abilities (~>> (mg ability env)
-                                                    monster-ability-xexpr
-                                                    (map xexpr->string))
-                    'monsters (~>> (id (monster-group-monsters mg) mg env)
-                                   monsters->xexprs
-                                   (map xexpr->string)))))
-     (displayln "event: monster-group" out)
-     (display (format "data: ~a" (jsexpr->string data)) out)
-     (displayln "\n\n" out)]
-    [`(number ,id ,(? number? n))
-      (define data (hash 'id (~a id) 'n n))
-      (displayln "event: number" out)
-      (display (format "data: ~a" (jsexpr->string data)) out)
-      (displayln "\n\n" out)]))
-
-(define (not-found _req)
-  (response/xexpr
-    #:code 404
-    `(html
-       (head
-         (title "Not Found")
-         ,@common-heads)
-       (body
-         (h1 "Not Found")))))
-
-(define (expired-page req)
-  (response/xexpr
-    `(html
-       (head
-         (title "Page Has Expired.")
-         ,@common-heads)
-       (body
-         (p "Sorry, this page has expired."
-            (a ([href ,(url->string (url-sans-param (request-uri req)))])
-               "This page")
-            " may be the one you wanted.")))))
-
-(define common-heads
-  `((meta ([name "viewport"] [content "width=device-width, initial-scale=1.0"]))
-    (meta ([charset "UTF-8"]))))
-
-(define (url-sans-param u)
-  (struct-copy url u [path (map path/param-sans-param (url-path u))]))
-
-(define (path/param-sans-param pp)
-  (struct-copy path/param pp [param empty]))
-
-(define (player-action req what args)
-  (let/ec return
-    (match (cons what args)
-      ['("hp" "+") (increment-player-hp req)]
-      ['("hp" "-") (decrement-player-hp req)]
-      ['("xp" "+") (increment-player-xp req)]
-      ['("xp" "-") (decrement-player-xp req)]
-      ['("condition" "remove") (remove-player-condition req)]
-      ['("condition" "add") (add-player-condition req)]
-      ['("initiative") (set-player-initiative req)]
-      [_ (return (not-found req))])
-    (response/empty)))
-
-(define (summon-action req what args)
-  (let/ec return
-    (match (cons what args)
-      ['("kill") (kill-summon req)]
-      ['("hp" "-") (decrement-summon-hp req)]
-      ['("hp" "+") (increment-summon-hp req)]
-      ['("condition" "add") (add-summon-condition req)]
-      ['("condition" "remove") (remove-summon-condition req)]
-      [_ (return (not-found req))])
-    (response/empty)))
-
-(define (monster-action req what args)
-  (let/ec return
-    (match (cons what args)
-      ['("kill") (kill-monster req)]
-      ['("hp" "-") (decrement-monster-hp req)]
-      ['("hp" "+") (increment-monster-hp req)]
-      ['("condition" "add") (add-monster-condition req)]
-      ['("condition" "remove") (remove-monster-condition req)]
-      [_ (return (not-found req))])
-    (response/empty)))
-
-(define (element-transition req)
-  (match (assq 'id (request-bindings req))
-    [`(id . ,(element-name-arg e))
-      (define @e-state
-        (~>> ((list 'Fire 'Ice 'Air 'Earth 'Light 'Dark)
-              (state-@elements (s)))
-             (map cons) (assq e) cdr))
-      (do (<@ @e-state transition-element-state))
-      (response/empty)]
-    [(or `(id . ,_) #f) (not-found req)]))
-
-(define (do-player req guard action)
-  (match (assq 'id (request-bindings req))
-    [`(id . ,(app string->number (? number? id)))
-     (do-player/id id guard action)]
-    [_ (void)]))
-
-(define (do-player/id id guard action)
-  (do (<~@ (state-@creatures (s))
-           (update-players id (flow (switch [(not guard) action]))))))
-
-(define-flow increment-player-hp
-  (do-player player-at-max-health? (player-act-on-hp add1)))
-
-(define-flow decrement-player-hp
-  (do-player player-dead? (player-act-on-hp sub1)))
-
-(define-flow increment-player-xp
-  (do-player (const #f) (player-act-on-xp add1)))
-
-(define-flow decrement-player-xp
-  (do-player (flow (~> player-xp zero?)) (player-act-on-xp sub1)))
-
-(define selector:condition? (make-coerce-safe? selector:condition))
-(define (do-player-condition req add-or-remove)
-  (define binds (request-bindings req))
-  (match (~> (binds) (-< (assq 'id _) (assq 'condition _)) collect)
-    [`((id . ,(app string->number (? number? id)))
-       (condition . ,(app string->number (? selector:condition? (app selector:condition c)))))
-      (define c? (list c add-or-remove))
-      (do (<~@ (state-@creatures (s))
-               (update-players id (player-condition-handler c?))))]
-    [_ (void)]))
-
-(define-flow remove-player-condition
-  (do-player-condition #f))
-
-(define-flow add-player-condition
-  (do-player-condition #t))
-
-(define (set-player-initiative req)
-  (define binds (request-bindings req))
-  (match (~> (binds) (-< (assq 'id _) (assq 'initiative _)) collect)
-    [`((id . ,(app string->number (? number? id)))
-       (initiative . ,(app string->number (? (and/c number? initiative?) init))))
-      (do (<~@ (state-@creatures (s))
-               (update-players id (flow (player-set-initiative init)))))]
-    [_ (void)]))
-
-(define (req->player-summon-id r)
-  (match (assq 'id (request-bindings r))
-    [(cons 'id (regexp #px"summon-(\\d+)-(\\d+)"
-                       (list _
-                             (app string->number (? number? player-id))
-                             (app string->number (? number? summon-id)))))
-     (values player-id summon-id)]
-    [_ (values #f #f)]))
-
-(define (req->condition r)
-  (match (assq 'condition (request-bindings r))
-    [(cons 'condition
-           (app string->number (? selector:condition? (app selector:condition c))))
-     c]
-    [_ #f]))
-
-(define (-do-summon req f)
-  (match/values (req->player-summon-id req)
-    [{#f #f} (void)]
-    [{pid sid} (f req pid sid)]))
-
-(define-syntax-parse-rule (define/summon name:id (req:id {~literal =>} [pid:id sid:id]) e:expr ...+)
-  (define (name req)
-    (-do-summon req (λ (req pid sid) e ...))))
-
-(define/summon kill-summon (_r => [pid sid])
-  (do-player/id pid (const #f) (player-kill-summon sid)))
-
-(define/summon decrement-summon-hp (_r => [pid sid])
-  (do-player/id pid
-                (flow (~> player-summons (list-ref sid) summon-dead?))
-                (update-player-summon sid (summon-act-on-hp sub1))))
-
-(define/summon increment-summon-hp (_r => [pid sid])
-  (do-player/id pid
-                (flow (~> player-summons (list-ref sid) summon-at-max-health?))
-                (update-player-summon sid (summon-act-on-hp add1))))
-
-(define/summon add-summon-condition (req => [pid sid])
-  (match (req->condition req)
-    [#f (void)]
-    [c (do-player/id pid (const #f) (update-player-summon sid (summon-add-condition c)))]))
-
-(define/summon remove-summon-condition (req => [pid sid])
-  (match (req->condition req)
-    [#f (void)]
-    [c (do-player/id pid (const #f) (update-player-summon sid (summon-remove-condition c)))]))
-
-(define (req->monster-ids r)
-  (match (assq 'id (request-bindings r))
-    [(cons 'id (regexp #px"monster-(\\d+)-(\\d+)"
-                       (list _
-                             (app string->number (? number? monster-group-id))
-                             (app string->number (? number? monster-number)))))
-     (values monster-group-id monster-number)]
-    [_ (values #f #f)]))
-
-(define (do-monster-group/mgid mgid action [action-n (flow 1>)])
-  (do (<~@ (state-@creatures (s))
-           (update-monster-groups mgid action action-n))))
-
-(define (do-monster-group/n mgid mn action)
-  (do-monster-group/mgid mgid (monster-group-update-num mn action)))
-
-(define (-do-monster req f)
-  (match/values (req->monster-ids req)
-    [{#f #f} (void)]
-    [{mgid mn} (f req mgid mn)]))
-
-(define-syntax-parse-rule (define/monster name:id (req:id {~literal =>} [monster-group-id:id monster-number:id])
-                                          e:expr ...+)
-  (define (name req)
-    (-do-monster req (λ (req monster-group-id monster-number) e ...))))
-
-(define/monster kill-monster (_r => [mgid mn])
-  (do-monster-group/mgid mgid (monster-group-remove mn) (flow (~> 2> monster-group-first-monster))))
-
-(define/monster decrement-monster-hp (_r => [mgid mn])
-  (do-monster-group/n mgid mn (flow (switch [(not monster-dead?) (monster-update-hp sub1)]))))
-
-(define/monster increment-monster-hp (_r => [mgid mn])
-  (define inc-hp (monster-update-hp add1))
-  (define ((inc-hp/mg mg) m)
-    (define stats (get-monster-stats mg m))
-    (cond
-      [(monster-at-max-health? m stats (@! (state-@env (s)))) m]
-      [else (inc-hp m)]))
-  (define (inc-hp/mg/n mg)
-    (define do-it (monster-group-update-num mn (inc-hp/mg mg)))
-    (do-it mg))
-  (do-monster-group/mgid mgid inc-hp/mg/n))
-
-(define/monster add-monster-condition (req => [mgid mn])
-  (match (req->condition req)
-    [#f (void)]
-    [c (do-monster-group/n mgid mn (monster-update-condition c #t))]))
-
-(define/monster remove-monster-condition (req => [mgid mn])
-  (match (req->condition req)
-    [#f (void)]
-    [c (do-monster-group/n mgid mn (monster-update-condition c #f))]))
-
-(define (action-button actions bindings body [attrs empty])
-  `(button ([type "button"]
-            ,(action-click actions bindings)
-            ,@attrs)
-           ,body))
-
-(define (action-script actions bindings)
-  (define URL (string-join (cons "action" actions) "/" #:before-first "/"))
-  (define params
-    (string-join
-      (for/list ([b bindings])
-        (match-define (list key value) b)
-        (format "[~a, ~a]" key value))
-      ","))
-  (format "fetch('~a', {method: 'POST', body: new URLSearchParams([~a])});"
-          URL params))
-
-(define (action-click actions bindings)
-  `[onclick ,(action-script actions bindings)])
-
-(define (active-condition->xexpr c id-binding [who "player"])
-  `(span ([class "condition"])
-         ,(~a c)
-         ,(action-button
-            (list who "condition" "remove")
-            (list id-binding
-                  (list (~s "condition") (~s (~s (discriminator:condition c)))))
-            "X")))
 
 (define (player-xexpr embed/url id p)
   (define id-binding (list (~s "id") (~s (~s id))))
@@ -712,7 +414,6 @@
     (summon-xexpr s id)))
 
 (define (monster-group-xexpr id mg ability env)
-  (define id-binding (list (~s "id") (~s (~s id))))
   `(li ([id ,(~a "monster-group-" id)])
        (span ([class "monster-group-name"])
              ,(monster-group-name mg))
@@ -781,3 +482,323 @@
                   ,@(~> (m) monster-conditions
                         (map (flow (active-condition->xexpr id-binding "monster")) _)
                         (add-between ", " #:before-last " and ")))))))
+
+(define (action-button actions bindings body [attrs empty])
+  `(button ([type "button"]
+            ,(action-click actions bindings)
+            ,@attrs)
+           ,body))
+
+(define (active-condition->xexpr c id-binding [who "player"])
+  `(span ([class "condition"])
+         ,(~a c)
+         ,(action-button
+            (list who "condition" "remove")
+            (list id-binding
+                  (list (~s "condition") (~s (~s (discriminator:condition c)))))
+            "X")))
+
+;;;; ELEMENT PICTURES
+
+(define (element-pic _req name style)
+  (response/output
+    (λ (o)
+      (write-bytes (convert (get-pic name style) 'svg-bytes) o))
+    #:mime-type #"image/svg+xml"))
+
+(define (get-pic name style)
+  ((hash-ref (hasheq 'infused elements:element-pics-infused
+                     'waning elements:element-pics-waning
+                     'unfused elements:element-pics-unfused)
+             style)
+   ((hash-ref (hasheq 'Fire elements:fire 'Ice elements:ice 'Air elements:air
+                      'Earth elements:earth 'Light elements:light 'Dark elements:dark)
+              name))))
+
+;;;; SSE
+
+(define ((event-source ch) _req)
+  (define receiver (make-multicast-receiver ch))
+  (response/output
+    #:headers (list (header #"Cache-Control" #"no-store")
+                    (header #"Content-Type" #"text/event-stream")
+                    ;; Don't use Connection in HTTP/2 or HTTP/3, but Racket's
+                    ;; web-server is HTTP/1.1 as confirmed by
+                    ;; `curl -vso /dev/null --http2 <addr>`.
+                    (header #"Connection" #"keep-alive")
+                    ;; Pairs with Connection; since our event source sends data
+                    ;; every 5 seconds at minimum, this 10s timeout should be
+                    ;; sufficient.
+                    (header #"Keep-Alive" #"timeout=10"))
+    (λ (out)
+      (let loop ()
+        (cond
+          [(sync/timeout 5 receiver) => (event-stream out)]
+          [else (displayln ":" out)])
+        (loop)))))
+
+(define (event-stream out)
+  (match-lambda
+    [`(element ,name ,state)
+      (define data (hash 'name name 'state (symbol->string state)))
+      (displayln "event: element" out)
+      (display (format "data: ~a" (jsexpr->string data)) out)
+      (display "\n\n" out)]
+    [`(player ,c)
+      (define p (creature-v c))
+      (define id (creature-id c))
+      (define id-binding (list (~s "id") (~s (~s id))))
+      (define css-id (~a "player-" id))
+      (define data
+        (hash 'id css-id
+              'data (hash
+                      'player-name (player-name p)
+                      'player-initiative (~a (player-initiative p))
+                      'player-initiative-input (hash 'value (~a (player-initiative p)))
+                      'player-HP (player->hp-text p)
+                      'player-XP (~a (player-xp p))
+                      'player-conditions
+                      (~> (p) player-conditions*
+                          (map (flow (active-condition->xexpr id-binding)) _)
+                          (add-between ", " #:before-last " and ")
+                          (cons 'span _)
+                          xexpr->string))
+              'summons (map xexpr->string (summons->xexprs id (player-summons p)))))
+      (displayln "event: player" out)
+      (display (format "data: ~a" (jsexpr->string data)) out)
+      (displayln "\n\n" out)]
+    [(list 'monster-group* c env ads)
+     (define mg (monster-group*-mg (creature-v c)))
+     (define id (creature-id c))
+     (define css-id (~a "monster-group-" id))
+     (define ability (~>> (mg) monster-group-set-name (hash-ref ads) ability-decks-current))
+     (define data
+       (hash 'id css-id
+             'data (hash
+                    'monster-group-name (monster-group-name mg)
+                    'monster-group-initiative (monster-ability-initiative->text ability)
+                    'monster-ability-name (monster-ability-name->text ability)
+                    'monster-ability-abilities (~>> (mg ability env)
+                                                    monster-ability-xexpr
+                                                    (map xexpr->string))
+                    'monsters (~>> (id (monster-group-monsters mg) mg env)
+                                   monsters->xexprs
+                                   (map xexpr->string)))))
+     (displayln "event: monster-group" out)
+     (display (format "data: ~a" (jsexpr->string data)) out)
+     (displayln "\n\n" out)]
+    [`(number ,id ,(? number? n))
+      (define data (hash 'id (~a id) 'n n))
+      (displayln "event: number" out)
+      (display (format "data: ~a" (jsexpr->string data)) out)
+      (displayln "\n\n" out)]))
+
+;;;; ACTIONS
+
+(define (player-action req what args)
+  (let/ec return
+    (match (cons what args)
+      ['("hp" "+") (increment-player-hp req)]
+      ['("hp" "-") (decrement-player-hp req)]
+      ['("xp" "+") (increment-player-xp req)]
+      ['("xp" "-") (decrement-player-xp req)]
+      ['("condition" "remove") (remove-player-condition req)]
+      ['("condition" "add") (add-player-condition req)]
+      ['("initiative") (set-player-initiative req)]
+      [_ (return (not-found req))])
+    (response/empty)))
+
+(define (summon-action req what args)
+  (let/ec return
+    (match (cons what args)
+      ['("kill") (kill-summon req)]
+      ['("hp" "-") (decrement-summon-hp req)]
+      ['("hp" "+") (increment-summon-hp req)]
+      ['("condition" "add") (add-summon-condition req)]
+      ['("condition" "remove") (remove-summon-condition req)]
+      [_ (return (not-found req))])
+    (response/empty)))
+
+(define (monster-action req what args)
+  (let/ec return
+    (match (cons what args)
+      ['("kill") (kill-monster req)]
+      ['("hp" "-") (decrement-monster-hp req)]
+      ['("hp" "+") (increment-monster-hp req)]
+      ['("condition" "add") (add-monster-condition req)]
+      ['("condition" "remove") (remove-monster-condition req)]
+      [_ (return (not-found req))])
+    (response/empty)))
+
+(define (element-transition req)
+  (match (assq 'id (request-bindings req))
+    [`(id . ,(element-name-arg e))
+      (define @e-state
+        (~>> ((list 'Fire 'Ice 'Air 'Earth 'Light 'Dark)
+              (state-@elements (s)))
+             (map cons) (assq e) cdr))
+      (do (<@ @e-state transition-element-state))
+      (response/empty)]
+    [(or `(id . ,_) #f) (not-found req)]))
+
+(define-flow (increment-player-hp req)
+  (do-player player-at-max-health? (player-act-on-hp add1)))
+
+(define-flow (decrement-player-hp req)
+  (do-player player-dead? (player-act-on-hp sub1)))
+
+(define-flow (increment-player-xp req)
+  (do-player (const #f) (player-act-on-xp add1)))
+
+(define-flow (decrement-player-xp req)
+  (do-player (flow (~> player-xp zero?)) (player-act-on-xp sub1)))
+
+(define-flow (remove-player-condition req)
+  (do-player-condition #f))
+
+(define-flow (add-player-condition req)
+  (do-player-condition #t))
+
+(define (set-player-initiative req)
+  (define binds (request-bindings req))
+  (match (~> (binds) (-< (assq 'id _) (assq 'initiative _)) collect)
+    [`((id . ,(app string->number (? number? id)))
+       (initiative . ,(app string->number (? (and/c number? initiative?) init))))
+      (do (<~@ (state-@creatures (s))
+               (update-players id (flow (player-set-initiative init)))))]
+    [_ (void)]))
+
+(define/summon kill-summon (_r => [pid sid])
+  (do-player/id pid (const #f) (player-kill-summon sid)))
+
+(define/summon decrement-summon-hp (_r => [pid sid])
+  (do-player/id pid
+                (flow (~> player-summons (list-ref sid) summon-dead?))
+                (update-player-summon sid (summon-act-on-hp sub1))))
+
+(define/summon increment-summon-hp (_r => [pid sid])
+  (do-player/id pid
+                (flow (~> player-summons (list-ref sid) summon-at-max-health?))
+                (update-player-summon sid (summon-act-on-hp add1))))
+
+(define/summon add-summon-condition (req => [pid sid])
+  (match (req->condition req)
+    [#f (void)]
+    [c (do-player/id pid (const #f) (update-player-summon sid (summon-add-condition c)))]))
+
+(define/summon remove-summon-condition (req => [pid sid])
+  (match (req->condition req)
+    [#f (void)]
+    [c (do-player/id pid (const #f) (update-player-summon sid (summon-remove-condition c)))]))
+
+(define/monster kill-monster (_r => [mgid mn])
+  (do-monster-group/mgid mgid (monster-group-remove mn) (flow (~> 2> monster-group-first-monster))))
+
+(define/monster decrement-monster-hp (_r => [mgid mn])
+  (do-monster-group/n mgid mn (flow (switch [(not monster-dead?) (monster-update-hp sub1)]))))
+
+(define/monster increment-monster-hp (_r => [mgid mn])
+  (define inc-hp (monster-update-hp add1))
+  (define ((inc-hp/mg mg) m)
+    (define stats (get-monster-stats mg m))
+    (cond
+      [(monster-at-max-health? m stats (@! (state-@env (s)))) m]
+      [else (inc-hp m)]))
+  (define (inc-hp/mg/n mg)
+    (define do-it (monster-group-update-num mn (inc-hp/mg mg)))
+    (do-it mg))
+  (do-monster-group/mgid mgid inc-hp/mg/n))
+
+(define/monster add-monster-condition (req => [mgid mn])
+  (match (req->condition req)
+    [#f (void)]
+    [c (do-monster-group/n mgid mn (monster-update-condition c #t))]))
+
+(define/monster remove-monster-condition (req => [mgid mn])
+  (match (req->condition req)
+    [#f (void)]
+    [c (do-monster-group/n mgid mn (monster-update-condition c #f))]))
+
+;;;; HELPERS
+
+(define (action-script actions bindings)
+  (define URL (string-join (cons "action" actions) "/" #:before-first "/"))
+  (define params
+    (string-join
+      (for/list ([b bindings])
+        (match-define (list key value) b)
+        (format "[~a, ~a]" key value))
+      ","))
+  (format "fetch('~a', {method: 'POST', body: new URLSearchParams([~a])});"
+          URL params))
+
+(define (action-click actions bindings)
+  `[onclick ,(action-script actions bindings)])
+
+(define (url-sans-param u)
+  (struct-copy url u [path (map path/param-sans-param (url-path u))]))
+
+(define (path/param-sans-param pp)
+  (struct-copy path/param pp [param empty]))
+
+(define (do-player req guard action)
+  (match (assq 'id (request-bindings req))
+    [`(id . ,(app string->number (? number? id)))
+     (do-player/id id guard action)]
+    [_ (void)]))
+
+(define (do-player/id id guard action)
+  (do (<~@ (state-@creatures (s))
+           (update-players id (flow (switch [(not guard) action]))))))
+
+(define (do-player-condition req add-or-remove)
+  (define binds (request-bindings req))
+  (match (~> (binds) (-< (assq 'id _) (assq 'condition _)) collect)
+    [`((id . ,(app string->number (? number? id)))
+       (condition . ,(app string->number (? selector:condition? (app selector:condition c)))))
+      (define c? (list c add-or-remove))
+      (do (<~@ (state-@creatures (s))
+               (update-players id (player-condition-handler c?))))]
+    [_ (void)]))
+
+(define (req->player-summon-id r)
+  (match (assq 'id (request-bindings r))
+    [(cons 'id (regexp #px"summon-(\\d+)-(\\d+)"
+                       (list _
+                             (app string->number (? number? player-id))
+                             (app string->number (? number? summon-id)))))
+     (values player-id summon-id)]
+    [_ (values #f #f)]))
+
+(define (req->condition r)
+  (match (assq 'condition (request-bindings r))
+    [(cons 'condition
+           (app string->number (? selector:condition? (app selector:condition c))))
+     c]
+    [_ #f]))
+
+(define (-do-summon req f)
+  (match/values (req->player-summon-id req)
+    [{#f #f} (void)]
+    [{pid sid} (f req pid sid)]))
+
+(define (req->monster-ids r)
+  (match (assq 'id (request-bindings r))
+    [(cons 'id (regexp #px"monster-(\\d+)-(\\d+)"
+                       (list _
+                             (app string->number (? number? monster-group-id))
+                             (app string->number (? number? monster-number)))))
+     (values monster-group-id monster-number)]
+    [_ (values #f #f)]))
+
+(define (do-monster-group/mgid mgid action [action-n (flow 1>)])
+  (do (<~@ (state-@creatures (s))
+           (update-monster-groups mgid action action-n))))
+
+(define (do-monster-group/n mgid mn action)
+  (do-monster-group/mgid mgid (monster-group-update-num mn action)))
+
+(define (-do-monster req f)
+  (match/values (req->monster-ids req)
+    [{#f #f} (void)]
+    [{mgid mn} (f req mgid mn)]))
