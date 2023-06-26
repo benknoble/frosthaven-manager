@@ -8,7 +8,8 @@
 (require frosthaven-manager/observable-operator
          frosthaven-manager/monster-db
          frosthaven-manager/manager/state
-         frosthaven-manager/manager/ability-decks)
+         frosthaven-manager/manager/ability-decks
+         frosthaven-manager/qi)
 
 (define (init-dbs db s)
   (define-values (info-db ability-db) (get-dbs db))
@@ -21,6 +22,8 @@
 (define (init-foes db s)
   (define make-foes (dynamic-require db 'make-foes (const #f)))
   (when make-foes
+    ;; remove all monster groups from creatures
+    (<~@ (state-@creatures s) (remf* (flow (~> creature-v monster-group*?)) _))
     (define mgs (make-foes (@! (state-@level s)) (@! (state-@num-players s))))
     (define events (map (λ (mg) `(add ,mg)) mgs))
     (for-each (add-or-remove-monster-group s) events)))
