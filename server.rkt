@@ -331,9 +331,7 @@
        (p (span
            ([class "player-conditions"])
            (span
-            ,@(~> (p) player-conditions*
-                  (map (flow (active-condition->xexpr id-binding)) _)
-                  (add-between ", " #:before-last " and ")))))
+            ,@(~> (p) player-conditions* (active-conditions->xexpr id-binding)))))
        (p (a ([href ,(embed/url (flow (new-summon-form id)))])
              "Summon"))
        (ol ([class "summons"])
@@ -375,9 +373,7 @@
        (p (span
            ([class "summon-conditions"])
            (span
-           ,@(~> (s) summon-conditions*
-                 (map (flow (active-condition->xexpr id-binding "summon")) _)
-                 (add-between ", " #:before-last " and ")))))))
+           ,@(~> (s) summon-conditions* (active-conditions->xexpr id-binding "summon")))))))
 
 ;; required => exn:fail if not present
 (define new-summon
@@ -479,15 +475,18 @@
              "Add Condition"))
         (p (span ([class "monster-conditions"])
                  (span
-                  ,@(~> (m) monster-conditions
-                        (map (flow (active-condition->xexpr id-binding "monster")) _)
-                        (add-between ", " #:before-last " and ")))))))
+                  ,@(~> (m) monster-conditions (active-conditions->xexpr id-binding "monster")))))))
 
 (define (action-button actions bindings body [attrs empty])
   `(button ([type "button"]
             ,(action-click actions bindings)
             ,@attrs)
            ,body))
+
+(define (active-conditions->xexpr cs id-binding [who "player"])
+  (~> (cs)
+      (map (flow (active-condition->xexpr id-binding who)) _)
+      (add-between ", " #:before-last " and ")))
 
 (define (active-condition->xexpr c id-binding [who "player"])
   `(span ([class "condition"])
@@ -559,8 +558,7 @@
                       'player-XP (~a (player-xp p))
                       'player-conditions
                       (~> (p) player-conditions*
-                          (map (flow (active-condition->xexpr id-binding)) _)
-                          (add-between ", " #:before-last " and ")
+                          (active-conditions->xexpr id-binding)
                           (cons 'span _)
                           xexpr->string))
               'summons (map xexpr->string (summons->xexprs id (player-summons p)))))
