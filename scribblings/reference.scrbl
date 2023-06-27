@@ -700,7 +700,7 @@ with calculated text and values.
 
 @defproc[(monster-ability-ability->extras [ability-card (or/c #f monster-ability?)]
                                           [ability-text string?])
-         (listof (or/c (list/c 'aoe-pict pict:pict?)))]{
+         (listof (or/c (list/c 'aoe-pict pict?)))]{
 Returns a list of ``extras'' for rendering a specific @racket[ability-text] from
 a @racket[monster-ability]. The meaning of each extra spec is as follows:
 
@@ -1325,7 +1325,7 @@ functions in Frosthaven Manager.
 This module's main function is to run the Frosthaven Manager. It provides only
 a single binding:
 
-@defproc[(manager) (is-a?/c view<%>)]{
+@defproc[(manager [s state?]) (is-a?/c window-view<%>)]{
 A view for the Frosthaven Manager. Render with @racket[render/eventspace].
 }
 
