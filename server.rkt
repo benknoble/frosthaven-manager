@@ -187,7 +187,7 @@
          (title "Page Has Expired.")
          ,@common-heads)
        (body
-         (p "Sorry, this page has expired."
+         (p "Sorry, this page has expired. "
             (a ([href ,(url->string (url-sans-param (request-uri req)))])
                "This page")
             " may be the one you wanted.")))))
