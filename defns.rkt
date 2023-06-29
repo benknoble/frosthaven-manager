@@ -581,6 +581,15 @@
                ((monster-ability-ability->text "Control Enemy: Move +1") mg env)
                "· Control Enemy: Move +1"))
 
+(define (not-an-aoe)
+  (pict:text "Not an AoE module"))
+
+(define (get-aoe path)
+  (namespace-call-with-registry-lock
+   (current-namespace)
+   (thunk
+    (dynamic-require path 'aoe (thunk not-an-aoe)))))
+
 (define (monster-ability-ability->extras ability-card ability-text)
   (define aoe
     (~> (ability-text) (regexp-match aoe-rx _) (and _ second)))
@@ -591,9 +600,7 @@
     (and aoe (~> (base aoe)
                  build-path
                  (switch
-                   [file-exists?
-                    (~> (dynamic-require 'aoe (thunk (const (pict:text "Not an AoE module"))))
-                        apply)]
+                   [file-exists? (~> get-aoe apply)]
                    [else (gen (pict:text "AoE File Not Found"))]))))
   (filter values
           (list (and aoe-pict `(aoe-pict ,aoe-pict)))))
