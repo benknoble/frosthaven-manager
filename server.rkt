@@ -423,7 +423,6 @@
           ;; abuse of tables…
           (table ([class "monster-ability-abilities"])
                  ,@(monster-ability-xexpr mg ability env)))
-       ;; TODO Add Monster(s)
        (div ([class "monsters"])
             ,@(monsters->xexprs id (monster-group-monsters mg) mg env))))
 
