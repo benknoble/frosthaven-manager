@@ -410,6 +410,11 @@
     (summon-xexpr s id)))
 
 (define (monster-group-xexpr id mg ability env)
+  (define normal-stats (monster-group-normal-stats mg))
+  (define elite-stats (monster-group-elite-stats mg))
+  (define (both-empty? f)
+    (~> (normal-stats elite-stats)
+        (>< f) (all empty?)))
   `(li ([id ,(~a "monster-group-" id)])
        (span ([class "monster-group-name"])
              ,(monster-group-name mg))
@@ -417,7 +422,33 @@
        (span ([class "monster-group-initiative"])
              ,(monster-ability-initiative->text ability))
        ")"
-       ;; TODO: collapsible stats
+       (table
+        ([class "monster-group-stats"])
+        (tr (th "Normal") (th "Stat") (th "Elite"))
+        (tr (td ,(~a (monster-stats-move normal-stats)))
+            (td "Move")
+            (td ,(~a (monster-stats-move elite-stats))))
+        (tr (td ,(~a (monster-stats-attack* normal-stats env)))
+            (td "Attack")
+            (td ,(~a (monster-stats-attack* elite-stats env))))
+        ,@(if (both-empty? monster-stats-bonuses)
+            empty
+            `((tr (td ,(string-join (monster-stats-bonuses normal-stats) ", "))
+                  (td "Bonuses")
+                  (td ,(string-join (monster-stats-bonuses elite-stats) ", ")))))
+        ,@(if (both-empty? monster-stats-effects)
+            empty
+            `((tr (td ,(string-join (monster-stats-effects normal-stats) ", "))
+                  (td "Effects")
+                  (td ,(string-join (monster-stats-effects elite-stats) ", ")))))
+        ,@(if (both-empty? monster-stats-immunities)
+            empty
+            `((tr (td ,(string-join (monster-stats-immunities normal-stats) ", "))
+                  (td "Immunities")
+                  (td ,(string-join (monster-stats-immunities elite-stats) ", ")))))
+        (tr (td ,(~a (monster-stats-max-hp* normal-stats env)))
+            (td "Max HP")
+            (td ,(~a (monster-stats-max-hp* elite-stats env)))))
        (p ([class "monster-ability"])
           (span ([class "monster-ability-name"]) ,(monster-ability-name->text ability))
           ;; abuse of tables…
