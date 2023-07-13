@@ -251,6 +251,9 @@
     (when (@! (@~> @mg (~> monster-group-monsters length (= 1))))
       (draw-new-card-mid-round-if-needed s (@! (@> @mg monster-group-set-name)))))
   (define (select num) (update values (const num)))
+  (define/match (swap who)
+    [{'all} (update swap-monster-group-elites)]
+    [{n} (update-by-num n swap-monster-elite)])
   (define @ability
     (obs-combine
       (flow (~> (== _ monster-group-set-name) hash-ref ability-decks-current))
@@ -264,7 +267,8 @@
     #:on-hp update-hp
     #:on-kill kill
     #:on-new new
-    #:on-select select))
+    #:on-select select
+    #:on-swap swap))
 
 (define ((make-creature-view s) k @e)
   (cond-view

@@ -798,6 +798,16 @@ The number of the first monster in the monster group @racket[mg], or
 Formats the string @racket["HP: current/max"] for the monster @racket[m].
 }
 
+@defproc[(swap-monster-group-elites [mg monster-group?])
+         monster-group?]{
+The same monster group, but with all elite monsters normal and vice-versa.
+}
+
+@defproc[(swap-monster-elite [m monster?])
+         monster?]{
+The same monster, but normal instead of elite and vice-versa.
+}
+
 @section{@tt{elements}}
 @defmodule[frosthaven-manager/elements]
 
@@ -1483,7 +1493,8 @@ removal of a group. Other parameters are used as in
            [#:on-condition on-condition (-> monster-number/c condition? boolean? any) void]
            [#:on-hp on-hp (-> monster-number/c (-> number? number?) any) void]
            [#:on-kill on-kill (-> monster-number/c any) void]
-           [#:on-new on-new (-> monster-number/c boolean? any)])
+           [#:on-new on-new (-> monster-number/c boolean? any)]
+           [#:on-swap on-swap (-> (or/c 'all monster-number?) any)])
          (is-a?/c view<%>)]{
 A GUI view used to display an entire monster group. See
 @secref{Monster_Group_Controls}. The @racket[|@ability|] is displayed if an
@@ -1497,6 +1508,7 @@ The callbacks function as follows:
           @item{@racket[on-hp] is given a monster number and a procedure to update the monsters @racket[monster-current-hp].}
           @item{@racket[on-kill] is invoked with a monster number when that monster is killed.}
           @item{@racket[on-new] is invoked with a monster number and @racket[#true] if the monster is elite or @racket[#false] otherwise for a newly added monster.}
+          @item{@racket[on-swap] is invoked with @racket['all] if all monsters should be swapped by @racket[swap-monster-group-elites], or with a monster number if only that monster should be swapped by @racket[swap-monster-elite].}
 ]
 }
 

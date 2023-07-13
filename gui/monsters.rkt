@@ -27,7 +27,8 @@
                         any)
             #:on-kill (-> monster-number/c any)
             #:on-new (-> monster-number/c boolean? any)
-            #:on-select (-> (or/c #f monster-number/c) any))
+            #:on-select (-> (or/c #f monster-number/c) any)
+            #:on-swap (-> (or/c 'all monster-number/c) any))
            (is-a?/c view<%>))]
     [db-view (-> (obs/c info-db/c) (obs/c ability-db/c) (obs/c (listof monster-group?)) (is-a?/c view<%>))]
     [add-monster-group (->* ((obs/c info-db/c)
@@ -81,7 +82,8 @@
 (define (monster-view @mg @monster @env
                       #:on-condition [on-condition void]
                       #:on-hp [on-hp void]
-                      #:on-kill [on-kill void])
+                      #:on-kill [on-kill void]
+                      #:on-swap [on-swap void])
   (define @monster-stats (obs-combine get-monster-stats @mg @monster))
   (define (make-condition-checkbox c)
     (checkbox #:label (~a c)
@@ -112,6 +114,9 @@
                add-hp
                subtract-hp)
       (button "💀Kill💀" on-kill))
+    (button (@~> @monster (~>> (if monster-elite? "Normal" "Elite")
+                               (~a "Swap to ")))
+            (thunk (on-swap)))
     (vpanel
       (text (@~> @monster (~> monster-conditions
                               (sep ~a) collect
@@ -123,7 +128,8 @@
                             #:on-condition [on-condition void]
                             #:on-hp [on-hp void]
                             #:on-kill [on-kill void]
-                            #:on-new [on-new void])
+                            #:on-new [on-new void]
+                            #:on-swap [on-swap void])
   (define (do-new)
     (define @available-numbers
       (@~> @mg (~>> monster-group-monsters
@@ -167,7 +173,8 @@
             #:stretch '(#f #t)
             (name-panel)
             (text (@~> @ability monster-ability-initiative->text))
-            (add-monster-button)))
+            (add-monster-button)
+            (button "Swap Elite/Normal" (thunk (on-swap 'all)))))
   (define (ability-panel)
     (group
       "Ability"
@@ -227,6 +234,7 @@
   (define/forward/guard-monster-num forward-condition on-condition c on?)
   (define/forward/guard-monster-num forward-hp on-hp proc)
   (define/forward/guard-monster-num forward-kill on-kill)
+  (define/forward/guard-monster-num forward-swap on-swap)
   (define (monsters)
     (tabs
       @monsters
@@ -247,7 +255,8 @@
           @env
           #:on-condition forward-condition
           #:on-hp forward-hp
-          #:on-kill forward-kill)
+          #:on-kill forward-kill
+          #:on-swap forward-swap)
         (spacer))))
   (group
     "Monster"
