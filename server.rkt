@@ -611,7 +611,8 @@
                                                     (map xexpr->string))
                     'monsters (~>> (id (monster-group-monsters mg) mg env)
                                    monsters->xexprs
-                                   (map xexpr->string)))))
+                                   (map xexpr->string)))
+             'xexpr (xexpr->string (monster-group-xexpr id mg ability env))))
      (displayln "event: monster-group" out)
      (display (format "data: ~a" (jsexpr->string data)) out)
      (displayln "\n\n" out)]

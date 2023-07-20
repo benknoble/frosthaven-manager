@@ -25,16 +25,21 @@ evtSource.addEventListener('player', (event) => {
 });
 
 evtSource.addEventListener('monster-group', (event) => {
-  const {id, data} = JSON.parse(event.data);
-  for (const css_class in data) {
-    const element = document.querySelector(`#${id} .${css_class}`);
-    const d = data[css_class];
-    const typ = typeof d;
-    if (typ === 'string') {
-      element.innerHTML = d;
-    } else if (typ === 'object' && Array.isArray(d)) {
-      element.innerHTML = d.join('');
+  const {id, data, xexpr} = JSON.parse(event.data);
+  if (document.querySelector(`#${id}`) !== null) {
+    for (const css_class in data) {
+      const element = document.querySelector(`#${id} .${css_class}`);
+      const d = data[css_class];
+      const typ = typeof d;
+      if (typ === 'string') {
+        element.innerHTML = d;
+      } else if (typ === 'object' && Array.isArray(d)) {
+        element.innerHTML = d.join('');
+      }
     }
+  } else {
+    const monsters = document.querySelector('ul.monsters');
+    monsters.insertAdjacentHTML('beforeend', xexpr);
   }
 });
 
