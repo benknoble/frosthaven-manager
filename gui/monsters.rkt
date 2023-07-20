@@ -285,11 +285,11 @@
     (on-change `(set from ,(@! @set) to ,set))
     (:= @set set))
   (define set-picker
-    (choice #:label "Set" sets choose-set
+    (choice #:label "Set" (sort sets string<?) choose-set
             #:min-size (~> (info-db "Set")
                            (== longest-set-length string-length)
                            + (* 10) (max 50) (list #f))))
-  (define @valid-monsters (@~> @name->info (~> hash-keys (set-subtract unavailable))))
+  (define @valid-monsters (@~> @name->info (~> hash-keys (set-subtract unavailable) (sort string<?))))
   (define (choose-monster monster-name)
     (when monster-name
       (define new-info (hash-ref (@! @name->info) monster-name))
@@ -468,7 +468,7 @@
 
 (define (info-view @info-db)
   (apply stacked-tables
-         (@~> @info-db (~> hash-keys list->vector))
+         (@~> @info-db (~> hash-keys (sort string<?) list->vector))
          info-view-stats-view
          (info-view-columns @info-db)))
 
@@ -487,7 +487,7 @@
     ;; set -> #((data set name _ _ _ name->info))
     (column "Set" values (λ (set)
                            (define name->info (hash-ref (@! @info-db) set))
-                           (for/vector ([name (in-hash-keys name->info)])
+                           (for/vector ([name (sort (hash-keys name->info) string<?)])
                              (data set name #f #f #f name->info))))
     ;; (data set name _ _ _ name->info) -> #((date set name level elite? info name->info))
     (column "Name" data-name (match-lambda
@@ -525,7 +525,7 @@
 (define (ability-view @ability-db)
   (apply stacked-tables
          #:panel vpanel
-         (@~> @ability-db (~> hash-keys list->vector))
+         (@~> @ability-db (~> hash-keys (sort string<?) list->vector))
          ability-view-ability-view
          (ability-view-columns @ability-db)))
 
@@ -554,7 +554,7 @@
   (list-view @monster-groups
     (λ (_k @e) (simple-monster-group-view @e))))
 
-(define-flow take-first (~> hash-keys car))
+(define-flow take-first (~> hash-keys (sort string<?) car))
 (define (initial-set+info info-db)
   (define set (take-first info-db))
   (define name->info (hash-ref info-db set))
