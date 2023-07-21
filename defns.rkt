@@ -531,21 +531,27 @@
     (list #px"(.*)((?i:move))\\s+([+-])(\\d+)"
           (skip-if-grant-or-control (keyword-sub monster-stats-move mg))))
   (define effects
-    (list #px"(.*)(?i:attack).*"
+    (list #px"(.*)((?i:attack) \\d+) \\(E:(\\d+)\\)"
           (skip-if-grant-or-control
-           (λ (match)
+           (λ (_match base-attack elite-value)
              (define-values (effects elite-effects)
                (~> (mg)
                    (-< monster-group-normal-stats monster-group-elite-stats)
-                   (>< (~> monster-stats-effects (string-join ", ")))))
-             (format "~a ~a~a"
-                     match
-                     (switch (effects)
-                       [non-empty-string? (format "(N:~a)" _)]
-                       [else ""])
-                     (switch (elite-effects)
-                       [non-empty-string? (format "(E:~a)" _)]
-                       [else ""]))))))
+                   (>< monster-stats-effects)))
+             (define common-effects (set-intersect effects elite-effects))
+             (define only-normal-effects (set-subtract effects common-effects))
+             (define only-elite-effects (set-subtract elite-effects common-effects))
+
+             (~a base-attack
+                 (if (not (empty? only-normal-effects))
+                   (format " (N:~a)" (string-join only-normal-effects ", "))
+                   "")
+                 (if (not (empty? only-elite-effects))
+                   (format " (E:~a~a)" elite-value (string-join only-elite-effects ", " #:before-first ", "))
+                   (format " (E:~a)" elite-value))
+                 (if (not (empty? common-effects))
+                   (string-join common-effects ", " #:before-first ", ")
+                   ""))))))
   (define replacements
     (list bulleted
           aoe-replacement
@@ -558,15 +564,29 @@
   (require rackunit)
   (define env (hash))
   (define get-dbs (dynamic-require 'frosthaven-manager/monster-db 'get-dbs))
-  (define mg
+  (match-define (list mg mg1 mg2 mg3)
     (match-let-values ([{info _} (get-dbs "testfiles/sample-bestiary-import.rkt")])
-      (make-monster-group (~> (info) (hash-ref "archer") (hash-ref "hynox archer"))
-                          0
-                          empty
-                          env)))
+      (map (λ (level)
+             (make-monster-group (~> (info) (hash-ref "archer") (hash-ref "hynox archer"))
+                                 level
+                                 empty
+                                 env))
+           (list 0 1 2 3))))
   (test-equal? "Simple Attack"
                ((monster-ability-ability->text "Attack +1") mg env)
-               "· Attack 3 (E:4) (E:wound)")
+               "· Attack 3 (E:4, wound)")
+  (test-equal? "Simple Attack 1"
+               ((monster-ability-ability->text "Attack +1") mg1 env)
+               "· Attack 4 (E:5), wound")
+  (test-equal? "Simple Attack 2"
+               ((monster-ability-ability->text "Attack +1") mg2 env)
+               "· Attack 5 (E:6, stun), wound")
+  (test-equal? "Simple Attack 3"
+               ((monster-ability-ability->text "Attack +1") mg3 env)
+               "· Attack 6 (N:muddle) (E:7, stun), wound")
+  (test-equal? "Attack, X"
+               ((monster-ability-ability->text "Attack +1, Push 1") mg3 env)
+               "· Attack 6 (N:muddle) (E:7, stun), wound, Push 1")
   (test-equal? "Simple Move"
                ((monster-ability-ability->text "Move +1") mg env)
                "· Move 3 (E:3)")
