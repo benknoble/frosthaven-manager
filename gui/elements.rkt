@@ -62,7 +62,8 @@
                                (menu-item "Infused" (λ () (:= @state 'infused)))
                                (menu-item "Waning" (λ () (:= @state 'waning)))
                                (menu-item "Unfused" (λ () (:= @state 'unfused))))))
-           (render-popup-menu (current-renderer) pum x y))]))))
+           (render-popup-menu (current-renderer) pum x y))]
+        [else (super on-event e)]))))
 
 (define (element-cycler @element-state e)
   (define (make-pict-for-canvas s)
