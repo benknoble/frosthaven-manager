@@ -100,8 +100,8 @@
                                  (list (monster 1 #f 5 empty)))
                   (monster-group "guard" "hynox guard" 4
                                  #s(monster-stats 6 6 6 () () ())
-                                 #s(monster-stats 8 6 7 ("shield 2") () ())
-                                 (list (monster 3 #t 8 empty)))))
+                                 #s(monster-stats 6 6 7 ("shield 2") () ())
+                                 (list (monster 3 #t 6 empty)))))
   (check-equal? (make-foes 5 3)
                 (list
                   (monster-group "archer" "wyrmling archer" 5
@@ -112,8 +112,8 @@
                                    (monster 1 #f 6 empty)))
                   (monster-group "guard" "hynox guard" 5
                                  #s(monster-stats 7 7 7 () () ())
-                                 #s(monster-stats 9 7 8 ("shield 2") () ())
-                                 (list (monster 10 #t 9 empty)))))
+                                 #s(monster-stats 7 7 8 ("shield 2") () ())
+                                 (list (monster 10 #t 7 empty)))))
   (check-equal? (make-foes 6 4)
                 (list
                   (monster-group "archer" "wyrmling archer" 6
@@ -124,5 +124,5 @@
                                    (monster 2 #t 9 empty)))
                   (monster-group "guard" "hynox guard" 6
                                  #s(monster-stats 8 8 8 () () ())
-                                 #s(monster-stats 10 8 9 ("shield 3") () ())
-                                 (list (monster 10 #t 10 empty))))))
+                                 #s(monster-stats 8 8 9 ("shield 3") () ())
+                                 (list (monster 10 #t 8 empty))))))
