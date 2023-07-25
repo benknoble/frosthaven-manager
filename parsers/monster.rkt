@@ -85,12 +85,16 @@
               (list  #f    #f      #f        empty      empty      empty))))
 
 (define stats/p
-  (fmap stats-values->monster-stats
-        (guard/p
-          (many+/p (apply or/p (map try/p stat/ps)) #:sep skip-ws)
-          (flow (~> stats-labels (and (not check-duplicates) stats-labels-sufficient)))
-          "exactly one each of HP, Move, Attack, and up to one each of Bonuses, Effects, and Immunities"
-          stats-labels)))
+  (let ([try-with-ws (λ (p)
+                       (try/p
+                        (do [v <- p] skip-ws
+                            (pure v))))])
+    (fmap stats-values->monster-stats
+          (guard/p
+           (many+/p (apply or/p (map try-with-ws stat/ps)) #:sep skip-ws)
+           (flow (~> stats-labels (and (not check-duplicates) stats-labels-sufficient)))
+           "exactly one each of HP, Move, Attack, and up to one each of Bonuses, Effects, and Immunities"
+           stats-labels))))
 
 (define cons-label (flow (~> (-< labelled-label labelled-v) cons)))
 
