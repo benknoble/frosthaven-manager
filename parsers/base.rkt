@@ -8,6 +8,7 @@
                        data/functor
                        frosthaven-manager/qi)
          (contract-out
+           [name->set (-> string? (or/c #f string?))]
            [string-ci/p (-> string? (parser/c char? string?))]
            [skip-ws (parser/c char? void?)]
            [opt/p (-> (parser/c char? any/c) (parser/c char? any/c))]
