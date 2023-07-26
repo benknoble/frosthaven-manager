@@ -5,7 +5,8 @@
 (define racket-launcher-libraries '("gui/manager"))
 (define gracket-launcher-names '("FrosthavenManager"))
 (define gracket-launcher-libraries '("gui/manager"))
-(define deps '("git://github.com/benknoble/racket-alexis?path=alexis-multicast#use-benknoble"
+(define deps '("pretty-expressive"
+               "git://github.com/benknoble/racket-alexis?path=alexis-multicast#use-benknoble"
                "nat-traversal"
                "web-server-lib"
                "functional-lib"

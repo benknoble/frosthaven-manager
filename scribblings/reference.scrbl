@@ -19,6 +19,7 @@
             racket/gui/easy/contract
             qi
             megaparsack
+            (prefix-in pretty: pretty-expressive)
             frosthaven-manager/aoe-images
             frosthaven-manager/defns
             (only-in frosthaven-manager/elements
@@ -50,6 +51,7 @@
             frosthaven-manager/parsers/formula
             frosthaven-manager/parsers/monster
             frosthaven-manager/observable-operator
+            frosthaven-manager/pp/bestiary
             frosthaven-manager/qi
             frosthaven-manager/qi/list2hash
             (prefix-in server: frosthaven-manager/server)
@@ -1928,6 +1930,33 @@ An alias for @racket[obs-map] that wraps @racket[flo] in @racket[flow].
 @defform[(|<~@| |@o| flo)
          #:contracts ([|@o| obs?])]{
 An alias for @racket[obs-update!] that wraps @racket[flo] in @racket[flow].
+}
+
+@section{@tt{pp}}
+
+This collection holds pretty printers based on
+@racketmodname[pretty-expressive].
+
+@subsection{@tt{pp/bestiary}}
+@defmodule[frosthaven-manager/pp/bestiary]
+
+This module pretty-prints bestiary files. It can be run as a program with
+
+@terminal|{
+racket -l- frosthaven-manager/pp/bestiary
+}|
+
+to format standard in or a provided file to standard out. Use @DFlag{help} for
+more options.
+
+@defproc[(pretty-bestiary [imports (listof (list/c 'import string?))]
+                          [monster-infos (listof monster-info?)]
+                          [monster-abilitiess (listof (listof monster-ability?))])
+         pretty:doc?]{
+Creates a document for pretty printing from the results of a parsed bestiary.
+See @racket[parse-bestiary] to produce a collection of the required elements; if
+the input port starts with a @(hash-lang) line, you'll need to discard it via
+@racket[read-line] first.
 }
 
 @section{@tt{qi}}
