@@ -2,21 +2,25 @@
 
 (provide
  (contract-out
-  [pretty-bestiary
-   (-> (listof (list/c 'import string?))
-       (listof monster-info?)
-       (listof (listof monster-ability?))
-       doc?)]))
+  [pretty-bestiary (-> bestiary/c doc?)]))
 
 (require pretty-expressive
          frosthaven-manager/defns
          frosthaven-manager/qi
          (only-in frosthaven-manager/parsers/base
-                  name->set))
+                  name->set)
+         frosthaven-manager/parsers/monster)
 
 (define lang-line (text "#lang frosthaven-manager/bestiary"))
 
-(define (pretty-bestiary imports monster-infos monster-abilitiess)
+(define (pretty-bestiary bestiary)
+  (define-values (imports monster-infos monster-abilitiess)
+    (~> (bestiary)
+        sep
+        (partition
+         [(esc (list/c 'import string?)) collect]
+         [monster-info? collect]
+         [(esc (listof monster-ability?)) collect])))
   (<> lang-line
       (pretty-imports imports)
       (pretty-monster-infos monster-infos)
@@ -141,8 +145,6 @@
     [else docs]))
 
 (module+ main
-  (require frosthaven-manager/parsers/monster)
-
   (current-page-width 120)
 
   (define ip
@@ -163,9 +165,4 @@
   (void (read-line ip)) ;; #lang line
   (~> (ip)
       (parse-bestiary "stdin" _ #:syntax? #f)
-      sep
-      (partition
-       [(esc (list/c 'import string?)) collect]
-       [monster-info? collect]
-       [(esc (listof monster-ability?)) collect])
       pretty-bestiary (pretty-print #:page-width 120)))
