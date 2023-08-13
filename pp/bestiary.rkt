@@ -62,7 +62,7 @@
   (define-flow length-n/s
     (switch
       [number? (~> ~a string-length)]
-      [string (~> string-length (+ 2))]))
+      [string? (~> string-length (+ 2))]))
   (define max-hp-width
     (apply max (map (flow (~> monster-stats-max-hp length-n/s))
                     (append normal-stats elite-stats))))
