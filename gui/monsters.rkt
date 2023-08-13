@@ -531,11 +531,22 @@
 
 ;; (obs/c (or/c #f monster-ability?)) -> view
 (define (ability-view-ability-view @ability?)
-  (apply vpanel
-         (map (match-lambda
-                [(list label func)
-                 (hpanel (text label) (text (@~> @ability? (if _ func "N/A"))))])
-              ability-table)))
+  (define from-table
+    (map (match-lambda
+           [(list label func)
+            (hpanel (text label) (text (@~> @ability? (if _ func "N/A"))))])
+         ability-table))
+  (define others
+    (list
+     (hpanel
+      (text "Abilities:")
+      (observable-view
+       @ability?
+       (λ (ability?)
+         (apply vpanel
+                (for/list ([ability-text (if ability? (monster-ability-abilities ability?) empty)])
+                  (text ability-text))))))))
+  (apply vpanel (append from-table others)))
 
 (define (ability-view-columns @ability-db)
   (list
@@ -547,8 +558,7 @@
 
 (define ability-table
   `(["Initiative:" ,(flow (~> monster-ability-initiative ~a))]
-    ["Shuffle?" ,(flow (if monster-ability-shuffle? "Yes" "No"))]
-    ["Abilities:" ,(flow (~> monster-ability-abilities (string-join "\n")))]))
+    ["Shuffle?" ,(flow (if monster-ability-shuffle? "Yes" "No"))]))
 
 (define (foes-view @monster-groups)
   (list-view @monster-groups
