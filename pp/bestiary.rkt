@@ -162,7 +162,7 @@
        [(_acc file) (open-input-file file)])
      '("file")))
 
-  (void (read-line ip)) ;; #lang line
+  (void (read-line ip 'any)) ;; #lang line
   (~> (ip)
       (parse-bestiary "stdin" _ #:syntax? #f)
       pretty-bestiary (pretty-print #:page-width 120)))
