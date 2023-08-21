@@ -1949,8 +1949,10 @@ racket -l- frosthaven-manager/pp/bestiary
 to format standard in or a provided file to standard out. Use @DFlag{help} for
 more options.
 
-@defproc[(pretty-bestiary [bestiary bestiary/c]) pretty:doc?]{
+@defproc[(pretty-bestiary [bestiary bestiary/c] [#:lang-line? lang-line? any/c #t]) pretty:doc?]{
 Creates a document for pretty printing from the results of a parsed bestiary.
+The document starts with a @(hash-lang) line preceding the result if
+@racket[lang-line?] is not @racket[#f].
 }
 
 @section{@tt{qi}}

@@ -13,7 +13,7 @@
 
 (define lang-line (text "#lang frosthaven-manager/bestiary"))
 
-(define (pretty-bestiary bestiary)
+(define (pretty-bestiary bestiary #:lang-line? [lang-line? #t])
   (define-values (imports monster-infos monster-abilitiess)
     (~> (bestiary)
         sep
@@ -21,7 +21,8 @@
          [(esc (list/c 'import string?)) collect]
          [monster-info? collect]
          [(esc (listof monster-ability?)) collect])))
-  (<> lang-line
+  ;; TODO avoid spurious empty lines if preceding group is empty
+  (<> (if lang-line? lang-line (<>))
       (pretty-imports imports)
       (pretty-monster-infos monster-infos)
       (pretty-monster-abilitiess monster-abilitiess)
@@ -162,7 +163,12 @@
        [(_acc file) (open-input-file file)])
      '("file")))
 
-  (void (read-line ip 'any)) ;; #lang line
+  (define write-lang-line #f)
+  (cond
+    [(regexp-match-peek #rx"#lang" ip) (void (read-line ip 'any))
+                                       (set! write-lang-line #t)])
+
   (~> (ip)
       (parse-bestiary "stdin" _ #:syntax? #f)
-      pretty-bestiary (pretty-print #:page-width 120)))
+      (pretty-bestiary #:lang-line? write-lang-line)
+      (pretty-print #:page-width 120)))
