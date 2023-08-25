@@ -15,8 +15,7 @@
             (obs/c natural-number/c)
             (obs/c natural-number/c)
             (obs/c (listof (cons/c player? any/c))))
-           (#:on-close (-> any)
-            #:on-player (-> any/c any))
+           (#:on-player (-> any/c any))
            (is-a?/c view<%>))]))
 
 (require racket/gui/easy
@@ -78,20 +77,19 @@
                      @num-loot-cards
                      @num-players
                      @players
-                     #:on-player [on-player void]
-                     #:on-close [on-close void])
+                     #:on-player [on-player void])
   (define-flow (loot-text deck num-cards)
     (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
   (define (show-assigner)
     ;; not setting current renderer, nor using an eventspace: dialog
-    (render (loot-assigner @loot-deck @num-players @players on-player on-close)))
+    (render (loot-assigner @loot-deck @num-players @players on-player)))
   (button (obs-combine loot-text @loot-deck @num-loot-cards)
           #:enabled? (@~> @loot-deck (not empty?))
           show-assigner))
 
-(define (loot-assigner @loot-deck @num-players @players on-player on-close)
+(define (loot-assigner @loot-deck @num-players @players on-player)
   (define-close! close! closing-mixin)
-  (define-flow mixin (~> closing-mixin (make-on-close-mixin on-close)))
+  (define-flow mixin closing-mixin)
   (define/match (make-player-button e)
     [{(cons p id)}
       (define (action)

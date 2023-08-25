@@ -188,7 +188,6 @@
                          (@~> (state-@creatures s)
                               (~> sep (pass (~> creature-v player?))
                                   (>< (~> (-< creature-v creature-id) cons)) collect))
-                         #:on-close (take-loot s)
                          #:on-player (give-player-loot s))
             (level-stats (state-@level s) (state-@num-players s))
             (level-table (state-@level s))

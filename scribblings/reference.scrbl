@@ -1121,10 +1121,6 @@ This module provides facilities for manipulating the loot deck.
 Update the loot deck based on the loot-picker event.
 }
 
-@defproc[(take-loot [s state?]) (-> any)]{
-Discard the top loot card.
-}
-
 @defproc[((give-player-loot [s state?]) [k any/c]) any]{
 Give player @racket[k] the top loot card.
 }
@@ -1315,17 +1311,14 @@ namely, mappings from decks to number of cards.
            [|@num-loot-cards| (obs/c natural-number/c)]
            [|@num-players| (obs/c natural-number/c)]
            [|@players| (obs/c (listof (cons/c player? any/c)))]
-           [#:on-close on-close (-> any) void]
            [#:on-player on-player (-> any/c any) void])
          (is-a?/c view<%>)]{
 A GUI view of a button that, when clicked, shows a view to assign the top loot
 card from @racket[|@loot-deck|] to one of @racket[|@players|] via buttons. The
-callback @racket[on-close] is invoked when the view is closed and can be used
-to, @italic{e.g.}, remove the top loot card from the deck. The callback
-@racket[on-player] is invoked with the ID (@racket[cdr]) of the player from
-@racket[|@players|] whose button is clicked to assign loot; it can be used to,
-@italic{e.g.}, assign the loot card. After @racket[on-player] is invoked, the
-view is closed, which invokes @racket[on-close].
+callback @racket[on-player] is invoked with the ID (@racket[cdr]) of the player
+from @racket[|@players|] whose button is clicked to assign loot; it can be used
+to, @italic{e.g.}, assign the loot card. After @racket[on-player] is invoked,
+the view is closed.
 
 See @secref{Scenario_Information_and_Loot} for how @racket[loot-button]
 functions in Frosthaven Manager.

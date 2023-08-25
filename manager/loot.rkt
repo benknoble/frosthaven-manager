@@ -4,7 +4,6 @@
   (contract-out
     [update-loot-deck-and-num-loot-cards
       (-> state? (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any))]
-    [take-loot (-> state? (-> any))]
     [give-player-loot (-> state? (-> any/c any))]))
 
 (require frosthaven-manager/observable-operator
@@ -17,7 +16,8 @@
   (<@ (state-@num-loot-cards s) (case (car evt) [(add) add1] [(remove) sub1])))
 
 ;; valid: only called if loot-deck non-empty, loot assigned
-(define ((take-loot s)) (<@ (state-@loot-deck s) rest))
+(define (take-loot s)
+  (<~@ (state-@loot-deck s) (if empty? _ rest)))
 
 (define ((give-player-loot* s) p)
   (define card
@@ -27,4 +27,5 @@
     p))
 
 (define ((give-player-loot s) k)
-  (<~@ (state-@creatures s) (update-players k (give-player-loot* s))))
+  (<~@ (state-@creatures s) (update-players k (give-player-loot* s)))
+  (take-loot s))
