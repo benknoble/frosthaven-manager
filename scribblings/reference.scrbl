@@ -1125,6 +1125,10 @@ Update the loot deck based on the loot-picker event.
 Give player @racket[k] the top loot card.
 }
 
+@defproc[(place-loot-on-bottom [s state?]) any]{
+Rotate the top loot card to the bottom of the deck.
+}
+
 @section[#:tag "frosthaven-manager/gui"]{@tt{gui}}
 
 The following sections describe modules under @tt{frosthaven-manager/gui}.
@@ -1311,7 +1315,9 @@ namely, mappings from decks to number of cards.
            [|@num-loot-cards| (obs/c natural-number/c)]
            [|@num-players| (obs/c natural-number/c)]
            [|@players| (obs/c (listof (cons/c player? any/c)))]
-           [#:on-player on-player (-> any/c any) void])
+           [#:on-player on-player (-> any/c any) void]
+           [#:on-top on-top (-> any) void]
+           [#:on-bottom on-bottom (-> any) void])
          (is-a?/c view<%>)]{
 A GUI view of a button that, when clicked, shows a view to assign the top loot
 card from @racket[|@loot-deck|] to one of @racket[|@players|] via buttons. The
@@ -1319,6 +1325,10 @@ callback @racket[on-player] is invoked with the ID (@racket[cdr]) of the player
 from @racket[|@players|] whose button is clicked to assign loot; it can be used
 to, @italic{e.g.}, assign the loot card. After @racket[on-player] is invoked,
 the view is closed.
+
+Additionally, buttons for the top and bottom of the deck trigger the
+@racket[on-top] and @racket[on-bottom] callbacks, which then also close the
+view.
 
 See @secref{Scenario_Information_and_Loot} for how @racket[loot-button]
 functions in Frosthaven Manager.

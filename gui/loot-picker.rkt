@@ -15,7 +15,9 @@
             (obs/c natural-number/c)
             (obs/c natural-number/c)
             (obs/c (listof (cons/c player? any/c))))
-           (#:on-player (-> any/c any))
+           (#:on-player (-> any/c any)
+            #:on-top (-> any)
+            #:on-bottom (-> any))
            (is-a?/c view<%>))]))
 
 (require racket/gui/easy
@@ -77,17 +79,19 @@
                      @num-loot-cards
                      @num-players
                      @players
-                     #:on-player [on-player void])
+                     #:on-player [on-player void]
+                     #:on-top [on-top void]
+                     #:on-bottom [on-bottom void])
   (define-flow (loot-text deck num-cards)
     (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
   (define (show-assigner)
     ;; not setting current renderer, nor using an eventspace: dialog
-    (render (loot-assigner @loot-deck @num-players @players on-player)))
+    (render (loot-assigner @loot-deck @num-players @players on-player on-top on-bottom)))
   (button (obs-combine loot-text @loot-deck @num-loot-cards)
           #:enabled? (@~> @loot-deck (not empty?))
           show-assigner))
 
-(define (loot-assigner @loot-deck @num-players @players on-player)
+(define (loot-assigner @loot-deck @num-players @players on-player on-top on-bottom)
   (define-close! close! closing-mixin)
   (define-flow mixin closing-mixin)
   (define/match (make-player-button e)
@@ -105,7 +109,11 @@
     #:title "Loot card"
     #:style empty
     (text (obs-combine card-text @num-players @loot-deck))
-    (observable-view @players (flow (~> (sep make-player-button) hpanel)))))
+    (observable-view @players (flow (~> (sep make-player-button) hpanel)))
+    (hpanel (spacer)
+            (button "Top of Deck" (thunk (on-top) (close!)))
+            (button "Bottom of Deck" (thunk (on-bottom) (close!)))
+            (spacer))))
 
 (module+ main
   (define/match (find-deck card)

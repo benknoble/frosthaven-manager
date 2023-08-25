@@ -236,7 +236,7 @@ is especially useful when a scenario is completed.
 
 Click the @onscreen{Loot!} button to draw a loot card; in the window that
 appears, click the name of a player to assign that loot card to the selected
-player. Close the window to assign the card to no player.
+player. You can also place the card on the top or bottom of the loot deck.
 
 The @onscreen{Level Stats} panel shows current Trap and Hazardous Terrain
 damage, the value of Gold, and XP and Inspiration bonuses for completing the
