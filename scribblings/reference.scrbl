@@ -1313,7 +1313,7 @@ namely, mappings from decks to number of cards.
 @defproc[(loot-button
            [|@loot-deck| (obs/c (listof loot-card?))]
            [|@num-loot-cards| (obs/c natural-number/c)]
-           [|@num-players| (obs/c natural-number/c)]
+           [|@num-players| (obs/c num-players/c)]
            [|@players| (obs/c (listof (cons/c player? any/c)))]
            [#:on-player on-player (-> any/c any) void]
            [#:on-top on-top (-> any) void]

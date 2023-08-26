@@ -13,7 +13,7 @@
     [loot-button
       (->* ((obs/c (listof loot-card?))
             (obs/c natural-number/c)
-            (obs/c natural-number/c)
+            (obs/c num-players/c)
             (obs/c (listof (cons/c player? any/c))))
            (#:on-player (-> any/c any)
             #:on-top (-> any)
