@@ -191,6 +191,7 @@
                          #:on-player (give-player-loot s)
                          ;; #:on-top: do nothing :)
                          #:on-bottom (thunk (place-loot-on-bottom s)))
+            (loot-preview (state-@loot-deck s) (state-@num-players s))
             (level-stats (state-@level s) (state-@num-players s))
             (level-table (state-@level s))
             (inspiration-table (state-@num-players s)))))

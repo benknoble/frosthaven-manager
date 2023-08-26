@@ -1334,6 +1334,12 @@ See @secref{Scenario_Information_and_Loot} for how @racket[loot-button]
 functions in Frosthaven Manager.
 }
 
+@defproc[(loot-preview [|@loot-deck (obs/c (listof loot-card?))]
+                       [|@num-players| (obs/c num-players/c)])
+         (is-a?/c view<%>)]{
+A button that, when clicked, shows a loot deck previewer.
+}
+
 @subsection{@tt{gui/manager}}
 @defmodule[frosthaven-manager/gui/manager]
 

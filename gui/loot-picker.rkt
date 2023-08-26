@@ -18,7 +18,10 @@
            (#:on-player (-> any/c any)
             #:on-top (-> any)
             #:on-bottom (-> any))
-           (is-a?/c view<%>))]))
+           (is-a?/c view<%>))]
+    [loot-preview (-> (obs/c (listof loot-card?))
+                      (obs/c num-players/c)
+                      (is-a?/c view<%>))]))
 
 (require racket/gui/easy
          frosthaven-manager/observable-operator
@@ -114,6 +117,40 @@
             (button "Top of Deck" (thunk (on-top) (close!)))
             (button "Bottom of Deck" (thunk (on-bottom) (close!)))
             (spacer))))
+
+(define (loot-preview @loot-deck @num-players)
+  (define (make-rows loot-deck num-players revealed)
+    (define-values (shown hidden)
+      (match revealed
+        ['all (values loot-deck empty)]
+        [(? number? n) (cond
+                         [(<= 0 n (length loot-deck)) (split-at loot-deck n)]
+                         [else (values loot-deck empty)])]))
+    (~> (shown hidden)
+        (== (~> sep (>< (~> (format-loot-card num-players) vector)))
+            (~> sep (>< (gen (vector "?")))))
+        vector))
+  (button "Preview Loot"
+          (thunk
+           (define/obs @revealed 0)
+           (define @rows (obs-combine make-rows @loot-deck @num-players @revealed))
+           (with-closing-custodian/eventspace
+            (render/eventspace
+             #:eventspace closing-eventspace
+             (window
+              #:mixin close-custodian-mixin
+              #:title "Loot Deck Previewer"
+              #:size '(350 450)
+              (hpanel
+               (table '("Loot Card") @rows)
+               (vpanel
+                (button "Reveal 1" (thunk (<~@ @revealed (switch [number? add1])))
+                        #:enabled? (obs-combine (flow (~> (== _ length)
+                                                          (and (~> 1> number?) <)))
+                                                @revealed @loot-deck))
+                (button "Reveal All" (thunk (:= @revealed 'all))
+                        #:enabled? (@> @revealed number?))
+                (spacer)))))))))
 
 (module+ main
   (define/match (find-deck card)
