@@ -27,7 +27,8 @@
                    [@monster-prev-discard (obs/c (or/c #f monster-modifier?))]
                    [@info-db (obs/c info-db/c)]
                    [@ability-db (obs/c ability-db/c)]
-                   [@ability-decks (obs/c (hash/c string? ability-decks?))])]
+                   [@ability-decks (obs/c (hash/c string? ability-decks?))]
+                   [@stickers-per-loot-deck (obs/c (hash/c (listof loot-card?) natural-number/c))])]
     [make-state
       (->* ()
            ((maybe-obs/c symbol?)
@@ -49,7 +50,8 @@
             (maybe-obs/c (or/c #f monster-modifier?))
             (maybe-obs/c info-db/c)
             (maybe-obs/c ability-db/c)
-            (maybe-obs/c (hash/c string? ability-decks?)))
+            (maybe-obs/c (hash/c string? ability-decks?))
+            (maybe-obs/c (hash/c (listof loot-card?) natural-number/c)))
            state?)]
     [state-@env (-> state? (obs/c env/c))]
     [serialize-state (-> state? output-port? void?)]
@@ -118,7 +120,8 @@
          @monster-prev-discard
          @info-db
          @ability-db
-         @ability-decks]
+         @ability-decks
+         @stickers-per-loot-deck]
         #:transparent ;; for struct->vector
         #:property prop:serializable
         (make-serialize-info
@@ -146,7 +149,8 @@
                     [@monster-prev-discard (@ #f)]
                     [@info-db (@ (hash))]
                     [@ability-db (@ (hash))]
-                    [@ability-decks (@ (hash))])
+                    [@ability-decks (@ (hash))]
+                    [@stickers-per-loot-deck (@ (hash))])
   (state (@ @mode)
          (@ @level)
          (@ @num-players)
@@ -166,7 +170,8 @@
          (@ @monster-prev-discard)
          (@ @info-db)
          (@ @ability-db)
-         (@ @ability-decks)))
+         (@ @ability-decks)
+         (@ @stickers-per-loot-deck)))
 
 (define (state-@env s)
   (obs-combine (λ (c l) (hash "C" c "L" l))
@@ -258,7 +263,9 @@
   (:=     (state-@ability-db to)
       (@! (state-@ability-db from)))
   (:=     (state-@ability-decks to)
-      (@! (state-@ability-decks from))))
+      (@! (state-@ability-decks from)))
+  (:=     (state-@stickers-per-loot-deck to)
+      (@! (state-@stickers-per-loot-deck from))))
 
 (define (make-player-creature i)
   (creature i (make-player "" 1)))

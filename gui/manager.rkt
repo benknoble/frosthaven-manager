@@ -80,7 +80,8 @@
 
 (define (build-loot-deck-view s)
   (vpanel
-    (loot-picker #:on-card (update-loot-deck-and-num-loot-cards s))
+    (loot-picker #:on-card (update-loot-deck-and-num-loot-cards s)
+                 #:on-sticker (update-stickers-per-deck (state-@stickers-per-loot-deck s)))
     (spacer)
     (button "Next" (to-choose-monster-db s))))
 
@@ -316,7 +317,7 @@
                (~a (for/sum ([loot (in-list loots)]
                              #:when (and (herb? loot)
                                          (equal? herb (herb-name loot))))
-                     1))))))
+                     (herb-amount loot)))))))
   (button
     "Show Loot and XP"
     (thunk
@@ -357,7 +358,8 @@
   (:= (state-@mode s) 'play))
 
 (define ((to-choose-monster-db s))
-  (:= (state-@loot-deck s) (build-loot-deck (@! (state-@cards-per-deck s))))
+  (:= (state-@loot-deck s) (build-loot-deck (@! (state-@cards-per-deck s))
+                                            (@! (state-@stickers-per-loot-deck s))))
   (:= (state-@mode s) 'choose-monster-db))
 (define ((to-choose-monsters s))
   (:= (state-@mode s) 'choose-monsters))

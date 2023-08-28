@@ -444,9 +444,9 @@ Represents the random-item loot card.
 Serializable.
 }
 
-@defstruct*[money ([amount (integer-in 1 3)])
+@defstruct*[money ([amount natural-number/c])
                   #:transparent]{
-Represents a loot card worth 1 to 3 gold.
+Represents a loot card worth 1 to 3 gold, but may have +1 stickers.
 
 Serializable.
 }
@@ -456,13 +456,15 @@ Serializable.
               [amount (apply list/c (build-list (sub1 max-players) (const natural-number/c)))])
              #:transparent]{
 Represents a loot card for a material; the amount varies by number of players.
+May have +1 stickers.
 
 Serializable.
 }
 
-@defstruct*[herb ([name herb-kind?])
+@defstruct*[herb ([name herb-kind?]
+                  [amount natural-number/c])
                  #:transparent]{
-Represents a loot card for an herb.
+Represents a loot card worth 1 @racket[name] herb, but may have +1 stickers.
 
 Serializable.
 }
@@ -925,7 +927,8 @@ Serializable.
               [|@|monster-prev-discard (obs/c (or/c #f monster-modifier?))]
               [|@|info-db (obs/c info-db/c)]
               [|@|ability-db (obs/c ability-db/c)]
-              [|@|ability-decks (obs/c (hash/c string? ability-decks?))])]{
+              [|@|ability-decks (obs/c (hash/c string? ability-decks?))]
+              [|@|stickers-per-loot-deck (obs/c (hash/c (listof loot-card?) natural-number/c))])]{
 All of the "global" manager state.
 }
 
@@ -949,7 +952,8 @@ All of the "global" manager state.
            [|@|monster-prev-discard (maybe-obs/c (or/c #f monster-modifier?)) (|@| #f)]
            [|@|info-db (maybe-obs/c info-db/c) (|@| (hash))]
            [|@|ability-db (maybe-obs/c ability-db/c) (|@| (hash))]
-           [|@|ability-decks (maybe-obs/c (hash/c string? ability-decks?)) (|@| (hash))])
+           [|@|ability-decks (maybe-obs/c (hash/c string? ability-decks?)) (|@| (hash))]
+           [|@|stickers-per-loot-deck (obs/c (hash/c (listof loot-card?) natural-number/c)) (|@| (hash))])
          state?]{
 Create an initial state.
 }
@@ -1287,11 +1291,13 @@ possible number of players. The current @racket[|@num-players|] starts selected.
 @subsection{@tt{gui/loot-picker}}
 @defmodule[frosthaven-manager/gui/loot-picker]
 
-@defproc[(loot-picker [#:on-card on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any) void])
+@defproc[(loot-picker [#:on-card on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any) void]
+                      [#:on-sticker on-sticker (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any) void])
          (is-a?/c view<%>)]{
 A GUI view to build a loot deck by including certain loot cards. The callback
 @racket[on-card] is invoked with an "event" that specifies a deck of cards from
-which one card should be added or removed.
+which one card should be added or removed. Similarly for @racket[on-sticker] to
+add stickers to decks.
 }
 
 @defproc[((loot-picker-updater [|@cards-per-loot-deck| (obs/c (hash/c (listof loot-card?) natural-number/c))])
@@ -1302,12 +1308,22 @@ Updates the observable @racket[|@cards-per-loot-deck|] based on the event
 per deck.
 }
 
-@defproc[(build-loot-deck [cards-per-loot-deck (hash/c (listof loot-card?) natural-number/c)])
+@defproc[((update-stickers-per-deck [|@stickers-per-deck| (obs/c (hash/c (listof loot-card?) natural-number/c))])
+          [evt (list/c (or/c 'add 'remove) (listof loot-card?))])
+         any]{
+Updates the observable @racket[|@stickers-per-deck|] based on the event
+@racket[evt] as described in @racket[loot-picker] by updating the count of
+stickers per deck.
+}
+
+@defproc[(build-loot-deck [cards-per-loot-deck (hash/c (listof loot-card?) natural-number/c)]
+                          [stickers-per-loot-deck (hash/c (listof loot-card?) natural-number/c)])
          (listof loot-card?)]{
 Converts a count of cards per deck into an shuffled deck of loot cards. This can
 be considered the interpreter for a language whose values are like those
-produced by combined @racket[loot-picker] and @racket[loot-picker-updater];
-namely, mappings from decks to number of cards.
+produced by combined @racket[loot-picker], @racket[loot-picker-updater], and
+@racket[update-stickers-per-deck]; namely, mappings from decks to number of
+cards.
 }
 
 @defproc[(loot-button

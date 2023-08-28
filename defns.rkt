@@ -83,10 +83,11 @@
   (enum-out herb-kind)
   (enum-out random-item-type)
   (contract-out
-    [struct money ([amount (integer-in 1 3)])]
+    [struct money ([amount natural-number/c])]
     [struct material ([name material-kind?]
                       [amount (apply list/c (build-list (sub1 max-players) (const natural-number/c)))])]
-    [struct herb ([name herb-kind?])]
+    [struct herb ([name herb-kind?]
+                  [amount natural-number/c])]
     [loot-card? predicate/c]
     [format-loot-card (-> num-players/c (-> loot-card? string?))]
     [max-money-cards natural-number/c]
@@ -376,7 +377,11 @@
   #:property-maker make-property-maker-that-displays-as-constant-names)
 (define herb-kinds
   (list arrowvine axenut corpsecap flamefruit rockroot snowthistle))
-(serializable-struct herb [name] #:transparent) ;; amount is always 1
+(serializable-struct/versions herb 1 [name amount]
+                              ([0
+                                (λ (name) (herb name 1))
+                                (thunk (error 'herb "cycles not supported"))])
+                              #:transparent)
 (define max-herb-cards 2) ;; each
 (define-serializable-enum-type random-item-type
   (random-item)
@@ -395,7 +400,7 @@
     [(money amount) (format "~a gold coin~a" amount (s? amount))]
     [(material name (app (flow (list-ref (- num-players 2))) amount))
      (format "~a ~a~a" amount name (s? amount))]
-    [(herb name) (format "1 ~a" name)]
+    [(herb name amount) (format "~a ~a~a" amount name (s? amount))]
     [(== random-item) "The random item!"]))
 
 ;; placeholders
@@ -415,7 +420,7 @@
           hide (make-deck hide))))
 (define herb-decks
   (for/hash ([h (in-list herb-kinds)])
-    (values h (build-list max-herb-cards (thunk* (herb h))))))
+    (values h (build-list max-herb-cards (thunk* (herb h 1))))))
 
 ;; scenario
 
