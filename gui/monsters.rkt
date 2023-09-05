@@ -18,7 +18,7 @@
                                (is-a?/c view<%>))]
     [monster-group-view
       (->* ((obs/c monster-group?)
-            (obs/c (or/c #f monster-ability?))
+            (obs/c ability-decks?)
             (obs/c (or/c #f monster-number/c))
             (obs/c env/c))
            (#:on-condition (-> monster-number/c condition? boolean?
@@ -28,7 +28,8 @@
             #:on-kill (-> monster-number/c any)
             #:on-new (-> monster-number/c boolean? any)
             #:on-select (-> (or/c #f monster-number/c) any)
-            #:on-swap (-> (or/c 'all monster-number/c) any))
+            #:on-swap (-> (or/c 'all monster-number/c) any)
+            #:on-move-ability-card (-> any))
            (is-a?/c view<%>))]
     [db-view (-> (obs/c info-db/c) (obs/c ability-db/c) (obs/c (listof monster-group?)) (is-a?/c view<%>))]
     [add-monster-group (->* ((obs/c info-db/c)
@@ -50,6 +51,7 @@
 
          frosthaven-manager/qi
          frosthaven-manager/defns
+         frosthaven-manager/manager/ability-decks
          frosthaven-manager/monster-db
          frosthaven-manager/parsers/formula)
 
@@ -123,13 +125,15 @@
                               (string-join ", " #:before-last " and "))))
       (button "Edit Conditions" show-conditions))))
 
-(define (monster-group-view @mg @ability @monster-num @env
+(define (monster-group-view @mg @ability-deck @monster-num @env
                             #:on-select [on-select void]
                             #:on-condition [on-condition void]
                             #:on-hp [on-hp void]
                             #:on-kill [on-kill void]
                             #:on-new [on-new void]
-                            #:on-swap [on-swap void])
+                            #:on-swap [on-swap void]
+                            #:on-move-ability-card [on-move-ability-card void])
+  (define @ability (@> @ability-deck ability-decks-current))
   (define (do-new)
     (define @available-numbers
       (@~> @mg (~>> monster-group-monsters
@@ -179,15 +183,8 @@
     (group
       "Ability"
       #:min-size (list 200 #f)
-      (vpanel
-        (text (@~> @ability monster-ability-name->text))
-        (observable-view
-         @ability
-         (λ (ability)
-           (apply vpanel
-                  (for/list ([ability-text (if ability (monster-ability-abilities ability) empty)])
-                    (hpanel (ability->text @mg ability-text @env)
-                            (ability->extras @mg @ability ability-text)))))))))
+      (hpanel (monster-ability-view @ability @mg @env)
+              (ability-deck-preview @ability-deck @mg @env #:on-move on-move-ability-card))))
   (define (stats-panel)
     (hpanel
       (group "Normal" (stats-view (@> @mg monster-group-normal-stats) @env)
@@ -268,6 +265,17 @@
                             (stats-panel))
                     (ability-panel)
                     (monsters))])))
+
+(define (monster-ability-view @ability @mg @env)
+  (vpanel
+   (text (@~> @ability monster-ability-name->text))
+   (observable-view
+    @ability
+    (λ (ability)
+      (apply vpanel
+             (for/list ([ability-text (if ability (monster-ability-abilities ability) empty)])
+               (hpanel (ability->text @mg ability-text @env)
+                       (ability->extras @mg @ability ability-text))))))))
 
 ;; TODO: should be able to manipulate individual HP (? dialog with counter)
 ;; Takes a non-observable info-db b/c instantiated by a thunk in
@@ -608,6 +616,102 @@
             (for/list ([extra extras])
               (match extra
                 [(list 'aoe-pict pict) (aoe-button pict)]))))))
+
+(define (ability-deck-preview @ability-deck @mg @env #:on-move [on-move void])
+  (define (make-rows ability-deck revealed)
+    (define draw (ability-decks-draw ability-deck))
+    (define-values {shown hidden}
+      (match revealed
+        ['all (values draw empty)]
+        [(? number? n) (cond
+                         [(<= 0 n (length draw)) (split-at draw n)]
+                         [else (values draw empty)])]))
+    (~> (shown hidden)
+        (== (~> sep (>< (~> monster-ability-name->text vector)))
+            (~> sep (>< (gen (vector "?")))))
+        vector))
+  (define (make-discard-rows ability-deck)
+    (for/vector ([ability (ability-decks-discard ability-deck)])
+      (vector (monster-ability-name->text ability))))
+  (define (revealed-ability-card-information @ability-deck @draw-selection @revealed @mg @env)
+    (define @cards (@> @ability-deck ability-decks-draw))
+    (cond-view
+      [(obs-combine (flow (and 1> (<= 0 __)))
+                    @draw-selection
+                    (@~> @revealed (switch [number? sub1] [else +inf.0])))
+       (monster-ability-view (obs-combine (flow (if (and 2> (~> X (== _ length) <))
+                                                  list-ref
+                                                  (gen (monster-ability "" "" 0 empty #f #f))))
+                                          @cards
+                                          @draw-selection)
+                             @mg
+                             @env)]
+      [else (spacer)]))
+  (define (discard-ability-card-information @ability-deck @discard-selection @mg @env)
+    (define @cards (@> @ability-deck ability-decks-discard))
+    (cond-view
+      [(obs-combine (flow (and 1> (<= 0 __)))
+                    @discard-selection
+                    (@> @cards length))
+       (monster-ability-view (obs-combine (flow (if (and 2> (~> X (== _ length) <))
+                                                  list-ref
+                                                  (gen (monster-ability "" "" 0 empty #f #f))))
+                                          @cards
+                                          @discard-selection)
+                             @mg
+                             @env)]
+      [else (spacer)]))
+  (button
+   "Preview Ability Deck"
+   (thunk
+    (define/obs @revealed 0)
+    (define/obs @draw-selection #f)
+    (define/obs @discard-selection #f)
+    (define @rows (obs-combine make-rows @ability-deck @revealed))
+    (define @discard-rows (@> @ability-deck make-discard-rows))
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
+     (dialog
+      #:size '(600 400)
+      #:style '(close-button resize-border)
+      #:title "Ability Deck Previewer"
+      (vpanel
+       ;; draw
+       (group
+        "Ability Card Draw Pile"
+        (hpanel
+         (table '("Ability Card")
+                @rows
+                (match-lambda**
+                  [{'select _ selection}
+                   (:= @draw-selection selection)]
+                  [{_ _ _} (void)])
+                #:min-size '(200 #f))
+         (revealed-ability-card-information @ability-deck @draw-selection @revealed @mg @env)
+         ;; reveal draw
+         (vpanel
+          (button "Reveal 1" (thunk (<~@ @revealed (switch [number? add1])))
+                  #:enabled? (obs-combine
+                              (flow (~> (== _ (~> ability-decks-draw length))
+                                        (and (~> 1> number?) <)))
+                              @revealed @ability-deck))
+          (button "Reveal All" (thunk (:= @revealed 'all))
+                  #:enabled? (@> @revealed number?))
+          (button "Move Top Card to Bottom"
+                  (thunk
+                   (on-move)
+                   (<~@ @revealed (switch [number? sub1])))))))
+       ;; discard
+       (group
+        "Ability Card Discard Pile"
+        (hpanel
+         (table '("Ability Card")
+                @discard-rows
+                (match-lambda**
+                  [{'select _ selection}
+                   (:= @discard-selection selection)]
+                  [{_ _ _} (void)]))
+         (discard-ability-card-information @ability-deck @discard-selection @mg @env)))))))))
 
 (module+ main
   (require frosthaven-manager/gui/render)

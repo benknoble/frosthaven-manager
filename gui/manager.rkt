@@ -257,13 +257,18 @@
   (define/match (swap who)
     [{'all} (update swap-monster-group-elites)]
     [{n} (update-by-num n swap-monster-elite)])
-  (define @ability
+  (define @ability-deck
     (obs-combine
-      (flow (~> (== _ monster-group-set-name) hash-ref ability-decks-current))
+      (flow (~> (== _ monster-group-set-name) hash-ref))
       (state-@ability-decks s) @mg))
+  (define (move-ability-card)
+    (<~@ (state-@ability-decks s)
+         ;; valid: in a dialog handler
+         (hash-update (monster-group-set-name (@! @mg))
+                      move-top-draw-to-bottom)))
   (monster-group-view
     @mg
-    @ability
+    @ability-deck
     @n
     @env
     #:on-condition update-condition
@@ -271,7 +276,8 @@
     #:on-kill kill
     #:on-new new
     #:on-select select
-    #:on-swap swap))
+    #:on-swap swap
+    #:on-move-ability-card move-ability-card))
 
 (define ((make-creature-view s) k @e)
   (cond-view

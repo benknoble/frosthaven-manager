@@ -1517,20 +1517,21 @@ removal of a group. Other parameters are used as in
 
 @defproc[(monster-group-view
            [|@mg| (obs/c monster-group?)]
-           [|@ability| (obs/c (or/c #f monster-ability?))]
+           [|@ability-deck| (obs/c ability-decks?)]
            [|@monster-num| (obs/c (or/c #f monster-number/c))]
            [|@env| (obs/c env/c)]
            [#:on-select on-select (-> (or/c #f monster-number/c) any) void]
            [#:on-condition on-condition (-> monster-number/c condition? boolean? any) void]
            [#:on-hp on-hp (-> monster-number/c (-> number? number?) any) void]
            [#:on-kill on-kill (-> monster-number/c any) void]
-           [#:on-new on-new (-> monster-number/c boolean? any)]
-           [#:on-swap on-swap (-> (or/c 'all monster-number?) any)])
+           [#:on-new on-new (-> monster-number/c boolean? any) void]
+           [#:on-swap on-swap (-> (or/c 'all monster-number?) any) void]
+           [#:on-move-ability-card on-move-ability-card (-> any) void])
          (is-a?/c view<%>)]{
 A GUI view used to display an entire monster group. See
-@secref{Monster_Group_Controls}. The @racket[|@ability|] is displayed if an
-ability card is present. The @racket[|@monster-num|] determines the currently
-selected monster in the detailed portion of the view.
+@secref{Monster_Group_Controls}. An ability is displayed if an ability card is
+present in @racket[|@ability-deck|]. The @racket[|@monster-num|] determines the
+currently selected monster in the detailed portion of the view.
 
 The callbacks function as follows:
 @itemlist[
@@ -1540,6 +1541,7 @@ The callbacks function as follows:
           @item{@racket[on-kill] is invoked with a monster number when that monster is killed.}
           @item{@racket[on-new] is invoked with a monster number and @racket[#true] if the monster is elite or @racket[#false] otherwise for a newly added monster.}
           @item{@racket[on-swap] is invoked with @racket['all] if all monsters should be swapped by @racket[swap-monster-group-elites], or with a monster number if only that monster should be swapped by @racket[swap-monster-elite].}
+          @item{@racket[on-move-ability-card] is invoked when the top of the ability draw pile should be moved to the bottom using the ability deck previewer.}
 ]
 }
 
