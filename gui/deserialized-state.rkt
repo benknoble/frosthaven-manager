@@ -41,6 +41,7 @@
    (pp-view "info-db" state-@info-db s)
    (pp-view "ability-db" state-@ability-db s)
    (pp-view "ability-decks" state-@ability-decks s)
+   (pp-view "stickers-per-loot-deck" state-@stickers-per-loot-deck s)
    (apply hpanel
           #:stretch '(#t #f)
           (for/list ([key '("L" "C")])
