@@ -10,7 +10,8 @@
     [update-ability-decks
       (-> (-> ability-decks? ability-decks?)
           (-> (hash/c string? ability-decks?)
-              (hash/c string? ability-decks?)))]))
+              (hash/c string? ability-decks?)))]
+    [move-top-draw-to-bottom (-> ability-decks? ability-decks?)]))
 
 (require racket/serialize
          frosthaven-manager/qi
@@ -43,3 +44,11 @@
 (define ((update-ability-decks f) ads)
   (for/hash ([(set ad) (in-hash ads)])
     (values set (f ad))))
+
+(define (move-top-draw-to-bottom ads)
+  (define the-draw (ability-decks-draw ads))
+  (define new-draw
+    (match the-draw
+      ['() '()]
+      [(cons top rest) (append rest (list top))]))
+  (struct-copy ability-decks ads [draw new-draw]))

@@ -1069,6 +1069,10 @@ Discards the active card and shuffles the ability deck if necessary.
 Updates each deck via @racket[f].
 }
 
+@defproc[(move-top-draw-to-bottom [ad ability-decks?]) ability-decks?]{
+Moves the top card of the draw pile to its bottom.
+}
+
 @subsection{@tt{manager/modifier-decks}}
 @defmodule[frosthaven-manager/manager/modifier-decks]
 
