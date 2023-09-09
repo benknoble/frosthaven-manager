@@ -973,6 +973,18 @@ observables. This makes it possible to update an existing @racket[state?] with
 the values from a deserialized @racket[state?].
 }
 
+@deftogether[(
+    @defproc[(make-undo [s state?]) obs?]
+    @defproc[(undo! [s state?] [|@|undo obs?]) any]
+    @defproc[(undoable? [undo list?]) any/c])]{
+Undo procedures. To create an observable undo state that tracks @racket[s], use
+@racket[(make-undo s)]. Then, when @racket[undoable?] is true of the observable
+undo state, use @racket[(undo! s |@|undo)] to actually trigger change.
+
+Warning: sometimes multiple undos are necessary to be coherent. Not all state
+changes are recorded.
+}
+
 @defproc[(make-player-creature [i any/c]) creature?]{
 Make a creature with @racket[creature-id] @racket[i] and @racket[creature-v] a
 @racket[player?].

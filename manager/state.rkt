@@ -57,6 +57,9 @@
     [serialize-state (-> state? output-port? void?)]
     [deserialize-state (-> input-port? state?)]
     [copy-state (-> state? state? any)]
+    [make-undo (-> state? obs?)]
+    [undo! (-> state? obs? any)]
+    [undoable? (-> list? any/c)]
     [make-player-creature (-> any/c creature?)]
     [update-players (-> (listof creature?) any/c (-> player? player?) (listof creature?))]
     [update-monster-groups (-> (listof creature?)
@@ -266,6 +269,51 @@
       (@! (state-@ability-decks from)))
   (:=     (state-@stickers-per-loot-deck to)
       (@! (state-@stickers-per-loot-deck from))))
+
+;;; UNDO
+(define (make-undo s)
+  (define/obs @undo (list (s@->v s)))
+  (define (push-state . _args)
+    (<~@ @undo
+         (~>> (-< _ (~> length (min 100)))
+              take
+              (cons (s@->v s)))))
+  ;; Only observe meaningful changes in state. Observing every change means
+  ;; that, for example, it takes multiple undo! calls to undo assigning loot or
+  ;; starting the round.
+  (for ([element (state-@elements s)])
+    (obs-observe! element push-state))
+  (for ([field (list state-@level
+                     state-@creatures
+                     state-@modifier
+                     state-@curses
+                     state-@blesses
+                     state-@in-draw?)])
+    (obs-observe! (field s) push-state))
+  @undo)
+
+(define (undo! s @undo)
+  ;; IMPORTANT
+  ;; The _saved_ copy `undo` holds the undo stack as of RIGHT NOW. When we call
+  ;; copy-state below, we will trigger changes in s that will (ostensibly) push
+  ;; more chagnes to @undo. But when we update @undo to be the tail of undo, we
+  ;; will discard those (spurious) changes _and_ the top of the stack which we
+  ;; are copying.
+  (define undo (@! @undo))
+  ;; INVARIANT
+  ;; The `undo` should never be empty. If it is, we've lost one state. Why? When
+  ;; we push states in reaction to observable changes, we are pushing the _new_
+  ;; state, not the old. So the only reference to the old state is "underneath"
+  ;; the current state. This also means that the state to restore is actually
+  ;; the 2nd element of the stack. There could be no second element, though.
+  (when (undoable? undo)
+    (define to-restore (second undo))
+    (define new-state (apply make-state (vector->list to-restore)))
+    (copy-state new-state s)
+    (:= @undo (cdr undo))))
+
+(define (undoable? undo)
+  (not (empty? (cdr undo))))
 
 (define (make-player-creature i)
   (creature i (make-player "" 1)))

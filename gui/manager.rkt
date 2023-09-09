@@ -36,6 +36,7 @@
          frosthaven-manager/gui/render)
 
 (define (manager s)
+  (define @undo (make-undo s))
   (application-about-handler do-about)
   (window
     #:title "Frosthaven Manager"
@@ -60,7 +61,7 @@
       [(build-loot-deck) (build-loot-deck-view s)]
       [(choose-monster-db) (choose-monster-db-view s)]
       [(choose-monsters) (choose-monsters-view s)]
-      [(play) (play-view s)]
+      [(play) (play-view s @undo)]
       [else (text "Broken")])))
 
 ;;;; GUI
@@ -123,7 +124,7 @@
                           #:on-change (add-or-remove-monster-group s))
     (button "Next" (to-play s))))
 
-(define (play-view s)
+(define (play-view s @undo)
   (vpanel
     (hpanel
       ;; left
@@ -176,7 +177,8 @@
         (spacer)
         (text (@~> (state-@round s) (~a "Round: " _)))
         (button "Next Round" #:enabled? (state-@in-draw? s) (next-round s))
-        (button "Draw Abilities" #:enabled? (@> (state-@in-draw? s) not) (draw-abilities s))))
+        (button "Draw Abilities" #:enabled? (@> (state-@in-draw? s) not) (draw-abilities s))
+        (button "Undo" #:enabled? (@~> @undo undoable?) (thunk (undo! s @undo)))))
     ;; bottom
     (hpanel #:stretch '(#f #f)
             (show-loot-and-xp (state-@num-players s)
