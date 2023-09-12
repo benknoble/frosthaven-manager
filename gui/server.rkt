@@ -43,6 +43,7 @@
            frosthaven-manager/qi
            frosthaven-manager/monster-db)
   (define-runtime-path more-monsters "../testfiles/sample-bestiary-import.rkt")
+  ;; gui/manager depends on gui/server…
   (define manager (dynamic-require 'frosthaven-manager/gui/manager 'manager))
   (define-values (info _abilities) (get-dbs more-monsters))
   (define mg (make-monster-group (~> (info) (hash-ref "archer") (hash-ref "hynox archer"))
