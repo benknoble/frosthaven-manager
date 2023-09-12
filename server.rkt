@@ -275,7 +275,7 @@
 
 (define (player-xexpr embed/url id p)
   (define id-binding (list (~s "id") (~s (~s id))))
-  `(li ([id ,(~a "player-" id)])
+  `(li ([id ,(player-css-id id)])
        (span ([class "player-name"])
              ,(player-name p))
        " ("
@@ -417,7 +417,7 @@
   (define (both-empty? f)
     (~> (normal-stats elite-stats)
         (>< f) (all empty?)))
-  `(li ([id ,(~a "monster-group-" id)])
+  `(li ([id ,(monster-group-css-id id)])
        (span ([class "monster-group-name"])
              ,(monster-group-name mg))
        " ("
@@ -579,7 +579,7 @@
       (define p (creature-v c))
       (define id (creature-id c))
       (define id-binding (list (~s "id") (~s (~s id))))
-      (define css-id (~a "player-" id))
+      (define css-id (player-css-id id))
       (define data
         (hash 'id css-id
               'data (hash
@@ -600,7 +600,7 @@
     [(list 'monster-group* c env ads)
      (define mg (monster-group*-mg (creature-v c)))
      (define id (creature-id c))
-     (define css-id (~a "monster-group-" id))
+     (define css-id (monster-group-css-id id))
      (define ability (~>> (mg) monster-group-set-name (hash-ref ads) ability-decks-current))
      (define data
        (hash 'id css-id
@@ -833,3 +833,10 @@
   (match/values (req->monster-ids req)
     [{#f #f} (void)]
     [{mgid mn} (f req mgid mn)]))
+
+(define-flow player-css-id (~a "player-" _))
+(define-flow monster-group-css-id (~a "monster-group-" _))
+(define-switch (creature-css-id c)
+  (% creature-v creature-id)
+  [player? player-css-id]
+  [monster-group*? monster-group-css-id])
