@@ -43,6 +43,20 @@ evtSource.addEventListener('monster-group', (event) => {
   }
 });
 
+evtSource.addEventListener('reorder-ids', (event) => {
+  const ids = JSON.parse(event.data);
+  console.log(ids);
+  const creatures = document.querySelector('ul.creatures');
+  let newCreatures = [];
+  for (const id of ids) {
+    newCreatures.push(document.querySelector(`#${id}`));
+  }
+  creatures.innerHTML = '';
+  for (const c of newCreatures) {
+    creatures.appendChild(c);
+  }
+});
+
 evtSource.addEventListener('number', (event) => {
   const {id, n} = JSON.parse(event.data);
   document.querySelector(`#${id}`).innerHTML = n;

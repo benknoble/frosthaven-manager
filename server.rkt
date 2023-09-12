@@ -122,10 +122,13 @@
     (λ (_in-draw?)
       (define env (@! (state-@env an-s)))
       (define ads (@! (state-@ability-decks an-s)))
-      (for ([c (@! (state-@creatures an-s))])
+      (define cs (@! (state-@creatures an-s)))
+      (for ([c cs])
         (cond
           [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]
-          [(monster-group*? (creature-v c)) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))))
+          [(monster-group*? (creature-v c)) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))
+      (define ids (map creature-css-id (sort cs < #:key (creature-initiative ads))))
+      (multicast-channel-put ch `(reorder ,ids))))
   (obs-observe!
    (state-@env an-s)
    (λ (env)
@@ -616,6 +619,11 @@
                                    (map xexpr->string)))
              'xexpr (xexpr->string (monster-group-xexpr id mg ability env))))
      (displayln "event: monster-group" out)
+     (display (format "data: ~a" (jsexpr->string data)) out)
+     (displayln "\n\n" out)]
+    [`(reorder ,ids)
+     (define data ids)
+     (displayln "event: reorder-ids" out)
      (display (format "data: ~a" (jsexpr->string data)) out)
      (displayln "\n\n" out)]
     [`(number ,id ,(? number? n))
