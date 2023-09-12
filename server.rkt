@@ -256,20 +256,22 @@
                   (list (list (~s "id") (~s (symbol->string e))))))))))
 
 (define (creatures-body embed/url)
-  `((h2 "Players")
-    (ul ([class "players"])
-        ,@(for/list ([c (@! (state-@creatures (s)))]
-                     #:when (player? (creature-v c)))
-            (player-xexpr embed/url (creature-id c) (creature-v c))))
-    (h2 "Monsters")
-    (ul ([class "monsters"])
+  `((h2 "Creatures")
+    (ul ([class "creatures"])
         ,@(let ([env (@! (state-@env (s)))]
-                [ability-decks (@! (state-@ability-decks (s)))])
-            (for/list ([c (@! (state-@creatures (s)))]
-                       #:when (monster-group*? (creature-v c)))
-              (define mg (monster-group*-mg (creature-v c)))
-              (define ability (~>> (mg) monster-group-set-name (hash-ref ability-decks) ability-decks-current))
-              (monster-group-xexpr (creature-id c) mg ability env))))))
+                [ability-decks (@! (state-@ability-decks (s)))]
+                [cs (@! (state-@creatures (s)))])
+            (creatures-xexprs embed/url cs env ability-decks)))))
+
+(define (creatures-xexprs embed/url cs env ability-decks)
+  (for/list ([c (sort cs < #:key (creature-initiative ability-decks))])
+    (define v (creature-v c))
+    (cond
+      [(player? v) (player-xexpr embed/url (creature-id c) v)]
+      [(monster-group*? v)
+       (define mg (monster-group*-mg v))
+       (define ability (~>> (mg) monster-group-set-name (hash-ref ability-decks) ability-decks-current))
+       (monster-group-xexpr (creature-id c) mg ability env)])))
 
 (define (player-xexpr embed/url id p)
   (define id-binding (list (~s "id") (~s (~s id))))

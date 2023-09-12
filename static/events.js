@@ -38,7 +38,7 @@ evtSource.addEventListener('monster-group', (event) => {
       }
     }
   } else {
-    const monsters = document.querySelector('ul.monsters');
+    const monsters = document.querySelector('ul.creatures');
     monsters.insertAdjacentHTML('beforeend', xexpr);
   }
 });
