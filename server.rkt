@@ -456,23 +456,24 @@
             (td ,(~a (monster-stats-max-hp* elite-stats env)))))
        (p ([class "monster-ability"])
           (span ([class "monster-ability-name"]) ,(monster-ability-name->text ability))
-          ;; abuse of tables…
-          (table ([class "monster-ability-abilities"])
-                 ,@(monster-ability-xexpr mg ability env)))
+          (ol ([class "monster-ability-abilities"]
+               [style "list-style-type: none;"])
+              ,@(monster-ability-xexpr mg ability env)))
        (div ([class "monsters"])
             ,@(monsters->xexprs id (monster-group-monsters mg) mg env))))
 
 (define (monster-ability-xexpr mg ability env)
-  (for/list ([the-ability (if ability (monster-ability-abilities ability) empty)])
-    (define extras (monster-ability-ability->extras ability the-ability))
-    `(tr
-      (td ,((monster-ability-ability->text the-ability) mg env))
-      ,@(for/list ([extra extras])
-          (match extra
-            [(list 'aoe-pict pict)
-             (define svg
-               (string->xexpr (bytes->string/utf-8 (convert pict 'svg-bytes))))
-             `(td (span ([class "aoe"]) ,svg))])))))
+  (append*
+   (for/list ([the-ability (if ability (monster-ability-abilities ability) empty)])
+     (define extras (monster-ability-ability->extras ability the-ability))
+     (cons
+      `(li (span ([class "monster-ability-ability"])
+                 ,((monster-ability-ability->text the-ability) mg env)))
+      (for/list ([extra extras])
+        (match extra
+          [(list 'aoe-pict pict)
+           (define svg (string->xexpr (bytes->string/utf-8 (convert pict 'svg-bytes))))
+           `(li (span ([class "aoe"]) ,svg))]))))))
 
 (define (monsters->xexprs group-id monsters mg env)
   (for/list ([monster monsters])
