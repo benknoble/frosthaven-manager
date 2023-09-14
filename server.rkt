@@ -427,33 +427,37 @@
        (span ([class "monster-group-initiative"])
              ,(monster-ability-initiative->text ability))
        ")"
-       (table
-        ([class "monster-group-stats"])
-        (tr (th "Normal") (th "Stat") (th "Elite"))
-        (tr (td ,(~a (monster-stats-move normal-stats)))
-            (td "Move")
-            (td ,(~a (monster-stats-move elite-stats))))
-        (tr (td ,(~a (monster-stats-attack* normal-stats env)))
-            (td "Attack")
-            (td ,(~a (monster-stats-attack* elite-stats env))))
-        ,@(if (both-empty? monster-stats-bonuses)
-            empty
-            `((tr (td ,(string-join (monster-stats-bonuses normal-stats) ", "))
-                  (td "Bonuses")
-                  (td ,(string-join (monster-stats-bonuses elite-stats) ", ")))))
-        ,@(if (both-empty? monster-stats-effects)
-            empty
-            `((tr (td ,(string-join (monster-stats-effects normal-stats) ", "))
-                  (td "Effects")
-                  (td ,(string-join (monster-stats-effects elite-stats) ", ")))))
-        ,@(if (both-empty? monster-stats-immunities)
-            empty
-            `((tr (td ,(string-join (monster-stats-immunities normal-stats) ", "))
-                  (td "Immunities")
-                  (td ,(string-join (monster-stats-immunities elite-stats) ", ")))))
-        (tr (td ,(~a (monster-stats-max-hp* normal-stats env)))
-            (td "Max HP")
-            (td ,(~a (monster-stats-max-hp* elite-stats env)))))
+       (details
+        ([style "display: inline; margin-left: 1%;"]
+         [ontoggle "this.style = this.open ? \"display: block;\" : \"display: inline; margin-left: 1%;\";"])
+        (summary "Stats")
+        (table
+         ([class "monster-group-stats"])
+         (tr (th "Normal") (th "Stat") (th "Elite"))
+         (tr (td ,(~a (monster-stats-move normal-stats)))
+             (td "Move")
+             (td ,(~a (monster-stats-move elite-stats))))
+         (tr (td ,(~a (monster-stats-attack* normal-stats env)))
+             (td "Attack")
+             (td ,(~a (monster-stats-attack* elite-stats env))))
+         ,@(if (both-empty? monster-stats-bonuses)
+             empty
+             `((tr (td ,(string-join (monster-stats-bonuses normal-stats) ", "))
+                   (td "Bonuses")
+                   (td ,(string-join (monster-stats-bonuses elite-stats) ", ")))))
+         ,@(if (both-empty? monster-stats-effects)
+             empty
+             `((tr (td ,(string-join (monster-stats-effects normal-stats) ", "))
+                   (td "Effects")
+                   (td ,(string-join (monster-stats-effects elite-stats) ", ")))))
+         ,@(if (both-empty? monster-stats-immunities)
+             empty
+             `((tr (td ,(string-join (monster-stats-immunities normal-stats) ", "))
+                   (td "Immunities")
+                   (td ,(string-join (monster-stats-immunities elite-stats) ", ")))))
+         (tr (td ,(~a (monster-stats-max-hp* normal-stats env)))
+             (td "Max HP")
+             (td ,(~a (monster-stats-max-hp* elite-stats env))))))
        (p ([class "monster-ability"])
           (span ([class "monster-ability-name"]) ,(monster-ability-name->text ability))
           (ol ([class "monster-ability-abilities"]
