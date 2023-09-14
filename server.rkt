@@ -487,6 +487,7 @@
                         (list id-binding)
                         "Kill")
         (span ([class "monster-number"])
+              ,(~a (monster-group-name mg) " ")
               ,(~a (monster-number m))
               ,(if (monster-elite? m) "(E)" ""))
         ,(action-button (list "monster" "hp" "-")
