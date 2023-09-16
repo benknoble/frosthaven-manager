@@ -10,7 +10,7 @@
 (require frosthaven-manager/observable-operator
          frosthaven-manager/defns
          frosthaven-manager/manager/state
-         frosthaven-manager/gui/loot-picker
+         frosthaven-manager/gui/loot
          frosthaven-manager/qi)
 
 (define ((update-loot-deck-and-num-loot-cards s) evt)

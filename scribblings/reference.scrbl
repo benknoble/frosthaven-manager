@@ -35,7 +35,7 @@
             frosthaven-manager/gui/formula-editor
             frosthaven-manager/gui/helpers
             frosthaven-manager/gui/level-info
-            frosthaven-manager/gui/loot-picker
+            frosthaven-manager/gui/loot
             frosthaven-manager/gui/manager
             frosthaven-manager/gui/markdown
             frosthaven-manager/gui/mixins
@@ -1304,8 +1304,8 @@ A GUI view of a button that shows a table of inspiration rewards for each
 possible number of players. The current @racket[|@num-players|] starts selected.
 }
 
-@subsection{@tt{gui/loot-picker}}
-@defmodule[frosthaven-manager/gui/loot-picker]
+@subsection{@tt{gui/loot}}
+@defmodule[frosthaven-manager/gui/loot]
 
 @defproc[(loot-picker [#:on-card on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any) void]
                       [#:on-sticker on-sticker (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any) void])

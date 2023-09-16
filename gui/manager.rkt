@@ -28,7 +28,7 @@
          frosthaven-manager/gui/start
          frosthaven-manager/gui/player-info
          frosthaven-manager/gui/level-info
-         frosthaven-manager/gui/loot-picker
+         frosthaven-manager/gui/loot
          (only-in frosthaven-manager/elements elements)
          frosthaven-manager/gui/elements
          frosthaven-manager/monster-db
