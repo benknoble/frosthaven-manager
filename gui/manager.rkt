@@ -326,9 +326,43 @@
                              #:when (and (herb? loot)
                                          (equal? herb (herb-name loot))))
                      (herb-amount loot)))))))
+  (define (make-entries players num-players level)
+    (for/vector #:length (length players) ([p players])
+      (list p num-players level)))
+  (define make-selected-entry
+    (match-lambda**
+      [{_ #f} (list (make-player "" 1) 2 0)]
+      [{entries selection} (vector-ref entries selection)]))
+  (define (loot-and-xp-view @entries action @selection)
+    (table labels
+           @entries
+           action
+           #:entry->row entry->row
+           #:selection @selection
+           #:column-widths
+           (for/list ([(label i) (in-indexed (in-list labels))])
+             (list i (* 10 (string-length label))))
+           #:min-size '(400 150)))
+  (define (loot-cards-view @entry)
+    (observable-view
+     @entry
+     (match-lambda
+       [(list (app player-loot loot-cards) num-players _)
+        (input
+         (string-join (map (format-loot-card num-players) loot-cards) "\n")
+         #:enabled? #f
+         #:style '(multiple)
+         #:min-size '(400 150))])))
   (button
     "Show Loot and XP"
     (thunk
+     (define @entries (obs-combine make-entries @players @num-players @level))
+     (define/obs @selection #f)
+     (define update-selection
+       (match-lambda**
+         [{'select _ selection} (:= @selection selection)]
+         [{_ _ _} (void)]))
+     (define @selected-entry (obs-combine make-selected-entry @entries @selection))
       (with-closing-custodian/eventspace
         (render/eventspace
           #:eventspace closing-eventspace
@@ -336,17 +370,8 @@
             #:mixin close-custodian-mixin
             #:title "Loot and XP"
             #:size '(400 300)
-            (table labels
-                   (obs-combine
-                     (λ (players num-players level)
-                       (for/vector #:length (length players) ([p players])
-                         (list p num-players level)))
-                     @players @num-players @level)
-                   #:entry->row entry->row
-                   #:selection #f
-                   #:column-widths
-                   (for/list ([(label i) (in-indexed (in-list labels))])
-                     (list i (* 10 (string-length label)))))))))))
+            (loot-and-xp-view @entries update-selection @selection)
+            (loot-cards-view @selected-entry)))))))
 
 ;;;; Transition functions
 
