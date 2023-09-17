@@ -42,6 +42,7 @@
             frosthaven-manager/gui/monsters
             frosthaven-manager/gui/player-info
             frosthaven-manager/gui/render
+            frosthaven-manager/gui/rewards
             frosthaven-manager/gui/server
             frosthaven-manager/gui/stacked-tables
             frosthaven-manager/gui/start
@@ -1698,6 +1699,21 @@ on whether window A or window B was closed first. Note also the use of
 (sync main-es) ;; wait until window A is closed
 (eventspace-shutdown? aux-es) ;; true if window B was closed first
 }
+}
+
+@subsection{@tt{gui/rewards}}
+@defmodule[frosthaven-manager/gui/rewards]
+
+This module contains views for end-of-scenario rewards.
+
+@defproc[(player-rewards-view [|@|num-players (obs/c num-players/c)]
+                              [|@|level (obs/c level/c)]
+                              [|@|players (obs/c (listof player?))]
+                              [#:mixin mix (make-mixin-contract top-level-window<%>) values])
+         (is-a?/c view<%>)]{
+Produces a @racket[window] for displaying a players rewards, such as loot, gold,
+and XP. The selected player's loot cards are also displayed. The mixin
+@racket[mix] is applied to the @racket[window].
 }
 
 @subsection{@tt{gui/server}}

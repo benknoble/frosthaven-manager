@@ -33,7 +33,8 @@
          frosthaven-manager/gui/elements
          frosthaven-manager/monster-db
          frosthaven-manager/gui/monsters
-         frosthaven-manager/gui/render)
+         frosthaven-manager/gui/render
+         frosthaven-manager/gui/rewards)
 
 (define (manager s)
   (define @undo (make-undo s))
@@ -301,77 +302,13 @@
         (spacer)))))
 
 (define (show-loot-and-xp @num-players @level @players)
-  (define labels
-    (append (list "Player" "Random Item?" "XP" "Gold")
-            (map ~a material-kinds)
-            (map ~a herb-kinds)))
-  (define (entry->row e)
-    (match-define (list p num-players level) e)
-    (define loots (player-loot p))
-    (apply vector
-           (player-name p)
-           (if (memf random-item? loots) "x" "")
-           (~a (player-xp p))
-           (~a (for/sum ([loot (in-list loots)] #:when (money? loot))
-                 (* (money-amount loot)
-                    (level-info-gold (get-level-info level)))))
-           (append
-             (for/list ([material material-kinds])
-               (~a (for/sum ([loot (in-list loots)]
-                             #:when (and (material? loot)
-                                         (equal? material (material-name loot))))
-                     (list-ref (material-amount loot) (- num-players 2)))))
-             (for/list ([herb herb-kinds])
-               (~a (for/sum ([loot (in-list loots)]
-                             #:when (and (herb? loot)
-                                         (equal? herb (herb-name loot))))
-                     (herb-amount loot)))))))
-  (define (make-entries players num-players level)
-    (for/vector #:length (length players) ([p players])
-      (list p num-players level)))
-  (define make-selected-entry
-    (match-lambda**
-      [{_ #f} (list (make-player "" 1) 2 0)]
-      [{entries selection} (vector-ref entries selection)]))
-  (define (loot-and-xp-view @entries action @selection)
-    (table labels
-           @entries
-           action
-           #:entry->row entry->row
-           #:selection @selection
-           #:column-widths
-           (for/list ([(label i) (in-indexed (in-list labels))])
-             (list i (* 10 (string-length label))))
-           #:min-size '(400 150)))
-  (define (loot-cards-view @entry)
-    (observable-view
-     @entry
-     (match-lambda
-       [(list (app player-loot loot-cards) num-players _)
-        (input
-         (string-join (map (format-loot-card num-players) loot-cards) "\n")
-         #:enabled? #f
-         #:style '(multiple)
-         #:min-size '(400 150))])))
   (button
-    "Show Loot and XP"
-    (thunk
-     (define @entries (obs-combine make-entries @players @num-players @level))
-     (define/obs @selection #f)
-     (define update-selection
-       (match-lambda**
-         [{'select _ selection} (:= @selection selection)]
-         [{_ _ _} (void)]))
-     (define @selected-entry (obs-combine make-selected-entry @entries @selection))
-      (with-closing-custodian/eventspace
-        (render/eventspace
-          #:eventspace closing-eventspace
-          (window
-            #:mixin close-custodian-mixin
-            #:title "Loot and XP"
-            #:size '(400 300)
-            (loot-and-xp-view @entries update-selection @selection)
-            (loot-cards-view @selected-entry)))))))
+   "Show Loot and XP"
+   (thunk
+    (with-closing-custodian/eventspace
+     (render/eventspace
+      #:eventspace closing-eventspace
+      (player-rewards-view @num-players @level @players #:mixin close-custodian-mixin))))))
 
 ;;;; Transition functions
 
