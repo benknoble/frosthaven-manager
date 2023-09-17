@@ -1812,7 +1812,8 @@ with the level and number of players for each update to those values.
                             (list/c exact-nonnegative-integer?
                                     dimension-integer?
                                     dimension-integer?
-                                    dimension-integer?)))))])
+                                    dimension-integer?)))))
+            #f])
          (is-a?/c view<%>)]{
 A GUI view for static tables. The columns are labelled by @racket[columns], and
 there are exactly @racket[num-rows] rows. Each row is indexed by a natural
