@@ -1139,7 +1139,28 @@ This module provides facilities for manipulating the loot deck.
 
 @defproc[(update-loot-deck-and-num-loot-cards [s state?])
          (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any)]{
-Update the loot deck based on the loot-picker event.
+Update the loot deck based on the @racket[loot-picker] event.
+}
+
+@defproc[((update-stickers-per-deck [s state?])
+          [evt (list/c (or/c 'add 'remove) (listof loot-card?))])
+         any]{
+Updates @racket[(state-|@stickers-per-loot-deck| s)] based on the event
+@racket[evt] as described in @racket[loot-picker] by updating the count of
+stickers per deck.
+}
+
+@defproc[(build-loot-deck [cards-per-loot-deck (hash/c (listof loot-card?) natural-number/c)]
+                          [stickers-per-loot-deck (hash/c (listof loot-card?) natural-number/c)])
+         (listof loot-card?)]{
+Converts a count of cards per deck into an shuffled deck of loot cards. This can
+be considered the interpreter for a language whose values are like those
+produced by @racket[loot-picker] and @racket[update-stickers-per-deck]; namely,
+mappings from decks to number of cards.
+}
+
+@defproc[(build-loot-deck! [s state?]) any]{
+Updates @racket[s] by applying @racket[build-loot-deck].
 }
 
 @defproc[((give-player-loot [s state?]) [k any/c]) any]{
@@ -1315,32 +1336,6 @@ A GUI view to build a loot deck by including certain loot cards. The callback
 @racket[on-card] is invoked with an "event" that specifies a deck of cards from
 which one card should be added or removed. Similarly for @racket[on-sticker] to
 add stickers to decks.
-}
-
-@defproc[((loot-picker-updater [|@cards-per-loot-deck| (obs/c (hash/c (listof loot-card?) natural-number/c))])
-          [evt (list/c (or/c 'add 'remove) (listof loot-card?))])
-         any]{
-Updates the observable @racket[|@cards-per-loot-deck|] based on the event
-@racket[evt] as described in @racket[loot-picker] by updating the count of cards
-per deck.
-}
-
-@defproc[((update-stickers-per-deck [|@stickers-per-deck| (obs/c (hash/c (listof loot-card?) natural-number/c))])
-          [evt (list/c (or/c 'add 'remove) (listof loot-card?))])
-         any]{
-Updates the observable @racket[|@stickers-per-deck|] based on the event
-@racket[evt] as described in @racket[loot-picker] by updating the count of
-stickers per deck.
-}
-
-@defproc[(build-loot-deck [cards-per-loot-deck (hash/c (listof loot-card?) natural-number/c)]
-                          [stickers-per-loot-deck (hash/c (listof loot-card?) natural-number/c)])
-         (listof loot-card?)]{
-Converts a count of cards per deck into an shuffled deck of loot cards. This can
-be considered the interpreter for a language whose values are like those
-produced by combined @racket[loot-picker], @racket[loot-picker-updater], and
-@racket[update-stickers-per-deck]; namely, mappings from decks to number of
-cards.
 }
 
 @defproc[(loot-button

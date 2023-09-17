@@ -6,15 +6,6 @@
                       (#:on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any)
                        #:on-sticker (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any))
                       (is-a?/c view<%>))]
-    [loot-picker-updater (-> (obs/c (hash/c (listof loot-card?) natural-number/c))
-                             (-> (list/c (or/c 'add 'remove) (listof loot-card?))
-                                 any))]
-    [update-stickers-per-deck (-> (obs/c (hash/c (listof loot-card?) natural-number/c))
-                                  (-> (list/c (or/c 'add 'remove) (listof loot-card?))
-                                      any))]
-    [build-loot-deck (-> (hash/c (listof loot-card?) natural-number/c)
-                         (hash/c (listof loot-card?) natural-number/c)
-                         (listof loot-card?))]
     [loot-button
       (->* ((obs/c (listof loot-card?))
             (obs/c natural-number/c)
@@ -86,36 +77,6 @@
     money-view
     (apply group "Materials" material-views)
     (apply group "Herbs" herb-views)))
-
-(define ((loot-picker-updater @cards-per-loot-deck) evt)
-  (define (update cards-per-loot-deck)
-    (match evt
-      [`(add ,deck) (hash-update cards-per-loot-deck deck add1 0)]
-      [`(remove ,deck) (hash-update cards-per-loot-deck deck sub1 0)]))
-  (<@ @cards-per-loot-deck update))
-
-(define (update-stickers-per-deck @stickers-per-deck)
-  ;; Same representation, so reuse implementation (for now)
-  (loot-picker-updater @stickers-per-deck))
-
-(define (build-loot-deck cards-per-loot-deck stickers-per-loot-deck)
-  (shuffle
-   (flatten
-    (for/list ([(deck count) (in-hash cards-per-loot-deck)])
-      ;; NOTE assume each card only gets one sticker…
-      (define stickers (hash-ref stickers-per-loot-deck deck 0))
-      (define-values (to-be-stickered unstickered)
-        (cond
-          [(<= 0 stickers (length deck)) (split-at deck stickers)]
-          [(>= stickers (length deck)) (values deck empty)]
-          [else (values empty deck)]))
-      (define stickered
-        (for/list ([card (in-list to-be-stickered)])
-          (match card
-            [(money amount) (money (add1 amount))]
-            [(material name amount) (material name (map add1 amount))]
-            [(herb name amount) (herb name (add1 amount))])))
-      (take (shuffle (append stickered unstickered)) count)))))
 
 (define (loot-button @loot-deck
                      @num-loot-cards
@@ -192,14 +153,14 @@
                 (spacer)))))))))
 
 (module+ main
+  (require frosthaven-manager/manager)
+  (define s (make-state))
   (define/match (find-deck card)
     [{(money _)} "Money"]
     [{(or (material kind _) (herb kind _))} (~a kind)]
     [{(== random-item)} "Random Item"])
   (define (table-with-actual-loot-deck)
-    (define @deck (obs-combine build-loot-deck
-                               @cards-per-loot-deck
-                               @stickers-per-loot-deck))
+    (define @deck (obs-combine build-loot-deck @cards-per-loot-deck (state-@stickers-per-loot-deck s)))
     ;; not setting current renderer, nor using an eventspace: dialog
     (vpanel
       (hpanel (text "Duplicates?")
@@ -209,12 +170,11 @@
              #:entry->row (flow (~> (-< eq-hash-code _) (>< ~a) vector))
              #:min-size '(250 300))))
   (define-flow count+decks->row (~> (-< (~> car car find-deck) (~> cdr ~a)) vector))
-  (define/obs @cards-per-loot-deck (hash))
-  (define/obs @stickers-per-loot-deck (hash))
+  (define/obs @cards-per-loot-deck (state-@cards-per-deck s))
   (void (render/eventspace
           ;; no separate eventspace: block main until this window closed
-          (window (hpanel (loot-picker #:on-card (loot-picker-updater @cards-per-loot-deck)
-                                       #:on-sticker (update-stickers-per-deck @stickers-per-loot-deck))
+          (window (hpanel (loot-picker #:on-card (update-loot-deck-and-num-loot-cards s)
+                                       #:on-sticker (update-stickers-per-deck s))
                           (table '("Deck" "Cards")
                                  (@~> @cards-per-loot-deck (~> hash->list list->vector))
                                  #:entry->row count+decks->row
