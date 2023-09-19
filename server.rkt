@@ -147,6 +147,7 @@
   (define-values (app the-reverse-uri)
     (dispatch-rules
       [("") overview]
+      [("rewards") rewards]
       [("action" "player" (string-arg) (string-arg) ...) #:method "post" player-action]
       [("action" "summon" (string-arg) (string-arg) ...) #:method "post" summon-action]
       [("action" "monster" (string-arg) (string-arg) ...) #:method "post" monster-action]
@@ -220,6 +221,65 @@
          ,@(bottom-info-body embed/url)
          ))))
 
+(define/page (rewards)
+  (define players
+    (for/list ([c (@! (state-@creatures (s)))]
+               #:when (player? (creature-v c)))
+      (creature-v c)))
+  (define num-players (@! (state-@num-players (s))))
+  (define level (@! (state-@level (s))))
+  (define gold-factor (level-info-gold (get-level-info level)))
+  (define-flow get-material-amount (~> material-amount (list-ref (- num-players 2))))
+  (define (find-materials m)
+    (flow (and material? (~> material-name (equal? m)))))
+  (define (find-herbs h)
+    (flow (and herb? (~> herb-name (equal? h)))))
+  (response/xexpr
+   `(html
+     (head
+      (title "Frosthaven Manager Rewards")
+      ,@common-heads
+      (style "
+             table { width: 100%; border: 1px solid; border-collapse: collapse; }
+             th, td { border: 1px solid; padding: 1%; }
+             tbody tr:hover { background-color: powderblue; }
+             .table-wrapper { width: 100%; overflow-x: auto; }
+             "))
+     (body
+      (h1 "Rewards")
+      (div
+       ([class "table-wrapper"])
+       (table
+        (thead
+         (tr (th "Player")
+             (th "Random Item?")
+             (th "XP")
+             (th "Gold")
+             ,@(map (flow (~>> ~a (list 'th))) material-kinds)
+             ,@(map (flow (~>> ~a (list 'th))) herb-kinds)))
+        (tbody
+         ,@(for/list ([p players])
+             (define loots (player-loot p))
+             `(tr (td ,(player-name p))
+                  (td ,(if (memf random-item? loots) "x" ""))
+                  (td ,(~a (player-xp p)))
+                  (td ,(~a (for/sum ([loot loots] #:when (money? loot))
+                             (* (money-amount loot) gold-factor))))
+                  ,@(for/list ([m material-kinds])
+                      `(td ,(~a (for/sum ([loot (filter (find-materials m) loots)])
+                                  (get-material-amount loot)))))
+                  ,@(for/list ([h herb-kinds])
+                      `(td ,(~a (for/sum ([loot (filter (find-herbs h) loots)])
+                                  (herb-amount loot))))))))))
+      (p "Gold Conversion Rate: " ,(~a gold-factor))
+      ;; individual loot cards
+      ,@(append*
+         (for/list ([p players])
+           `((h2 ,(~a (player-name p) "'s Loot Cards"))
+             (ul
+              ,@(for/list ([loot-text (map (format-loot-card num-players) (player-loot p))])
+                  `(li ,loot-text))))))))))
+
 (define (top-info-body embed/url)
   `((p "Round "
        (span ([id "round"])
@@ -246,7 +306,8 @@
        (br)
        "Inspiration: "
        (span ([id "inspiration"])
-             ,(number->string (inspiration-reward num-players))))))
+             ,(number->string (inspiration-reward num-players))))
+    (a ([href "/rewards"]) "Rewards")))
 
 (define (elements-body embed/url)
   `((h2 "Elements")
