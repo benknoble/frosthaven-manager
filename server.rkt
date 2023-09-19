@@ -381,7 +381,11 @@
           ,(action-button
             (list "player" "xp" "+")
             (list id-binding)
-            "+"))
+            "+")
+          ,(action-button
+            (list "player" "loot")
+            (list id-binding)
+            "Loot!"))
        (p (select ([id ,(~a "select-conditions-" id)])
                   ,@(for/list ([c conditions])
                       `(option ([value ,(~a (discriminator:condition c))])
@@ -711,6 +715,7 @@
       ['("condition" "remove") (remove-player-condition req)]
       ['("condition" "add") (add-player-condition req)]
       ['("initiative") (set-player-initiative req)]
+      ['("loot") (loot! req)]
       [_ (return (not-found req))])
     (response/empty)))
 
@@ -772,6 +777,12 @@
        (initiative . ,(app string->number (? (and/c number? initiative?) init))))
       (do (<~@ (state-@creatures (s))
                (update-players id (flow (player-set-initiative init)))))]
+    [_ (void)]))
+
+(define (loot! req)
+  (match (assq 'id (request-bindings req))
+    [`(id . ,(app string->number (? number? id)))
+     (do ((give-player-loot (s)) id))]
     [_ (void)]))
 
 (define/summon kill-summon (_r => [pid sid])
