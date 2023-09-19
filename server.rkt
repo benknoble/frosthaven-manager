@@ -797,13 +797,13 @@
 
 (define/summon add-summon-condition (req => [pid sid])
   (match (req->condition req)
-    [#f (void)]
-    [c (do-player/id pid (const #f) (update-player-summon sid (summon-add-condition c)))]))
+    [(and c (not #f)) (do-player/id pid (const #f) (update-player-summon sid (summon-add-condition c)))]
+    [_ (void)]))
 
 (define/summon remove-summon-condition (req => [pid sid])
   (match (req->condition req)
-    [#f (void)]
-    [c (do-player/id pid (const #f) (update-player-summon sid (summon-remove-condition c)))]))
+    [(and c (not #f)) (do-player/id pid (const #f) (update-player-summon sid (summon-remove-condition c)))]
+    [_ (void)]))
 
 (define/monster kill-monster (_r => [mgid mn])
   (do-monster-group/mgid mgid (monster-group-remove mn) (flow (~> 2> monster-group-first-monster))))
@@ -825,13 +825,13 @@
 
 (define/monster add-monster-condition (req => [mgid mn])
   (match (req->condition req)
-    [#f (void)]
-    [c (do-monster-group/n mgid mn (monster-update-condition c #t))]))
+    [(and c (not #f)) (do-monster-group/n mgid mn (monster-update-condition c #t))]
+    [_ (void)]))
 
 (define/monster remove-monster-condition (req => [mgid mn])
   (match (req->condition req)
-    [#f (void)]
-    [c (do-monster-group/n mgid mn (monster-update-condition c #f))]))
+    [(and c (not #f)) (do-monster-group/n mgid mn (monster-update-condition c #f))]
+    [_ (void)]))
 
 ;;;; HELPERS
 
@@ -857,8 +857,8 @@
 
 (define (do-player req guard action)
   (match (req->player-id req)
-    [#f (void)]
-    [id (do-player/id id guard action)]))
+    [(and id (not #f)) (do-player/id id guard action)]
+    [_ (void)]))
 
 (define (do-player/id id guard action)
   (do (<~@ (state-@creatures (s))
@@ -922,8 +922,8 @@
 
 (define (-do-monster req f)
   (match/values (req->monster-ids req)
-    [{#f #f} (void)]
-    [{mgid mn} (f req mgid mn)]))
+    [{(and mgid (not #f)) (and mn (not #f))} (f req mgid mn)]
+    [{_ _} (void)]))
 
 (define-flow player-css-id (~a "player-" _))
 (define-flow monster-group-css-id (~a "monster-group-" _))
