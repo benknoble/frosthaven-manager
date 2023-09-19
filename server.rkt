@@ -901,8 +901,8 @@
 
 (define (-do-summon req f)
   (match/values (req->player-summon-id req)
-    [{#f #f} (void)]
-    [{pid sid} (f req pid sid)]))
+    [{(and pid (not #f)) (and sid (not #f))} (f req pid sid)]
+    [{_ _} (void)]))
 
 (define (req->monster-ids r)
   (match (assq 'id (request-bindings r))
