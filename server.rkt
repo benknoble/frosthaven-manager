@@ -771,18 +771,15 @@
   (do-player-condition #t))
 
 (define (set-player-initiative req)
-  (define binds (request-bindings req))
-  (match (~> (binds) (-< (assq 'id _) (assq 'initiative _)) collect)
-    [`((id . ,(app string->number (? number? id)))
-       (initiative . ,(app string->number (? (and/c number? initiative?) init))))
-      (do (<~@ (state-@creatures (s))
-               (update-players id (flow (player-set-initiative init)))))]
-    [_ (void)]))
+  (match* {(req->player-id req) (req->initiative req)}
+    [{(and id (not #f)) (and init (not #f))}
+     (do (<~@ (state-@creatures (s))
+              (update-players id (flow (player-set-initiative init)))))]
+    [{_ _} (void)]))
 
 (define (loot! req)
-  (match (assq 'id (request-bindings req))
-    [`(id . ,(app string->number (? number? id)))
-     (do ((give-player-loot (s)) id))]
+  (match (req->player-id req)
+    [(and id (not #f)) (do ((give-player-loot (s)) id))]
     [_ (void)]))
 
 (define/summon kill-summon (_r => [pid sid])
@@ -859,24 +856,26 @@
   (struct-copy path/param pp [param empty]))
 
 (define (do-player req guard action)
-  (match (assq 'id (request-bindings req))
-    [`(id . ,(app string->number (? number? id)))
-     (do-player/id id guard action)]
-    [_ (void)]))
+  (match (req->player-id req)
+    [#f (void)]
+    [id (do-player/id id guard action)]))
 
 (define (do-player/id id guard action)
   (do (<~@ (state-@creatures (s))
            (update-players id (flow (switch [(not guard) action]))))))
 
 (define (do-player-condition req add-or-remove)
-  (define binds (request-bindings req))
-  (match (~> (binds) (-< (assq 'id _) (assq 'condition _)) collect)
-    [`((id . ,(app string->number (? number? id)))
-       (condition . ,(app string->number (? selector:condition? (app selector:condition c)))))
+  (match* {(req->player-id req) (req->condition req)}
+    [{(and id (not #f)) (and c (not #f))}
       (define c? (list c add-or-remove))
       (do (<~@ (state-@creatures (s))
                (update-players id (player-condition-handler c?))))]
-    [_ (void)]))
+    [{_ _} (void)]))
+
+(define (req->player-id r)
+  (match (assq 'id (request-bindings r))
+    [`(id . ,(app string->number (? number? id))) id]
+    [_ #f]))
 
 (define (req->player-summon-id r)
   (match (assq 'id (request-bindings r))
@@ -892,6 +891,12 @@
     [(cons 'condition
            (app string->number (? selector:condition? (app selector:condition c))))
      c]
+    [_ #f]))
+
+(define (req->initiative r)
+  (match (assq 'initiative (request-bindings r))
+    [`(initiative . ,(app string->number (? (and/c number? initiative?) init)))
+     init]
     [_ #f]))
 
 (define (-do-summon req f)
