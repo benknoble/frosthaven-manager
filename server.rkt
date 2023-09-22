@@ -247,7 +247,7 @@ table {
 }
 th, td {
   border: 1px solid;
-  padding: 1%;
+  padding: 0.5em;
 }
 tbody tr:hover {
   background-color: powderblue;
