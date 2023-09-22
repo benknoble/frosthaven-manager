@@ -109,8 +109,8 @@
   (~> (bestiary)
       sep (>< (switch [(listof monster-ability?) sep])) collect
       datums->dbs
-      (== (:= @info-db _)
-          (:= @ability-db _)))
+      (== (ε (:= @info-db _) ground)
+          (ε (:= @ability-db _) ground)))
   (:= @imports (filter-map (and/c (list/c 'import string?)
                                   second)
                            bestiary))
