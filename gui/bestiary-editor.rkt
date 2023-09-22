@@ -4,6 +4,10 @@
 
 (module+ main (main))
 
+;; (module+ main
+;;   (require racket/gui/easy/debugger)
+;;   (start-debugger))
+
 (require (only-in racket/gui
                   get-file
                   put-file
@@ -24,6 +28,8 @@
   (define/obs @ability-db (hash))
   (define/obs @imports (list))
   (define/obs @current-file #f)
+  (define/obs @previous-files empty)
+  (define/obs @next-files empty)
   (define/obs @error-text "")
   (define (call-with-error-text th)
     (:= @error-text "")
@@ -35,8 +41,7 @@
     (with-error-text
      (define file (get-file/filter "Bestiary" '("Bestiary" "*.rkt")))
      (when file
-       (open-file file @current-file @info-db @ability-db @imports)
-       (:= @current-file file))))
+       (open-file file @previous-files @current-file @next-files @info-db @ability-db @imports))))
   (define (save-bestiary)
     (with-error-text
      (define file (put-file/filter "Bestiary" '("Bestiary" "*.rkt")
@@ -68,9 +73,25 @@
            (issue-menu-item)
            (feature-menu-item)
            (contribute-menu-item)))
-    ;; TODO nav buttons (when you open a bestiary, you should be able to go "back" and "forward" to files; stack)
-    (hpanel (button "Open Bestiary" open-bestiary)
-            (button "Save Bestiary" save-bestiary))
+    (hpanel (button "Back"
+                    (back @previous-files @current-file @next-files @info-db @ability-db @imports)
+                    #:enabled? (@~> @previous-files (not empty?)))
+            (input (@~> @previous-files (if empty? "(None)" (~> car ~a)))
+                   #:enabled? #f
+                   #:label "Back to:"))
+    (hpanel (button "Forward"
+                    (forward @previous-files @current-file @next-files @info-db @ability-db @imports)
+                    #:enabled? (@~> @next-files (not empty?)))
+            (input (@~> @next-files (if empty? "(None)" (~> car ~a)))
+                   #:enabled? #f
+                   #:label "Forward to:"))
+    (hpanel (spacer)
+            (button "Open Bestiary" open-bestiary)
+            (button "Save Bestiary" save-bestiary)
+            (spacer))
+    (input (@~> @current-file (if _ ~a "(None)"))
+           #:enabled? #f
+           #:label "Current File:")
     ;; imports-view
     (table
      '("Valid Import?" "Imports")
@@ -85,12 +106,14 @@
      (match-lambda**
        [{'dclick imports (? number? index)}
         (with-error-text
-         (open-file (vector-ref (vector-ref imports index) 1) @current-file @info-db @ability-db @imports))]
+         (open-file (vector-ref (vector-ref imports index) 1) @previous-files @current-file @next-files @info-db @ability-db @imports))]
        [{_ _ _} (void)]))
     ;; db-view
     ;; TODO Edit buttons
     ;; TODO New Set/Monster/Ability Buttons
     ;; requires some updates to db-view
+    ;; or a brand new db-editor? would be easier, at the cost of some possible
+    ;; code duplication
     (db-view @info-db @ability-db (@ empty))
     (cond-view
       [(@> @error-text non-empty-string?)
@@ -98,16 +121,41 @@
                (input @error-text #:style '(multiple)))]
       [else (spacer)]))))
 
-(define (open-file file @current-file @info-db @ability-db @imports)
-  (define the-file
-    (file-relative-to-current file (@! @current-file)))
+(define (open-file file @previous-files @current-file @next-files @info-db @ability-db @imports)
+  (define current-file (@! @current-file))
+  (define the-file (file-relative-to-current file current-file))
+  (get-bestiary the-file @info-db @ability-db @imports)
+  (when current-file
+    (<~@ @previous-files (cons current-file _)))
+  (:= @current-file the-file)
+  (:= @next-files empty))
+
+(define ((back @previous-files @current-file @next-files @info-db @ability-db @imports))
+  (define previous-file (@! (@~> @previous-files (if empty? #f first))))
+  (when previous-file
+    (define current-file (@! @current-file))
+    (<~@ @next-files (cons current-file _))
+    (:= @current-file previous-file)
+    (<~@ @previous-files rest)
+    (get-bestiary previous-file @info-db @ability-db @imports)))
+
+(define ((forward @previous-files @current-file @next-files @info-db @ability-db @imports))
+  (define next-file (@! (@~> @next-files (if empty? #f first))))
+  (when next-file
+    (define current-file (@! @current-file))
+    (<~@ @previous-files (cons current-file _))
+    (:= @current-file next-file)
+    (<~@ @next-files rest)
+    (get-bestiary next-file @info-db @ability-db @imports)))
+
+(define (get-bestiary file @info-db @ability-db @imports)
   (define bestiary
     (call-with-input-file*
-     the-file
+     file
      (λ (ip)
        (when (regexp-match-peek #rx"#lang" ip)
          (void (read-line ip 'any)))
-       (parse-bestiary the-file ip #:syntax? #f))))
+       (parse-bestiary file ip #:syntax? #f))))
   (~> (bestiary)
       sep (>< (switch [(listof monster-ability?) sep])) collect
       datums->dbs
@@ -115,8 +163,7 @@
           (ε (:= @ability-db _) ground)))
   (:= @imports (filter-map (and/c (list/c 'import string?)
                                   second)
-                           bestiary))
-  (:= @current-file the-file))
+                           bestiary)))
 
 (define (file-relative-to-current file current-file)
   (cond
