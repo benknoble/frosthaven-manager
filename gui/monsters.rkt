@@ -553,7 +553,8 @@
        (λ (ability?)
          (apply vpanel
                 (for/list ([ability-text (if ability? (monster-ability-abilities ability?) empty)])
-                  (text ability-text))))))))
+                  (text ability-text))
+                #:alignment '(left center)))))))
   (apply vpanel (append from-table others)))
 
 (define (ability-view-columns @ability-db)
