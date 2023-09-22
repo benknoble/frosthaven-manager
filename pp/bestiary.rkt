@@ -2,7 +2,7 @@
 
 (provide
  (contract-out
-  [pretty-bestiary (-> bestiary/c doc?)]))
+  [pretty-bestiary (->* (bestiary/c) (#:lang-line? any/c) doc?)]))
 
 (require pretty-expressive
          frosthaven-manager/defns
