@@ -104,7 +104,8 @@
     (call-with-input-file*
      the-file
      (λ (ip)
-       (void (read-line ip)) ;; #lang line
+       (when (regexp-match-peek #rx"#lang" ip)
+         (void (read-line ip 'any)))
        (parse-bestiary the-file ip #:syntax? #f))))
   (~> (bestiary)
       sep (>< (switch [(listof monster-ability?) sep])) collect
