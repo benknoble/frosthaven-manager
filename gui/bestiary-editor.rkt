@@ -68,6 +68,9 @@
            (issue-menu-item)
            (feature-menu-item)
            (contribute-menu-item)))
+    ;; TODO nav buttons (when you open a bestiary, you should be able to go "back" and "forward" to files; stack)
+    (hpanel (button "Open Bestiary" open-bestiary)
+            (button "Save Bestiary" save-bestiary))
     ;; imports-view
     (table
      '("Valid Import?" "Imports")
@@ -89,8 +92,6 @@
     ;; TODO New Set/Monster/Ability Buttons
     ;; requires some updates to db-view
     (db-view @info-db @ability-db (@ empty))
-    (hpanel (button "Open Bestiary" open-bestiary)
-            (button "Save Bestiary" save-bestiary))
     (cond-view
       [(@> @error-text non-empty-string?)
        (hpanel (text "Error message:" #:color "red")
