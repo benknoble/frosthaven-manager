@@ -497,14 +497,14 @@
                            (define name->info (hash-ref (@! @info-db) set))
                            (for/vector ([name (sort (hash-keys name->info) string<?)])
                              (data set name #f #f #f name->info))))
-    ;; (data set name _ _ _ name->info) -> #((date set name level elite? info name->info))
+    ;; (data set name _ _ _ name->info) -> #((data set name level elite? info name->info))
     (column "Name" data-name (match-lambda
                                [(data set name _ _ _ name->info)
                                 (define mi (hash-ref name->info name))
                                 (for*/vector ([level (in-range number-of-levels)]
                                               [elite? (list #t #f)])
                                   (data set name level elite? mi name->info))]))
-    ;; (date set name level elite? info name->info) -> monster-stats?
+    ;; (data set name level elite? info name->info) -> monster-stats?
     (column "Level"
             (match-lambda [(data _ _ level elite? _ _)
                            (~a "Level " level (if elite? " (Elite)" ""))])
