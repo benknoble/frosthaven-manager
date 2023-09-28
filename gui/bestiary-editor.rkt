@@ -168,7 +168,7 @@
        [{_ _ _} (void)]))
     ;; TODO new-import here
     ;; db-view
-    ;; TODO New Set/Monster/Ability Buttons
+    ;; TODO New Monster Buttons
     (bestiary-editor @info-db @ability-db edit)
     (cond-view
       [(@> @error-text non-empty-string?)
@@ -195,7 +195,6 @@
    (~> (info) ->stats (list-ref level))])
 
 (define (stats-editor @info-db edit)
-  ;; TODO new set, new "name"
   (apply stacked-tables
          ;; #(set)
          (@~> @info-db (~> hash-keys (sort string<?) list->vector))
@@ -239,6 +238,7 @@
                           #:enabled? @data?)))))
 
 (define (abilities-editor @ability-db edit)
+  ;; TODO
   (spacer))
 
 (define (number-editor label @n edit)
