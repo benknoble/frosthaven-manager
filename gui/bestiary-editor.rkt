@@ -81,14 +81,20 @@
                     (struct-copy monster-stats stats [attack (proc current-value)])]
                    [{(== monster-stats-bonuses) '(new)}
                     (struct-copy monster-stats stats [bonuses (append current-value '(""))])]
+                   [{(== monster-stats-bonuses) (list index 'remove)}
+                    (struct-copy monster-stats stats [bonuses (list-remove current-value index)])]
                    [{(== monster-stats-bonuses) (list index value)}
                     (struct-copy monster-stats stats [bonuses (list-set current-value index value)])]
                    [{(== monster-stats-effects) '(new)}
                     (struct-copy monster-stats stats [effects (append current-value '(""))])]
+                   [{(== monster-stats-effects) (list index 'remove)}
+                    (struct-copy monster-stats stats [effects (list-remove current-value index)])]
                    [{(== monster-stats-effects) (list index value)}
                     (struct-copy monster-stats stats [effects (list-set current-value index value)])]
                    [{(== monster-stats-immunities) '(new)}
                     (struct-copy monster-stats stats [immunities (append current-value '(""))])]
+                   [{(== monster-stats-immunities) (list index 'remove)}
+                    (struct-copy monster-stats stats [immunities (list-remove current-value index)])]
                    [{(== monster-stats-immunities) (list index value)}
                     (struct-copy monster-stats stats [immunities (list-set current-value index value)])]))))
             (<@ @info-db
@@ -260,7 +266,7 @@
                         [@button-enabled @button-enableds])
                (define/obs @value x)
                (hpanel
-                ;; TODO remove i
+                (button "Remove" (thunk (edit i 'remove)))
                 (input x
                        (λ (action value)
                          (case action
