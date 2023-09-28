@@ -20,8 +20,9 @@
          frosthaven-manager/monster-db
          frosthaven-manager/parsers/monster
          frosthaven-manager/pp/bestiary
-         frosthaven-manager/gui/monsters
-         frosthaven-manager/gui/common-menu)
+         frosthaven-manager/gui/common-menu
+         frosthaven-manager/gui/stacked-tables
+         frosthaven-manager/gui/counter)
 
 (define (main)
   (define/obs @info-db (hash))
@@ -58,6 +59,54 @@
            #:out op
            #:page-width 120))
         #:exists 'replace))))
+  (define (edit . xs)
+    (match (car xs)
+      ['stats
+       (match (cdr xs)
+         [(list* data f args)
+          (when data
+            (match-define (struct stats-editor-data [set name level elite? _info _name->info]) data)
+            (define current-value (f (stats-editor-data-stats data)))
+            (define (update-statss the-statss)
+              (list-update
+               the-statss
+               level
+               (λ (stats)
+                 (match* (f args)
+                   [{(== monster-stats-max-hp) (list proc)}
+                    (struct-copy monster-stats stats [max-hp (proc current-value)])]
+                   [{(== monster-stats-move) (list proc)}
+                    (struct-copy monster-stats stats [move (proc current-value)])]
+                   [{(== monster-stats-attack) (list proc)}
+                    (struct-copy monster-stats stats [attack (proc current-value)])]
+                   [{(== monster-stats-bonuses) '(new)}
+                    (struct-copy monster-stats stats [bonuses (append current-value '(""))])]
+                   [{(== monster-stats-bonuses) (list index value)}
+                    (struct-copy monster-stats stats [bonuses (list-set current-value index value)])]
+                   [{(== monster-stats-effects) '(new)}
+                    (struct-copy monster-stats stats [effects (append current-value '(""))])]
+                   [{(== monster-stats-effects) (list index value)}
+                    (struct-copy monster-stats stats [effects (list-set current-value index value)])]
+                   [{(== monster-stats-immunities) '(new)}
+                    (struct-copy monster-stats stats [immunities (append current-value '(""))])]
+                   [{(== monster-stats-immunities) (list index value)}
+                    (struct-copy monster-stats stats [immunities (list-set current-value index value)])]))))
+            (<@ @info-db
+                (λ (info-db)
+                  (hash-update
+                   info-db
+                   set
+                   (λ (name->info)
+                     (hash-update
+                      name->info
+                      name
+                      (λ (info)
+                        (define ->stats (if elite? monster-info-elite-stats monster-info-normal-stats))
+                        (define the-statss (->stats info))
+                        (if elite?
+                          (struct-copy monster-info info [elite-stats (update-statss the-statss)])
+                          (struct-copy monster-info info [normal-stats (update-statss the-statss)])))))))))])]
+      ['abilities (void)]))
   (render
    (window
     #:title "Bestiary Editor"
@@ -93,6 +142,7 @@
            #:enabled? #f
            #:label "Current File:")
     ;; imports-view
+    ;; TODO not big enough :(
     (table
      '("Valid Import?" "Imports")
      (obs-combine
@@ -108,18 +158,130 @@
         (with-error-text
          (open-file (vector-ref (vector-ref imports index) 1) @previous-files @current-file @next-files @info-db @ability-db @imports))]
        [{_ _ _} (void)]))
+    ;; TODO new-import here
     ;; db-view
-    ;; TODO Edit buttons
     ;; TODO New Set/Monster/Ability Buttons
-    ;; requires some updates to db-view
-    ;; or a brand new db-editor? would be easier, at the cost of some possible
-    ;; code duplication
-    (db-view @info-db @ability-db (@ empty))
+    (bestiary-editor @info-db @ability-db edit)
     (cond-view
       [(@> @error-text non-empty-string?)
        (hpanel (text "Error message:" #:color "red")
                (input @error-text #:style '(multiple)))]
       [else (spacer)]))))
+
+(define (bestiary-editor @info-db @ability-db edit)
+  (define/obs @tab "Stats")
+  (tabs '("Stats" "Abilities")
+        #:selection @tab
+        (λ (e _choices current)
+          (case e [(select) (:= @tab current)]))
+        (case-view @tab
+          [("Stats") (stats-editor @info-db (λ xs (apply edit 'stats xs)))]
+          [("Abilities") (abilities-editor @ability-db (λ xs (apply edit 'abilities xs)))]
+          [else (spacer)])))
+
+(struct stats-editor-data [set name level elite? info name->info])
+
+(define/match (stats-editor-data-stats _x)
+  [{(stats-editor-data _ _ level elite? info _)}
+   (define ->stats (if elite? monster-info-elite-stats monster-info-normal-stats))
+   (~> (info) ->stats (list-ref level))])
+
+(define (stats-editor @info-db edit)
+  ;; TODO new set, new "name"
+  ;; TODO remove entire info
+  (apply stacked-tables
+         ;; #(set)
+         (@~> @info-db (~> hash-keys (sort string<?) list->vector))
+         (stats-editor-stats-editor edit)
+         (stats-editor-columns @info-db)))
+
+(define (stats-editor-columns @info-db)
+  (list
+   ;; set -> #((stats-editor-data set name _ _ _ name->info))
+   (column "Set" values (λ (set)
+                          (define name->info (hash-ref (@! @info-db) set))
+                          (for/vector ([name (sort (hash-keys name->info) string<?)])
+                            (stats-editor-data set name #f #f #f name->info))))
+   ;; (stats-editor-data set name _ _ _ name->info) -> #((stats-editor-data set name level elite? info name->info))
+   (column "Name" stats-editor-data-name (match-lambda
+                              [(stats-editor-data set name _ _ _ name->info)
+                               (define mi (hash-ref name->info name))
+                               (for*/vector ([level (in-range number-of-levels)]
+                                             [elite? (list #t #f)])
+                                 (stats-editor-data set name level elite? mi name->info))]))
+   ;; (stats-editor-data set name level elite? info name->info) -> (stats-editor-data …)
+   (column "Level"
+           (match-lambda [(stats-editor-data _ _ level elite? _ _)
+                          (~a "Level " level (if elite? " (Elite)" ""))])
+           values)))
+
+;; (obs/c (or/c #f stats-editor-data?)) -> view
+(define ((stats-editor-stats-editor edit) @data?)
+  (define @stats? (@~> @data? (and _ stats-editor-data-stats)))
+  (apply vpanel
+         (for/list ([part stats-editor-parts])
+           (match-define (list label f ed) part)
+           (ed label
+               (@~> @stats? (and _ f))
+               (λ args (apply edit (@! @data?) f args))))))
+
+(define (abilities-editor @ability-db edit)
+  (spacer))
+
+(define (number-editor label @n edit)
+  (counter (@~> @n (~>> (or _ "N/A") (format "~a: ~a" label)))
+           (thunk (edit add1))
+           (thunk (edit sub1))))
+
+(define (list-editor label @xs edit)
+  (define (start-edit @current-input @current-button @inputs @buttons)
+    (for ([@input @inputs]) (:= @input #f))
+    (for ([@button @buttons]) (:= @button #f))
+    (:= @current-input #t)
+    (:= @current-button #t))
+  (define (finish-edit i value @inputs @buttons)
+    (for ([@input @inputs]) (:= @input #f))
+    (for ([@button @buttons]) (:= @button #t))
+    (edit i value))
+  (vpanel
+   (text label)
+   (observable-view
+    @xs
+    (λ (xs)
+      (define @input-enableds
+        ;; don't use const: we want separate observables
+        (map (thunk* (@ #f)) (or xs empty)))
+      (define @button-enableds
+        ;; don't use const: we want separate observables
+        (map (thunk* (@ #t)) (or xs empty)))
+      (apply vpanel
+             (for/list ([(x i) (in-indexed (or xs empty))]
+                        [@input-enabled @input-enableds]
+                        [@button-enabled @button-enableds])
+               (define/obs @value x)
+               (hpanel
+                ;; TODO remove i
+                (input x
+                       (λ (action value)
+                         (case action
+                           [(input) (:= @value value)]
+                           [(return) (finish-edit i value @input-enableds @button-enableds)]))
+                       #:enabled? @input-enabled)
+                (button (@~> @input-enabled (if _ "Save" "Edit"))
+                        (thunk
+                         (if (@! @input-enabled)
+                           (finish-edit i (@! @value) @input-enableds @button-enableds)
+                           (start-edit @input-enabled @button-enabled @input-enableds @button-enableds)))
+                        #:enabled? @button-enabled))))))
+   (button "+" (thunk (edit 'new)))))
+
+(define stats-editor-parts
+  `(["Max HP" ,monster-stats-max-hp ,number-editor]
+    ["Move" ,monster-stats-move ,number-editor]
+    ["Attack" ,monster-stats-attack ,number-editor]
+    ["Bonuses" ,monster-stats-bonuses ,list-editor]
+    ["Effects" ,monster-stats-effects ,list-editor]
+    ["Immunities" ,monster-stats-immunities ,list-editor]))
 
 (define (open-file file @previous-files @current-file @next-files @info-db @ability-db @imports)
   (define current-file (@! @current-file))
