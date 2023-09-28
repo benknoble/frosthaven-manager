@@ -211,11 +211,11 @@
                             (stats-editor-data set name #f #f #f name->info))))
    ;; (stats-editor-data set name _ _ _ name->info) -> #((stats-editor-data set name level elite? info name->info))
    (column "Name" stats-editor-data-name (match-lambda
-                              [(stats-editor-data set name _ _ _ name->info)
-                               (define mi (hash-ref name->info name))
-                               (for*/vector ([level (in-range number-of-levels)]
-                                             [elite? (list #t #f)])
-                                 (stats-editor-data set name level elite? mi name->info))]))
+                                           [(stats-editor-data set name _ _ _ name->info)
+                                            (define mi (hash-ref name->info name))
+                                            (for*/vector ([level (in-range number-of-levels)]
+                                                          [elite? (list #t #f)])
+                                              (stats-editor-data set name level elite? mi name->info))]))
    ;; (stats-editor-data set name level elite? info name->info) -> (stats-editor-data …)
    (column "Level"
            (match-lambda [(stats-editor-data _ _ level elite? _ _)
