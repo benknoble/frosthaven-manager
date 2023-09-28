@@ -61,6 +61,8 @@
         #:exists 'replace))))
   (define (edit . xs)
     (match (car xs)
+      ['remove-monster (match-define (list monster-set monster-name) (cdr xs))
+                       (<~@ @info-db (hash-update monster-set (flow (hash-remove monster-name))))]
       ['stats
        (match (cdr xs)
          [(list* data f args)
@@ -181,8 +183,8 @@
         (λ (e _choices current)
           (case e [(select) (:= @tab current)]))
         (case-view @tab
-          [("Stats") (stats-editor @info-db (λ xs (apply edit 'stats xs)))]
-          [("Abilities") (abilities-editor @ability-db (λ xs (apply edit 'abilities xs)))]
+          [("Stats") (stats-editor @info-db edit)]
+          [("Abilities") (abilities-editor @ability-db edit)]
           [else (spacer)])))
 
 (struct stats-editor-data [set name level elite? info name->info])
@@ -194,7 +196,6 @@
 
 (define (stats-editor @info-db edit)
   ;; TODO new set, new "name"
-  ;; TODO remove entire info
   (apply stacked-tables
          ;; #(set)
          (@~> @info-db (~> hash-keys (sort string<?) list->vector))
@@ -225,11 +226,17 @@
 (define ((stats-editor-stats-editor edit) @data?)
   (define @stats? (@~> @data? (and _ stats-editor-data-stats)))
   (apply vpanel
-         (for/list ([part stats-editor-parts])
-           (match-define (list label f ed) part)
-           (ed label
-               (@~> @stats? (and _ f))
-               (λ args (apply edit (@! @data?) f args))))))
+         (append (for/list ([part stats-editor-parts])
+                   (match-define (list label f ed) part)
+                   (ed label
+                       (@~> @stats? (and _ f))
+                       (λ args (apply edit 'stats (@! @data?) f args))))
+                 (list
+                  (button "Delete Selected Monster"
+                          (thunk
+                           (define data (@! @data?))
+                           (edit 'remove-monster (stats-editor-data-set data) (stats-editor-data-name data)))
+                          #:enabled? @data?)))))
 
 (define (abilities-editor @ability-db edit)
   (spacer))
