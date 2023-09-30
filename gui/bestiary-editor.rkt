@@ -150,7 +150,6 @@
            #:enabled? #f
            #:label "Current File:")
     ;; imports-view
-    ;; TODO not big enough :(
     (table
      '("Valid Import?" "Imports")
      (obs-combine
@@ -165,7 +164,8 @@
        [{'dclick imports (? number? index)}
         (with-error-text
          (open-file (vector-ref (vector-ref imports index) 1) @previous-files @current-file @next-files @info-db @ability-db @imports))]
-       [{_ _ _} (void)]))
+       [{_ _ _} (void)])
+     #:min-size '(#f 150))
     ;; TODO new-import here
     ;; db-view
     ;; TODO New Monster Buttons
