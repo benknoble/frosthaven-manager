@@ -1177,15 +1177,14 @@ Rotate the top loot card to the bottom of the deck.
 
 This module provides facilities for manipulating round prompt values.
 
-@defform[#:literals (beginning-of end-of even odd every starting-at)
+@defform[#:literals (even odd every starting-at)
          (prompt [time rule] ...)
-         #:grammar ([time beginning-of
-                          end-of]
-                    [rule m-expr
+         #:grammar ([rule m-expr
                           even
                           odd
                           (code:line every n-expr starting-at start-expr)])
-         #:contracts ([m-expr natural-number/c]
+         #:contracts ([time time/c]
+                      [m-expr natural-number/c]
                       [n-expr natural-number/c]
                       [start-expr natural-number/c])]{
 Notation for describing round prompt values. The result of a @racket[prompt]

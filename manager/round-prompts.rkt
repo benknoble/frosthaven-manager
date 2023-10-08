@@ -2,10 +2,10 @@
 
 (provide
  prompt
- beginning-of
- end-of
  (contract-out
   [prompt/c flat-contract?]
+  [beginning-of time/c]
+  [end-of time/c]
   [time/c flat-contract?]
   [should-do-prompt? (-> time/c natural-number/c (listof prompt/c) any/c)]))
 
@@ -48,10 +48,8 @@
 
  (define-syntax-class prompt-spec
    #:attributes (compiled)
-   [pattern [{~and time {~or {~literal beginning-of}
-                             {~literal end-of}}}
-             s:round-prompt-spec]
-            #:attr compiled #'(cons time s.compiled)]))
+   [pattern [{~var time (expr/c #'time/c)} s:round-prompt-spec]
+            #:attr compiled #'(cons time.c s.compiled)]))
 
 (define-syntax-parse-rule (prompt s:prompt-spec ...)
   (list s.compiled ...))
