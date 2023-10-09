@@ -40,8 +40,6 @@ health with the plus and minus buttons. @counter{each player's maximum HP}
 
 @step{Build the Loot Deck}
 
-@margin-note{At time of writing, this step does not yet support modified loot cards.}
-
 On the next screen, build the loot deck:
 @itemlist[
           @item{To include a "Random Item" card, check the box labelled @onscreen{Random Item Card?}.}
@@ -49,6 +47,7 @@ On the next screen, build the loot deck:
           @item{To include materials, increase or decrease the number of each material card. @counter{the number of each material card in the deck}}
           @item{Similarly for herbs: @counter{the number of each herb card in the deck}}
 ]
+Include stickers using the provided controls.
 @next
 
 @step{Add Round Prompts}
