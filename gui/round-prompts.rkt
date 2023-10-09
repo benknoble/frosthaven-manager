@@ -20,16 +20,18 @@
   (define @keyed-prompts
     (@~> @prompts (~>> (-< (~> length range) _) (map cons))))
   (vpanel
+   (button "Add Prompt"
+           (thunk
+            ;; not setting current renderer, nor using an eventspace: dialog
+            (render (round-prompt-selector (flow (when _ on-add))))))
    (list-view
      @keyed-prompts
      #:key car
      (λ (k @kp)
-       (hpanel (text (@~> @kp (~> cdr prompt->string)))
-               (button "X" (thunk (on-remove k (cdr (@! @kp))))))))
-   (button "Add Prompt"
-           (thunk
-            ;; not setting current renderer, nor using an eventspace: dialog
-            (render (round-prompt-selector (flow (when _ on-add))))))))
+       (hpanel
+        #:alignment '(center top)
+        (text (@~> @kp (~> cdr prompt->string)))
+        (button "X" (thunk (on-remove k (cdr (@! @kp))))))))))
 
 (define (add-prompt-menu-item [on-finish void])
   (menu-item
