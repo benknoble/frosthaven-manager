@@ -49,6 +49,10 @@
             (menu-item "L&oad Game" (thunk (do-load-game s)))
             (launch-server-menu-item s)
             (formula-menu-item (state-@env s)))
+      (menu "Edit"
+            (add-prompt-menu-item (λ (p)
+                                    (when p
+                                      (<~@ (state-@prompts s) (cons p _))))))
       (menu "Help"
             (about-menu-item)
             (how-to-play-menu-item)
