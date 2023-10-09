@@ -51,6 +51,16 @@ On the next screen, build the loot deck:
 ]
 @next
 
+@step{Add Round Prompts}
+
+You can add a prompt to execute a special rule at the beginning or end of
+specified rounds by clicking @onscreen{Add Prompt} and choosing the timing of
+a prompt to add. You can remove specific prompts with @onscreen{X}. These
+prompts will trigger during the game to remind you to check the rules. You can
+add more during the game via the @onscreen{Edit} menu.
+
+@next
+
 @step[#:tag select-monster-db-tag]{Select a Bestiary}
 
 Click either the @onscreen{Open Bestiary or Foes} button or the @onscreen{Use

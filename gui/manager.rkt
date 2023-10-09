@@ -65,6 +65,7 @@
       [(start) (the-start-view s)]
       [(input-player-info) (input-player-info-view s)]
       [(build-loot-deck) (build-loot-deck-view s)]
+      [(add-prompts) (add-prompts-view s)]
       [(choose-monster-db) (choose-monster-db-view s)]
       [(choose-monsters) (choose-monsters-view s)]
       [(play) (play-view s @undo)]
@@ -90,7 +91,20 @@
     (loot-picker #:on-card (update-loot-deck-and-num-loot-cards s)
                  #:on-sticker (update-stickers-per-deck s))
     (spacer)
-    (button "Next" (to-choose-monster-db s))))
+    (button "Next" (to-add-prompts s))))
+
+(define (add-prompts-view s)
+  (define @prompts (state-@prompts s))
+  (define (add p)
+    (<~@ @prompts (cons p _)))
+  (define (remove i p)
+    (define-values (new-ps p2)
+      (list-remove (@! @prompts) i))
+    (when (equal? p p2)
+      (:= @prompts new-ps)))
+  (vpanel
+   (prompts-input-view @prompts #:on-add add #:on-remove remove)
+   (button "Next" (to-choose-monster-db s))))
 
 (define (choose-monster-db-view s)
   (define/obs @error-text "")
@@ -331,6 +345,9 @@
 
 (define ((to-play s))
   (:= (state-@mode s) 'play))
+
+(define ((to-add-prompts s))
+  (:= (state-@mode s) 'add-prompts))
 
 (define ((to-choose-monster-db s))
   (build-loot-deck! s)
