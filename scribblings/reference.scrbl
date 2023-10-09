@@ -43,6 +43,7 @@
             frosthaven-manager/gui/player-info
             frosthaven-manager/gui/render
             frosthaven-manager/gui/rewards
+            frosthaven-manager/gui/round-prompts
             frosthaven-manager/gui/server
             frosthaven-manager/gui/stacked-tables
             frosthaven-manager/gui/start
@@ -1762,6 +1763,33 @@ This module contains views for end-of-scenario rewards.
 Produces a @racket[window] for displaying a players rewards, such as loot, gold,
 and XP. The selected player's loot cards are also displayed. The mixin
 @racket[mix] is applied to the @racket[window].
+}
+
+@subsection{@tt{gui/round-prompts}}
+@defmodule[frosthaven-manager/gui/round-prompts]
+
+This module contains GUI utilities for
+@racketmodname[frosthaven-manager/manager/round-prompts].
+
+@defproc[(prompts-input-view [|@|prompts (obs/c (listof prompt/c))]
+                             [#:on-add on-add (-> prompt/c any) void]
+                             [#:on-remove on-remove (-> natural-number/c prompt/c any) void])
+         (is-a?/c view<%>)]{
+Views and constructs a list of round prompt values. The @racket[on-add] event is
+emitted when a round prompt is added, and @racket[on-remove] when a round prompt
+is removed. The @racket[on-remove] event signals both the index of the round
+prompt and the prompt value to be removed.
+}
+
+@defproc[(add-prompt-menu-item [on-finish (-> (or/c #f prompt/c) any) void])
+         (is-a?/c view<%>)]{
+A menu item that, when clicked, allows input of a prompt round value. When
+closed, emits @racket[on-finish] with the input value if able. Can be cancelled.
+}
+
+@defproc[(do-round-prompt [t time/c] [round natural-number/c]) any]{
+Renders a dialog prompting players to check the rules based on the timing of the
+current round.
 }
 
 @subsection{@tt{gui/server}}
