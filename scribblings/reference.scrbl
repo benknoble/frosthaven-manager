@@ -932,7 +932,8 @@ Serializable.
               [|@|info-db (obs/c info-db/c)]
               [|@|ability-db (obs/c ability-db/c)]
               [|@|ability-decks (obs/c (hash/c string? ability-decks?))]
-              [|@|stickers-per-loot-deck (obs/c (hash/c (listof loot-card?) natural-number/c))])]{
+              [|@|stickers-per-loot-deck (obs/c (hash/c (listof loot-card?) natural-number/c))]
+              [|@|prompts (obs/c (listof prompt/c))])]{
 All of the "global" manager state.
 }
 
@@ -957,7 +958,8 @@ All of the "global" manager state.
            [|@|info-db (maybe-obs/c info-db/c) (|@| (hash))]
            [|@|ability-db (maybe-obs/c ability-db/c) (|@| (hash))]
            [|@|ability-decks (maybe-obs/c (hash/c string? ability-decks?)) (|@| (hash))]
-           [|@|stickers-per-loot-deck (maybe-obs/c (hash/c (listof loot-card?) natural-number/c)) (|@| (hash))])
+           [|@|stickers-per-loot-deck (maybe-obs/c (hash/c (listof loot-card?) natural-number/c)) (|@| (hash))]
+           [|@|prompts (maybe-obs/c (listof prompt/c)) (|@| empty)])
          state?]{
 Create an initial state.
 }
