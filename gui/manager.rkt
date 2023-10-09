@@ -34,7 +34,8 @@
          frosthaven-manager/monster-db
          frosthaven-manager/gui/monsters
          frosthaven-manager/gui/render
-         frosthaven-manager/gui/rewards)
+         frosthaven-manager/gui/rewards
+         frosthaven-manager/gui/round-prompts)
 
 (define (manager s)
   (define @undo (make-undo s))
@@ -342,6 +343,11 @@
      [else to-choose-monsters])))
 
 (define ((next-round s))
+  ;; check prompts
+  (let ([t end-of]
+        [round (@! (state-@round s))])
+    (when (should-do-prompt? t round (@! (state-@prompts s)))
+      (do-round-prompt t round)))
   ;; wane elements
   (for-each (flow (<@ wane-element)) (state-@elements s))
   ;; reset player initiative
@@ -355,7 +361,12 @@
   ;; increment round number
   (<@ (state-@round s) add1)
   ;; toggle state
-  (<@ (state-@in-draw? s) not))
+  (<@ (state-@in-draw? s) not)
+  ;; check prompts
+  (let ([t beginning-of]
+        [round (@! (state-@round s))])
+    (when (should-do-prompt? t round (@! (state-@prompts s)))
+      (do-round-prompt t round))))
 
 (define ((draw-abilities s))
   ;; draw new monster cards
