@@ -7,7 +7,8 @@
   [beginning-of time/c]
   [end-of time/c]
   [time/c flat-contract?]
-  [should-do-prompt? (-> time/c natural-number/c (listof prompt/c) any/c)]))
+  [should-do-prompt? (-> time/c natural-number/c (listof prompt/c) any/c)]
+  [prompt->string (-> prompt/c string?)]))
 
 (require racket/serialize
          syntax/parse/define
@@ -53,6 +54,17 @@
 
 (define-syntax-parse-rule (prompt s:prompt-spec ...)
   (list s.compiled ...))
+
+(define (prompt->string p)
+  (~a (match (car p)
+        ['beginning-of "Beginning of"]
+        ['end-of "End of"])
+      " "
+      (match (cdr p)
+        [(prompt-round n) (~a "round " n)]
+        [(prompt-even-rounds) (~a "every even round")]
+        [(prompt-odd-rounds) (~a "every odd round")]
+        [(prompt-every-n-rounds n start) (~a "every " n " rounds, starting at round " start)])))
 
 (module* test racket/base
   (require (submod "..")

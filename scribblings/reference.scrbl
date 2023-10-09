@@ -1219,6 +1219,10 @@ Times for round prompts representing the beginning of the round and the end of
 the round.
 }
 
+@defproc[(prompt->string [p prompt/c]) string?]{
+A textual description of a round prompt value meant for human use.
+}
+
 @section[#:tag "frosthaven-manager/gui"]{@tt{gui}}
 
 The following sections describe modules under @tt{frosthaven-manager/gui}.
