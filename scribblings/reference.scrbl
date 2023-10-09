@@ -55,6 +55,7 @@
             frosthaven-manager/pp/bestiary
             frosthaven-manager/qi
             frosthaven-manager/qi/list2hash
+            frosthaven-manager/qi/utils
             (prefix-in server: frosthaven-manager/server)
             (only-in frosthaven-manager/syntax/module-reader)
             frosthaven-manager/syntax/monsters
@@ -2066,7 +2067,8 @@ The document starts with a @(hash-lang) line preceding the result if
 @defmodule[frosthaven-manager/qi]
 
 This modules provides everything from @racketmodname[qi] in addition to the
-bindings from @racketmodname[frosthaven-manager/qi/list2hash].
+bindings from @racketmodname[frosthaven-manager/qi/list2hash] and
+@racketmodname[frosthaven-manager/qi/utils].
 
 @subsection{@tt{qi/list2hash}}
 @defmodule[frosthaven-manager/qi/list2hash]
@@ -2088,6 +2090,16 @@ of the list is mapped into a key via @racket[->key-flo] and a value via
          hash?]{
 Transforms @racket[xs] to a hash by mapping each element into a key via
 @racket[->key] and a value via @racket[->value].
+}
+
+@subsection{@tt{qi/utils}}
+@defmodule[frosthaven-manager/qi/utils]
+
+@defproc[(list-remove [xs list?] [i natural-number/c])
+         (values list? any/c)]{
+Returns a new list consisting of all elements of @racket[xs] excepth the
+@racket[i]th, and the @racket[i]th value. If @racket[i] is out of bounds, raises
+an exception.
 }
 
 @section{@tt{server}}
