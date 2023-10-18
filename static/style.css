@@ -1,0 +1,31 @@
+/* DEFAULT: Extra small devices (phones) */
+/* @media only screen and (max-width: 600px) { */
+/* } */
+details.stats-summary {
+  margin-left: 1%;
+  display: inline;
+}
+
+details.stats-summary[open] {
+  display: block;
+}
+
+ol.monster-ability-abilities {
+  list-style-type: none;
+}
+
+/* Small devices (portrait tablets and large phones) */
+@media only screen and (min-width: 600px) {
+}
+
+/* Medium devices (landscape tablets) */
+@media only screen and (min-width: 768px) {
+}
+
+/* Large devices (laptops/desktops) */
+@media only screen and (min-width: 992px) {
+}
+
+/* Extra large devices (large laptops and desktops) */
+@media only screen and (min-width: 1200px) {
+}

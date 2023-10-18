@@ -182,7 +182,8 @@
 
 (define common-heads
   `((meta ([name "viewport"] [content "width=device-width, initial-scale=1.0"]))
-    (meta ([charset "UTF-8"]))))
+    (meta ([charset "UTF-8"]))
+    (link ([rel "stylesheet"] [href "/static/style.css"]))))
 
 (define (expired-page req)
   (response/xexpr
@@ -506,8 +507,7 @@ STYLE
              ,(monster-ability-initiative->text ability))
        ")"
        (details
-        ([style "display: inline; margin-left: 1%;"]
-         [ontoggle "this.style = this.open ? \"display: block;\" : \"display: inline; margin-left: 1%;\";"])
+        ([class "stats-summary"])
         (summary "Stats")
         (table
          ([class "monster-group-stats"])
@@ -538,8 +538,7 @@ STYLE
              (td ,(~a (monster-stats-max-hp* elite-stats env))))))
        (p ([class "monster-ability"])
           (span ([class "monster-ability-name"]) ,(monster-ability-name->text ability))
-          (ol ([class "monster-ability-abilities"]
-               [style "list-style-type: none;"])
+          (ol ([class "monster-ability-abilities"])
               ,@(monster-ability-xexpr mg ability env)))
        (div ([class "monsters"])
             ,@(monsters->xexprs id (monster-group-monsters mg) mg env))))
