@@ -359,7 +359,7 @@
 
 (define ((player-kill-summon i) p)
   (struct-copy player p
-               [summons (~> (p) player-summons (split-at i) (== _ cdr) append)]))
+               [summons (~> (p) player-summons (list-remove i) 1>)]))
 
 ;; loot deck
 
