@@ -48,6 +48,7 @@
          frosthaven-manager/gui/stacked-tables
          frosthaven-manager/gui/render
          frosthaven-manager/gui/font
+         frosthaven-manager/gui/helpers
 
          frosthaven-manager/qi
          frosthaven-manager/defns
@@ -69,15 +70,15 @@
     (text (obs-combine (flow (~> monster-stats-attack* ~a)) @stats @env))
     (cond-view
       [(@~> @stats (~> monster-stats-bonuses (not empty?)))
-       (text (@~> @stats (~> monster-stats-bonuses (string-join ", "))))]
+       (text (@~> @stats (~> monster-stats-bonuses (string-join ", ") escape-text)))]
       [else (spacer)])
     (cond-view
       [(@~> @stats (~> monster-stats-effects (not empty?)))
-       (text (@~> @stats (~> monster-stats-effects (string-join ", "))))]
+       (text (@~> @stats (~> monster-stats-effects (string-join ", ") escape-text)))]
       [else (spacer)])
     (cond-view
       [(@~> @stats (~> monster-stats-immunities (not empty?)))
-       (text (@~> @stats (~> monster-stats-immunities (string-join ", "))))]
+       (text (@~> @stats (~> monster-stats-immunities (string-join ", ") escape-text)))]
       [else (spacer)])
     (text (obs-combine (flow (~> monster-stats-max-hp* ~a)) @stats @env))))
 
@@ -164,7 +165,7 @@
                        (flow (~> sep (>< (make-monster-selector on-change))
                                  vpanel)))
       (button "Add" close!))))
-  (define (name-panel) (text (@> @mg monster-group-name) #:font big-control-font))
+  (define (name-panel) (text (@~> @mg (~> monster-group-name escape-text)) #:font big-control-font))
   (define (add-monster-button)
     (button "Add Monster" do-new
             #:enabled?
@@ -268,7 +269,7 @@
 
 (define (monster-ability-view @ability @mg @env)
   (vpanel
-   (text (@~> @ability monster-ability-name->text))
+   (text (@~> @ability (~> monster-ability-name->text escape-text)))
    (observable-view
     @ability
     (λ (ability)
@@ -439,7 +440,7 @@
     #:alignment '(left top)
     (hpanel
       #:stretch '(#f #f)
-      (text (@> @monster-group monster-group-name))
+      (text (@~> @monster-group (~> monster-group-name escape-text)))
       (text (@~> @monster-group (~>> monster-group-level (~a "Level: ")))))
     (table
       '("Number" "Type" "HP")
@@ -486,7 +487,7 @@
          (map (match-lambda
                 [(list label func)
                  (hpanel (text (~a label ":"))
-                         (text (@~> @stats? (if _ (~> func fmt-stat) "N/A"))))])
+                         (text (@~> @stats? (if _ (~> func fmt-stat escape-text) "N/A"))))])
               stats-table)))
 
 (define (info-view-columns @info-db)
@@ -542,7 +543,7 @@
   (define from-table
     (map (match-lambda
            [(list label func)
-            (hpanel (text label) (text (@~> @ability? (if _ func "N/A"))))])
+            (hpanel (text label) (text (@~> @ability? (if _ (~> func escape-text) "N/A"))))])
          ability-table))
   (define others
     (list
@@ -553,7 +554,7 @@
        (λ (ability?)
          (apply vpanel
                 (for/list ([ability-text (if ability? (monster-ability-abilities ability?) empty)])
-                  (text ability-text))
+                  (text (escape-text ability-text)))
                 #:alignment '(left center)))))))
   (apply vpanel (append from-table others)))
 
@@ -592,7 +593,7 @@
 (define aoe-rx #rx"aoe\\(([^)]+)\\)")
 
 (define (ability->text @mg ability @env)
-  (text (obs-combine (monster-ability-ability->text ability) @mg @env)))
+  (text (obs-combine (flow (~> (esc (monster-ability-ability->text ability)) escape-text)) @mg @env)))
 
 (define (aoe-button pict)
   (button "AoE" (thunk

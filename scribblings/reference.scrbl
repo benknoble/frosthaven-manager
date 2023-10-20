@@ -1359,6 +1359,11 @@ Returns translated @racket[x] and @racket[y] coordinates relative to
 @racket[top], assuming they were originally relative to @racket[this].
 }
 
+@defproc[(escape-text [s string?]) string?]{
+Escapes @racket[s] for use in @racket[text]; only needed when @racket[s] is
+derived from user input.
+}
+
 @subsection{@tt{gui/level-info}}
 @defmodule[frosthaven-manager/gui/level-info]
 
