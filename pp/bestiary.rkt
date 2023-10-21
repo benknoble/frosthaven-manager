@@ -49,12 +49,12 @@
 (define (pretty-monster-info mi)
   (match-define (monster-info set-name name normal-stats elite-stats) mi)
   (<>
-   (<s> (text "begin-monster")
-        (text (~s name))
-        (let ([computed-set-name (name->set name)])
-          (cond
-            [(equal? set-name computed-set-name) (<>)]
-            [else (<> lparen (text (~s set-name)) rparen)])))
+   (<> (text "begin-monster ")
+       (text (~s name))
+       (let ([computed-set-name (name->set name)])
+         (cond
+           [(equal? set-name computed-set-name) (<>)]
+           [else (<> (text " ") lparen (text (~s set-name)) rparen)])))
    (nest 2 (<> nl (pretty-statss normal-stats elite-stats)))
    nl
    (text "end-monster")))
