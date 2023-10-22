@@ -86,6 +86,11 @@
 ;; number
 (define selector:condition? (make-coerce-safe? selector:condition))
 
+;; formlet shorthand
+(define input-int
+  (let ([numeric-text-input (form:text-input #:attributes '([inputmode "numeric"]))])
+    (form:to-number (form:to-string (form:required numeric-text-input)))))
+
 ;;;; MAIN ENTRYPOINT
 
 (define (launch-server an-s a-send-event)
@@ -464,7 +469,7 @@ STYLE
   (form:formlet
    (form:#%#
     "Name:" ,{=> form:input-string name}
-    "Max HP:" ,{=> form:input-int max-hp}
+    "Max HP:" ,{=> input-int max-hp}
     ,{=> (form:submit "Summon") _submit})
    (list name max-hp)))
 
