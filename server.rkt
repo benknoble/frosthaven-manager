@@ -676,7 +676,6 @@ STYLE
               'data (hash
                       'player-name (player-name p)
                       'player-initiative (~a (player-initiative p))
-                      'player-initiative-input (hash 'value (~a (player-initiative p)))
                       'player-HP (player->hp-text p)
                       'player-XP (~a (player-xp p))
                       'player-conditions
