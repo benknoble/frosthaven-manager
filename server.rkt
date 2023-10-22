@@ -365,21 +365,8 @@ STYLE
        (span ([class "player-initiative"])
              ,(~a (player-initiative p)))
        ")"
-       (input ([class "player-initiative-input"]
-               [type "text"]
-               [inputmode "numeric"]
-               [value ,(~a (player-initiative p))]
-               ;; TODO
-               ;; - probably requires restructure: got to "pick" a
-               ;; player
-               ;; - update input values when player init changes, when
-               ;; init revealed
-               ;; - when init dragged, reveal ONLY current init (so that dragging works)
-               [oninput
-                ,(~a "for (element of document.querySelectorAll(\".player-initiative-input\")) { if (element !== this) { element.disabled = true; } }"
-                     (action-script (list "player" "initiative")
-                                    (list id-binding
-                                          (list (~s "initiative") "this.value"))))]))
+       (a ([href ,(embed/url (flow (set-initiative-form id)))])
+          "Set Initiative")
        (p ,(action-button
             (list "player" "hp" "-")
             (list id-binding)
@@ -425,6 +412,30 @@ STYLE
              "Summon"))
        (ol ([class "summons"])
            ,@(summons->xexprs id (player-summons p)))))
+
+(define set-initiative
+  (form:formlet
+   (form:#%#
+    (p "Initiative" ,{=> input-int init})
+    (p ,{=> (form:submit "Set Initiative") _submit}))
+   init))
+
+(define/page (set-initiative-form player-id)
+  (define (handle-form-response r)
+    (define form-response
+      (with-handlers ([exn:fail? values])
+        (form:formlet-process set-initiative r)))
+    (match form-response
+      [(? initiative? init) (set-player-initiative player-id init)]
+      [_ (void)])
+    (overview (redirect/get)))
+  (response/xexpr
+   `(html
+     (head (title "Set Initiative") ,@common-heads)
+     (body
+      (form ([action ,(embed/url handle-form-response)]
+             [method "post"])
+            ,@(form:formlet-display set-initiative))))))
 
 ;; s: summon?
 ;; id: string? unique to whole page
@@ -730,7 +741,6 @@ STYLE
       ['("xp" "-") (decrement-player-xp req)]
       ['("condition" "remove") (remove-player-condition req)]
       ['("condition" "add") (add-player-condition req)]
-      ['("initiative") (set-player-initiative req)]
       ['("loot") (loot! req)]
       [_ (return (not-found req))])
     (response/empty)))
@@ -786,12 +796,9 @@ STYLE
 (define-flow (add-player-condition req)
   (do-player-condition #t))
 
-(define (set-player-initiative req)
-  (match* {(req->player-id req) (req->initiative req)}
-    [{(and id (not #f)) (and init (not #f))}
-     (do (<~@ (state-@creatures (s))
-              (update-players id (flow (player-set-initiative init)))))]
-    [{_ _} (void)]))
+(define (set-player-initiative id init)
+  (do (<~@ (state-@creatures (s))
+           (update-players id (flow (player-set-initiative init))))))
 
 (define (loot! req)
   (match (req->player-id req)
@@ -907,12 +914,6 @@ STYLE
     [(cons 'condition
            (app string->number (? selector:condition? (app selector:condition c))))
      c]
-    [_ #f]))
-
-(define (req->initiative r)
-  (match (assq 'initiative (request-bindings r))
-    [`(initiative . ,(app string->number (? (and/c number? initiative?) init)))
-     init]
     [_ #f]))
 
 (define (-do-summon req f)
