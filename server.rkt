@@ -468,9 +468,9 @@ STYLE
 (define new-summon
   (form:formlet
    (form:#%#
-    "Name:" ,{=> form:input-string name}
-    "Max HP:" ,{=> input-int max-hp}
-    ,{=> (form:submit "Summon") _submit})
+    (p "Name:" ,{=> form:input-string name})
+    (p "Max HP:" ,{=> input-int max-hp})
+    (p ,{=> (form:submit "Summon") _submit}))
    (list name max-hp)))
 
 (define/page (new-summon-form player-id)
