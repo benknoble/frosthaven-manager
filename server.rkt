@@ -741,7 +741,7 @@ STYLE
       ['("xp" "-") (decrement-player-xp req)]
       ['("condition" "remove") (remove-player-condition req)]
       ['("condition" "add") (add-player-condition req)]
-      ['("loot") (loot! req)]
+      ['("loot") (loot! req return)]
       [_ (return (not-found req))])
     (response/empty)))
 
@@ -800,9 +800,16 @@ STYLE
   (do (<~@ (state-@creatures (s))
            (update-players id (flow (player-set-initiative init))))))
 
-(define (loot! req)
+(define (loot! req return)
   (match (req->player-id req)
-    [(and id (not #f)) (do ((give-player-loot (s)) id))]
+    [(and id (not #f))
+     (define card
+       (@! (@~> (state-@loot-deck (s)) (and (not empty?) first))))
+     (do ((give-player-loot (s)) id))
+     (when card
+       (return
+        (response/jsexpr
+         (hash 'loot ((format-loot-card (@! (state-@num-players (s)))) card)))))]
     [_ (void)]))
 
 (define/summon kill-summon (_r => [pid sid])
