@@ -388,10 +388,15 @@ STYLE
             (list "player" "xp" "+")
             (list id-binding)
             "+")
-          ,(action-button
-            (list "player" "loot")
-            (list id-binding)
-            "Loot!"))
+          (button ([type "button"]
+                   [onclick
+                    ,(~a
+                      (list
+                       (string-trim (action-script (list "player" "loot") (list id-binding)) ";" #:left? #f)
+                       ".then((r) => r.json())"
+                       ".then((j) => { alert(`You got ${j.loot}!`); },"
+                       "      (_) => { alert('The loot deck is empty.'); })"))])
+                  "Loot!"))
        (p (select ([id ,(~a "select-conditions-" id)])
                   ,@(for/list ([c conditions])
                       `(option ([value ,(~a (discriminator:condition c))])
