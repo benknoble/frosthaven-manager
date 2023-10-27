@@ -564,8 +564,8 @@ STYLE
           (span ([class "monster-ability-name"]) ,(monster-ability-name->text ability))
           (ol ([class "monster-ability-abilities"])
               ,@(monster-ability-xexpr mg ability env)))
-       (div ([class "monsters"])
-            ,@(monsters->xexprs id (monster-group-monsters mg) mg env))))
+       (ul ([class "monsters"])
+           ,@(monsters->xexprs id (monster-group-monsters mg) mg env))))
 
 (define (monster-ability-xexpr mg ability env)
   (append*
@@ -587,7 +587,7 @@ STYLE
 
 (define (monster-xexpr id m mg env)
   (define id-binding (list (~s "id") (~s id)))
-  `(div ([id ,id])
+  `(li ([id ,id])
         ,(action-button (list "monster" "kill")
                         (list id-binding)
                         "Kill")
