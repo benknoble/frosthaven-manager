@@ -359,60 +359,62 @@ STYLE
 (define (player-xexpr embed/url id p)
   (define id-binding (list (~s "id") (~s (~s id))))
   `(li ([id ,(player-css-id id)])
-       (span ([class "player-name"])
-             ,(player-name p))
-       " ("
-       (span ([class "player-initiative"])
-             ,(~a (player-initiative p)))
-       ") "
-       (a ([href ,(embed/url (flow (set-initiative-form id)))])
-          "Set Initiative")
-       (p ,(action-button
-            (list "player" "hp" "-")
-            (list id-binding)
-            "-")
-          (span ([class "player-HP"])
-                ,(player->hp-text p))
-          ,(action-button
-            (list "player" "hp" "+")
-            (list id-binding)
-            "+")
-          ,(action-button
-            (list "player" "xp" "-")
-            (list id-binding)
-            "-")
-          "XP: "
-          (span ([class "player-XP"])
-                ,(~a (player-xp p)))
-          ,(action-button
-            (list "player" "xp" "+")
-            (list id-binding)
-            "+")
-          (button ([type "button"]
-                   [onclick
-                    ,(~a
-                      (list
-                       (string-trim (action-script (list "player" "loot") (list id-binding)) ";" #:left? #f)
-                       ".then((r) => r.json())"
-                       ".then((j) => { alert(`You got ${j.loot}!`); },"
-                       "      (_) => { alert('The loot deck is empty.'); })"))])
-                  "Loot!"))
-       (p (select ([id ,(~a "select-conditions-" id)])
-                  ,@(for/list ([c conditions])
-                      `(option ([value ,(~a (discriminator:condition c))])
-                               ,(~a c))))
-          ,(action-button
-            (list "player" "condition" "add")
-            (list id-binding
-                  (list (~s "condition")
-                        (~a "document.querySelector("
-                            (~s (~a "#select-conditions-" id))
-                            ").value")))
-            "Add Condition"))
-       (p (span
-           ([class "player-conditions"])
-           (span
-            ,@(~> (p) player-conditions* (active-conditions->xexpr id-binding)))))
+       (div ([class "smash-inline"])
+            (span ([class "player-name"])
+                  ,(player-name p))
+            " ("
+            (span ([class "player-initiative"])
+                  ,(~a (player-initiative p)))
+            ") "
+            (a ([href ,(embed/url (flow (set-initiative-form id)))])
+               "Set Initiative")
+            (p ,(action-button
+                 (list "player" "hp" "-")
+                 (list id-binding)
+                 "-")
+               (span ([class "player-HP"])
+                     ,(player->hp-text p))
+               ,(action-button
+                 (list "player" "hp" "+")
+                 (list id-binding)
+                 "+")
+               ,(action-button
+                 (list "player" "xp" "-")
+                 (list id-binding)
+                 "-")
+               "XP: "
+               (span ([class "player-XP"])
+                     ,(~a (player-xp p)))
+               ,(action-button
+                 (list "player" "xp" "+")
+                 (list id-binding)
+                 "+")
+               (button ([type "button"]
+                        [onclick
+                         ,(~a
+                           (list
+                            (string-trim (action-script (list "player" "loot") (list id-binding)) ";" #:left? #f)
+                            ".then((r) => r.json())"
+                            ".then((j) => { alert(`You got ${j.loot}!`); },"
+                            "      (_) => { alert('The loot deck is empty.'); })"))])
+                       "Loot!")))
+       (div ([class "smash-inline"])
+            (p (select ([id ,(~a "select-conditions-" id)])
+                       ,@(for/list ([c conditions])
+                           `(option ([value ,(~a (discriminator:condition c))])
+                                    ,(~a c))))
+               ,(action-button
+                 (list "player" "condition" "add")
+                 (list id-binding
+                       (list (~s "condition")
+                             (~a "document.querySelector("
+                                 (~s (~a "#select-conditions-" id))
+                                 ").value")))
+                 "Add Condition"))
+            (p (span
+                ([class "player-conditions"])
+                (span
+                 ,@(~> (p) player-conditions* (active-conditions->xexpr id-binding))))))
        (p (a ([href ,(embed/url (flow (new-summon-form id)))])
              "Summon"))
        (ol ([class "summons"])
@@ -463,22 +465,23 @@ STYLE
          (list "summon" "hp" "+")
          (list id-binding)
          "+")
-       (p (select ([id ,(~a "select-conditions-" id)])
-                  ,@(for/list ([c conditions])
-                      `(option ([value ,(~a (discriminator:condition c))])
-                               ,(~a c))))
-          ,(action-button
-            (list "summon" "condition" "add")
-            (list id-binding
-                  (list (~s "condition")
-                        (~a "document.querySelector("
-                            (~s (~a "#select-conditions-" id))
-                            ").value")))
-            "Add Condition"))
-       (p (span
-           ([class "summon-conditions"])
-           (span
-           ,@(~> (s) summon-conditions* (active-conditions->xexpr id-binding "summon")))))))
+       (div ([class "smash-inline"])
+            (p (select ([id ,(~a "select-conditions-" id)])
+                       ,@(for/list ([c conditions])
+                           `(option ([value ,(~a (discriminator:condition c))])
+                                    ,(~a c))))
+               ,(action-button
+                 (list "summon" "condition" "add")
+                 (list id-binding
+                       (list (~s "condition")
+                             (~a "document.querySelector("
+                                 (~s (~a "#select-conditions-" id))
+                                 ").value")))
+                 "Add Condition"))
+            (p (span
+                ([class "summon-conditions"])
+                (span
+                 ,@(~> (s) summon-conditions* (active-conditions->xexpr id-binding "summon"))))))))
 
 ;; required => exn:fail if not present
 (define new-summon
@@ -600,21 +603,22 @@ STYLE
         ,(action-button (list "monster" "hp" "+")
                         (list id-binding)
                         "+")
-        (p (select ([id ,(~a "select-conditions-" id)])
-                   ,@(for/list ([c conditions])
-                       `(option ([value ,(~a (discriminator:condition c))])
-                                ,(~a c))))
-           ,(action-button
-             (list "monster" "condition" "add")
-             (list id-binding
-                   (list (~s "condition")
-                         (~a "document.querySelector("
-                             (~s (~a "#select-conditions-" id))
-                             ").value")))
-             "Add Condition"))
-        (p (span ([class "monster-conditions"])
-                 (span
-                  ,@(~> (m) monster-conditions (active-conditions->xexpr id-binding "monster")))))))
+        (div ([class "smash-inline"])
+             (p (select ([id ,(~a "select-conditions-" id)])
+                        ,@(for/list ([c conditions])
+                            `(option ([value ,(~a (discriminator:condition c))])
+                                     ,(~a c))))
+                ,(action-button
+                  (list "monster" "condition" "add")
+                  (list id-binding
+                        (list (~s "condition")
+                              (~a "document.querySelector("
+                                  (~s (~a "#select-conditions-" id))
+                                  ").value")))
+                  "Add Condition"))
+             (p (span ([class "monster-conditions"])
+                      (span
+                       ,@(~> (m) monster-conditions (active-conditions->xexpr id-binding "monster"))))))))
 
 (define (action-button actions bindings body [attrs empty])
   `(button ([type "button"]

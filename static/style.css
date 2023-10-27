@@ -17,8 +17,18 @@ ol.monster-ability-abilities {
 /* Small devices (portrait tablets and large phones) */
 @media only screen and (min-width: 600px) {
 
+  /* https://stackoverflow.com/q/2710764 */
+  html {
+    /* Prevent iPhone font scaling in landscape */
+    -webkit-text-size-adjust: 100%;
+}
+
   details.stats-summary[open] {
     display: inline;
+  }
+
+  .smash-inline * {
+    display: inline-block;
   }
 
 }
