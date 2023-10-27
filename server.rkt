@@ -364,7 +364,7 @@ STYLE
        " ("
        (span ([class "player-initiative"])
              ,(~a (player-initiative p)))
-       ")"
+       ") "
        (a ([href ,(embed/url (flow (set-initiative-form id)))])
           "Set Initiative")
        (p ,(action-button
