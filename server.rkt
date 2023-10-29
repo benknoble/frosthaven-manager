@@ -380,7 +380,8 @@
                             "      (_) => { alert('The loot deck is empty.'); })"))])
                        "Loot!")))
        (div ([class "smash-inline"])
-            (p (select ([id ,(~a "select-conditions-" id)])
+            (p (select ([id ,(~a "select-conditions-" id)]
+                        [aria-label ,(~a "Add conditions to " (player-name p))])
                        ,@(for/list ([c conditions])
                            `(option ([value ,(~a (discriminator:condition c))])
                                     ,(~a c))))
@@ -447,7 +448,8 @@
          (list id-binding)
          "+")
        (div ([class "smash-inline"])
-            (p (select ([id ,(~a "select-conditions-" id)])
+            (p (select ([id ,(~a "select-conditions-" id)]
+                        [aria-label ,(~a "Add conditions to " (summon-name s))])
                        ,@(for/list ([c conditions])
                            `(option ([value ,(~a (discriminator:condition c))])
                                     ,(~a c))))
@@ -585,7 +587,8 @@
                         (list id-binding)
                         "+")
         (div ([class "smash-inline"])
-             (p (select ([id ,(~a "select-conditions-" id)])
+             (p (select ([id ,(~a "select-conditions-" id)]
+                         [aria-label ,(~a "Add conditions to " (monster-group-name mg) " " (monster-number m))])
                         ,@(for/list ([c conditions])
                             `(option ([value ,(~a (discriminator:condition c))])
                                      ,(~a c))))
