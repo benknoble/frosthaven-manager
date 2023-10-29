@@ -14,6 +14,25 @@ ol.monster-ability-abilities {
   list-style-type: none;
 }
 
+/* Rewards style */
+.table-wrapper table {
+  width: 100%;
+  border: 1px solid;
+  border-collapse: collapse;
+}
+.table-wrapper th,
+.table-wrapper td {
+  border: 1px solid;
+  padding: 0.5em;
+}
+.table-wrapper tbody tr:hover {
+  background-color: powderblue;
+}
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
 /* Small devices (portrait tablets and large phones) */
 @media only screen and (min-width: 600px) {
 

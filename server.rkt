@@ -244,26 +244,7 @@
    `(html
      (head
       (title "Frosthaven Manager Rewards")
-      ,@common-heads
-      (style #<<STYLE
-table {
-  width: 100%;
-  border: 1px solid;
-  border-collapse: collapse;
-}
-th, td {
-  border: 1px solid;
-  padding: 0.5em;
-}
-tbody tr:hover {
-  background-color: powderblue;
-}
-.table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-}
-STYLE
-             ))
+      ,@common-heads)
      (body
       (h1 "Rewards")
       (div
