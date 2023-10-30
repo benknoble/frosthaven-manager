@@ -166,7 +166,13 @@
          (open-file (vector-ref (vector-ref imports index) 1) @previous-files @current-file @next-files @info-db @ability-db @imports))]
        [{_ _ _} (void)])
      #:min-size '(#f 150))
-    ;; TODO new-import here
+    ;; TODO delete import
+    (let ([@import (obs "")])
+      (hpanel
+          (input #:label "New Import:" @import (λ (_action inp) (:= @import inp)))
+          (button "Import" (thunk
+                            (<~@ @imports (cons (@! @import) _))
+                            (:= @import "")))))
     ;; db-view
     ;; TODO New Monster Buttons
     (bestiary-editor @info-db @ability-db edit)
