@@ -6,6 +6,7 @@
 
 (require racket/gui
          racket/gui/easy
+         net/sendurl
          frosthaven-manager/observable-operator
          frosthaven-manager/gui/render
          frosthaven-manager/manager
@@ -32,6 +33,7 @@
       (window
         #:mixin close-custodian-mixin
         (text (@~> @addr (~a "Server: " _)))
+        (button "Open in browser" (thunk (send-url (@! @addr))))
         (button "Restart Server" restart)))))
 
 (define (handle _s evt)
