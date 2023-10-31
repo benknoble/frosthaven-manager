@@ -26,6 +26,7 @@
   (except-in racket/gui null)
   racket/gui/easy
   racket/runtime-path
+  racket/async-channel
   syntax/parse/define
   web-server/dispatch/syntax
   web-server/dispatch/url-patterns
@@ -170,19 +171,22 @@
                                 (struct-copy url u [path (cdr (url-path u))])))
                 #:cache-no-cache #t))
 
-  (define port 8000)
+  (define port-ch (make-async-channel 1))
   (define manager
     (make-threshold-LRU-manager expired-page (* 1024 1024 1024)))
-  (values
-    (~a "http://" (best-interface-ip-address) ":" port)
+  (define stop
     (parameterize ([s an-s]
                    [reverse-uri the-reverse-uri]
                    [send-event a-send-event])
       (serve
-        #:dispatch (sequencer:make
-                     (filter:make #rx"^/static/" static-dispatcher)
-                     (dispatch/servlet app #:manager manager))
-        #:port port))))
+       #:dispatch (sequencer:make
+                   (filter:make #rx"^/static/" static-dispatcher)
+                   (dispatch/servlet app #:manager manager))
+       #:port 0
+       #:confirmation-channel port-ch)))
+  (match (async-channel-get port-ch)
+    [(? port-number? port) (values (~a "http://" (best-interface-ip-address) ":" port) stop)]
+    [(? exn? e) (raise e)]))
 
 ;;;; X-EXPRS
 
