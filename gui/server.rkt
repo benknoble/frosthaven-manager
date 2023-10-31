@@ -33,7 +33,11 @@
       (window
         #:mixin close-custodian-mixin
         (text (@~> @addr (~a "Server: " _)))
-        (button "Open in browser" (thunk (send-url (@! @addr))))
+        (hpanel
+         (button "Open in browser" (thunk (send-url (@! @addr))))
+         (button "Copy address to clipboard"
+                 (thunk
+                  (send the-clipboard set-clipboard-string (@! @addr) 0))))
         (button "Restart Server" restart)))))
 
 (define (handle _s evt)
