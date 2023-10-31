@@ -418,7 +418,7 @@
     (match form-response
       [(? initiative? init) (set-player-initiative player-id init)]
       [_ (void)])
-    (overview (redirect/get)))
+    (my-redirect/get ((reverse-uri) overview)))
   (response/xexpr
    `(html
      (head (title "Set Initiative") ,@common-heads)
@@ -487,7 +487,7 @@
                      (const #f)
                      (flow (player-summon name max-hp)))]
       [_ (void)])
-    (overview (redirect/get)))
+    (my-redirect/get ((reverse-uri) overview)))
   (response/xexpr
    `(html
      (head (title "Summon") ,@common-heads)
@@ -872,6 +872,11 @@
 
 (define (action-click actions bindings)
   `[onclick ,(action-script actions bindings)])
+
+(define (my-redirect/get where)
+  (send/suspend
+   (λ (_)
+     (redirect-to where see-other))))
 
 (define (url-sans-param u)
   (struct-copy url u [path (map path/param-sans-param (url-path u))]))
