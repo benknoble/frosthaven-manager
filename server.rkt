@@ -171,7 +171,8 @@
                 #:cache-no-cache #t))
 
   (define port 8000)
-  (define manager (make-threshold-LRU-manager expired-page (* 64 1024 1024)))
+  (define manager
+    (make-threshold-LRU-manager expired-page (* 1024 1024 1024)))
   (values
     (~a "http://" (best-interface-ip-address) ":" port)
     (parameterize ([s an-s]
