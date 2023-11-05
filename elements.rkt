@@ -239,9 +239,9 @@
             (pin-over 6 (/ size 4)
                       (disk (half size) #:color color #:border-color "white" #:border-width 1)))))
 (define (dark)
-  (define infused-dark (~> ((base)) (colorize "purple") (dark-disks "purple")))
-  (define waning-dark (~> ("purple") wane (dark-disks "purple")))
-  (define unfused-dark (~> ((base)) (dark-disks "black")))
+  (define infused-dark (~> ((base)) (colorize "purple") (esc (dark-disks "purple"))))
+  (define waning-dark (~> ("purple") wane (esc (dark-disks "purple"))))
+  (define unfused-dark (~> ((base)) (esc (dark-disks "black"))))
   (element-pics "Dark" infused-dark waning-dark unfused-dark))
 
 (define (elements) (list (fire) (ice) (air) (earth) (light) (dark)))

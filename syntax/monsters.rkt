@@ -96,7 +96,7 @@
   [(_ p-flo:expr ...) #'(partition [p-flo collect] ...)])
 
 (define-qi-syntax-parser collect-matching/stx
-  [(_ p-flo:expr ...) #'(collect-matching (syntaxish? p-flo) ...)])
+  [(_ p:expr ...) #'(collect-matching (esc (syntaxish? p)) ...)])
 
 (define-flow hash-keys/set (~> hash-keys list->set))
 
