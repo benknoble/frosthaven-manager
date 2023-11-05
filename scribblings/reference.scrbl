@@ -1790,7 +1790,7 @@ prompt and the prompt value to be removed.
 
 @defproc[(add-prompt-menu-item [on-finish (-> (or/c #f prompt/c) any) void])
          (is-a?/c view<%>)]{
-A menu item that, when clicked, allows input of a prompt round value. When
+A menu item that, when clicked, allows input of a round prompt value. When
 closed, emits @racket[on-finish] with the input value if able. Can be cancelled.
 }
 
