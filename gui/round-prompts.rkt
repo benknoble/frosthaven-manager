@@ -6,9 +6,9 @@
                            (#:on-add (-> prompt/c any)
                             #:on-remove (-> natural-number/c prompt/c any))
                            (is-a?/c view<%>))]
-  [add-prompt-menu-item (->* () ((-> (or/c #f prompt/c) any)) (is-a?/c view<%>))]
-  [remove-prompt-menu-item (->* ((obs/c (listof prompt/c)))
-                                ((-> (or/c #f prompt/c) any))
+  [manage-prompt-menu-item (->* ((obs/c (listof prompt/c)))
+                                (#:on-add (-> prompt/c any)
+                                 #:on-remove (-> natural-number/c prompt/c any))
                                 (is-a?/c view<%>))]
   [do-round-prompt (-> time/c natural-number/c any)]))
 
@@ -36,19 +36,18 @@
         (text (@~> @kp (~> cdr prompt->string)))
         (button "X" (thunk (on-remove k (cdr (@! @kp))))))))))
 
-(define (add-prompt-menu-item [on-finish void])
+(define (manage-prompt-menu-item @prompts #:on-add [on-add void] #:on-remove [on-remove void])
   (menu-item
-   "Add Round Prompt"
+   "Manage Round Prompts"
    (thunk
     ;; not setting current renderer, nor using an eventspace: dialog
-    (render (round-prompt-selector on-finish)))))
+    (render
+     (dialog
+      #:title "Manage Round Prompts"
+      #:style '(close-button resize-border)
+      #:size '(400 300)
+      (prompts-input-view @prompts #:on-add on-add #:on-remove on-remove))))))
 
-(define (remove-prompt-menu-item @prompts [on-remove void])
-  (menu-item
-   "Remove Round Prompt"
-   (thunk
-    ;; not setting current renderer, nor using an eventspace: dialog
-    (render (round-prompt-remover @prompts on-remove)))))
 
 (define (do-round-prompt time round)
   (define-close! close! closing-mixin)
@@ -106,20 +105,6 @@
    (hpanel
     (button "Ok" close!)
     (button "Cancel" (thunk (:= @time #f) (close!))))))
-
-;; on-remove: (-> (or/c #f prompt/c) any)
-(define (round-prompt-remover @prompts [on-remove void])
-  (define/obs @selection #f)
-  (dialog
-   #:title "Remove Round Prompt"
-   #:style '(close-button resize-border)
-   (table '("Prompt")
-          (@> @prompts list->vector)
-          (λ (_action entries selection)
-            (:= @selection (vector-ref entries selection)))
-          #:entry->row (flow (~> prompt->string vector))
-          #:style '(single column-headers))
-   (button "Remove Selected Prompt" (thunk (on-remove (@! @selection))))))
 
 (define (->input-value @N)
   (@~> @N (if _ ~a "")))

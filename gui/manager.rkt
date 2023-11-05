@@ -50,13 +50,9 @@
             (launch-server-menu-item s)
             (formula-menu-item (state-@env s)))
       (menu "Edit"
-            (add-prompt-menu-item (λ (p)
-                                    (when p
-                                      (<~@ (state-@prompts s) (cons p _)))))
-            (remove-prompt-menu-item (state-@prompts s)
-                                     (λ (p)
-                                       (when p
-                                         (<~@ (state-@prompts s) (remove p _))))))
+            (manage-prompt-menu-item (state-@prompts s)
+                                     #:on-add (add-prompt s)
+                                     #:on-remove (remove-prompt s)))
       (menu "Help"
             (about-menu-item)
             (how-to-play-menu-item)
@@ -98,16 +94,10 @@
     (button "Next" (to-add-prompts s))))
 
 (define (add-prompts-view s)
-  (define @prompts (state-@prompts s))
-  (define (add p)
-    (<~@ @prompts (cons p _)))
-  (define (remove i p)
-    (define-values (new-ps p2)
-      (list-remove (@! @prompts) i))
-    (when (equal? p p2)
-      (:= @prompts new-ps)))
   (vpanel
-   (prompts-input-view @prompts #:on-add add #:on-remove remove)
+   (prompts-input-view (state-@prompts s)
+                       #:on-add (add-prompt s)
+                       #:on-remove (remove-prompt s))
    (button "Next" (to-choose-monster-db s))))
 
 (define (choose-monster-db-view s)
@@ -441,3 +431,14 @@
 
 (define-flow ->extension
   (~> path-get-extension (and _ (~> bytes->string/utf-8 (substring 1)))))
+
+;;;; Prompt helpers
+
+(define ((add-prompt s) p)
+  (<~@ (state-@prompts s) (cons p _)))
+
+(define ((remove-prompt s) i p)
+  (define-values (new-ps p2)
+    (list-remove (@! (state-@prompts s)) i))
+  (when (equal? p p2)
+    (:= (state-@prompts s) new-ps)))

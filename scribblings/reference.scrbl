@@ -1788,18 +1788,12 @@ is removed. The @racket[on-remove] event signals both the index of the round
 prompt and the prompt value to be removed.
 }
 
-@defproc[(add-prompt-menu-item [on-finish (-> (or/c #f prompt/c) any) void])
+@defproc[(manage-prompt-menu-item [|@|prompts (obs/c (listof prompt/c))]
+                                  [#:on-add on-add (-> prompt/c any) void]
+                                  [#:on-remove on-remove (-> natural-number/c prompt/c any) void])
          (is-a?/c view<%>)]{
-A menu item that, when clicked, allows input of a round prompt value. When
-closed, emits @racket[on-finish] with the input value if able. Can be cancelled.
-}
-
-@defproc[(remove-prompt-menu-item [|@|prompts (obs/c (listof prompt/c))]
-                                  [on-remove (-> (or/c #f prompt/c) any) void])
-         (is-a?/c view<%>)]{
-A menu item that, when clicked, allows removing round prompts. When a selected
-round prompt value is requested for removal, emits @racket[on-remove] with the
-value. Close to finish.
+Renders a dialog for managing round prompts in the same style as
+@racket[prompts-input-view].
 }
 
 @defproc[(do-round-prompt [t time/c] [round natural-number/c]) any]{
