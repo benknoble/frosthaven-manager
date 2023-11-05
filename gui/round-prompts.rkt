@@ -7,6 +7,9 @@
                             #:on-remove (-> natural-number/c prompt/c any))
                            (is-a?/c view<%>))]
   [add-prompt-menu-item (->* () ((-> (or/c #f prompt/c) any)) (is-a?/c view<%>))]
+  [remove-prompt-menu-item (->* ((obs/c (listof prompt/c)))
+                                ((-> (or/c #f prompt/c) any))
+                                (is-a?/c view<%>))]
   [do-round-prompt (-> time/c natural-number/c any)]))
 
 (require racket/gui/easy
@@ -39,6 +42,13 @@
    (thunk
     ;; not setting current renderer, nor using an eventspace: dialog
     (render (round-prompt-selector on-finish)))))
+
+(define (remove-prompt-menu-item @prompts [on-remove void])
+  (menu-item
+   "Remove Round Prompt"
+   (thunk
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render (round-prompt-remover @prompts on-remove)))))
 
 (define (do-round-prompt time round)
   (define-close! close! closing-mixin)
@@ -96,6 +106,20 @@
    (hpanel
     (button "Ok" close!)
     (button "Cancel" (thunk (:= @time #f) (close!))))))
+
+;; on-remove: (-> (or/c #f prompt/c) any)
+(define (round-prompt-remover @prompts [on-remove void])
+  (define/obs @selection #f)
+  (dialog
+   #:title "Remove Round Prompt"
+   #:style '(close-button resize-border)
+   (table '("Prompt")
+          (@> @prompts list->vector)
+          (λ (_action entries selection)
+            (:= @selection (vector-ref entries selection)))
+          #:entry->row (flow (~> prompt->string vector))
+          #:style '(single column-headers))
+   (button "Remove Selected Prompt" (thunk (on-remove (@! @selection))))))
 
 (define (->input-value @N)
   (@~> @N (if _ ~a "")))

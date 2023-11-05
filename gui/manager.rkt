@@ -52,7 +52,11 @@
       (menu "Edit"
             (add-prompt-menu-item (λ (p)
                                     (when p
-                                      (<~@ (state-@prompts s) (cons p _))))))
+                                      (<~@ (state-@prompts s) (cons p _)))))
+            (remove-prompt-menu-item (state-@prompts s)
+                                     (λ (p)
+                                       (when p
+                                         (<~@ (state-@prompts s) (remove p _))))))
       (menu "Help"
             (about-menu-item)
             (how-to-play-menu-item)

@@ -1794,6 +1794,14 @@ A menu item that, when clicked, allows input of a prompt round value. When
 closed, emits @racket[on-finish] with the input value if able. Can be cancelled.
 }
 
+@defproc[(remove-prompt-menu-item [|@|prompts (obs/c (listof prompt/c))]
+                                  [on-remove (-> (or/c #f prompt/c) any) void])
+         (is-a?/c view<%>)]{
+A menu item that, when clicked, allows removing round prompts. When a selected
+round prompt value is requested for removal, emits @racket[on-remove] with the
+value. Close to finish.
+}
+
 @defproc[(do-round-prompt [t time/c] [round natural-number/c]) any]{
 Renders a dialog prompting players to check the rules based on the timing of the
 current round.
