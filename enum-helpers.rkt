@@ -10,7 +10,6 @@
 (require
   racket/serialize
   (for-syntax racket/syntax)
-  syntax/parse
   syntax/parse/define
   rebellion/type/enum
   rebellion/collection/keyset
