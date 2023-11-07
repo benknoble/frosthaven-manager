@@ -15,6 +15,8 @@
   rebellion/collection/keyset
   frosthaven-manager/qi)
 
+(module+ test (require rackunit))
+
 (define (make-property-maker-that-displays-as-constant-names desc)
   (define default-props-sans-custom-writer
     (remove prop:custom-write
@@ -35,6 +37,24 @@
                 ;; everything else
                 [(v out mode) (custom-writer v out mode)]))
         default-props-sans-custom-writer))
+
+(module+ test
+  (define-enum-type langs (racket typed/racket datalog) #:property-maker make-property-maker-that-displays-as-constant-names)
+  (define-binary-check (check-display-output actual expected)
+                       (equal? (with-output-to-string (thunk (display actual)))
+                               expected))
+  (test-case "displayble enums"
+    (check-display-output racket "racket")
+    (check-display-output typed/racket "typed/racket")
+    (check-display-output datalog "datalog")
+    ;;
+    (check-equal? (~a racket) "racket")
+    (check-equal? (~a typed/racket) "typed/racket")
+    (check-equal? (~a datalog) "datalog")
+    ;;
+    (check-equal? (~s racket) "#<langs:racket>")
+    (check-equal? (~s typed/racket) "#<langs:typed/racket>")
+    (check-equal? (~s datalog) "#<langs:datalog>")))
 
 (define-syntax-parse-rule
   (define-serializable-enum-type
@@ -67,6 +87,16 @@
       (make-deserialize-info
         {~? selector default-selector}
         (thunk (error 'type "cycles not supported"))))))
+
+(module+ test
+  (require racket/serialize)
+  (define-serializable-enum-type slangs (j apl forth))
+  (define-simple-check (check-serializes x)
+                       (equal? x (deserialize (serialize x))))
+  (test-case "serializable enums"
+    (check-serializes j "j")
+    (check-serializes apl "apl")
+    (check-serializes forth "forth")))
 
 (define ((serializable-property-maker deserialize-info-binding) desc)
   (define discrim (enum-descriptor-discriminator desc))
