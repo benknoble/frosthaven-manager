@@ -5,12 +5,7 @@
   (contract-out
     [make-property-maker-that-displays-as-constant-names
       (-> uninitialized-enum-descriptor?
-          (listof (cons/c struct-type-property? any/c)))]
-    [compose-property-makers
-      (-> (-> uninitialized-enum-descriptor?
-              (listof (cons/c struct-type-property? any/c))) ...
-          (-> uninitialized-enum-descriptor?
-              (listof (cons/c struct-type-property? any/c))))]))
+          (listof (cons/c struct-type-property? any/c)))]))
 
 (require
   racket/serialize

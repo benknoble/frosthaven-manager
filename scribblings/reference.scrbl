@@ -849,12 +849,6 @@ that the @racket[display] string is the same as the constant name as in
 @racket[define-enum-type].
 }
 
-@defproc[(compose-property-makers [p (-> uninitialized-enum-descriptor? (listof (cons/c struct-type-property? any/c)))] ...)
-         (-> uninitialized-enum-descriptor? (listof (cons/c struct-type-property? any/c)))]{
-Creates a property maker suitable for @racket[define-enum-type] that combines
-each @racket[p].
-}
-
 @defform[(define-serializable-enum-type id (constant-id ...) enum-option ...)
          #:grammar ([enum-option #:omit-root-binding
                                  (code:line #:descriptor-name descriptor-id)
