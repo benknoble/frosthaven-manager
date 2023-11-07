@@ -25,12 +25,20 @@
          frosthaven-manager/elements
          (only-in pict inset))
 
+(module+ test (require rackunit))
+
 (define (elements-cycler @states es [panel hpanel])
   (apply panel #:stretch '(#f #f) (element-cyclers @states es)))
 
 (define (make-states es)
   ;; don't use const; we don't want them to all be eq?
   (map (λ (_) (@ 'unfused)) es))
+
+(module+ test
+  (test-case "make-states"
+    (check-equal? (length (make-states (range 6))) 6)
+    (check-false (let ([states (make-states (range 6))])
+                   (andmap eq? (drop-right states 1) (cdr states))))))
 
 (define ((make-all state) es)
   (for ([@e (in-list es)])
@@ -39,9 +47,31 @@
 (define infuse-all (make-all 'infused))
 (define consume-all (make-all 'unfused))
 
+(module+ test
+  (test-case "*-all"
+    (define states (make-states (range 6)))
+    (infuse-all states)
+    (check-true (andmap (flow (equal? 'infused)) (map @! states)))
+    (consume-all states)
+    (check-true (andmap (flow (equal? 'unfused)) (map @! states)))))
+
 (define (make-transition-element-state @state)
   (λ ()
     (<@ @state transition-element-state)))
+
+(module+ test
+  (test-case "transitions"
+    (define/obs state 'infused)
+    (define t (make-transition-element-state state))
+    (t)
+    (check-equal? (@! state) 'waning)
+    (t)
+    (check-equal? (@! state) 'unfused)
+    (t)
+    (check-equal? (@! state) 'infused)
+    (:= state 'nothing)
+    (t)
+    (check-equal? (@! state) 'infused)))
 
 (define (handle-element-clicks @state)
   (define cycle-element (make-transition-element-state @state))
