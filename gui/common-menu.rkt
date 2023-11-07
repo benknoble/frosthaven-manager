@@ -19,17 +19,34 @@
          frosthaven-manager/gui/server
          frosthaven-manager/manager)
 
+(module+ test (require rackunit))
+
 (begin-for-syntax
   (require setup/getinfo)
   (define (get-version) ((get-info '("frosthaven-manager")) 'version)))
 (define-syntax (version stx)
   (datum->syntax stx (get-version) stx stx))
 
+(module+ test
+  (require version/utils)
+  (define-simple-check (check-valid-version x)
+                       (valid-version? x))
+  (check-valid-version version))
+
 (define-runtime-path about.md "../ABOUT.md")
 
-(define (do-about)
+(define (get-about-text)
   (define about-text (file->string about.md))
   (define about+version (string-join (list about-text "---" (string-append "Version: " version)) "\n"))
+  about+version)
+
+(module+ test
+  (test-case "about information"
+    (check-not-exn get-about-text)
+    (check-match (get-about-text) (regexp #px"Version: (.*)" (list _ the-version))
+                 (valid-version? the-version))))
+
+(define (do-about)
   (with-closing-custodian/eventspace
     (render/eventspace
       #:eventspace closing-eventspace
@@ -37,7 +54,7 @@
         #:mixin close-custodian-mixin
         #:title "About Frosthaven Manager"
         #:size '(400 300)
-        (markdown-text about+version)))))
+        (markdown-text (get-about-text))))))
 
 (define (about-menu-item)
   (menu-item "About Frosthaven Manager" do-about))
