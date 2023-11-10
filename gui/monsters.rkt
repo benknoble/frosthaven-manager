@@ -119,7 +119,7 @@
       (button "💀Kill💀" on-kill))
     (button (@~> @monster (~>> (if monster-elite? "Normal" "Elite")
                                (~a "Swap to ")))
-            (thunk (on-swap)))
+            on-swap)
     (vpanel
       (text (@~> @monster (~> monster-conditions
                               (sep ~a) collect
