@@ -344,6 +344,7 @@
   (list/c 'remove monster-group?))
 
 (define (multi-monster-picker @info-db @initial-level @env #:on-change [on-change void])
+  ;; TODO why maintain own list? why not have passed in? (something to do with IDs?)
   (define/obs @monster-groups empty)
   (define @monster-names
     (@~> @monster-groups
