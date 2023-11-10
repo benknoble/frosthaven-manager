@@ -39,7 +39,7 @@
                             (#:on-group (-> monster-group? any))
                             any)]))
 
-(require (only-in pict pict-width pict-height [text pict:text])
+(require (only-in pict pict-width pict-height)
          racket/gui/easy
          racket/gui/easy/contract
          frosthaven-manager/observable-operator
@@ -142,7 +142,7 @@
                     (set-subtract (inclusive-range 1 10))
                     (sort _ <))))
     (define/obs @number->elite (hash))
-    (define/match (on-change e)
+    (define/match (on-change _e)
       [{`(include? ,num to #t)} (<~@ @number->elite (hash-update num values #f))]
       [{`(include? ,num to #f)} (<~@ @number->elite (hash-remove num))]
       [{`(elite? ,num to ,elite?)}
@@ -589,8 +589,6 @@
          (for*/list ([monster-name->monster-info (in-hash-values info-db)]
                      [monster-name (in-hash-keys monster-name->monster-info)])
            (string-length monster-name))))
-
-(define aoe-rx #rx"aoe\\(([^)]+)\\)")
 
 (define (ability->text @mg ability @env)
   (text (obs-combine (flow (~> (esc (monster-ability-ability->text ability)) escape-text)) @mg @env)))
