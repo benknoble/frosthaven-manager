@@ -56,6 +56,8 @@
          frosthaven-manager/monster-db
          frosthaven-manager/parsers/formula)
 
+(module+ test (require rackunit))
+
 (define single-monster-event/c
   (or/c
     (list/c 'set 'from string? 'to string?)
@@ -142,13 +144,8 @@
                     (set-subtract (inclusive-range 1 10))
                     (sort _ <))))
     (define/obs @number->elite (hash))
-    (define/match (on-change _e)
-      [{`(include? ,num to #t)} (<~@ @number->elite (hash-update num values #f))]
-      [{`(include? ,num to #f)} (<~@ @number->elite (hash-remove num))]
-      [{`(elite? ,num to ,elite?)}
-       ;; looks like hash-set, but I want the missing-key semantics of
-       ;; hash-update with no failure-result as a guard against bugs
-       (<~@ @number->elite (hash-update num (const elite?)))])
+    (define (on-change e)
+      (<~@ @number->elite (update-selected-tracker e _)))
     (define-close! close! closing-mixin)
     (define (on-close)
       ;; valid because called when the dialog that changes @number->elite is closed
@@ -408,12 +405,7 @@
     (match e
       [`(set from ,_old to ,new) (vector-set! new-group 0 new)]
       [`(monster from ,_old to ,new) (vector-set! new-group 1 new)]
-      [`(include? ,n to #t) (vector-update! new-group 2 (flow (hash-update n values #f)))]
-      [`(include? ,n to #f) (vector-update! new-group 2 (flow (hash-remove n)))]
-      [`(elite? ,n to ,elite?)
-        ;; looks like hash-set, but I want the missing-key semantics of
-        ;; hash-update with no failure-result as a guard against bugs
-        (vector-update! new-group 2 (flow (hash-update n (const elite?))))]
+      [(or `(include? ,_ to ,_) `(elite? ,_ to ,_)) (vector-update! new-group 2 (flow (update-selected-tracker e _)))]
       [`(level ,level) (vector-set! new-group 3 level)]))
   (define-close! close! closing-mixin)
   (define-flow mixin (~> closing-mixin (make-on-close-mixin finish)))
@@ -619,18 +611,6 @@
                 [(list 'aoe-pict pict) (aoe-button pict)]))))))
 
 (define (ability-deck-preview @ability-deck @mg @env #:on-move [on-move void])
-  (define (make-rows ability-deck revealed)
-    (define draw (ability-decks-draw ability-deck))
-    (define-values {shown hidden}
-      (match revealed
-        ['all (values draw empty)]
-        [(? number? n) (cond
-                         [(<= 0 n (length draw)) (split-at draw n)]
-                         [else (values draw empty)])]))
-    (~> (shown hidden)
-        (== (~> sep (>< (~> monster-ability-name->text vector)))
-            (~> sep (>< (gen (vector "?")))))
-        vector))
   (define (make-discard-rows ability-deck)
     (for/vector ([ability (ability-decks-discard ability-deck)])
       (vector (monster-ability-name->text ability))))
@@ -668,7 +648,7 @@
     (define/obs @revealed 0)
     (define/obs @draw-selection #f)
     (define/obs @discard-selection #f)
-    (define @rows (obs-combine make-rows @ability-deck @revealed))
+    (define @rows (obs-combine make-preview-rows @ability-deck @revealed))
     (define @discard-rows (@> @ability-deck make-discard-rows))
     ;; not setting current renderer, nor using an eventspace: dialog
     (render
@@ -713,6 +693,79 @@
                    (:= @discard-selection selection)]
                   [{_ _ _} (void)]))
          (discard-ability-card-information @ability-deck @discard-selection @mg @env)))))))))
+
+;; TODO: gui/loot.rkt:146
+(define (make-preview-rows ability-deck revealed)
+  (define draw (ability-decks-draw ability-deck))
+  (define-values {shown hidden}
+    (match revealed
+      ['all (values draw empty)]
+      [(? number? n) (cond
+                       [(<= 0 n (length draw)) (split-at draw n)]
+                       [else (values draw empty)])]))
+  (~> (shown hidden)
+      (== (~> sep (>< (~> monster-ability-name->text vector)))
+          (~> sep (>< (gen (vector "?")))))
+      vector))
+
+(module+ test
+  (require frosthaven-manager/monster-db)
+  (define-values {_info abilities} (get-dbs default-monster-db))
+  (define draw-pile (shuffle (hash-ref abilities "archer")))
+  (define in (ability-decks #f draw-pile empty))
+  (define name-text
+    (list->vector (map vector (map monster-ability-name->text draw-pile))))
+  (test-case "make-preview-rows"
+    (check-equal? (make-preview-rows in 0)
+                  (vector-map (const (vector "?")) name-text))
+    (check-equal? (make-preview-rows in 5)
+                  (vector-append
+                   (vector-take name-text 5)
+                   (vector-map (const (vector "?")) (vector-drop name-text 5))))
+    (check-equal? (make-preview-rows in 'all)
+                  name-text)
+    (check-equal? (make-preview-rows in (length draw-pile))
+                  name-text)
+    (check-equal? (make-preview-rows in (add1 (length draw-pile)))
+                  name-text)
+    (check-equal? (make-preview-rows in -5)
+                  name-text)))
+
+(define (update-selected-tracker e tracker)
+  (match e
+    [`(include? ,num to #t) (hash-update tracker num values #f)]
+    [`(include? ,num to #f) (hash-remove tracker num)]
+    [`(elite? ,num to ,elite?)
+     ;; looks like hash-set, but I want the missing-key semantics of
+     ;; hash-update with no failure-result as a guard against bugs
+     (hash-update tracker num (const elite?))]))
+
+(module+ test
+  (test-case "update-selected-tracker"
+    (check-equal? (update-selected-tracker '(include? 3 to #t) (hash))
+                  (hash 3 #f))
+    (check-equal? (update-selected-tracker '(include? 3 to #t) (hash 3 #f))
+                  (hash 3 #f))
+    (check-equal? (update-selected-tracker '(include? 3 to #t) (hash 4 #f))
+                  (hash 3 #f 4 #f))
+    (check-equal? (update-selected-tracker '(include? 3 to #f) (hash))
+                  (hash))
+    (check-equal? (update-selected-tracker '(include? 3 to #f) (hash 3 #f))
+                  (hash))
+    (check-equal? (update-selected-tracker '(include? 3 to #f) (hash 4 #f))
+                  (hash 4 #f))
+    (check-equal? (update-selected-tracker '(include? 3 to #f) (hash 3 #f 4 #f))
+                  (hash 4 #f))
+    (check-equal? (update-selected-tracker '(elite? 3 to #t) (hash 3 #f 4 #t))
+                  (hash 3 #t 4 #t))
+    (check-equal? (update-selected-tracker '(elite? 3 to #f) (hash 3 #t 4 #t))
+                  (hash 3 #f 4 #t))
+    (check-equal? (update-selected-tracker '(elite? 3 to #t) (hash 3 #t 4 #t))
+                  (hash 3 #t 4 #t))
+    (check-equal? (update-selected-tracker '(elite? 3 to #f) (hash 3 #f 4 #t))
+                  (hash 3 #f 4 #t))
+    (check-exn exn:fail? (thunk (update-selected-tracker '(elite? 3 to #t) (hash 4 #t))))
+    (check-exn exn:fail? (thunk (update-selected-tracker '(elite? 3 to #f) (hash 4 #t))))))
 
 (module+ main
   (require frosthaven-manager/gui/render)

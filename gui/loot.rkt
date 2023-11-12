@@ -143,6 +143,7 @@
                         #:enabled? (@> @revealed number?))
                 (spacer)))))))))
 
+;; TODO: gui/monsters.rkt:697
 (define (make-preview-rows loot-deck num-players revealed)
   (define-values (shown hidden)
     (match revealed
