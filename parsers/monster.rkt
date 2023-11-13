@@ -16,6 +16,8 @@
 (require frosthaven-manager/parsers/base
          frosthaven-manager/defns)
 
+(module+ test (require rackunit))
+
 (define bestiary/c
   (listof (or/c (list/c 'import string?)
                 monster-info?
@@ -112,6 +114,32 @@
 (define-flow level-x-type-dupes (~> check-duplicates (and _ (take 2))))
 (define-flow level-x-type-set (~> (sep (take 2)) set))
 
+(define-flow make-stats
+  (~>> (group-by second) ;; type
+       (sep (sort < #:key first)) ;; level
+       (if (~> 1> first second (equal? "normal")) _ X)
+       (>< (map third _)) collect))
+
+(module+ test
+  (test-case "make-stats"
+    ;; use dummy hashes to stand for stats
+    (define in
+      '([0 "normal" (hash 'hp 1)]
+        [0 "elite" (hash 'hp 2)]
+        [1 "normal" (hash 'hp 3)]
+        [2 "normal" (hash 'hp 5)]
+        [1 "elite" (hash 'hp 4)]
+        [2 "elite" (hash 'hp 6)]))
+    (check-equal? (make-stats in)
+                  ;; normal stats
+                  '([(hash 'hp 1)
+                     (hash 'hp 3)
+                     (hash 'hp 5)]
+                    ;; elite stats
+                    [(hash 'hp 2)
+                     (hash 'hp 4)
+                     (hash 'hp 6)]))))
+
 (define monster/p
   (do (string/p "begin-monster") skip-ws
       [name <- (non-empty-text/p "non-empty monster name")] skip-ws
@@ -127,11 +155,7 @@
         (apply monster-info
                set-name
                name
-               (~>> (stats)
-                    (group-by second) ;; type
-                    (sep (sort < #:key first)) ;; level
-                    (if (~> 1> first second (equal? "normal")) _ X)
-                    (>< (map third _)) collect)))))
+               (make-stats stats)))))
 
 ;; (list card initiative shuffle? abilities)
 (define ability-card/p
