@@ -53,7 +53,7 @@
       [ps <- (many/p (list/p (or/p (string/p "*") (string/p "/")) term/p #:sep skip-ws))] skip-ws
       (pure
         (for/fold ([res p])
-          ([op-p (in-list ps)])
+                  ([op-p (in-list ps)])
           (match-define (list op p) op-p)
           (case op
             [("*") (λ (env) (* (res env) (p env)))]
