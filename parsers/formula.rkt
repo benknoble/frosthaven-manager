@@ -10,6 +10,8 @@
 
 (require frosthaven-manager/parsers/base)
 
+(module+ test (require rackunit))
+
 #| formulas syntax
 
 <expr> ::= product ([+-] product)*
@@ -72,3 +74,9 @@
 
 (define (parse-expr s)
   (parse-result! (parse-string expr/p s)))
+
+(module+ test
+  (test-case "parse-expr"
+    (check-equal? ((parse-expr "5-3-1") (hash)) 1)
+    (check-equal? ((parse-expr "30/15/5") (hash)) 2/5)
+    (check-equal? ((parse-expr "5*6-2") (hash)) 28)))
