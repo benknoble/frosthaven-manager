@@ -19,6 +19,8 @@
          frosthaven-manager/manager/state
          frosthaven-manager/qi)
 
+(module+ test (require rackunit))
+
 (define ((update-loot-deck-and-num-loot-cards s) evt)
   ((loot-picker-updater (state-@cards-per-deck s)) evt)
   (<@ (state-@num-loot-cards s) (case (car evt) [(add) add1] [(remove) sub1])))
@@ -39,7 +41,14 @@
   (take-loot s))
 
 (define-flow rotate
-  (~> (-< rest first) (== _ list) append))
+  (if empty?
+    _
+    (~> (-< rest first) (== _ list) append)))
+
+(module+ test
+  (test-case "rotate"
+    (check-equal? (rotate '(a b c)) '(b c a))
+    (check-equal? (rotate '()) '())))
 
 (define (place-loot-on-bottom s)
   (<~@ (state-@loot-deck s) rotate))
