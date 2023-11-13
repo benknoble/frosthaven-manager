@@ -18,10 +18,37 @@
          frosthaven-manager/defns
          frosthaven-manager/manager/state)
 
+(module+ test (require rackunit)
+  (define (counter . xs)
+    (for/fold ([h (hash)])
+              ([x xs])
+      (hash-update h x add1 0)))
+  (define count-deck (apply counter monster-modifier-deck))
+  (define (check-deck-and-discard-make-complete-deck s)
+    (define all-cards
+      (append (@! (state-@monster-modifier-deck s))
+              (@! (state-@monster-discard s))))
+    (define count-state
+      (apply counter (filter (flow (not (or (equal? curse) (equal? bless))))
+                             all-cards)))
+    (check-equal? count-state count-deck)))
+
 (define (reshuffle-modifier-deck s)
   (define-values (@deck @discard) (on (s) (-< state-@monster-modifier-deck state-@monster-discard)))
   (<@ @deck (λ (d) (shuffle (append d (@! @discard)))))
   (:= @discard empty))
+
+(module+ test
+  (test-case "reshuffle-modifier-deck"
+    (define s (make-state))
+    (check-equal? (length (@! (state-@monster-modifier-deck s))) (length monster-modifier-deck))
+    (define top-3 (take (@! (state-@monster-modifier-deck s)) 3))
+    (<~@ (state-@monster-modifier-deck s) (drop 3))
+    (:= (state-@monster-discard s) (reverse top-3))
+    (reshuffle-modifier-deck s)
+    (check-equal? (length (@! (state-@monster-modifier-deck s))) (length monster-modifier-deck))
+    (check-true (empty? (@! (state-@monster-discard s))))
+    (check-deck-and-discard-make-complete-deck s)))
 
 (define (discard s card)
   (<~@ (switch (card s) (% 1> 2>)
@@ -50,6 +77,36 @@
   (:= (state-@modifier s) card)
   (discard s card))
 
+(module+ test
+  (test-case "draw-modifier"
+    (define s (make-state))
+    (define top-card (first (@! (state-@monster-modifier-deck s))))
+    ((draw-modifier s))
+    (check-deck-and-discard-make-complete-deck s)
+    (check-equal? (@! (state-@modifier s)) top-card)
+
+    (define top-5 (cons top-card (take (@! (state-@monster-modifier-deck s)) 4)))
+    (for ([_i 4])
+      ((draw-modifier s)))
+    (check-deck-and-discard-make-complete-deck s)
+    (check-equal? (length (@! (state-@monster-modifier-deck s))) 15)
+    (check-equal? (length (@! (state-@monster-discard s))) 5)
+    (check-equal? (apply counter (@! (state-@monster-discard s)))
+                  (apply counter top-5))
+    (check-equal? (@! (state-@modifier s)) (fifth top-5))
+    (check-equal? (@! (state-@monster-prev-discard s)) (fourth top-5))
+
+    (for ([_i 15])
+      ((draw-modifier s)))
+    (check-deck-and-discard-make-complete-deck s)
+    (check-equal? (length (@! (state-@monster-modifier-deck s))) 0)
+    (check-equal? (length (@! (state-@monster-discard s))) 20)
+
+    ((draw-modifier s))
+    (check-deck-and-discard-make-complete-deck s)
+    (check-equal? (length (@! (state-@monster-modifier-deck s))) 19)
+    (check-equal? (length (@! (state-@monster-discard s))) 1)))
+
 (define ((draw-modifier* s [keep better-modifier]))
   (match-define (list a b) (draw-cards s 2))
   (define keep-card (keep a b))
@@ -61,6 +118,23 @@
   (:= (state-@modifier s) keep-card)
   (discard s not-keep-card)
   (discard s keep-card))
+
+(module+ test
+  (test-case "draw-modifier*"
+    (define s (make-state))
+    (define best-card (better-modifier (first (@! (state-@monster-modifier-deck s)))
+                                       (second (@! (state-@monster-modifier-deck s)))))
+    ((draw-modifier* s))
+    (check-deck-and-discard-make-complete-deck s)
+    (check-equal? (@! (state-@modifier s)) best-card)
+    (check-not-false (@! (state-@monster-prev-discard s)))
+
+    (define worst-card (worse-modifier (first (@! (state-@monster-modifier-deck s)))
+                                       (second (@! (state-@monster-modifier-deck s)))))
+    ((draw-modifier* s worse-modifier))
+    (check-deck-and-discard-make-complete-deck s)
+    (check-equal? (@! (state-@modifier s)) worst-card)
+    (check-not-false (@! (state-@monster-prev-discard s)))))
 
 (define (shuffle-modifier-deck s)
   (<@ (state-@monster-modifier-deck s) shuffle))
