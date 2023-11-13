@@ -37,6 +37,8 @@
                     [map fmap])
          frosthaven-manager/qi)
 
+(module+ test (require rackunit))
+
 ;; megaparsack's string-ci/p is broken
 ;; (https://github.com/lexi-lambda/megaparsack/issues/24)
 (define (string-ci/p s)
@@ -45,6 +47,11 @@
     (label/p s (do (char-ci/p (string-ref s 0))
                    (string-ci/p (substring s 1))
                    (pure s)))))
+
+(module+ test
+  (test-case "string-ci/p"
+    (check-equal? (parse-result! (parse-string (string-ci/p "hello") "HeLlO"))
+                  "hello")))
 
 (define skip-ws
   (do (many/p space/p)
@@ -96,6 +103,12 @@
 
 (define-flow name->set (~> string-split (and (~> length (> 0)) last)))
 
+(module+ test
+  (test-case "name->set"
+    (check-equal? (name->set "Horrifying Monster") "Monster")
+    (check-equal? (name->set "Creep") "Creep")
+    (check-equal? (name->set "") #f)))
+
 (define (set-name?/p name)
   (or/p (opt/p (non-empty-text/p "non-empty set name"))
         (guard/p
@@ -103,6 +116,13 @@
           (flow (and _ (~> string-length (not zero?))))
           "name with monster set"
           (const name))))
+
+(module+ test
+  (test-case "set-name?/p"
+    (check-equal? (parse-result! (parse-string (set-name?/p "Monster") "Monster"))
+                  "Monster")
+    (check-equal? (parse-result! (parse-string (set-name?/p "Monster") ""))
+                  "Monster")))
 
 (define (ws-separated-whole-file/p p)
   (fmap first
