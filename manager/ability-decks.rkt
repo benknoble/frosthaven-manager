@@ -17,6 +17,8 @@
          frosthaven-manager/qi
          frosthaven-manager/defns)
 
+(module+ test (require rackunit))
+
 (serializable-struct ability-decks [current draw discard] #:transparent)
 
 (define-flow (ability-decks-draw-next ad)
@@ -24,6 +26,16 @@
           (~> ability-decks-draw (switch [(not empty?) rest]))
           ability-decks-discard)
       ability-decks))
+
+(module+ test
+  (test-case "ability-decks-draw-next"
+    (check-equal? (ability-decks-draw-next (ability-decks #f '(3 4) '(1 2)))
+                  (ability-decks 3 '(4) '(1 2)))
+    (check-equal? (ability-decks-draw-next (ability-decks #f '() '(1 2)))
+                  (ability-decks #f '() '(1 2)))
+    ;; /!\ assumption that current is #f, or you lose a card:
+    (check-equal? (ability-decks-draw-next (ability-decks 3 '(4) '(1 2)))
+                  (ability-decks 4 '() '(1 2)))))
 
 (define (ability-decks-discard-and-maybe-shuffle ad)
   (match-define (ability-decks current draw discard) ad)
@@ -40,6 +52,41 @@
       (values (shuffle (append draw discard-with-current)) empty)
       (values draw discard-with-current)))
   (ability-decks #f draw* discard*))
+
+(module+ test
+  (require frosthaven-manager/monster-db)
+  (define-values {_info abilities} (get-dbs default-monster-db))
+  (define draw-pile (shuffle (hash-ref abilities "archer")))
+  (test-case "ability-decks-discard-and-maybe-shuffle"
+    (for/fold ([ad (ability-decks #f draw-pile empty)])
+              ([_i (add1 (length draw-pile))])
+      (define ad* (ability-decks-discard-and-maybe-shuffle (ability-decks-draw-next ad)))
+      ;; current card after drawing and discarding is always #f
+      (check-equal? (ability-decks-current ad*) #f)
+      (cond
+        ;; discarding when draw is empty triggers shuffle
+        [(= 1 (length (ability-decks-draw ad)))
+         ;; |draw| = 1: after drawing, draw pile is empty
+         (check-true (not (empty? (ability-decks-draw ad*))))
+         (check-equal? (length (ability-decks-draw ad*))
+                       (length draw-pile))
+         (check-true (empty? (ability-decks-discard ad*)))]
+        ;; when forced to shuffle, shuffle
+        [(monster-ability-shuffle? (first (ability-decks-draw ad)))
+         (check-true (not (empty? (ability-decks-draw ad*))))
+         (check-equal? (length (ability-decks-draw ad*))
+                       (length draw-pile))
+         (check-true (empty? (ability-decks-discard ad*)))]
+        ;; when draw pile wasn't empty and card didn't mandate shuffle,
+        ;; drawn card should go in discard
+        [else
+         (check-not-false (member (first (ability-decks-draw ad))
+                                  (ability-decks-discard ad*)))
+         (check-equal? (+ (length (ability-decks-draw ad*))
+                          (length (ability-decks-discard ad*)))
+                       (length draw-pile))])
+      ad*)
+    (void)))
 
 (define ((update-ability-decks f) ads)
   (for/hash ([(set ad) (in-hash ads)])

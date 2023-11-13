@@ -1068,7 +1068,9 @@ Serializable.
 }
 
 @defproc[(ability-decks-draw-next [ad ability-decks?]) ability-decks?]{
-Draws a card from the ability deck.
+Draws a card from the ability deck. The value of @racket[(ability-decks-current ad)]
+is silently discarded; if it is a @racket[monster-ability?], it is effectively
+lost.
 }
 
 @defproc[(ability-decks-discard-and-maybe-shuffle [ad ability-decks?])
