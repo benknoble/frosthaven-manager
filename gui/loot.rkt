@@ -26,9 +26,8 @@
          frosthaven-manager/defns
          frosthaven-manager/gui/mixins
          frosthaven-manager/gui/counter
-         frosthaven-manager/gui/render)
-
-(module+ test (require rackunit))
+         frosthaven-manager/gui/render
+         frosthaven-manager/gui/table)
 
 (define (loot-picker #:on-card [on-card void]
                      #:on-sticker [on-sticker void])
@@ -124,7 +123,7 @@
   (button "Preview Loot"
           (thunk
            (define/obs @revealed 0)
-           (define @rows (obs-combine make-preview-rows @loot-deck @num-players @revealed))
+           (define @rows (obs-combine preview-rows @loot-deck @num-players @revealed))
            (with-closing-custodian/eventspace
             (render/eventspace
              #:eventspace closing-eventspace
@@ -143,47 +142,10 @@
                         #:enabled? (@> @revealed number?))
                 (spacer)))))))))
 
-;; TODO: gui/monsters.rkt:697
-(define (make-preview-rows loot-deck num-players revealed)
-  (define-values (shown hidden)
-    (match revealed
-      ['all (values loot-deck empty)]
-      [(? number? n) (cond
-                       [(<= 0 n (length loot-deck)) (split-at loot-deck n)]
-                       [else (values loot-deck empty)])]))
-  (~> (shown hidden)
-      (== (~> sep (>< (~> (format-loot-card num-players) vector)))
-          (~> sep (>< (gen (vector "?")))))
-      vector))
-
-(module+ test
-  (require frosthaven-manager/defns
-           frosthaven-manager/manager/loot)
-  (define loot-deck (build-loot-deck (hash money-deck 3
-                                           (hash-ref material-decks lumber) 2
-                                           (hash-ref material-decks hide) 2
-                                           (hash-ref herb-decks axenut) 2)
-                                     (hash)))
-  (define n-players 3)
-  (define loot-text (list->vector (map vector (map (format-loot-card n-players) loot-deck))))
-  (test-case "make-preview-rows"
-    (check-equal? (make-preview-rows loot-deck n-players 0)
-                  (vector-map (const (vector "?")) loot-text))
-    ;; check that vector-map didn't modify loot-text
-    (check-equal? loot-text
-                  (list->vector (map vector (map (format-loot-card n-players) loot-deck))))
-    (check-equal? (make-preview-rows loot-deck n-players 5)
-                  (vector-append
-                   (vector-take loot-text 5)
-                   (vector-map (const (vector "?")) (vector-drop loot-text 5))))
-    (check-equal? (make-preview-rows loot-deck n-players 'all)
-                  loot-text)
-    (check-equal? (make-preview-rows loot-deck n-players (length loot-deck))
-                  loot-text)
-    (check-equal? (make-preview-rows loot-deck n-players (add1 (length loot-deck)))
-                  loot-text)
-    (check-equal? (make-preview-rows loot-deck n-players -5)
-                  loot-text)))
+(define (preview-rows loot-deck num-players revealed)
+  (define-flow reveal (~> (format-loot-card num-players) vector))
+  (define-flow hide-loot (gen (vector "?")))
+  (make-preview-rows loot-deck revealed #:reveal reveal #:hide hide-loot))
 
 (module+ main
   (require frosthaven-manager/manager)

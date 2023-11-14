@@ -46,6 +46,7 @@
          frosthaven-manager/gui/render
          frosthaven-manager/gui/font
          frosthaven-manager/gui/helpers
+         frosthaven-manager/gui/table
 
          frosthaven-manager/qi
          frosthaven-manager/defns
@@ -632,7 +633,7 @@
     (define/obs @revealed 0)
     (define/obs @draw-selection #f)
     (define/obs @discard-selection #f)
-    (define @rows (obs-combine make-preview-rows @ability-deck @revealed))
+    (define @rows (obs-combine preview-rows @ability-deck @revealed))
     (define @discard-rows (@> @ability-deck make-discard-rows))
     ;; not setting current renderer, nor using an eventspace: dialog
     (render
@@ -678,42 +679,11 @@
                   [{_ _ _} (void)]))
          (discard-ability-card-information @ability-deck @discard-selection @mg @env)))))))))
 
-;; TODO: gui/loot.rkt:146
-(define (make-preview-rows ability-deck revealed)
+(define (preview-rows ability-deck revealed)
   (define draw (ability-decks-draw ability-deck))
-  (define-values {shown hidden}
-    (match revealed
-      ['all (values draw empty)]
-      [(? number? n) (cond
-                       [(<= 0 n (length draw)) (split-at draw n)]
-                       [else (values draw empty)])]))
-  (~> (shown hidden)
-      (== (~> sep (>< (~> monster-ability-name->text vector)))
-          (~> sep (>< (gen (vector "?")))))
-      vector))
-
-(module+ test
-  (require frosthaven-manager/monster-db)
-  (define-values {_info abilities} (get-dbs default-monster-db))
-  (define draw-pile (shuffle (hash-ref abilities "archer")))
-  (define in (ability-decks #f draw-pile empty))
-  (define name-text
-    (list->vector (map vector (map monster-ability-name->text draw-pile))))
-  (test-case "make-preview-rows"
-    (check-equal? (make-preview-rows in 0)
-                  (vector-map (const (vector "?")) name-text))
-    (check-equal? (make-preview-rows in 5)
-                  (vector-append
-                   (vector-take name-text 5)
-                   (vector-map (const (vector "?")) (vector-drop name-text 5))))
-    (check-equal? (make-preview-rows in 'all)
-                  name-text)
-    (check-equal? (make-preview-rows in (length draw-pile))
-                  name-text)
-    (check-equal? (make-preview-rows in (add1 (length draw-pile)))
-                  name-text)
-    (check-equal? (make-preview-rows in -5)
-                  name-text)))
+  (define-flow reveal (~> monster-ability-name->text vector))
+  (define-flow hide (gen (vector "?")))
+  (make-preview-rows draw revealed #:reveal reveal #:hide hide))
 
 (define (update-selected-tracker e tracker)
   (match e
