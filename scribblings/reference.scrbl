@@ -1033,6 +1033,27 @@ Updates player @racket[k]s name to @racket[name] or max health via @racket[f].
 Calculates a creature's initiative.
 }
 
+@deftogether[(
+              @defthing[single-monster-event/c
+                         contract?
+                         #:value
+                         (or/c
+                           (list/c 'set 'from string? 'to string?)
+                           (list/c 'monster 'from monster-info? 'to monster-info?)
+                           (list/c 'include? monster-number/c 'to boolean?)
+                           (list/c 'elite? monster-number/c 'to boolean?)
+                           (list/c 'level level/c))]
+              @defthing[add-monster-event/c
+                         contract?
+                         #:value (list/c 'add monster-group?)]
+              @defthing[remove-monster-event/c
+                         contract?
+                         #:value (list/c 'remove monster-group?)]
+)]{
+Contracts for events used in callbacks to monster GUI views. Best used with
+@racket[match].
+}
+
 @defproc[(add-or-remove-monster-group [s state?])
          (-> (or/c add-monster-event/c
                    remove-monster-event/c)
@@ -1524,27 +1545,6 @@ closes it.
 
 @subsection{@tt{gui/monsters}}
 @defmodule[frosthaven-manager/gui/monsters]
-
-@deftogether[(
-              @defthing[single-monster-event/c
-                         contract?
-                         #:value
-                         (or/c
-                           (list/c 'set 'from string? 'to string?)
-                           (list/c 'monster 'from monster-info? 'to monster-info?)
-                           (list/c 'include? monster-number/c 'to boolean?)
-                           (list/c 'elite? monster-number/c 'to boolean?)
-                           (list/c 'level level/c))]
-              @defthing[add-monster-event/c
-                         contract?
-                         #:value (list/c 'add monster-group?)]
-              @defthing[remove-monster-event/c
-                         contract?
-                         #:value (list/c 'remove monster-group?)]
-)]{
-Contracts for events used in callbacks to monster GUI views. Best used with
-@racket[match].
-}
 
 @defproc[(single-monster-picker
            [info-db info-db/c]

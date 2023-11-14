@@ -74,6 +74,9 @@
     [update-player-name (-> state? (-> any/c string? any))]
     [update-player-max-hp (-> state? (-> any/c (-> natural-number/c natural-number/c) any))]
     [creature-initiative (-> (hash/c string? ability-decks?) (-> creature? (or/c +inf.0 initiative?)))]
+    [single-monster-event/c contract?]
+    [add-monster-event/c contract?]
+    [remove-monster-event/c contract?]
     [add-or-remove-monster-group (-> state? (-> (or/c add-monster-event/c remove-monster-event/c) any))]
     [draw-new-card-mid-round-if-needed (-> state? string? any)]
     [initiative-public? (-> boolean? boolean?)]))
@@ -89,9 +92,6 @@
                   element-state/c
                   make-states)
          frosthaven-manager/monster-db
-         (only-in frosthaven-manager/gui/monsters
-                  add-monster-event/c
-                  remove-monster-event/c)
          frosthaven-manager/manager/ability-decks
          frosthaven-manager/manager/round-prompts
          frosthaven-manager/parsers/formula)
@@ -391,6 +391,20 @@
   (clos (~>
           (== _ (~> creature-v (and monster-group*? monster-group*-mg)))
           equal?)))
+
+(define single-monster-event/c
+  (or/c
+    (list/c 'set 'from string? 'to string?)
+    (list/c 'monster 'from monster-info? 'to monster-info?)
+    (list/c 'include? monster-number/c 'to boolean?)
+    (list/c 'elite? monster-number/c 'to boolean?)
+    (list/c 'level level/c)))
+
+(define add-monster-event/c
+  (list/c 'add monster-group?))
+
+(define remove-monster-event/c
+  (list/c 'remove monster-group?))
 
 (define ((add-or-remove-monster-group s) evt)
   (match evt

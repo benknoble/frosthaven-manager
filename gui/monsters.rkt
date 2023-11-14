@@ -2,9 +2,6 @@
 
 (provide
   (contract-out
-    [single-monster-event/c contract?]
-    [add-monster-event/c contract?]
-    [remove-monster-event/c contract?]
     [single-monster-picker (->* (info-db/c (obs/c level/c))
                                 (#:on-change (-> single-monster-event/c any)
                                  #:unavailable (set/c string? #:cmp 'dont-care #:kind 'dont-care))
@@ -52,19 +49,11 @@
 
          frosthaven-manager/qi
          frosthaven-manager/defns
-         frosthaven-manager/manager/ability-decks
+         frosthaven-manager/manager
          frosthaven-manager/monster-db
          frosthaven-manager/parsers/formula)
 
 (module+ test (require rackunit))
-
-(define single-monster-event/c
-  (or/c
-    (list/c 'set 'from string? 'to string?)
-    (list/c 'monster 'from monster-info? 'to monster-info?)
-    (list/c 'include? monster-number/c 'to boolean?)
-    (list/c 'elite? monster-number/c 'to boolean?)
-    (list/c 'level level/c)))
 
 (define (stats-view @stats @env)
   (vpanel
@@ -334,11 +323,6 @@
   (hpanel #:alignment '(center top)
           (checkbox set-included #:label (~a num))
           (checkbox set-elite #:label "Elite?" #:enabled? @included?)))
-
-(define add-monster-event/c
-  (list/c 'add monster-group?))
-(define remove-monster-event/c
-  (list/c 'remove monster-group?))
 
 (define (multi-monster-picker @info-db @initial-level @env #:on-change [on-change void])
   ;; TODO why maintain own list? why not have passed in? (something to do with IDs?)
