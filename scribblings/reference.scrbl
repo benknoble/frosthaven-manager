@@ -1077,6 +1077,18 @@ True if, according to @racket[in-draw?], initiative values should be publicly
 revealed.
 }
 
+@defthing[element-state/c
+           contract?
+           #:value (or/c 'unfused 'infused 'waning)]{
+A contract recognizing valid element states.
+}
+
+@defproc[(make-states [es (listof any/c)])
+         (listof (obs/c element-state/c))]{
+Builds an equally-sized list of element states to control @racket[es] in
+@racket[elements-cycler].
+}
+
 @subsection{@tt{manager/ability-decks}}
 @defmodule[frosthaven-manager/manager/ability-decks]
 
@@ -1282,12 +1294,6 @@ A GUI component for a counter with a label and up and down callbacks.
 @subsection{@tt{gui/elements}}
 @defmodule[frosthaven-manager/gui/elements]
 
-@defthing[element-state/c
-           contract?
-           #:value (or/c 'unfused 'infused 'waning)]{
-A contract recognizing valid element states.
-}
-
 @defproc[(elements-cycler
            [|@|states (listof (obs/c element-state/c))]
            [es (listof element-pics?)]
@@ -1295,12 +1301,6 @@ A contract recognizing valid element states.
          (is-a?/c view<%>)]{
 Returns a GUI view displaying the @racket[element-pics]. Each element of
 @racket[es] is controlled by the corresponding element of @racket[|@|states].
-}
-
-@defproc[(make-states [es (listof any/c)])
-         (listof (obs/c element-state/c))]{
-Builds an equally-sized list of element states to control @racket[es] in
-@racket[elements-cycler].
 }
 
 @deftogether[(@defproc[(infuse-all [es (listof (obs/c element-state/c))]) any]

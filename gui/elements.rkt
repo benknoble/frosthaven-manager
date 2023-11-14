@@ -2,18 +2,14 @@
 
 (provide
   (contract-out
-    [element-state/c contract?]
     [elements-cycler (->* ((listof (obs/c element-state/c))
                            (listof element-pics?))
                           ((unconstrained-domain-> (is-a?/c view<%>)))
                           (is-a?/c view<%>))]
-    [make-states (-> (listof any/c) (listof (obs/c element-state/c)))]
     [infuse-all (-> (listof (obs/c element-state/c)) any)]
     [consume-all (-> (listof (obs/c element-state/c)) any)]
     [wane-element (-> element-state/c element-state/c)]
     [transition-element-state (-> element-state/c element-state/c)]))
-
-(define element-state/c (or/c 'unfused 'infused 'waning))
 
 (require racket/gui/easy
          frosthaven-manager/observable-operator
@@ -23,22 +19,13 @@
          frosthaven-manager/gui/helpers
 
          frosthaven-manager/elements
+         frosthaven-manager/manager
          (only-in pict inset))
 
 (module+ test (require rackunit))
 
 (define (elements-cycler @states es [panel hpanel])
   (apply panel #:stretch '(#f #f) (element-cyclers @states es)))
-
-(define (make-states es)
-  ;; don't use const; we don't want them to all be eq?
-  (map (λ (_) (@ 'unfused)) es))
-
-(module+ test
-  (test-case "make-states"
-    (check-equal? (length (make-states (range 6))) 6)
-    (check-false (let ([states (make-states (range 6))])
-                   (andmap eq? (drop-right states 1) (cdr states))))))
 
 (define ((make-all state) es)
   (for ([@e (in-list es)])

@@ -79,7 +79,9 @@
     [remove-monster-event/c contract?]
     [add-or-remove-monster-group (-> state? (-> (or/c add-monster-event/c remove-monster-event/c) any))]
     [draw-new-card-mid-round-if-needed (-> state? string? any)]
-    [initiative-public? (-> boolean? boolean?)]))
+    [initiative-public? (-> boolean? boolean?)]
+    [element-state/c contract?]
+    [make-states (-> (listof any/c) (listof (obs/c element-state/c)))]))
 
 (require racket/serialize
          racket/fasl
@@ -88,9 +90,6 @@
          frosthaven-manager/observable-operator
          frosthaven-manager/qi
          frosthaven-manager/defns
-         (only-in frosthaven-manager/gui/elements
-                  element-state/c
-                  make-states)
          frosthaven-manager/monster-db
          frosthaven-manager/manager/ability-decks
          frosthaven-manager/manager/round-prompts
@@ -432,3 +431,15 @@
 
 (define (initiative-public? in-draw?)
   in-draw?)
+
+(define element-state/c (or/c 'unfused 'infused 'waning))
+
+(define (make-states es)
+  ;; don't use const; we don't want them to all be eq?
+  (map (λ (_) (@ 'unfused)) es))
+
+(module+ test
+  (test-case "make-states"
+    (check-equal? (length (make-states (range 6))) 6)
+    (check-false (let ([states (make-states (range 6))])
+                   (andmap eq? (drop-right states 1) (cdr states))))))
