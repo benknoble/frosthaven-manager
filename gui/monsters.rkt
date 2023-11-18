@@ -721,6 +721,9 @@
     (check-exn exn:fail? (thunk (update-selected-tracker '(elite? 3 to #t) (hash 4 #t))))
     (check-exn exn:fail? (thunk (update-selected-tracker '(elite? 3 to #f) (hash 4 #t))))))
 
+(define (vector-update! v pos f)
+  (vector-set! v pos (f (vector-ref v pos))))
+
 (module+ main
   (require frosthaven-manager/gui/render)
   (define-values (info-db ability-db)

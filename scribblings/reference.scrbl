@@ -9,6 +9,7 @@ and compelling reason.
 
 @include-section{aoe.scrbl}
 @include-section{aoe-images.scrbl}
+@include-section{contracts.scrbl}
 @include-section{defns.scrbl}
 @include-section{elements.scrbl}
 @include-section{enum-helpers.scrbl}

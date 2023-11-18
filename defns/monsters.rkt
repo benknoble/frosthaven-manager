@@ -1,0 +1,385 @@
+#lang racket
+
+(provide
+ (contract-out
+  [struct monster-stats ([max-hp (or/c positive-integer? string?)]
+                         [move natural-number/c]
+                         [attack (or/c natural-number/c string?)]
+                         [bonuses (listof string?)]
+                         [effects (listof string?)]
+                         [immunities (listof string?)])]
+  [struct monster-info ([set-name string?]
+                        [name string?]
+                        [normal-stats (apply list/c (build-list number-of-levels (const monster-stats?)))]
+                        [elite-stats (apply list/c (build-list number-of-levels (const monster-stats?)))])]
+  [struct monster-ability ([set-name string?]
+                           [name string?]
+                           [initiative initiative?]
+                           [abilities (listof string?)]
+                           [shuffle? boolean?]
+                           [location (or/c path? #f)])]
+  [monster-number/c contract?]
+  [struct monster ([number monster-number/c]
+                   [elite? boolean?]
+                   [current-hp natural-number/c]
+                   [conditions (listof condition?)])]
+  [struct monster-group ([set-name string?]
+                         [name string?]
+                         [level level/c]
+                         [normal-stats monster-stats?]
+                         [elite-stats monster-stats?]
+                         [monsters (listof monster?)])]
+  [monster-stats-max-hp* (-> monster-stats? env/c natural-number/c)]
+  [monster-stats-attack* (-> monster-stats? env/c natural-number/c)]
+  [monster-ability-name->text (-> (or/c #f monster-ability?) string?)]
+  [monster-ability-initiative->text (-> (or/c #f monster-ability?) string?)]
+  [monster-ability-ability->text (-> string? (-> monster-group? env/c string?))]
+  [monster-ability-ability->extras (-> (or/c #f monster-ability?)
+                                       string?
+                                       (listof (or/c (list/c 'aoe-pict pict:pict?))))]
+  [make-monster (-> monster-info? level/c
+                    monster-number/c boolean?
+                    env/c
+                    monster?)]
+  [make-monster-group (-> monster-info? level/c
+                          (and/c (listof (cons/c monster-number/c boolean?))
+                                 (unique-with/c car any/c))
+                          env/c
+                          monster-group?)]
+  [get-monster-stats (-> monster-group? monster? monster-stats?)]
+  [monster-at-max-health? (-> monster? monster-stats? env/c boolean?)]
+  [monster-dead? (-> monster? boolean?)]
+  [monster-group-update-num
+   (-> monster-number/c
+       (-> monster? monster?)
+       (-> monster-group? monster-group?))]
+  [monster-update-condition (-> condition? boolean?
+                                (-> monster? monster?))]
+  [monster-update-hp (-> (-> number? number?)
+                         (-> monster? monster?))]
+  [monster-group-remove (-> monster-number/c
+                            (-> monster-group? monster-group?))]
+  [monster-group-add (-> monster-number/c boolean? env/c
+                         (-> monster-group? monster-group?))]
+  [monster-group-first-monster (-> monster-group? (or/c #f monster-number/c))]
+  [monster->hp-text (-> monster? monster-stats? env/c string?)]
+  [swap-monster-group-elites (-> monster-group? monster-group?)]
+  [swap-monster-elite (-> monster? monster?)]))
+
+(require
+ racket/serialize
+ (prefix-in pict: pict)
+ frosthaven-manager/contracts
+ frosthaven-manager/qi
+ frosthaven-manager/parsers/formula
+ frosthaven-manager/defns/level
+ frosthaven-manager/defns/scenario)
+
+(struct monster-stats [max-hp move attack bonuses effects immunities] #:prefab)
+(struct monster-info [set-name name normal-stats elite-stats] #:prefab)
+(struct monster-ability [set-name name initiative abilities shuffle? location] #:prefab)
+(define monster-number/c (integer-in 1 10))
+(serializable-struct monster [number elite? current-hp conditions] #:transparent)
+(serializable-struct monster-group [set-name name level normal-stats elite-stats monsters] #:transparent)
+
+(define (monster-stats-max-hp* stats env)
+  (match (monster-stats-max-hp stats)
+    [(? number? x) x]
+    [(? string? s)
+     (match ((parse-expr s) env)
+       [(? positive-integer? x) x]
+       [x (raise-arguments-error 'monster-stats-max-hp*
+                                 "Calculated max HP is not positive"
+                                 "Max HP" x
+                                 "formula" s
+                                 "environment" env)])]))
+
+(define (monster-stats-attack* stats env)
+  (match (monster-stats-attack stats)
+    [(? number? x) x]
+    [(? string? s)
+     (match ((parse-expr s) env)
+       [(? positive-integer? x) x]
+       [x (raise-arguments-error 'monster-stats-attack*
+                                 "Calculated attack is not positive"
+                                 "attack" x
+                                 "formula" s
+                                 "environment" env)])]))
+
+(define-flow (monster-ability-name->text ability)
+  (if monster-ability?
+    (~>> (-< monster-ability-name
+             (~> (if monster-ability-shuffle? " (shuffle)" "")))
+         (format "~a~a"))
+    ""))
+
+(define-flow (monster-ability-initiative->text ability)
+  (if monster-ability? (~> monster-ability-initiative ~a) "??"))
+
+(define aoe-rx #rx"aoe\\(([^)]+)\\)")
+
+(define ((keyword-sub stats-f mg) _match word +- amount)
+  (define op (eval (string->symbol +-) (make-base-namespace)))
+  (define amount* (string->number amount))
+  (define normal
+    (op (stats-f (monster-group-normal-stats mg)) amount*))
+  (define elite
+    (op (stats-f (monster-group-elite-stats mg)) amount*))
+  (format "~a ~a (E:~a)" word normal elite))
+
+(define ((skip-if-grant-or-control f) match before . args)
+  (if (regexp-match #px"(?i:grant)|(?i:control)" before)
+    match
+    (format "~a~a" before (apply f (substring match (string-length before)) args))))
+
+(define ((monster-ability-ability->text ability) mg env)
+  (define aoe-replacement `(,aoe-rx ""))
+  (define bulleted '(#rx"^" "· "))
+  (define attack
+    (list #px"(.*)((?i:attack))\\s+([+-])(\\d+)"
+          (skip-if-grant-or-control (keyword-sub (flow (monster-stats-attack* env)) mg))))
+  (define move
+    (list #px"(.*)((?i:move))\\s+([+-])(\\d+)"
+          (skip-if-grant-or-control (keyword-sub monster-stats-move mg))))
+  (define effects
+    (list #px"(.*)((?i:attack) \\d+) \\(E:(\\d+)\\)"
+          (skip-if-grant-or-control
+           (λ (_match base-attack elite-value)
+             (define-values (effects elite-effects)
+               (~> (mg)
+                   (-< monster-group-normal-stats monster-group-elite-stats)
+                   (>< monster-stats-effects)))
+             (define common-effects (set-intersect effects elite-effects))
+             (define only-normal-effects (set-subtract effects common-effects))
+             (define only-elite-effects (set-subtract elite-effects common-effects))
+
+             (~a base-attack
+                 (if (not (empty? only-normal-effects))
+                   (format " (N:~a)" (string-join only-normal-effects ", "))
+                   "")
+                 (if (not (empty? only-elite-effects))
+                   (format " (E:~a~a)" elite-value (string-join only-elite-effects ", " #:before-first ", "))
+                   (format " (E:~a)" elite-value))
+                 (if (not (empty? common-effects))
+                   (string-join common-effects ", " #:before-first ", ")
+                   ""))))))
+  (define replacements
+    (list bulleted
+          aoe-replacement
+          attack
+          effects
+          move))
+  (regexp-replaces ability replacements))
+
+(module+ test
+  (require rackunit)
+  (define env (hash))
+  (define get-dbs (dynamic-require 'frosthaven-manager/monster-db 'get-dbs))
+  (match-define (list mg mg1 mg2 mg3)
+    (match-let-values ([{info _} (get-dbs "../testfiles/sample-bestiary-import.rkt")])
+      (map (λ (level)
+             (make-monster-group (~> (info) (hash-ref "archer") (hash-ref "hynox archer"))
+                                 level
+                                 empty
+                                 env))
+           (list 0 1 2 3))))
+  (test-equal? "Simple Attack"
+               ((monster-ability-ability->text "Attack +1") mg env)
+               "· Attack 3 (E:4, wound)")
+  (test-equal? "Simple Attack 1"
+               ((monster-ability-ability->text "Attack +1") mg1 env)
+               "· Attack 4 (E:5), wound")
+  (test-equal? "Simple Attack 2"
+               ((monster-ability-ability->text "Attack +1") mg2 env)
+               "· Attack 5 (E:6, stun), wound")
+  (test-equal? "Simple Attack 3"
+               ((monster-ability-ability->text "Attack +1") mg3 env)
+               "· Attack 6 (N:muddle) (E:7, stun), wound")
+  (test-equal? "Attack, X"
+               ((monster-ability-ability->text "Attack +1, Push 1") mg3 env)
+               "· Attack 6 (N:muddle) (E:7, stun), wound, Push 1")
+  (test-equal? "Simple Move"
+               ((monster-ability-ability->text "Move +1") mg env)
+               "· Move 3 (E:3)")
+  (test-equal? "Granted Attack"
+               ((monster-ability-ability->text "Grant Piranha: Attack +1") mg env)
+               "· Grant Piranha: Attack +1")
+  (test-equal? "Granted Move"
+               ((monster-ability-ability->text "Grant Piranha: Move +1") mg env)
+               "· Grant Piranha: Move +1")
+  (test-equal? "Controlled Attack"
+               ((monster-ability-ability->text "Control Enemy: Attack +1") mg env)
+               "· Control Enemy: Attack +1")
+  (test-equal? "Controlled Move"
+               ((monster-ability-ability->text "Control Enemy: Move +1") mg env)
+               "· Control Enemy: Move +1"))
+
+(define (not-an-aoe)
+  (pict:text "Not an AoE module"))
+
+(define (get-aoe path)
+  (namespace-call-with-registry-lock
+   (current-namespace)
+   (thunk
+    (dynamic-require path 'aoe (thunk not-an-aoe)))))
+
+(define (monster-ability-ability->extras ability-card ability-text)
+  (define aoe
+    (~> (ability-text) (regexp-match aoe-rx _) (and _ second)))
+  (define base (switch (ability-card)
+                 [monster-ability? monster-ability-location]
+                 [else "."]))
+  (define aoe-pict
+    (and aoe (~> (base aoe)
+                 build-path
+                 (switch
+                   [file-exists? (~> get-aoe apply)]
+                   [else (gen (pict:text "AoE File Not Found"))]))))
+  (filter values
+          (list (and aoe-pict `(aoe-pict ,aoe-pict)))))
+
+(define (make-monster* stats number elite? env)
+  (monster number elite? (monster-stats-max-hp* stats env) empty))
+
+(define (make-monster info level number elite? env)
+  (define level-stats
+    (list-ref (if elite?
+                (monster-info-elite-stats info)
+                (monster-info-normal-stats info))
+              level))
+  (make-monster* level-stats number elite? env))
+
+(define (make-monster-group info level num+elite?s env)
+  (define-values (normal elite)
+    (~> (info)
+        (-< monster-info-normal-stats
+            monster-info-elite-stats)
+        (amp (list-ref level))))
+  (monster-group
+    (monster-info-set-name info)
+    (monster-info-name info)
+    level
+    normal elite
+    (sort-monsters
+      (map (match-lambda
+             [(cons num elite?)
+              (make-monster* (if elite? elite normal) num elite? env)])
+           num+elite?s))))
+
+(define-switch (get-monster-stats mg m)
+  (% 2> 1>)
+  [monster-elite? monster-group-elite-stats]
+  [else monster-group-normal-stats])
+
+(define-flow (monster-at-max-health? m stats env)
+  (~> (group 1 monster-current-hp monster-stats-max-hp*) >=))
+
+(define-flow (monster-dead? m)
+  (~> monster-current-hp zero?))
+
+(define-flow (sort-monsters monsters)
+  ;; two passes less efficient, but easier to reason about AND we expect most
+  ;; monsters lists to be "short" (10 or less).
+  (~> (sort #:key monster-number <)
+      ;; Notation: use t and f for #true and #false.
+      ;; truth-table for strict sort-by-monster-elite?
+      ;; a | b | a is first?
+      ;; --+---+------------
+      ;; t | t | equal ∴ f
+      ;; t | f | t
+      ;; f | t | f
+      ;; f | f | equal ∴ f
+      ;; On xor: (xor a b) is true ⇔ a and b are different. By itself, this already
+      ;; covers the first and last rows of the table. The second row is also
+      ;; correct, but the third is wrong. Notice that and'ing the result with a will
+      ;; produce the final truth-table (since ∀ x boolean, (and x #f) = #f and also
+      ;; (and x #t) = x).
+      (sort #:key monster-elite? (λ (a b) (and (xor a b) a)))))
+
+(module+ test
+  (require rackunit)
+  (test-case
+    "sort-monsters groups by elite? and sorts by number"
+    (check-equal? (sort-monsters (list (monster 1 #f 0 empty)
+                                       (monster 2 #t 0 empty)))
+                  (list (monster 2 #t 0 empty) (monster 1 #f 0 empty)))
+    (check-equal?
+      (sort-monsters
+        (list
+          (monster 4 #f 0 empty)
+          (monster 2 #t 0 empty)
+          (monster 3 #f 0 empty)
+          (monster 1 #t 0 empty)))
+      (list
+        (monster 1 #t 0 empty)
+        (monster 2 #t 0 empty)
+        (monster 3 #f 0 empty)
+        (monster 4 #f 0 empty)))))
+
+(define ((monster-group-update-num num f) group)
+  ;; TODO: lenses?
+  ;; TODO: should monster-group-monsters be a hash?
+  ;; current contract doesn't even have uniqueness
+  (define (is-num? m) (= num (monster-number m)))
+  (define old-monsters (monster-group-monsters group))
+  (define the-monster (findf is-num? old-monsters))
+  (define new-monster (f the-monster))
+  (define new-monsters
+    (sort-monsters (cons new-monster (remove the-monster old-monsters))))
+  (struct-copy monster-group group [monsters new-monsters]))
+
+(define ((monster-group-remove num) group)
+  (define (is-num? m) (= num (monster-number m)))
+  (define old-monsters (monster-group-monsters group))
+  (define the-monster (findf is-num? old-monsters))
+  (define new-monsters
+    (sort-monsters (remove the-monster old-monsters)))
+  (struct-copy monster-group group [monsters new-monsters]))
+
+(define ((monster-group-add num elite? env) group)
+  (when (~>> (group) monster-group-monsters (map monster-number) (member num))
+    (raise-arguments-error 'monster-group-add
+                           (format "Monster ~a already exists in group" num)
+                           "num" num
+                           "group" group))
+  (define new-monster
+    (make-monster* (if elite?
+                     (monster-group-elite-stats group)
+                     (monster-group-normal-stats group))
+                   num
+                   elite?
+                   env))
+  (define new-monsters
+    (sort-monsters (cons new-monster (monster-group-monsters group))))
+  (struct-copy monster-group group [monsters new-monsters]))
+
+(define-flow (monster-group-first-monster mg)
+  (~> monster-group-monsters
+      (and (not empty?) (~> first monster-number))))
+
+(define ((monster-update-condition c on?) m)
+  (define old-conditions (monster-conditions m))
+  (define new-conditions
+    (if on?
+      (cons c (remove* (list c) old-conditions))
+      (remove* (list c) old-conditions)))
+  (struct-copy monster m [conditions new-conditions]))
+
+(define ((monster-update-hp proc) m)
+  (define old-hp (monster-current-hp m))
+  (define new-hp (proc old-hp))
+  (if (positive? new-hp)
+    (struct-copy monster m [current-hp new-hp])
+    m))
+
+(define-flow (monster->hp-text m ms env)
+  (~>> (group 1 monster-current-hp monster-stats-max-hp*)
+       (format "HP: ~a/~a")))
+
+(define (swap-monster-group-elites mg)
+  (struct-copy monster-group mg
+               [monsters (sort-monsters (map swap-monster-elite (monster-group-monsters mg)))]))
+
+(define (swap-monster-elite m)
+  (struct-copy monster m
+               [elite? (not (monster-elite? m))]))
