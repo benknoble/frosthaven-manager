@@ -57,21 +57,16 @@
 (module+ test (require rackunit))
 
 (define (stats-view @stats @env)
+  (define (empty-view f sf)
+    (cond-view
+      [(@~> @stats (~> f (not empty?))) (text (@~> @stats (~> sf escape-text)))]
+      [else (spacer)]))
   (vpanel
     (text (@~> @stats (~> monster-stats-move ~a)))
     (text (obs-combine (flow (~> monster-stats-attack* ~a)) @stats @env))
-    (cond-view
-      [(@~> @stats (~> monster-stats-bonuses (not empty?)))
-       (text (@~> @stats (~> monster-stats-bonuses-string escape-text)))]
-      [else (spacer)])
-    (cond-view
-      [(@~> @stats (~> monster-stats-effects (not empty?)))
-       (text (@~> @stats (~> monster-stats-effects-string escape-text)))]
-      [else (spacer)])
-    (cond-view
-      [(@~> @stats (~> monster-stats-immunities (not empty?)))
-       (text (@~> @stats (~> monster-stats-immunities-string escape-text)))]
-      [else (spacer)])
+    (empty-view monster-stats-bonuses monster-stats-bonuses-string)
+    (empty-view monster-stats-effects monster-stats-effects-string)
+    (empty-view monster-stats-immunities monster-stats-immunities-string)
     (text (obs-combine (flow (~> monster-stats-max-hp* ~a)) @stats @env))))
 
 (define (monster-view @mg @monster @env
@@ -174,30 +169,22 @@
       (hpanel (monster-ability-view @ability @mg @env)
               (ability-deck-preview @ability-deck @mg @env #:on-move on-move-ability-card))))
   (define (stats-panel)
+    (define (empty-stats label f)
+      (cond-view
+        [(obs-combine (flow (~> (>< f) (not (all empty?))))
+                      (@> @mg monster-group-normal-stats)
+                      (@> @mg monster-group-elite-stats))
+         (text label)]
+        [else (spacer)]))
     (hpanel
       (group "Normal" (stats-view (@> @mg monster-group-normal-stats) @env)
              #:min-size (list (* 10 (string-length "Normal")) #f))
       (group "Stats"
              (text "Move")
              (text "Attack")
-             (cond-view
-               [(obs-combine (flow (~> (>< monster-stats-bonuses) (not (all empty?))))
-                             (@> @mg monster-group-normal-stats)
-                             (@> @mg monster-group-elite-stats))
-                (text "Bonuses")]
-               [else (spacer)])
-             (cond-view
-               [(obs-combine (flow (~> (>< monster-stats-effects) (not (all empty?))))
-                             (@> @mg monster-group-normal-stats)
-                             (@> @mg monster-group-elite-stats))
-                (text "Effects")]
-               [else (spacer)])
-             (cond-view
-               [(obs-combine (flow (~> (>< monster-stats-immunities) (not (all empty?))))
-                             (@> @mg monster-group-normal-stats)
-                             (@> @mg monster-group-elite-stats))
-                (text "Immunities")]
-               [else (spacer)])
+             (empty-stats "Bonuses" monster-stats-bonuses)
+             (empty-stats "Effects" monster-stats-effects)
+             (empty-stats "Immunities" monster-stats-immunities)
              (text "Max HP"))
       (group "Elite" (stats-view (@> @mg monster-group-elite-stats) @env)
              #:min-size (list (* 10 (string-length "Elite")) #f))))
