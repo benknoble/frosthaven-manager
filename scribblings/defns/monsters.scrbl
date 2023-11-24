@@ -87,6 +87,14 @@ Calculates the maximum HP value of @racket[stats], which may be a formula.
 Calculates the attack value of @racket[stats], which may be a formula.
 }
 
+@deftogether[(
+  @defproc[(monster-stats-bonuses-string [m monster-stats?]) string?]
+  @defproc[(monster-stats-effects-string [m monster-stats?]) string?]
+  @defproc[(monster-stats-immunities-string [m monster-stats?]) string?]
+)]{
+Returns a single string containing all the bonuses, effects, or immunities.
+}
+
 @defproc[(monster-ability-name->text [ability (or/c #f monster-ability?)])
          string?]{
 Returns a string suitable for display to indicate the name of a possibly-absent

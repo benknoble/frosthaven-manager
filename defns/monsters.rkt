@@ -31,6 +31,9 @@
                          [monsters (listof monster?)])]
   [monster-stats-max-hp* (-> monster-stats? env/c natural-number/c)]
   [monster-stats-attack* (-> monster-stats? env/c natural-number/c)]
+  [monster-stats-bonuses-string (-> monster-stats? string?)]
+  [monster-stats-effects-string (-> monster-stats? string?)]
+  [monster-stats-immunities-string (-> monster-stats? string?)]
   [monster-ability-name->text (-> (or/c #f monster-ability?) string?)]
   [monster-ability-initiative->text (-> (or/c #f monster-ability?) string?)]
   [monster-ability-ability->text (-> string? (-> monster-group? env/c string?))]
@@ -105,6 +108,15 @@
                                  "attack" x
                                  "formula" s
                                  "environment" env)])]))
+
+(define (monster-stats-bonuses-string m)
+  (~> (m) monster-stats-bonuses (string-join ", ")))
+
+(define (monster-stats-effects-string m)
+  (~> (m) monster-stats-effects (string-join ", ")))
+
+(define (monster-stats-immunities-string m)
+  (~> (m) monster-stats-immunities (string-join ", ")))
 
 (define-flow (monster-ability-name->text ability)
   (if monster-ability?

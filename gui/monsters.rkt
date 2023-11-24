@@ -62,15 +62,15 @@
     (text (obs-combine (flow (~> monster-stats-attack* ~a)) @stats @env))
     (cond-view
       [(@~> @stats (~> monster-stats-bonuses (not empty?)))
-       (text (@~> @stats (~> monster-stats-bonuses (string-join ", ") escape-text)))]
+       (text (@~> @stats (~> monster-stats-bonuses-string escape-text)))]
       [else (spacer)])
     (cond-view
       [(@~> @stats (~> monster-stats-effects (not empty?)))
-       (text (@~> @stats (~> monster-stats-effects (string-join ", ") escape-text)))]
+       (text (@~> @stats (~> monster-stats-effects-string escape-text)))]
       [else (spacer)])
     (cond-view
       [(@~> @stats (~> monster-stats-immunities (not empty?)))
-       (text (@~> @stats (~> monster-stats-immunities (string-join ", ") escape-text)))]
+       (text (@~> @stats (~> monster-stats-immunities-string escape-text)))]
       [else (spacer)])
     (text (obs-combine (flow (~> monster-stats-max-hp* ~a)) @stats @env))))
 
