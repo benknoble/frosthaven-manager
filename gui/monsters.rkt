@@ -586,34 +586,25 @@
   (define (make-discard-rows ability-deck)
     (for/vector ([ability (ability-decks-discard ability-deck)])
       (vector (monster-ability-name->text ability))))
+  (define (card-information @cards @selection @revealed @mg @env)
+    (cond-view
+      [(obs-combine (flow (and 1> (<= 0 __)))
+                    @selection
+                    @revealed)
+       (monster-ability-view (obs-combine (flow (if (and 2> (~> X (== _ length) <))
+                                                  list-ref
+                                                  (gen (monster-ability "" "" 0 empty #f #f))))
+                                          @cards
+                                          @selection)
+                             @mg
+                             @env)]
+      [else (spacer)]))
   (define (revealed-ability-card-information @ability-deck @draw-selection @revealed @mg @env)
     (define @cards (@> @ability-deck ability-decks-draw))
-    (cond-view
-      [(obs-combine (flow (and 1> (<= 0 __)))
-                    @draw-selection
-                    (@~> @revealed (switch [number? sub1] [else +inf.0])))
-       (monster-ability-view (obs-combine (flow (if (and 2> (~> X (== _ length) <))
-                                                  list-ref
-                                                  (gen (monster-ability "" "" 0 empty #f #f))))
-                                          @cards
-                                          @draw-selection)
-                             @mg
-                             @env)]
-      [else (spacer)]))
+    (card-information @cards @draw-selection (@~> @revealed (switch [number? sub1] [else +inf.0])) @mg @env))
   (define (discard-ability-card-information @ability-deck @discard-selection @mg @env)
     (define @cards (@> @ability-deck ability-decks-discard))
-    (cond-view
-      [(obs-combine (flow (and 1> (<= 0 __)))
-                    @discard-selection
-                    (@> @cards length))
-       (monster-ability-view (obs-combine (flow (if (and 2> (~> X (== _ length) <))
-                                                  list-ref
-                                                  (gen (monster-ability "" "" 0 empty #f #f))))
-                                          @cards
-                                          @discard-selection)
-                             @mg
-                             @env)]
-      [else (spacer)]))
+    (card-information @cards @discard-selection (@> @cards length) @mg @env))
   (button
    "Preview Ability Deck"
    (thunk
