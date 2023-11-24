@@ -34,9 +34,9 @@
   (define (make-cards-picker! label max-cards deck)
     (define/obs @n 0)
     (define/obs @stickers 0)
-    (define ((send-card event) . _flow-args)
+    (define (send-card _n event)
       (on-card event))
-    (define ((send-sticker event) . _flow-args)
+    (define (send-sticker _stickers event)
       (on-sticker event))
     (define (subtract-card)
       (<~@ @n (switch
