@@ -65,7 +65,6 @@
   (define herb-views
     (for/list ([h (in-list herb-kinds)])
       (make-cards-picker! (~a h " Cards: ") max-herb-cards (hash-ref herb-decks h))))
-  (define/obs @random-item? #f)
   (define random-item-view
     (let ([deck (list random-item)])
       (checkbox #:label "Random Item Card?"
