@@ -15,7 +15,8 @@
   [better-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
   [worse-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
   [monster-curse-deck (listof monster-modifier?)]
-  [bless-deck (listof monster-modifier?)]))
+  [bless-deck (listof monster-modifier?)]
+  [conditions->string (-> (listof condition?) string?)]))
 
 (require
  rebellion/type/enum
@@ -74,3 +75,6 @@
 (define conditions
   (sort (list regenerate ward invisible strengthen wound brittle bane poison immobilize disarm impair stun muddle)
         string<=? #:key ~a))
+
+(define-flow (conditions->string _cs)
+  (~> (sep ~a) collect (string-join ", " #:before-last " and ")))

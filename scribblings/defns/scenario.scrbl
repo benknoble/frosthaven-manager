@@ -81,6 +81,10 @@ A predicate recognizing valid initiative values.
 All the conditions together.
 }
 
+@defproc[(conditions->string [cs (listof condition?)]) string?]{
+Converts a set of conditions to a string.
+}
+
 @defthing[monster-modifier-deck (listof monster-modifier?)]{
 A full deck of 20 monster modifier cards.
 }

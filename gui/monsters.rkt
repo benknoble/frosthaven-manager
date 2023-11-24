@@ -108,9 +108,7 @@
                                (~a "Swap to ")))
             on-swap)
     (vpanel
-      (text (@~> @monster (~> monster-conditions
-                              (sep ~a) collect
-                              (string-join ", " #:before-last " and "))))
+      (text (@~> @monster (~> monster-conditions conditions->string)))
       (button "Edit Conditions" show-conditions))))
 
 (define (monster-group-view @mg @ability-deck @monster-num @env

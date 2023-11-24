@@ -120,9 +120,7 @@
                (map make-condition-checkbox conditions)))))
   (define conditions-panel
     (vpanel
-      (text (@~> @player (~> player-conditions*
-                             (sep ~a) collect
-                             (string-join ", " #:before-last " and "))))
+      (text (@~> @player (~> player-conditions* conditions->string)))
       (button "Edit Conditions" show-conditions)))
   (define add-summon-button
     (button "Summon" (thunk (do-summon add-summon))))
@@ -180,8 +178,7 @@
    (button "💀Kill💀" die)
    (text (escape-text (summon-name s)))
    (counter (summon->hp-text s) add-hp subtract-hp)
-   (text (~> (s) summon-conditions* (sep ~a) collect
-             (string-join ", " #:before-last " and ")))
+   (text (~> (s) summon-conditions* conditions->string))
    (button "Edit Conditions" edit-conditions)))
 
 (define (do-summon add-summon)
