@@ -145,6 +145,27 @@
                        (flow (~> sep (>< (make-monster-selector on-change))
                                  vpanel)))
       (button "Add" close!))))
+  (define (do-mass-condition)
+    (define-close! close! closing-mixin)
+    (define ((do-it on?))
+      ;; valid because inside a dialog closer
+      (define c (@! @condition))
+      (for ([monster-number (~>> (@mg) @! monster-group-monsters (map monster-number))])
+        (on-condition monster-number c on?))
+      (close!))
+    (define add (do-it #t))
+    (define remove (do-it #f))
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (define/obs @condition (first conditions))
+    (render
+     (dialog
+      #:mixin closing-mixin
+      #:title (@~> @mg (~>> monster-group-name escape-text (~a "Mass Assign Conditions for ")))
+      (choice conditions (λ:= @condition) #:choice->label ~a #:selection @condition)
+      (hpanel
+       (button "Add" add)
+       (button "Remove" remove)
+       (button "Cancel" close!)))))
   (define (name-panel) (text (@~> @mg (~> monster-group-name escape-text)) #:font big-control-font))
   (define (add-monster-button)
     (button "Add Monster" do-new
@@ -159,7 +180,8 @@
             (name-panel)
             (text (@~> @ability monster-ability-initiative->text))
             (add-monster-button)
-            (button "Swap Elite/Normal" (thunk (on-swap 'all)))))
+            (button "Swap Elite/Normal" (thunk (on-swap 'all)))
+            (button "Mass Conditions" do-mass-condition)))
   (define (ability-panel)
     (group
       "Ability"
