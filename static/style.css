@@ -33,6 +33,10 @@ ol.monster-ability-abilities {
   overflow-x: auto;
 }
 
+button {
+  margin: 2px 5px;
+}
+
 /* Small devices (portrait tablets and large phones) */
 @media only screen and (min-width: 600px) {
 
