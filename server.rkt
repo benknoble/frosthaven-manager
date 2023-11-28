@@ -316,13 +316,14 @@
 
 (define (elements-body embed/url)
   `((h2 "Elements")
-    ,@(for/list ([e (list 'Fire 'Ice 'Air 'Earth 'Light 'Dark)]
-                 [@e-state (state-@elements (s))])
-        `(img ([id ,(symbol->string e)]
-               [src ,((reverse-uri) element-pic e (@! @e-state))]
-               ,(action-click
-                  (list "element" "transition")
-                  (list (list (~s "id") (~s (symbol->string e))))))))))
+    (div ([id "elements"])
+         ,@(for/list ([e (list 'Fire 'Ice 'Air 'Earth 'Light 'Dark)]
+                      [@e-state (state-@elements (s))])
+             `(img ([id ,(symbol->string e)]
+                    [src ,((reverse-uri) element-pic e (@! @e-state))]
+                    ,(action-click
+                      (list "element" "transition")
+                      (list (list (~s "id") (~s (symbol->string e)))))))))))
 
 (define (creatures-body embed/url)
   `((h2 "Creatures")

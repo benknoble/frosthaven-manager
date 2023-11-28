@@ -37,6 +37,14 @@ button {
   margin: 2px 5px;
 }
 
+#elements {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  border: 2px solid lightgrey;
+  padding: 8px 0px;
+}
+
 /* Small devices (portrait tablets and large phones) */
 @media only screen and (min-width: 600px) {
 
