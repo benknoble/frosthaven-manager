@@ -239,7 +239,9 @@
       (creature-v c)))
   (define num-players (@! (state-@num-players (s))))
   (define level (@! (state-@level (s))))
-  (define gold-factor (level-info-gold (get-level-info level)))
+  (define level-info (get-level-info level))
+  (define gold-factor (level-info-gold level-info))
+  (define bonus-xp (level-info-exp level-info))
   (response/xexpr
    `(html
      (head
@@ -262,6 +264,7 @@
              (define loots (player->rewards p num-players level))
              `(tr ,@(map (flow (~>> (list 'td))) loots))))))
       (p "Gold Conversion Rate: " ,(~a gold-factor))
+      (p "Bonus Experience: " ,(~a bonus-xp))
       ;; individual loot cards
       ,@(append*
          (for/list ([p players])
