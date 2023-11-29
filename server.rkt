@@ -240,10 +240,6 @@
   (define num-players (@! (state-@num-players (s))))
   (define level (@! (state-@level (s))))
   (define gold-factor (level-info-gold (get-level-info level)))
-  (define (find-materials m)
-    (flow (and material? (~> material-name (equal? m)))))
-  (define (find-herbs h)
-    (flow (and herb? (~> herb-name (equal? h)))))
   (response/xexpr
    `(html
      (head
@@ -263,18 +259,8 @@
              ,@(map (flow (~>> ~a (list 'th))) herb-kinds)))
         (tbody
          ,@(for/list ([p players])
-             (define loots (player-loot p))
-             `(tr (td ,(player-name p))
-                  (td ,(if (memf random-item? loots) "x" ""))
-                  (td ,(~a (player-xp p)))
-                  (td ,(~a (for/sum ([loot loots] #:when (money? loot))
-                             (* (money-amount loot) gold-factor))))
-                  ,@(for/list ([m material-kinds])
-                      `(td ,(~a (for/sum ([loot (filter (find-materials m) loots)])
-                                  (material-amount* loot num-players)))))
-                  ,@(for/list ([h herb-kinds])
-                      `(td ,(~a (for/sum ([loot (filter (find-herbs h) loots)])
-                                  (herb-amount loot))))))))))
+             (define loots (player->rewards p num-players level))
+             `(tr ,@(map (flow (~>> (list 'td))) loots))))))
       (p "Gold Conversion Rate: " ,(~a gold-factor))
       ;; individual loot cards
       ,@(append*

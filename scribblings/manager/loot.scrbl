@@ -43,3 +43,10 @@ Give player @racket[k] the top loot card.
 @defproc[(place-loot-on-bottom [s state?]) any]{
 Rotate the top loot card to the bottom of the deck.
 }
+
+@defproc[(player->rewards [p player?] [num-players num-players/c] [level level/c])
+         (listof string?)]{
+Each string is a reward for player @racket[p] except the first, which is the
+player's name. The values are an indicator if the player got the random item,
+the player's XP, gold, each material amount, and each herb amount.
+}

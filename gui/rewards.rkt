@@ -12,7 +12,8 @@
          racket/gui/easy
          racket/gui/easy/contract
          frosthaven-manager/defns
-         frosthaven-manager/observable-operator)
+         frosthaven-manager/observable-operator
+         frosthaven-manager/manager/loot)
 
 (module+ test (require rackunit))
 
@@ -55,25 +56,7 @@
 
 (define (entry->row e)
   (match-define (list p num-players level) e)
-  (define loots (player-loot p))
-  (apply vector
-         (player-name p)
-         (if (memf random-item? loots) "x" "")
-         (~a (player-xp p))
-         (~a (for/sum ([loot (in-list loots)] #:when (money? loot))
-               (* (money-amount loot)
-                  (level-info-gold (get-level-info level)))))
-         (append
-          (for/list ([material material-kinds])
-            (~a (for/sum ([loot (in-list loots)]
-                          #:when (and (material? loot)
-                                      (equal? material (material-name loot))))
-                  (material-amount* loot num-players))))
-          (for/list ([herb herb-kinds])
-            (~a (for/sum ([loot (in-list loots)]
-                          #:when (and (herb? loot)
-                                      (equal? herb (herb-name loot))))
-                  (herb-amount loot)))))))
+  (list->vector (player->rewards p num-players level)))
 
 (module+ test
   (test-case "entry->row"

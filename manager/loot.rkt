@@ -12,7 +12,9 @@
                          (listof loot-card?))]
     [build-loot-deck! (-> state? any)]
     [give-player-loot (-> state? (-> any/c any))]
-    [place-loot-on-bottom (-> state? any)]))
+    [place-loot-on-bottom (-> state? any)]
+    [player->rewards (-> player? num-players/c level/c
+                         (listof string?))]))
 
 (require frosthaven-manager/observable-operator
          frosthaven-manager/defns
@@ -86,3 +88,25 @@
 (define (build-loot-deck! s)
   (:= (state-@loot-deck s) (build-loot-deck (@! (state-@cards-per-deck s))
                                             (@! (state-@stickers-per-loot-deck s)))))
+
+(define (player->rewards p num-players level)
+  (define gold-factor (level-info-gold (get-level-info level)))
+  (define (find-materials m)
+    (flow (and material? (~> material-name (equal? m)))))
+  (define (find-herbs h)
+    (flow (and herb? (~> herb-name (equal? h)))))
+  (define loots (player-loot p))
+  (map ~a
+       (apply list
+              (player-name p)
+              (if (memf random-item? loots) "x" "")
+              (player-xp p)
+              (for/sum ([loot (in-list loots)] #:when (money? loot))
+                (* (money-amount loot) gold-factor))
+              (append
+               (for/list ([m material-kinds])
+                 (for/sum ([loot (in-list (filter (find-materials m) loots))])
+                   (material-amount* loot num-players)))
+               (for/list ([h herb-kinds])
+                 (for/sum ([loot (in-list (filter (find-herbs h) loots))])
+                   (herb-amount loot)))))))
