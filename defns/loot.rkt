@@ -8,6 +8,7 @@
   [struct money ([amount natural-number/c])]
   [struct material ([name material-kind?]
                     [amount (apply list/c (build-list (sub1 max-players) (const natural-number/c)))])]
+  [material-amount* (-> material? num-players/c natural-number/c)]
   [struct herb ([name herb-kind?]
                 [amount natural-number/c])]
   [loot-card? predicate/c]
@@ -70,12 +71,15 @@
 
 (define loot-card? (or/c money? material? herb? random-item?))
 
+(define-flow (material-amount* _loot _num-players)
+  (~> (== material-amount (- 2)) list-ref))
+
 (define (format-loot-card num-players)
   (define-flow (s? _n)
     (if (> 1) "s" ""))
   (match-lambda
     [(money amount) (format "~a gold coin~a" amount (s? amount))]
-    [(material name (app (flow (list-ref (- num-players 2))) amount))
+    [(and (material name _) (app (flow (material-amount* num-players)) amount))
      (format "~a ~a~a" amount name (s? amount))]
     [(herb name amount) (format "~a ~a~a" amount name (s? amount))]
     [(== random-item) "The random item!"]))

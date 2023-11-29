@@ -68,7 +68,7 @@
             (~a (for/sum ([loot (in-list loots)]
                           #:when (and (material? loot)
                                       (equal? material (material-name loot))))
-                  (list-ref (material-amount loot) (- num-players 2)))))
+                  (material-amount* loot num-players))))
           (for/list ([herb herb-kinds])
             (~a (for/sum ([loot (in-list loots)]
                           #:when (and (herb? loot)

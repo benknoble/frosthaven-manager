@@ -64,6 +64,11 @@ May have +1 stickers.
 Serializable.
 }
 
+@defproc[(material-amount* [m material?] [n num-players/c]) natural-number/c]{
+Calculates the amount a material loot card @racket[m] is worth for the number of
+players @racket[n].
+}
+
 @defstruct*[herb ([name herb-kind?]
                   [amount natural-number/c])
                  #:transparent]{
