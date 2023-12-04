@@ -38,6 +38,10 @@ A @racket[monster-group*] wraps a @racket[monster-group] with a possibly active
 Serializable.
 }
 
+@defproc[(creature-is-mg*? [c creature?]) any/c]{
+True iff @racket[c] holds a @racket[monster-group*].
+}
+
 @defstruct*[state
              ([|@|mode symbol?]
               [|@|level (obs/c level/c)]

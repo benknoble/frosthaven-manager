@@ -7,3 +7,4 @@ frosthaven-manager/manager/db
 frosthaven-manager/manager/loot
 frosthaven-manager/manager/round-prompts
 frosthaven-manager/manager/elements
+frosthaven-manager/manager/transition

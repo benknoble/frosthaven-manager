@@ -8,6 +8,7 @@
                       [v (or/c player? monster-group*?)])]
     [struct monster-group* ([active (or/c #f monster-number/c)]
                             [mg monster-group?])]
+    [creature-is-mg*? (-> creature? any/c)]
     [struct state ([@mode (obs/c symbol?)]
                    [@level (obs/c level/c)]
                    [@num-players (obs/c num-players/c)]
@@ -96,6 +97,8 @@
 
 (serializable-struct creature [id v] #:transparent)
 (serializable-struct monster-group* [active mg] #:transparent)
+
+(define-flow creature-is-mg*? (~> creature-v monster-group*?))
 
 ;; private observable utilities for this module
 (define-flow s@->v (~> struct->vector (vector-drop 1) (vector-map @!* _)))
