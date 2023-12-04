@@ -30,7 +30,7 @@
       (text (@~> @num-players (~>> inspiration-reward (~a "Inspiration: ")))))))
 
 (define (level-table @level)
-  (define table
+  (define (table)
     (static-table
       '("Level" "Gold" "Bonus XP" "Trap Damage" "Hazardous Terrain Damage")
       number-of-levels
@@ -46,11 +46,11 @@
                          (window #:mixin close-custodian-mixin
                                  #:title "Level Information"
                                  #:stretch '(#f #f)
-                                 table))))
+                                 (table)))))
   (button "Level Table" action))
 
 (define (inspiration-table @num-players)
-  (define table
+  (define (table)
     (static-table
       '("Players" "Inspiration")
       (sub1 max-players)
@@ -63,7 +63,7 @@
                          (window #:mixin close-custodian-mixin
                                  #:title "Inspiration"
                                  #:stretch '(#f #f)
-                                 table))))
+                                 (table)))))
   (button "Inspiration Table" action))
 
 (module+ main
