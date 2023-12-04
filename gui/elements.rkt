@@ -5,12 +5,7 @@
     [elements-cycler (->* ((listof (obs/c element-state/c))
                            (listof element-pics?))
                           ((unconstrained-domain-> (is-a?/c view<%>)))
-                          (is-a?/c view<%>))]
-    [infuse-all (-> (listof (obs/c element-state/c)) any)]
-    [consume-all (-> (listof (obs/c element-state/c)) any)]
-    [wane-element (-> element-state/c element-state/c)]
-    [transition-element-state (-> element-state/c element-state/c)]))
-
+                          (is-a?/c view<%>))]))
 (require racket/gui/easy
          frosthaven-manager/observable-operator
          racket/gui/easy/contract
@@ -27,21 +22,6 @@
 (define (elements-cycler @states es [panel hpanel])
   (apply panel #:stretch '(#f #f) (element-cyclers @states es)))
 
-(define ((make-all state) es)
-  (for ([@e (in-list es)])
-    (:= @e state)))
-
-(define infuse-all (make-all 'infused))
-(define consume-all (make-all 'unfused))
-
-(module+ test
-  (test-case "*-all"
-    (define states (make-states (range 6)))
-    (infuse-all states)
-    (check-true (andmap (flow (equal? 'infused)) (map @! states)))
-    (consume-all states)
-    (check-true (andmap (flow (equal? 'unfused)) (map @! states)))))
-
 (define (make-transition-element-state @state)
   (λ ()
     (<@ @state transition-element-state)))
@@ -54,9 +34,6 @@
     (check-equal? (@! state) 'waning)
     (t)
     (check-equal? (@! state) 'unfused)
-    (t)
-    (check-equal? (@! state) 'infused)
-    (:= state 'nothing)
     (t)
     (check-equal? (@! state) 'infused)))
 
@@ -110,19 +87,6 @@
     ['infused "Wane"]
     ['waning "Unfuse"]
     [_ "Infuse"]))
-
-(define transition-element-state
-  (match-lambda
-    ['unfused 'infused]
-    ['infused 'waning]
-    ['waning 'unfused]
-    [_ 'infused]))
-
-(define wane-element
-  (match-lambda
-    ['infused 'waning]
-    ['waning 'unfused]
-    [_ 'unfused]))
 
 (define (element-cyclers @states es)
   (map element-cycler @states es))

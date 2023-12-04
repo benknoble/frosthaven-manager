@@ -6,3 +6,4 @@ frosthaven-manager/manager/modifier-decks
 frosthaven-manager/manager/db
 frosthaven-manager/manager/loot
 frosthaven-manager/manager/round-prompts
+frosthaven-manager/manager/elements

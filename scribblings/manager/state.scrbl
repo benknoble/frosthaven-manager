@@ -208,15 +208,3 @@ needs to potentially trigger a new card.
 True if, according to @racket[in-draw?], initiative values should be publicly
 revealed.
 }
-
-@defthing[element-state/c
-           contract?
-           #:value (or/c 'unfused 'infused 'waning)]{
-A contract recognizing valid element states.
-}
-
-@defproc[(make-states [es (listof any/c)])
-         (listof (obs/c element-state/c))]{
-Builds an equally-sized list of element states to control @racket[es] in
-@racket[elements-cycler].
-}
