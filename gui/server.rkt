@@ -44,37 +44,10 @@
   (evt))
 
 (module+ main
-  (require racket/runtime-path
-           frosthaven-manager/defns
-           frosthaven-manager/qi
-           frosthaven-manager/monster-db)
-  (define-runtime-path more-monsters "../testfiles/sample-bestiary-import.rkt")
+  (require frosthaven-manager/testfiles/data)
   ;; gui/manager depends on gui/server…
   (define manager (dynamic-require 'frosthaven-manager/gui/manager 'manager))
-  (define-values (info _abilities) (get-dbs more-monsters))
-  (define mg (make-monster-group (~> (info) (hash-ref "archer") (hash-ref "hynox archer"))
-                                 0
-                                 '([1 . #t] [2 . #f] [3 . #t])
-                                 (hash)))
-  (define boss (make-monster-group (~> (info) (hash-ref "boss") (hash-ref "giant squid"))
-                                   0
-                                   '([1 . #f])
-                                   (hash "C" 2)))
-  (define s (make-state (@ 'play)))
-  (void
-   (init-dbs more-monsters s)
-   (:= (state-@num-players s) 2)
-   (:= (state-@creatures s)
-       (list (creature 0 (~> ((make-player "Jack Skellington" 8))
-                             (player-summon "Corpse Bro" 4)))
-             (creature 1 (~> ((player "Frigg" 12 10 3 (list muddle ward) 67 empty empty))
-                             (player-summon "Banner of Courage" 7)))
-             (creature 2 (monster-group* 1 mg))
-             (creature 3 (monster-group* 1 boss))))
-   (for ([deck (append (list money-deck)
-                       (hash-values material-decks)
-                       (hash-values herb-decks))])
-     ((update-loot-deck-and-num-loot-cards s) `(add ,deck)))
-   (build-loot-deck! s)
-   (launch-server s)
-   (render/eventspace (manager s))))
+  (define s (make-sample-state))
+  (make-sample-loot-deck s)
+  (void (launch-server s)
+        (render/eventspace (manager s))))
