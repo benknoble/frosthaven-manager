@@ -48,7 +48,6 @@
          frosthaven-manager/gui/helpers
          frosthaven-manager/gui/table
 
-         frosthaven-manager/qi
          frosthaven-manager/defns
          frosthaven-manager/manager
          frosthaven-manager/monster-db

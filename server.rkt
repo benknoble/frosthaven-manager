@@ -19,7 +19,6 @@
   frosthaven-manager/gui/elements
   frosthaven-manager/manager
   frosthaven-manager/observable-operator
-  frosthaven-manager/qi
   json
   nat-traversal
   net/url

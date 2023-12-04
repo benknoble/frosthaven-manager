@@ -18,8 +18,7 @@
 
 (require frosthaven-manager/observable-operator
          frosthaven-manager/defns
-         frosthaven-manager/manager/state
-         frosthaven-manager/qi)
+         frosthaven-manager/manager/state)
 
 (module+ test (require rackunit))
 

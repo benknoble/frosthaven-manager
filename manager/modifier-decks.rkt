@@ -14,7 +14,6 @@
     [do-unbless-player (-> state? (-> any))]))
 
 (require frosthaven-manager/observable-operator
-         frosthaven-manager/qi
          frosthaven-manager/defns
          frosthaven-manager/manager/state)
 

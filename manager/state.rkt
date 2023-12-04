@@ -87,7 +87,6 @@
          racket/gui/easy/contract
          racket/gui/easy/observable
          frosthaven-manager/observable-operator
-         frosthaven-manager/qi
          frosthaven-manager/defns
          frosthaven-manager/monster-db
          frosthaven-manager/manager/ability-decks

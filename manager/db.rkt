@@ -8,8 +8,7 @@
 (require frosthaven-manager/observable-operator
          frosthaven-manager/monster-db
          frosthaven-manager/manager/state
-         frosthaven-manager/manager/ability-decks
-         frosthaven-manager/qi)
+         frosthaven-manager/manager/ability-decks)
 
 (define (init-dbs db s)
   (define-values (info-db ability-db) (get-dbs db))

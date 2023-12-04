@@ -15,8 +15,7 @@
 
 (require racket/gui/easy
          racket/gui/easy/contract
-         frosthaven-manager/observable-operator
-         frosthaven-manager/qi)
+         frosthaven-manager/observable-operator)
 
 (struct column [title entry->label entry->next])
 
@@ -70,8 +69,7 @@
   (require (submod "..") ;; for contracts
            racket/gui/easy
            frosthaven-manager/gui/render
-           frosthaven-manager/observable-operator
-           frosthaven-manager/qi)
+           frosthaven-manager/observable-operator)
 
   (require frosthaven-manager/monster-db
            frosthaven-manager/defns)

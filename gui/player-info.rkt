@@ -23,7 +23,6 @@
 
 (require racket/gui/easy
          frosthaven-manager/observable-operator
-         frosthaven-manager/qi
          racket/gui/easy/contract
          frosthaven-manager/defns
          frosthaven-manager/gui/counter
