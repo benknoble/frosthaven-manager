@@ -298,7 +298,7 @@
 (define ((make-creature-view s) k @e)
   (cond-view
     [(@~> @e (~> creature-v player?)) ((make-player-view s) k @e)]
-    [(@~> @e (~> creature-v monster-group*?)) ((make-monster-group-view s) k @e)]
+    [(@~> @e creature-is-mg*?) ((make-monster-group-view s) k @e)]
     [else (text "creature is neither player or monster-group*")]))
 
 (define ((show-discard-pile s))

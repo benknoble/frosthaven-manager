@@ -23,7 +23,7 @@
   (define make-foes (dynamic-require db 'make-foes (const #f)))
   (when make-foes
     ;; remove all monster groups from creatures
-    (<~@ (state-@creatures s) (remf* (flow (~> creature-v monster-group*?)) _))
+    (<~@ (state-@creatures s) (remf* creature-is-mg*? _))
     (define mgs (make-foes (@! (state-@level s)) (@! (state-@num-players s))))
     (define events (map (λ (mg) `(add ,mg)) mgs))
     (for-each (add-or-remove-monster-group s) events)))

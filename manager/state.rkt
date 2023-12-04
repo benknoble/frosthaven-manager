@@ -390,7 +390,7 @@
 ;; (-> mg (-> creature bool))
 (define-flow creature-is-mg~?
   (clos (~>
-          (== _ (~> creature-v (and monster-group*? monster-group*-mg)))
+          (== _ (and creature-is-mg*? (~> creature-v monster-group*-mg)))
           equal?)))
 
 (define single-monster-event/c

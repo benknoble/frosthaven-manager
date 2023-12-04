@@ -103,9 +103,9 @@
               (and ability (monster-ability-set-name ability))))
           (define monster-set-has-monsters?
             (for/or ([creature (@! (state-@creatures s))]
-                     #:do [(define v (creature-v creature))]
-                     #:when (monster-group*? v)
-                     #:do [(define mg (monster-group*-mg v))]
+                     #:when (creature-is-mg*? creature)
+                     #:do [(define v (creature-v creature))
+                           (define mg (monster-group*-mg v))]
                      #:when (~> (mg) monster-group-set-name (equal? monster-set)))
               (~> (mg) monster-group-monsters (not empty?))))
           (cond

@@ -112,7 +112,7 @@
       (for ([c creatures])
         (cond
           [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]
-          [(monster-group*? (creature-v c)) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))
+          [(creature-is-mg*? c) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))
       (define ids (map creature-css-id (sort creatures < #:key (creature-initiative ads))))
       (multicast-channel-put ch `(reorder ,ids))))
   (obs-observe! (state-@round an-s) (λ (r) (multicast-channel-put ch `(number round ,r))))
@@ -134,7 +134,7 @@
       (for ([c cs])
         (cond
           [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]
-          [(monster-group*? (creature-v c)) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))
+          [(creature-is-mg*? c) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))
       (define ids (map creature-css-id (sort cs < #:key (creature-initiative ads))))
       (multicast-channel-put ch `(reorder ,ids))))
   (obs-observe!
@@ -143,14 +143,14 @@
      (define ads (@! (state-@ability-decks an-s)))
      (for ([c (@! (state-@creatures an-s))])
        (cond
-         [(monster-group*? (creature-v c)) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))))
+         [(creature-is-mg*? c) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))))
   (obs-observe!
    (state-@ability-decks an-s)
    (λ (ads)
      (define env (@! (state-@env an-s)))
      (for ([c (@! (state-@creatures an-s))])
        (cond
-         [(monster-group*? (creature-v c)) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))))
+         [(creature-is-mg*? c) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))))
 
   (define-values (app the-reverse-uri)
     (dispatch-rules
