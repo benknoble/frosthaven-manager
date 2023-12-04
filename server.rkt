@@ -112,7 +112,9 @@
       (for ([c creatures])
         (cond
           [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]
-          [(monster-group*? (creature-v c)) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))))
+          [(monster-group*? (creature-v c)) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))
+      (define ids (map creature-css-id (sort creatures < #:key (creature-initiative ads))))
+      (multicast-channel-put ch `(reorder ,ids))))
   (obs-observe! (state-@round an-s) (λ (r) (multicast-channel-put ch `(number round ,r))))
   (obs-observe! (state-@num-players an-s)
                 (λ (n) (multicast-channel-put ch `(number inspiration ,(inspiration-reward n)))))
