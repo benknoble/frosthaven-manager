@@ -31,40 +31,14 @@
 
 (define (loot-picker #:on-card [on-card void]
                      #:on-sticker [on-sticker void])
-  (define (make-cards-picker! label max-cards deck)
-    (define/obs @n 0)
-    (define/obs @stickers 0)
-    (define (send-card _n event)
-      (on-card event))
-    (define (send-sticker _stickers event)
-      (on-sticker event))
-    (define (subtract-card)
-      (<~@ @n (switch
-                [zero? _]
-                [else (ε (send-card `(remove ,deck)) sub1)])))
-    (define (subtract-sticker)
-      (<~@ @stickers (switch
-                       [zero? _]
-                       [else (ε (send-sticker `(remove ,deck)) sub1)])))
-    (define (add-card)
-      (<~@ @n (switch
-                [(>= max-cards) _]
-                [else (ε (send-card `(add ,deck)) add1)])))
-    (define (add-sticker)
-      (<~@ @stickers (switch
-                       [(>= max-cards) _]
-                       [else (ε (send-sticker `(add ,deck)) add1)])))
-    (hpanel (spacer)
-            (counter (@~> @n (~a label _)) add-card subtract-card)
-            (counter (@~> @stickers (~a "+1 Stickers: " _)) add-sticker subtract-sticker)
-            (spacer)))
-  (define money-view (make-cards-picker! "Money Cards: " max-money-cards money-deck))
+  (define cards-picker (make-cards-picker! #:on-card on-card #:on-sticker on-sticker))
+  (define money-view (cards-picker "Money Cards: " max-money-cards money-deck))
   (define material-views
     (for/list ([m (in-list material-kinds)])
-      (make-cards-picker! (~a m " Cards: ") max-material-cards (hash-ref material-decks m))))
+      (cards-picker (~a m " Cards: ") max-material-cards (hash-ref material-decks m))))
   (define herb-views
     (for/list ([h (in-list herb-kinds)])
-      (make-cards-picker! (~a h " Cards: ") max-herb-cards (hash-ref herb-decks h))))
+      (cards-picker (~a h " Cards: ") max-herb-cards (hash-ref herb-decks h))))
   (define random-item-view
     (let ([deck (list random-item)])
       (checkbox #:label "Random Item Card?"
@@ -77,6 +51,35 @@
     money-view
     (apply group "Materials" material-views)
     (apply group "Herbs" herb-views)))
+
+(define ((make-cards-picker! #:on-card on-card #:on-sticker on-sticker)
+         label max-cards deck)
+  (define/obs @n 0)
+  (define/obs @stickers 0)
+  (define (send-card _n event)
+    (on-card event))
+  (define (send-sticker _stickers event)
+    (on-sticker event))
+  (define (subtract-card)
+    (<~@ @n (switch
+              [zero? _]
+              [else (ε (send-card `(remove ,deck)) sub1)])))
+  (define (subtract-sticker)
+    (<~@ @stickers (switch
+                     [zero? _]
+                     [else (ε (send-sticker `(remove ,deck)) sub1)])))
+  (define (add-card)
+    (<~@ @n (switch
+              [(>= max-cards) _]
+              [else (ε (send-card `(add ,deck)) add1)])))
+  (define (add-sticker)
+    (<~@ @stickers (switch
+                     [(>= max-cards) _]
+                     [else (ε (send-sticker `(add ,deck)) add1)])))
+  (hpanel (spacer)
+          (counter (@~> @n (~a label _)) add-card subtract-card)
+          (counter (@~> @stickers (~a "+1 Stickers: " _)) add-sticker subtract-sticker)
+          (spacer)))
 
 (define (loot-button @loot-deck
                      @num-loot-cards
