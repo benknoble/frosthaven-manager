@@ -22,20 +22,23 @@
 (define (elements-cycler @states es [panel hpanel])
   (apply panel #:stretch '(#f #f) (element-cyclers @states es)))
 
-(define (make-transition-element-state @state)
-  (λ ()
-    (<@ @state transition-element-state)))
+(define (element-cyclers @states es)
+  (map element-cycler @states es))
 
-(module+ test
-  (test-case "transitions"
-    (define/obs state 'infused)
-    (define t (make-transition-element-state state))
-    (t)
-    (check-equal? (@! state) 'waning)
-    (t)
-    (check-equal? (@! state) 'unfused)
-    (t)
-    (check-equal? (@! state) 'infused)))
+(define (element-cycler @element-state e)
+  (define (make-pict-for-canvas s)
+    (inset ((state->pict e) s) (+ 3 (/ size 3)) 3 0 0))
+  (define cycle-element (make-transition-element-state @element-state))
+  (define pict-view
+    (pict-canvas @element-state
+                 make-pict-for-canvas
+                 #:min-size (list (+ 6 size) (+ 6 size))
+                 #:mixin (handle-element-clicks @element-state)))
+  (group
+    (element-pics-name e)
+    #:stretch '(#f #f)
+    pict-view
+    (button (@> @element-state state->text) cycle-element)))
 
 (define (handle-element-clicks @state)
   (define cycle-element (make-transition-element-state @state))
@@ -59,20 +62,20 @@
            (render-popup-menu (current-renderer) pum x y))]
         [else (super on-event e)]))))
 
-(define (element-cycler @element-state e)
-  (define (make-pict-for-canvas s)
-    (inset ((state->pict e) s) (+ 3 (/ size 3)) 3 0 0))
-  (define cycle-element (make-transition-element-state @element-state))
-  (define pict-view
-    (pict-canvas @element-state
-                 make-pict-for-canvas
-                 #:min-size (list (+ 6 size) (+ 6 size))
-                 #:mixin (handle-element-clicks @element-state)))
-  (group
-    (element-pics-name e)
-    #:stretch '(#f #f)
-    pict-view
-    (button (@> @element-state state->text) cycle-element)))
+(define (make-transition-element-state @state)
+  (λ ()
+    (<@ @state transition-element-state)))
+
+(module+ test
+  (test-case "transitions"
+    (define/obs state 'infused)
+    (define t (make-transition-element-state state))
+    (t)
+    (check-equal? (@! state) 'waning)
+    (t)
+    (check-equal? (@! state) 'unfused)
+    (t)
+    (check-equal? (@! state) 'infused)))
 
 (define (state->pict e)
   (match-lambda
@@ -87,9 +90,6 @@
     ['infused "Wane"]
     ['waning "Unfuse"]
     [_ "Infuse"]))
-
-(define (element-cyclers @states es)
-  (map element-cycler @states es))
 
 (module+ main
   (define es (elements))
