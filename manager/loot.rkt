@@ -42,6 +42,43 @@
   (<~@ (state-@creatures s) (update-players k (give-player-loot* s)))
   (take-loot s))
 
+(module+ test
+  (require racket/runtime-path
+           frosthaven-manager/defns
+           frosthaven-manager/qi
+           frosthaven-manager/monster-db)
+  (define-runtime-path more-monsters "../testfiles/sample-bestiary-import.rkt")
+  (define-values (info _abilities) (get-dbs more-monsters))
+  (define mg (make-monster-group (~> (info) (hash-ref "archer") (hash-ref "hynox archer"))
+                                 0
+                                 '([1 . #t] [2 . #f] [3 . #t])
+                                 (hash)))
+  (test-case "give-player-loot"
+    (define s (make-state))
+    (:= (state-@creatures s)
+        (list (creature 0 (~> ((make-player "Jack Skellington" 8))
+                              (player-summon "Corpse Bro" 4)))
+              (creature 1 (~> ((player "Frigg" 12 10 3 (list muddle ward) 67 empty empty))))
+              (creature 2 (monster-group* 1 mg))))
+    (:= (state-@loot-deck s)
+        (list
+         (money 2)
+         (material lumber '(2 2 1))
+         (herb axenut 1)))
+    ((give-player-loot s) 0) ;; 2 money => Jack
+    ((give-player-loot s) 1) ;; 2 lumber => Frigg
+    ((give-player-loot s) 0) ;; 1 axenut => Jack
+    (define cs (@! (state-@creatures s)))
+    (define (check-loot-equal? player-id expected)
+      (void
+       (update-players cs
+                       player-id
+                       (λ (p)
+                         (check-equal? (player-loot p) expected)
+                         p))))
+    (check-loot-equal? 0 (list (herb axenut 1) (money 2)))
+    (check-loot-equal? 1 (list (material lumber '(2 2 1))))))
+
 (define-flow rotate
   (if empty?
     _
