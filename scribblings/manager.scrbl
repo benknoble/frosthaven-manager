@@ -13,8 +13,9 @@ This module reprovides all the bindings from
 @racketmodname[frosthaven-manager/manager/db],
 @racketmodname[frosthaven-manager/manager/elements],
 @racketmodname[frosthaven-manager/manager/loot],
-@racketmodname[frosthaven-manager/manager/round-prompts], and
-@racketmodname[frosthaven-manager/manager/transition].
+@racketmodname[frosthaven-manager/manager/round-prompts],
+@racketmodname[frosthaven-manager/manager/transition], and
+@racketmodname[frosthaven-manager/manager/save].
 
 @include-section{manager/state.scrbl}
 @include-section{manager/ability-decks.scrbl}
@@ -24,3 +25,4 @@ This module reprovides all the bindings from
 @include-section{manager/loot.scrbl}
 @include-section{manager/round-prompts.scrbl}
 @include-section{manager/transition.scrbl}
+@include-section{manager/save.scrbl}

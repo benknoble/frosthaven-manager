@@ -23,6 +23,7 @@
          frosthaven-manager/qi
          frosthaven-manager/defns
          frosthaven-manager/manager
+         frosthaven-manager/files
          frosthaven-manager/gui/common-menu
          frosthaven-manager/gui/formula-editor
          frosthaven-manager/gui/start
@@ -322,40 +323,3 @@
      (render/eventspace
       #:eventspace closing-eventspace
       (player-rewards-view @num-players @level @players #:mixin close-custodian-mixin))))))
-
-;;;; Save & Load
-
-(define ((save-game s) p)
-  (call-with-output-file* p (curry serialize-state s) #:exists 'replace))
-
-(define (do-save-game s)
-  (cond [(put-file/filter "Save Game" '("Saved Games" "*.fasl")) => (save-game s)]))
-
-(define ((load-game s) p)
-  (define saved-state (call-with-input-file* p deserialize-state))
-  (copy-state saved-state s))
-
-(define (do-load-game s)
-  (cond [(get-file/filter "Load Game" '("Saved Games" "*.fasl")) => (load-game s)]))
-
-;;;; Files
-
-(define (get-file/filter message filter)
-  (get-file message #f #f #f (->extension (second filter)) empty (list filter '("Any" "*.*"))))
-
-(define (put-file/filter message filter)
-  (put-file message #f #f #f (->extension (second filter)) empty (list filter '("Any" "*.*"))))
-
-(define-flow ->extension
-  (~> path-get-extension (and _ (~> bytes->string/utf-8 (substring 1)))))
-
-;;;; Prompt helpers
-
-(define ((add-prompt s) p)
-  (<~@ (state-@prompts s) (cons p _)))
-
-(define ((remove-prompt s) i p)
-  (define-values (new-ps p2)
-    (list-remove (@! (state-@prompts s)) i))
-  (when (equal? p p2)
-    (:= (state-@prompts s) new-ps)))

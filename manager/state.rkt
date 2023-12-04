@@ -80,7 +80,9 @@
     [remove-monster-event/c contract?]
     [add-or-remove-monster-group (-> state? (-> (or/c add-monster-event/c remove-monster-event/c) any))]
     [draw-new-card-mid-round-if-needed (-> state? string? any)]
-    [initiative-public? (-> boolean? boolean?)]))
+    [initiative-public? (-> boolean? boolean?)]
+    [add-prompt (-> state? (-> prompt/c any))]
+    [remove-prompt (-> state? (-> natural-number/c prompt/c any))]))
 
 (require racket/serialize
          racket/fasl
@@ -88,6 +90,7 @@
          racket/gui/easy/observable
          frosthaven-manager/observable-operator
          frosthaven-manager/defns
+         frosthaven-manager/qi
          frosthaven-manager/monster-db
          frosthaven-manager/manager/ability-decks
          frosthaven-manager/manager/round-prompts
@@ -432,3 +435,12 @@
 
 (define (initiative-public? in-draw?)
   in-draw?)
+
+(define ((add-prompt s) p)
+  (<~@ (state-@prompts s) (cons p _)))
+
+(define ((remove-prompt s) i p)
+  (define-values (new-ps p2)
+    (list-remove (@! (state-@prompts s)) i))
+  (when (equal? p p2)
+    (:= (state-@prompts s) new-ps)))

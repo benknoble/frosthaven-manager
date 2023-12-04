@@ -212,3 +212,12 @@ needs to potentially trigger a new card.
 True if, according to @racket[in-draw?], initiative values should be publicly
 revealed.
 }
+
+@defproc[(add-prompt [s state?]) (-> prompt/c any)]{
+Add a prompt to @racket[s].
+}
+
+@defproc[((remove-prompt [s state?]) [i natural-number/c] [p prompt/c]) any]{
+Remove a prompt @racket[p] from @racket[s] by index @racket[i]. If the prompt at
+index @racket[i] is not @racket[p], no prompts are removed.
+}
