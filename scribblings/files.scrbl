@@ -13,7 +13,9 @@ Additionally permits an "Any" filter. The Windows extensions is provided from
 @racket[(second filter)].
 }
 
-@defproc[(put-file/filter [message string?] [filter (list/c string? string?)])
+@defproc[(put-file/filter [message string?] [filter (list/c string? string?)]
+                          [directory path-string? #f]
+                          [file path-string? #f])
          (or/c path? #f)]{
 Returns @racket[put-file] with @racket[message] and @racket[filter].
 Additionally permits an "Any" filter. The Windows extensions is provided from
