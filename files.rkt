@@ -2,8 +2,8 @@
 
 (provide
  (contract-out
-  [get-file/filter (-> string? (list/c string? string?) (or/c path? #f))]
-  [put-file/filter (->* {string? (list/c string? string?)}
+  [get-file/filter (-> label-string? (list/c string? string?) (or/c path? #f))]
+  [put-file/filter (->* {label-string? (list/c string? string?)}
                         {(or/c path-string? #f) (or/c path-string? #f)}
                         (or/c path? #f))]))
 
