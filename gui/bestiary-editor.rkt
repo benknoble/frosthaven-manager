@@ -166,10 +166,10 @@
     ;; TODO delete import
     (let ([@import (obs "")])
       (hpanel
-          (input #:label "New Import:" @import (λ (_action inp) (:= @import inp)))
-          (button "Import" (thunk
-                            (<~@ @imports (cons (@! @import) _))
-                            (:= @import "")))))
+       (input #:label "New Import:" @import (λ (_action inp) (:= @import inp)))
+       (button "Import" (thunk
+                         (<~@ @imports (cons (@! @import) _))
+                         (:= @import "")))))
     ;; db-view
     ;; TODO New Monster Buttons
     (bestiary-editor @info-db @ability-db edit)
