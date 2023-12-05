@@ -1,7 +1,5 @@
 #lang racket
 
-;; TODO refactor duplicate code (gui/manager.rkt)
-
 (module+ main (main))
 
 ;; (module+ main
@@ -9,8 +7,6 @@
 ;;   (start-debugger))
 
 (require (only-in racket/gui
-                  get-file
-                  put-file
                   application-about-handler)
          racket/gui/easy
          (only-in pretty-expressive pretty-print)
@@ -22,7 +18,8 @@
          frosthaven-manager/pp/bestiary
          frosthaven-manager/gui/common-menu
          frosthaven-manager/gui/stacked-tables
-         frosthaven-manager/gui/counter)
+         frosthaven-manager/gui/counter
+         frosthaven-manager/files)
 
 (define (main)
   (define/obs @info-db (hash))
@@ -353,12 +350,3 @@
      (define base-dir (path-only current-file))
      (build-path base-dir file)]
     [else file]))
-
-(define (get-file/filter message filter)
-  (get-file message #f #f #f (->extension (second filter)) empty (list filter '("Any" "*.*"))))
-
-(define (put-file/filter message filter [directory #f] [filename #f])
-  (put-file message #f directory filename (->extension (second filter)) empty (list filter '("Any" "*.*"))))
-
-(define-flow ->extension
-  (~> path-get-extension (and _ (~> bytes->string/utf-8 (substring 1)))))
