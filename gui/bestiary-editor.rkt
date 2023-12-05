@@ -17,6 +17,7 @@
          frosthaven-manager/parsers/monster
          frosthaven-manager/pp/bestiary
          frosthaven-manager/gui/common-menu
+         frosthaven-manager/gui/mixins
          frosthaven-manager/gui/stacked-tables
          frosthaven-manager/gui/counter
          frosthaven-manager/files)
@@ -163,13 +164,28 @@
          (open-file (vector-ref (vector-ref imports index) 1) @previous-files @current-file @next-files @info-db @ability-db @imports))]
        [{_ _ _} (void)])
      #:min-size '(#f 150))
-    ;; TODO delete import
     (let ([@import (obs "")])
       (hpanel
        (input #:label "New Import:" @import (λ (_action inp) (:= @import inp)))
        (button "Import" (thunk
                          (<~@ @imports (cons (@! @import) _))
                          (:= @import "")))))
+    (button "Remove Import"
+            (thunk
+             (define-close! close! closing-mixin)
+             (define/obs @choice #f)
+             ;; not setting current renderer, nor using an eventspace: dialog
+             (render
+              (dialog
+               #:title "Remove Import"
+               #:mixin closing-mixin
+               (hpanel (choice @imports (λ:= @choice))
+                       (button "Remove"
+                               (thunk
+                                (when (@! @choice)
+                                  (<~@ @imports (remove (@! @choice) _)))
+                                (close!))))
+               (button "Cancel" close!)))))
     ;; db-view
     ;; TODO New Monster Buttons
     (bestiary-editor @info-db @ability-db edit)
