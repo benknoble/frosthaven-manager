@@ -57,6 +57,21 @@
            #:out op
            #:page-width 120))
         #:exists 'replace))))
+  (define (remove-import)
+    (define-close! close! closing-mixin)
+    (define/obs @choice #f)
+    (define (remove-import!)
+      (when (@! @choice)
+        (<~@ @imports (remove (@! @choice) _)))
+      (close!))
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
+     (dialog
+      #:title "Remove Import"
+      #:mixin closing-mixin
+      (hpanel (choice @imports (λ:= @choice))
+              (button "Remove" remove-import!))
+      (button "Cancel" close!))))
   (define (edit . xs)
     (match (car xs)
       ['remove-monster (match-define (list monster-set monster-name) (cdr xs))
@@ -170,22 +185,7 @@
        (button "Import" (thunk
                          (<~@ @imports (cons (@! @import) _))
                          (:= @import "")))))
-    (button "Remove Import"
-            (thunk
-             (define-close! close! closing-mixin)
-             (define/obs @choice #f)
-             ;; not setting current renderer, nor using an eventspace: dialog
-             (render
-              (dialog
-               #:title "Remove Import"
-               #:mixin closing-mixin
-               (hpanel (choice @imports (λ:= @choice))
-                       (button "Remove"
-                               (thunk
-                                (when (@! @choice)
-                                  (<~@ @imports (remove (@! @choice) _)))
-                                (close!))))
-               (button "Cancel" close!)))))
+    (button "Remove Import" remove-import)
     ;; db-view
     ;; TODO New Monster Buttons
     (bestiary-editor @info-db @ability-db edit)
