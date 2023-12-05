@@ -162,3 +162,43 @@
                [(cons card cards) (discard s card)
                                   cards]
                ['() '()])))
+
+(module+ test
+  (test-case "draw-when-cursed-blessed"
+    (define s (make-state))
+    (define ((add-card cards))
+      (<@ (cards s)
+          (match-lambda
+            [(cons card cards) (<~@ (state-@monster-modifier-deck s) (cons card _))
+                               cards])))
+    (define curse! (add-card state-@curses))
+    (define bless! (add-card state-@blesses))
+
+    (for ([curse-or-bless! (list curse! bless!)]
+          [card (list curse bless)]
+          [discard (list state-@curses state-@blesses)]
+          [original (list monster-curse-deck bless-deck)])
+
+      (curse-or-bless!)
+      ((draw-modifier s))
+      (check-equal? (@! (state-@modifier s)) card)
+      (check-equal? (@! (discard s)) original)
+
+      (curse-or-bless!)
+      ((draw-modifier* s))
+      (check-equal? (@! (discard s)) original)
+
+      (curse-or-bless!)
+      ((draw-modifier* s worse-modifier))
+      (check-equal? (@! (discard s)) original)))
+
+  (test-case "draw-when-cursed-blessed-2"
+    (define s (make-state))
+    (for ([_i (in-range (max (length monster-curse-deck) (length bless-deck)))])
+      ((do-bless-monster s))
+      ((do-curse-monster s)))
+    (for ([_i (in-range (length (@! (state-@monster-modifier-deck s))))])
+      ((draw-modifier s)))
+    (check-equal? (@! (state-@curses s)) monster-curse-deck)
+    (check-equal? (@! (state-@blesses s)) bless-deck)
+    (check-deck-and-discard-make-complete-deck s)))
