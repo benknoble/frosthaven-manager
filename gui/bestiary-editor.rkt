@@ -1,6 +1,6 @@
 #lang racket
 
-(module+ main (main))
+(module+ main (void (main)))
 
 ;; (module+ main
 ;;   (require racket/gui/easy/debugger)
