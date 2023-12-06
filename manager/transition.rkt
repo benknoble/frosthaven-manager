@@ -40,7 +40,7 @@
 (define ((to-input-player-info s))
   (define cs (@! (state-@creatures s)))
   (define n-players (@! (state-@num-players s)))
-  (define n-cs (length cs))
+  (define n-cs (length (filter (flow (~> creature-v player?)) cs)))
   (cond
     [(< n-cs n-players)
      (:= (state-@creatures s)
