@@ -3,6 +3,7 @@
 (provide
  (contract-out
   [transition/c contract?]
+  [to-start transition/c]
   [to-input-player-info transition/c]
   [to-build-loot-deck transition/c]
   [to-add-prompts transition/c]
@@ -32,6 +33,9 @@
 ;; 4. Choose Monster DB
 ;; 5. Choose Monsters (optional)
 ;; 6. Play (Draw -> Next Round -> …)
+
+(define ((to-start s))
+  (:= (state-@mode s) 'start))
 
 (define ((to-input-player-info s))
   (when (empty? (@! (state-@creatures s)))

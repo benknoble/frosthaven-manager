@@ -13,6 +13,7 @@ used as the action for a @racket[button].
 }
 
 @deftogether[(
+              @defthing[to-start transition/c]
               @defthing[to-input-player-info transition/c]
               @defthing[to-build-loot-deck transition/c]
               @defthing[to-add-prompts transition/c]
