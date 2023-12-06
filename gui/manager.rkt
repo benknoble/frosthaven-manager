@@ -102,10 +102,15 @@
 
 (define (build-loot-deck-view s)
   (vpanel
-    (loot-picker #:on-card (update-loot-deck-and-num-loot-cards s)
+    (loot-picker (state-@cards-per-deck s)
+                 (state-@stickers-per-loot-deck s)
+                 #:on-card (update-loot-deck-and-num-loot-cards s)
                  #:on-sticker (update-stickers-per-deck s))
     (spacer)
-    (button "Next" (to-add-prompts s))))
+    (hpanel #:stretch '(#t #f)
+            #:alignment '(center center)
+            (button "Back" (to-input-player-info s))
+            (button "Next" (to-add-prompts s)))))
 
 (define (add-prompts-view s)
   (vpanel

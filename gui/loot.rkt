@@ -2,7 +2,8 @@
 
 (provide
   (contract-out
-    [loot-picker (->* ()
+    [loot-picker (->* ((obs/c (hash/c (listof loot-card?) natural-number/c))
+                       (obs/c (hash/c (listof loot-card?) natural-number/c)))
                       (#:on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any)
                        #:on-sticker (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any))
                       (is-a?/c view<%>))]
@@ -28,9 +29,11 @@
          frosthaven-manager/gui/render
          frosthaven-manager/gui/table)
 
-(define (loot-picker #:on-card [on-card void]
+(define (loot-picker @cards-per-deck
+                     @stickers-per-deck
+                     #:on-card [on-card void]
                      #:on-sticker [on-sticker void])
-  (define cards-picker (make-cards-picker! #:on-card on-card #:on-sticker on-sticker))
+  (define cards-picker (make-cards-picker! @cards-per-deck @stickers-per-deck #:on-card on-card #:on-sticker on-sticker))
   (define money-view (cards-picker "Money Cards: " max-money-cards money-deck))
   (define material-views
     (for/list ([m (in-list material-kinds)])
@@ -41,6 +44,7 @@
   (define random-item-view
     (let ([deck (list random-item)])
       (checkbox #:label "Random Item Card?"
+                #:checked? (@~> @cards-per-deck (~> (hash-ref deck 0) (> 0)))
                 (match-lambda
                   [#t (on-card `(add ,deck))]
                   [#f (on-card `(remove ,deck))]))))
@@ -51,30 +55,22 @@
     (apply group "Materials" material-views)
     (apply group "Herbs" herb-views)))
 
-(define ((make-cards-picker! #:on-card on-card #:on-sticker on-sticker)
+(define ((make-cards-picker! @cards-per-deck @stickers-per-deck #:on-card on-card #:on-sticker on-sticker)
          label max-cards deck)
-  (define/obs @n 0)
-  (define/obs @stickers 0)
-  (define (send-card _n event)
-    (on-card event))
-  (define (send-sticker _stickers event)
-    (on-sticker event))
+  (define @n (@~> @cards-per-deck (hash-ref deck 0)))
+  (define @stickers (@~> @stickers-per-deck (hash-ref deck 0)))
   (define (subtract-card)
-    (<~@ @n (switch
-              [zero? _]
-              [else (ε (send-card `(remove ,deck)) sub1)])))
+    (when (> (@! @n) 0)
+      (on-card `(remove ,deck))))
   (define (subtract-sticker)
-    (<~@ @stickers (switch
-                     [zero? _]
-                     [else (ε (send-sticker `(remove ,deck)) sub1)])))
+    (when (> (@! @stickers) 0)
+      (on-sticker `(remove ,deck))))
   (define (add-card)
-    (<~@ @n (switch
-              [(>= max-cards) _]
-              [else (ε (send-card `(add ,deck)) add1)])))
+    (when (< (@! @n) max-cards)
+      (on-card `(add ,deck))))
   (define (add-sticker)
-    (<~@ @stickers (switch
-                     [(>= max-cards) _]
-                     [else (ε (send-sticker `(add ,deck)) add1)])))
+    (when (< (@! @stickers) max-cards)
+      (on-sticker `(add ,deck))))
   (hpanel (spacer)
           (counter (@~> @n (~a label _)) add-card subtract-card)
           (counter (@~> @stickers (~a "+1 Stickers: " _)) add-sticker subtract-sticker)
