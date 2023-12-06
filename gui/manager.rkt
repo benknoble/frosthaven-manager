@@ -150,7 +150,10 @@
                (hpanel (text "Error message:" #:color "red")
                        (input @error-text #:style '(multiple)))]
               [else (spacer)]))
-    (button "Next" (to-choose-monsters-or-play s) #:enabled? (@~> (state-@info-db s) (not hash-empty?)))))
+    (hpanel #:stretch '(#t #f)
+            #:alignment '(center center)
+            (button "Back" (to-add-prompts s))
+            (button "Next" (to-choose-monsters-or-play s) #:enabled? (@~> (state-@info-db s) (not hash-empty?))))))
 
 (define (choose-monsters-view s)
   (vpanel
