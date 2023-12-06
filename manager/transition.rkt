@@ -41,9 +41,14 @@
   (define cs (@! (state-@creatures s)))
   (define n-players (@! (state-@num-players s)))
   (define n-cs (length cs))
-  (when (< n-cs n-players)
-    (:= (state-@creatures s)
-        (cs . append . (build-list (- n-players n-cs) make-player-creature))))
+  (cond
+    [(< n-cs n-players)
+     (:= (state-@creatures s)
+         (cs . append . (build-list (- n-players n-cs) make-player-creature)))]
+    [(> n-cs n-players)
+     ;; throw away old values
+     (:= (state-@creatures s)
+         (build-list n-players make-player-creature))])
   (:= (state-@mode s) 'input-player-info))
 
 (define ((to-build-loot-deck s))
