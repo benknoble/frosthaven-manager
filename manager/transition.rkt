@@ -38,8 +38,12 @@
   (:= (state-@mode s) 'start))
 
 (define ((to-input-player-info s))
-  (when (empty? (@! (state-@creatures s)))
-    (:= (state-@creatures s) (build-list (@! (state-@num-players s)) make-player-creature)))
+  (define cs (@! (state-@creatures s)))
+  (define n-players (@! (state-@num-players s)))
+  (define n-cs (length cs))
+  (when (< n-cs n-players)
+    (:= (state-@creatures s)
+        (cs . append . (build-list (- n-players n-cs) make-player-creature))))
   (:= (state-@mode s) 'input-player-info))
 
 (define ((to-build-loot-deck s))
