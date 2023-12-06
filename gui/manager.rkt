@@ -117,7 +117,10 @@
    (prompts-input-view (state-@prompts s)
                        #:on-add (add-prompt s)
                        #:on-remove (remove-prompt s))
-   (button "Next" (to-choose-monster-db s))))
+   (hpanel #:stretch '(#t #f)
+           #:alignment '(center center)
+           (button "Back" (to-build-loot-deck s))
+           (button "Next" (to-choose-monster-db s)))))
 
 (define (choose-monster-db-view s)
   (define/obs @error-text "")
