@@ -2,15 +2,16 @@
 
 (provide
   (contract-out
-    [start-view (->* ()
+    [start-view (->* ((obs/c level/c) (obs/c num-players/c))
                      (#:on-level (-> level/c any)
                       #:on-player (-> num-players/c any))
                      (is-a?/c view<%>))]))
 
 (require racket/gui/easy
+         racket/gui/easy/contract
          frosthaven-manager/defns)
 
-(define (start-view #:on-level [on-level void] #:on-player [on-player void])
+(define (start-view @level @num-players #:on-level [on-level void] #:on-player [on-player void])
   (vpanel
     (spacer)
     (text "Frosthaven Manager")
@@ -21,11 +22,13 @@
       (choice #:label "Scenario Level"
               (build-list number-of-levels identity)
               #:choice->label ~a
-              on-level)
+              on-level
+              #:selection @level)
       (choice #:label "Number of Players"
               (build-list (sub1 max-players) (curry + 2))
               #:choice->label ~a
-              on-player))
+              on-player
+              #:selection @num-players))
     (spacer)))
 
 (module+ main

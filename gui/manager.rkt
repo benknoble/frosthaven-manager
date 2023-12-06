@@ -76,16 +76,29 @@
 
 (define (the-start-view s)
   (vpanel
-    (start-view #:on-level (λ:= (state-@level s))
-                #:on-player (λ:= (state-@num-players s)))
-    (button "Play" (to-input-player-info s))))
+   (start-view
+    (state-@level s)
+    (state-@num-players s)
+    #:on-level (λ:= (state-@level s))
+    #:on-player (λ:= (state-@num-players s)))
+   (button "Play" (to-input-player-info s))))
 
 (define (input-player-info-view s)
+  (define players
+    (filter-map (flow (~> creature-v (and player? _)))
+                (@! (state-@creatures s))))
+  (define names (map player-name players))
+  (define hps (map player-max-hp players))
   (vpanel
     (player-input-views (state-@num-players s)
                         #:on-name (update-player-name s)
-                        #:on-hp (update-player-max-hp s))
-    (button "Next" (to-build-loot-deck s))))
+                        #:on-hp (update-player-max-hp s)
+                        #:names names
+                        #:hps hps)
+    (hpanel #:stretch '(#t #f)
+            #:alignment '(center center)
+            (button "Back" (to-start s))
+            (button "Next" (to-build-loot-deck s)))))
 
 (define (build-loot-deck-view s)
   (vpanel
