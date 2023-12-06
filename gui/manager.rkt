@@ -161,7 +161,10 @@
                           (state-@level s)
                           (state-@env s)
                           #:on-change (add-or-remove-monster-group s))
-    (button "Next" (to-play s))))
+    (hpanel #:stretch '(#t #f)
+            #:alignment '(center center)
+            (button "Back" (to-choose-monster-db s))
+            (button "Next" (to-play s)))))
 
 (define (play-view s @undo)
   (vpanel
