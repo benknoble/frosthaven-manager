@@ -1,6 +1,11 @@
 /* DEFAULT: Extra small devices (phones) */
 /* @media only screen and (max-width: 600px) { */
 /* } */
+
+:root {
+  color-scheme: light dark;
+}
+
 details.stats-summary {
   margin-left: 1%;
   display: inline;
@@ -26,7 +31,7 @@ ol.monster-ability-abilities {
   padding: 0.5em;
 }
 .table-wrapper tbody tr:hover {
-  background-color: powderblue;
+  background-color: #8be9fd;
 }
 .table-wrapper {
   width: 100%;
@@ -41,7 +46,9 @@ button {
   position: sticky;
   top: 0;
   background-color: white;
-  border: 2px solid lightgrey;
+  border-width: 2px;
+  border-style: solid;
+  border-color: lightgrey;
   padding: 8px 0px;
 }
 
@@ -74,4 +81,24 @@ button {
 
 /* Extra large devices (large laptops and desktops) */
 @media only screen and (min-width: 1200px) {
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #282a36;
+    color: #f8f8f2;
+  }
+  a, button, select {
+    color: #8be9fd;
+  }
+  a:visited {
+    color: #ff79c6;
+  }
+  .table-wrapper tbody tr:hover {
+    color: #282a36;
+  }
+  #elements {
+    background-color: #282a36;
+    border-color: #6272a4;
+  }
 }
