@@ -58,7 +58,7 @@
                                        (hash)))
     (define n-players 3)
     (define loot-text (list->vector (map vector (map (format-loot-card n-players) loot-deck))))
-    (define-flow reveal (~> (format-loot-card n-players) vector))
+    (define-flow reveal (~> (esc (format-loot-card n-players)) vector))
     (define-flow hide-loot (gen (vector "?")))
     (check-equal? (make-preview-rows loot-deck 0 #:reveal reveal #:hide hide-loot)
                   (vector-map (const (vector "?")) loot-text))
