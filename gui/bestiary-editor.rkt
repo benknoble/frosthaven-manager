@@ -87,6 +87,7 @@
                the-statss
                level
                (λ (stats)
+                 ;; TODO: should not cause contract violation
                  (match* (f args)
                    [{(== monster-stats-max-hp) (list proc)}
                     (struct-copy monster-stats stats [max-hp (proc current-value)])]
