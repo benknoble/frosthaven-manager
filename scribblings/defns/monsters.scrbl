@@ -11,7 +11,7 @@
 
 @defstruct*[monster-stats
              ([max-hp (or/c positive-integer? string?)]
-              [move natural-number/c]
+              [move (or/c #f natural-number/c)]
               [attack (or/c natural-number/c string?)]
               [bonuses (listof string?)]
               [effects (listof string?)]

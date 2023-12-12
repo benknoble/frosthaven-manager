@@ -3,7 +3,7 @@
 (provide
  (contract-out
   [struct monster-stats ([max-hp (or/c positive-integer? string?)]
-                         [move natural-number/c]
+                         [move (or/c #f natural-number/c)]
                          [attack (or/c natural-number/c string?)]
                          [bonuses (listof string?)]
                          [effects (listof string?)]
@@ -133,10 +133,10 @@
 (define ((keyword-sub stats-f mg) _match word +- amount)
   (define op (eval (string->symbol +-) (make-base-namespace)))
   (define amount* (string->number amount))
-  (define normal
-    (op (stats-f (monster-group-normal-stats mg)) amount*))
-  (define elite
-    (op (stats-f (monster-group-elite-stats mg)) amount*))
+  (define normal-base (stats-f (monster-group-normal-stats mg)))
+  (define elite-base (stats-f (monster-group-elite-stats mg)))
+  (define normal (if normal-base (op normal-base amount*) "-"))
+  (define elite (if elite-base (op elite-base amount*) "-"))
   (format "~a ~a (E:~a)" word normal elite))
 
 (define ((skip-if-grant-or-control f) match before . args)

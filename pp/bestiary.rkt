@@ -62,6 +62,7 @@
 (define (pretty-statss normal-stats elite-stats)
   (define-flow length-n/s
     (switch
+      [false? 1]
       [number? (~> ~a string-length)]
       [string? (~> string-length (+ 2))]))
   (define max-hp-width
@@ -92,7 +93,7 @@
          (group
           (<$>
            (labelled-value "HP" (aligned max-hp max-hp-width))
-           (labelled-value "Move" (aligned move max-move-width))
+           (labelled-value "Move" (aligned (or move '-) max-move-width))
            (labelled-value "Attack" (aligned attack max-attack-width))))
          (group
           (<$>

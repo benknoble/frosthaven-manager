@@ -520,9 +520,9 @@
         (table
          ([class "monster-group-stats"])
          (tr (th "Normal") (th "Stat") (th "Elite"))
-         (tr (td ,(~a (monster-stats-move normal-stats)))
+         (tr (td ,(~> (normal-stats) monster-stats-move (if _ ~a "-")))
              (td "Move")
-             (td ,(~a (monster-stats-move elite-stats))))
+             (td ,(~> (elite-stats) monster-stats-move (if _ ~a "-"))))
          (tr (td ,(~a (monster-stats-attack* normal-stats env)))
              (td "Attack")
              (td ,(~a (monster-stats-attack* elite-stats env))))

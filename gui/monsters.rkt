@@ -61,7 +61,7 @@
       [(@~> @stats (~> f (not empty?))) (text (@~> @stats (~> sf escape-text)))]
       [else (spacer)]))
   (vpanel
-    (text (@~> @stats (~> monster-stats-move ~a)))
+    (text (@~> @stats (~> monster-stats-move (if _ ~a "-"))))
     (text (obs-combine (flow (~> monster-stats-attack* ~a)) @stats @env))
     (empty-view monster-stats-bonuses monster-stats-bonuses-string)
     (empty-view monster-stats-effects monster-stats-effects-string)
@@ -508,6 +508,7 @@
 
 (define (fmt-stat s)
   (match s
+    [#f "-"]
     ['() "none"]
     [(list ss ...)
      (~> (ss)

@@ -54,7 +54,10 @@
   (value/p "HP"
            (or/p (non-empty-text/p "non-empty HP formula")
                  (guard/p number/p positive-integer? "positive maximum health"))))
-(define move/p (value/p "Move" (guard/p number/p natural-number/c "base move value at least 0")))
+(define move/p
+  (value/p "Move"
+           (or/p (do (string/p "-") (pure #f))
+                 (guard/p number/p natural-number/c "base move value at least 0"))))
 (define attack/p
   (value/p "Attack"
            (or/p (non-empty-text/p "non-empty Attack formula")
@@ -97,6 +100,15 @@
            (flow (~> stats-labels (and (not check-duplicates) stats-labels-sufficient)))
            "exactly one each of HP, Move, Attack, and up to one each of Bonuses, Effects, and Immunities"
            stats-labels))))
+
+(module+ test
+  (test-case "stats/p"
+    (check-equal?
+     (parse-result! (parse-string stats/p "[move 3] [hp 4] [attack 3]"))
+     (monster-stats 4 3 3 empty empty empty))
+    (check-equal?
+     (parse-result! (parse-string stats/p "[move -] [hp 4] [attack 3]"))
+     (monster-stats 4 #f 3 empty empty empty))))
 
 (define cons-label (flow (~> (-< labelled-label labelled-v) cons)))
 

@@ -317,6 +317,9 @@ the standard arithmetic operators @racket["+"], @racket["-"], @racket["*"], and
 The functions @code{up} and @code{down} round up or down and are written
 @racket["up(3/2)"] or @racket["down(L/3)"].
 
+Any monster's move value can be specified as "no move value" by writing @tt{-},
+like @tt{[Move -]}.
+
 Any @nonterm{card}'s abilities in the @nonterm{text-list} can include a
 reference to an AoE pattern by using the function @racket[aoe], like in the
 following example: @racket["attack +1, aoe(path/to/triangle.rkt)"]. See
@@ -351,7 +354,9 @@ following example: @racket["attack +1, aoe(path/to/triangle.rkt)"]. See
      (list @nonterm{hp} @BNF-seq[@litchar{[} @litchar{HP}
                                              @BNF-group[@BNF-alt[@nonterm{number} @nonterm{formula:text}]]
                                              @litchar{]}])
-     (list @nonterm{move} @BNF-seq[@litchar{[} @litchar{Move} @nonterm{number} @litchar{]}])
+     (list @nonterm{move} @BNF-seq[@litchar{[} @litchar{Move}
+                                               @BNF-group[@BNF-alt[@nonterm{number} @litchar{-}]]
+                                               @litchar{]}])
      (list @nonterm{attack} @BNF-seq[@litchar{[} @litchar{Attack}
                                                  @BNF-group[@BNF-alt[@nonterm{number} @nonterm{formula:text}]]
                                                  @litchar{]}])
