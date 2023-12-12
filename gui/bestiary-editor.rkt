@@ -261,9 +261,18 @@
   (spacer))
 
 (define (number-editor label @n edit)
-  (counter (@~> @n (~>> (or _ "N/A") (format "~a: ~a" label)))
+  (counter (@~> @n (~>> (or _ "-") (format "~a: ~a" label)))
            (thunk (edit add1))
            (thunk (edit sub1))))
+
+(define (optional-number-editor label @n edit)
+  (hpanel
+   (button "-" (thunk (edit sub1)) #:enabled? @n)
+   (text (@~> @n (~>> (or _ "-") (format "~a: ~a" label))))
+   (button "+" (thunk (edit add1)) #:enabled? @n)
+   (checkbox #:label (format "Has ~a" label)
+             #:checked? @n
+             (λ (on?) (edit (const (and on? 0)))))))
 
 (define (list-editor label @xs edit)
   (define (start-edit @current-input @current-button @inputs @buttons)
@@ -309,7 +318,7 @@
 
 (define stats-editor-parts
   `(["Max HP" ,monster-stats-max-hp ,number-editor]
-    ["Move" ,monster-stats-move ,number-editor]
+    ["Move" ,monster-stats-move ,optional-number-editor]
     ["Attack" ,monster-stats-attack ,number-editor]
     ["Bonuses" ,monster-stats-bonuses ,list-editor]
     ["Effects" ,monster-stats-effects ,list-editor]
