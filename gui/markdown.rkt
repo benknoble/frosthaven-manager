@@ -216,6 +216,8 @@
              [stretchable-width w-s?]
              [stretchable-height h-s?]))
       (define editor (new (hide-caret/selection text%)))
+      ((current-text-keymap-initializer)
+       (send editor get-keymap))
       (send canvas set-editor editor)
       (send* editor
              (auto-wrap #t)
