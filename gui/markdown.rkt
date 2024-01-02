@@ -173,11 +173,11 @@
 (define (insert-list-item editor items styles)
   (define marker
     (match (list-type)
-      ['ol (format "~a.	"
+      ['ol (format "~a. "
                    (let ([n (list-number)])
                      (list-number (add1 n))
                      n))]
-      ['ul "•	"]))
+      ['ul "• "]))
   (parameterize ([paragraph-indent (* 20 (list-nesting))])
     (insert-md-items editor (cons marker items) styles #:paragraph? #t)))
 
