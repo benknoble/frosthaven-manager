@@ -211,9 +211,7 @@
       ((current-text-keymap-initializer)
        (send editor get-keymap))
       (send canvas set-editor editor)
-      (send* editor
-             (auto-wrap #t)
-             (hide-caret #t))
+      (send editor auto-wrap #t)
       (draw-markdown editor (peek @content))
       (send* editor
              (scroll-to-position 0)

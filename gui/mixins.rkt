@@ -48,6 +48,7 @@
   ;; not using mixin: after-set-position is a method of text% that is not
   ;; exposed by any interface that text% implements
   (class % (super-new)
+    (send this hide-caret #t)
     (define/augment (after-set-position)
       (send this hide-caret (= (send this get-start-position)
                                (send this get-end-position)))
