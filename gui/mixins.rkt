@@ -5,7 +5,8 @@
 
 (provide make-closing-proc-mixin
          make-on-close-mixin
-         define-close!)
+         define-close!
+         hide-caret/selection)
 
 (require (only-in racket/gui/base top-level-window<%>)
          syntax/parse/define)
@@ -42,3 +43,12 @@
       (syntax-parse stx
         [_:id #'(λ () ((unbox close!-)))]
         [(_) #'((unbox close!-))]))))
+
+(define (hide-caret/selection %)
+  ;; not using mixin: after-set-position is a method of text% that is not
+  ;; exposed by any interface that text% implements
+  (class % (super-new)
+    (define/augment (after-set-position)
+      (send this hide-caret (= (send this get-start-position)
+                               (send this get-end-position)))
+      (inner (void) after-set-position))))

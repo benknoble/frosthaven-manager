@@ -24,3 +24,7 @@ If the mixin @racket[set-close-mixin-id] is applied to a
 @racket[top-level-window<%>] then @racket[close!-id] is a nullary procedure that
 closes it.
 }
+
+@defmixin[hide-caret/selection (text%) (text%)]{
+Augments the text editor to hide the caret but still permit and show selections.
+}

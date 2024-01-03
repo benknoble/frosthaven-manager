@@ -31,7 +31,8 @@
          (only-in markdown
                   parse-markdown
                   current-strict-markdown?)
-         (only-in txexpr attr-ref))
+         (only-in txexpr attr-ref)
+         frosthaven-manager/gui/mixins)
 
 (define (peek v)
   (if (obs? v)
@@ -180,15 +181,6 @@
       ['ul "• "]))
   (parameterize ([paragraph-indent (* 20 (list-nesting))])
     (insert-md-items editor (cons marker items) styles #:paragraph? #t)))
-
-(define (hide-caret/selection %)
-  ;; not using mixin: after-set-position is a method of text% that is not
-  ;; exposed by any interface that text% implements
-  (class % (super-new)
-    (define/augment (after-set-position)
-      (send this hide-caret (= (send this get-start-position)
-                               (send this get-end-position)))
-      (inner (void) after-set-position))))
 
 (define markdown-text%
   (class* object% (view<%>)
