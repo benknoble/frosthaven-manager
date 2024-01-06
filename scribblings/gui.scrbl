@@ -19,6 +19,7 @@ This collection provides modules for operating GUIs.
 @include-section{gui/player-info.scrbl}
 @include-section{gui/render.scrbl}
 @include-section{gui/rewards.scrbl}
+@include-section{gui/rich-text-display.scrbl}
 @include-section{gui/round-prompts.scrbl}
 @include-section{gui/server.scrbl}
 @include-section{gui/stacked-tables.scrbl}
