@@ -71,10 +71,10 @@
   (define (add-sticker)
     (when (< (@! @stickers) max-cards)
       (on-sticker `(add ,deck))))
-  (hpanel (spacer)
-          (counter (@~> @n (~a label _)) add-card subtract-card)
-          (counter (@~> @stickers (~a "+1 Stickers: " _)) add-sticker subtract-sticker)
-          (spacer)))
+  (hpanel
+   ;; TODO: pad labels to organize columns
+   (counter (@~> @n (~a label _)) add-card subtract-card)
+   (counter (@~> @stickers (~a "+1 Stickers: " _)) add-sticker subtract-sticker)))
 
 (define (loot-button @loot-deck
                      @num-loot-cards
