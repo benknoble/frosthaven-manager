@@ -11,6 +11,7 @@
          racket/gui/easy/contract)
 
 (define (counter @label up down)
-  (hpanel (button "-" down)
+  (hpanel #:stretch '(#f #f)
+          (button "-" down)
           (text @label)
           (button "+" up)))
