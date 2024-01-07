@@ -47,6 +47,7 @@
          frosthaven-manager/gui/font
          frosthaven-manager/gui/helpers
          frosthaven-manager/gui/table
+         frosthaven-manager/gui/rich-text-display
 
          frosthaven-manager/defns
          frosthaven-manager/manager
@@ -107,7 +108,8 @@
                                (~a "Swap to ")))
             on-swap)
     (vpanel
-      (text (@~> @monster (~> monster-conditions conditions->string)))
+      (rich-text-display (@~> @monster (~> monster-conditions conditions->string list))
+                         #:min-size '(50 30))
       (button "Edit Conditions" show-conditions))))
 
 (define (monster-group-view @mg @ability-deck @monster-num @env
@@ -261,15 +263,23 @@
                     (monsters))])))
 
 (define (monster-ability-view @ability @mg @env)
-  (vpanel
-   (text (@~> @ability (~> monster-ability-name->text escape-text)))
+  (hpanel
+   (rich-text-display
+    (obs-combine
+     (λ (ability mg env)
+       (list*
+        (monster-ability-name->text ability) newline
+        (append*
+         (for/list ([ability-text (if ability (monster-ability-abilities ability) empty)])
+           (list ((monster-ability-ability->text ability-text) mg env) newline)))))
+     @ability @mg @env)
+    #:min-size '(200 60))
    (observable-view
     @ability
     (λ (ability)
       (apply vpanel
              (for/list ([ability-text (if ability (monster-ability-abilities ability) empty)])
-               (hpanel (ability->text @mg ability-text @env)
-                       (ability->extras @mg @ability ability-text))))))))
+               (ability->extras @mg @ability ability-text)))))))
 
 ;; TODO: should be able to manipulate individual HP (? dialog with counter)
 ;; Takes a non-observable info-db b/c instantiated by a thunk in
@@ -574,9 +584,6 @@
          (for*/list ([monster-name->monster-info (in-hash-values info-db)]
                      [monster-name (in-hash-keys monster-name->monster-info)])
            (string-length monster-name))))
-
-(define (ability->text @mg ability @env)
-  (text (obs-combine (flow (~> (esc (monster-ability-ability->text ability)) escape-text)) @mg @env)))
 
 (define (aoe-button pict)
   (button "AoE" (thunk

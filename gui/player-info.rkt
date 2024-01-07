@@ -29,7 +29,8 @@
          frosthaven-manager/gui/render
          frosthaven-manager/gui/mixins
          frosthaven-manager/gui/font
-         frosthaven-manager/gui/helpers)
+         frosthaven-manager/gui/helpers
+         frosthaven-manager/gui/rich-text-display)
 
 (define (player-input-views @num-players
                             #:on-name [on-name void]
@@ -119,7 +120,8 @@
                (map make-condition-checkbox conditions)))))
   (define conditions-panel
     (vpanel
-      (text (@~> @player (~> player-conditions* conditions->string)))
+      (rich-text-display (@~> @player (~> player-conditions* conditions->string list))
+                         #:min-size '(50 30))
       (button "Edit Conditions" show-conditions)))
   (define add-summon-button
     (button "Summon" (thunk (do-summon add-summon))))
@@ -177,7 +179,8 @@
    (button "💀Kill💀" die)
    (text (escape-text (summon-name s)))
    (counter (summon->hp-text s) add-hp subtract-hp)
-   (text (~> (s) summon-conditions* conditions->string))
+   (rich-text-display (~> (s) summon-conditions* conditions->string list)
+                      #:min-size '(50 30))
    (button "Edit Conditions" edit-conditions)))
 
 (define (do-summon add-summon)

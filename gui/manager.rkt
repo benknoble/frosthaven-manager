@@ -36,7 +36,8 @@
          frosthaven-manager/gui/monsters
          frosthaven-manager/gui/render
          frosthaven-manager/gui/rewards
-         frosthaven-manager/gui/round-prompts)
+         frosthaven-manager/gui/round-prompts
+         frosthaven-manager/gui/rich-text-display)
 
 (define (manager s)
   (define @undo (make-undo s))
@@ -148,7 +149,7 @@
             (cond-view
               [(@> @error-text non-empty-string?)
                (hpanel (text "Error message:" #:color "red")
-                       (input @error-text #:style '(multiple)))]
+                       (rich-text-display (@> @error-text list) #:min-size '(#f 60)))]
               [else (spacer)]))
     (hpanel #:stretch '(#t #f)
             #:alignment '(center center)
