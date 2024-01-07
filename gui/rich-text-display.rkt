@@ -150,6 +150,7 @@
       (send editor lock #f)
       (send editor erase)
       (draw editor content font)
+      (send editor scroll-to-position 0)
       (send editor lock #t))
 
     (define/public (update v what val)
