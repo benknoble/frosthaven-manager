@@ -7,14 +7,17 @@
                       #:on-player (-> num-players/c any))
                      (is-a?/c view<%>))]))
 
-(require racket/gui/easy
+(require (only-in racket/gui normal-control-font)
+         racket/gui/easy
          racket/gui/easy/contract
-         frosthaven-manager/defns)
+         frosthaven-manager/defns
+         frosthaven-manager/gui/font)
 
 (define (start-view @level @num-players #:on-level [on-level void] #:on-player [on-player void])
   (vpanel
     (spacer)
-    (text "Frosthaven Manager")
+    (text "Frosthaven Manager"
+          #:font (copy-font normal-control-font #:size 50))
     (spacer)
     (group
       "Party Information"
