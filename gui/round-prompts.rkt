@@ -32,7 +32,8 @@
      #:key car
      (λ (k @kp)
        (hpanel
-        #:alignment '(center top)
+        #:stretch '(#t #f)
+        #:alignment '(center center)
         (text (@~> @kp (~> cdr prompt->string)))
         (button "X" (thunk (on-remove k (cdr (@! @kp))))))))))
 
