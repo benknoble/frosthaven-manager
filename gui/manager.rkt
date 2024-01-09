@@ -311,6 +311,8 @@
          ;; valid: in a dialog handler
          (hash-update (monster-group-set-name (@! @mg))
                       move-top-draw-to-bottom)))
+  (define (update-max-hp f)
+    (update (flow (monster-group-change-max-HP f (@! @env)))))
   (monster-group-view
     @mg
     @ability-deck
@@ -322,7 +324,8 @@
     #:on-new new
     #:on-select select
     #:on-swap swap
-    #:on-move-ability-card move-ability-card))
+    #:on-move-ability-card move-ability-card
+    #:on-max-hp update-max-hp))
 
 (define ((make-creature-view s) k @e)
   (cond-view

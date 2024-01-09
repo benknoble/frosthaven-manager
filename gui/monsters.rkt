@@ -26,7 +26,8 @@
             #:on-new (-> monster-number/c boolean? any)
             #:on-select (-> (or/c #f monster-number/c) any)
             #:on-swap (-> (or/c 'all monster-number/c) any)
-            #:on-move-ability-card (-> any))
+            #:on-move-ability-card (-> any)
+            #:on-max-hp (-> (-> (or/c 'normal 'elite) natural-number/c number?) any))
            (is-a?/c view<%>))]
     [db-view (-> (obs/c info-db/c) (obs/c ability-db/c) (obs/c (listof monster-group?)) (is-a?/c view<%>))]
     [add-monster-group (->* ((obs/c info-db/c)
@@ -119,7 +120,8 @@
                             #:on-kill [on-kill void]
                             #:on-new [on-new void]
                             #:on-swap [on-swap void]
-                            #:on-move-ability-card [on-move-ability-card void])
+                            #:on-move-ability-card [on-move-ability-card void]
+                            #:on-max-hp [on-max-hp void])
   (define @ability (@> @ability-deck ability-decks-current))
   (define (do-new)
     (define @available-numbers
@@ -167,6 +169,35 @@
        (button "Add" add)
        (button "Remove" remove)
        (button "Cancel" close!)))))
+  (define (bump-max-hp)
+    (define-close! close! closing-mixin)
+    (define/obs @inc #f)
+    (define (increase!)
+      (define inc (@! @inc))
+      (when inc
+        (define env (@! @env))
+        (define true-inc
+          (with-handlers ([exn:fail? (const 0)])
+            ((parse-expr inc) env)))
+        (on-max-hp (λ (_type num) (+ num true-inc)))
+        (for ([n (in-list (map monster-number (@! @monsters)))])
+          (on-hp n (flow (+ true-inc)))))
+      (close!))
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
+     (dialog
+      #:mixin closing-mixin
+      #:title (@~> @mg (~>> monster-group-name escape-text (~a "Increase maximum HP for ")))
+      #:style '()
+      (input ""
+             (match-lambda**
+               [{'input val} (:= @inc val)]
+               [{'return val} (:= @inc val)
+                              (increase!)])
+             #:label "Enter a number or a formula")
+      (hpanel
+       (button "Increase" increase!)
+       (button "Cancel" close!)))))
   (define (name-panel) (text (@~> @mg (~> monster-group-name escape-text)) #:font big-control-font))
   (define (add-monster-button)
     (button "Add Monster" do-new
@@ -182,7 +213,8 @@
             (text (@~> @ability monster-ability-initiative->text))
             (add-monster-button)
             (button "Swap Elite/Normal" (thunk (on-swap 'all)))
-            (button "Mass Conditions" do-mass-condition)))
+            (button "Mass Conditions" do-mass-condition)
+            (button "Increase all maximum HP" bump-max-hp)))
   (define (ability-panel)
     (group
       "Ability"
