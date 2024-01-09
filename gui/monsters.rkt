@@ -223,13 +223,13 @@
                        #:title (@~> @mg (~>> monster-group-name escape-text (~a "More Actions for ")))
                        (button "Swap Elite/Normal" (thunk (on-swap 'all)))
                        (button "Mass Conditions" do-mass-condition)
+                       (ability-deck-preview @ability-deck @mg @env #:on-move on-move-ability-card)
                        (button "Increase all maximum HP" bump-max-hp)))))))
   (define (ability-panel)
     (group
       "Ability"
       #:min-size (list 200 #f)
-      (hpanel (monster-ability-view @ability @mg @env)
-              (ability-deck-preview @ability-deck @mg @env #:on-move on-move-ability-card))))
+      (monster-ability-view @ability @mg @env)))
   (define (stats-panel)
     (define (empty-stats label f)
       (cond-view
