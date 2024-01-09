@@ -52,6 +52,17 @@ button {
   padding: 8px;
 }
 
+.bottom-info {
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  border-width: 1px;
+  border-style: solid;
+  border-color: lightgrey;
+  padding: 4px;
+  font-size: 50%;
+}
+
 /* Small devices (portrait tablets and large phones) */
 @media only screen and (min-width: 600px) {
 
@@ -98,6 +109,10 @@ button {
     color: #282a36;
   }
   #elements {
+    background-color: #282a36;
+    border-color: #6272a4;
+  }
+  .bottom-info {
     background-color: #282a36;
     border-color: #6272a4;
   }

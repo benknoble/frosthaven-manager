@@ -229,7 +229,6 @@
          ,@common-heads)
        (body
          (h1 "Frosthaven Manager")
-         ,@(top-info-body embed/url)
          ,@(elements-body embed/url)
          ,@(creatures-body embed/url)
          ,@(bottom-info-body embed/url)
@@ -276,34 +275,35 @@
               ,@(for/list ([loot-text (map (format-loot-card num-players) (player-loot p))])
                   `(li ,loot-text))))))))))
 
-(define (top-info-body embed/url)
-  `((p "Round "
-       (span ([id "round"])
-             ,(number->string (@! (state-@round (s))))))))
-
 (define (bottom-info-body embed/url)
   (define level-info (@! (@> (state-@level (s)) get-level-info)))
   (define num-players (@! (state-@num-players (s))))
-  `((p "Trap: "
+  `((p ([class "bottom-info"])
+       "Round "
+       (span ([id "round"])
+             ,(number->string (@! (state-@round (s)))))
+       ". "
+       "Trap: "
        (span ([id "trap"])
              ,(number->string (level-info-trap-damage level-info)))
-       (br)
+       ". "
        "Hazardous Terrain: "
        (span ([id "hazardous-terrain"])
              ,(number->string (level-info-hazardous-terrain level-info)))
-       (br)
+       ". "
        "Gold: "
        (span ([id "gold"])
              ,(number->string (level-info-gold level-info)))
-       (br)
+       ". "
        "Bonus XP: "
        (span ([id "xp"])
              ,(number->string (level-info-exp level-info)))
-       (br)
+       ". "
        "Inspiration: "
        (span ([id "inspiration"])
-             ,(number->string (inspiration-reward num-players))))
-    (a ([href "/rewards"]) "Rewards")))
+             ,(number->string (inspiration-reward num-players)))
+       ". "
+       (a ([href "/rewards"]) "Rewards."))))
 
 (define (elements-body embed/url)
   `((h2 "Elements")
