@@ -67,7 +67,8 @@
   [monster-group-first-monster (-> monster-group? (or/c #f monster-number/c))]
   [monster->hp-text (-> monster? monster-stats? env/c string?)]
   [swap-monster-group-elites (-> monster-group? monster-group?)]
-  [swap-monster-elite (-> monster? monster?)]))
+  [swap-monster-elite (-> monster? monster?)]
+  [monster-group-change-max-HP (-> monster-group? (-> (or/c 'normal 'elite) natural-number/c number?) env/c monster-group?)]))
 
 (require
  racket/serialize
@@ -395,3 +396,14 @@
 (define (swap-monster-elite m)
   (struct-copy monster m
                [elite? (not (monster-elite? m))]))
+
+(define (monster-group-change-max-HP mg f env)
+  (define (update-stats stats type)
+    (define current-max (monster-stats-max-hp* stats env))
+    (define new-max (f type current-max))
+    (if (positive? new-max)
+      (struct-copy monster-stats stats [max-hp new-max])
+      stats))
+  (struct-copy monster-group mg
+               [normal-stats (update-stats (monster-group-normal-stats mg) 'normal)]
+               [elite-stats (update-stats (monster-group-elite-stats mg) 'elite)]))

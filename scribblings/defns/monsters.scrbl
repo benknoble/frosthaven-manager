@@ -224,3 +224,9 @@ The same monster group, but with all elite monsters normal and vice-versa.
          monster?]{
 The same monster, but normal instead of elite and vice-versa.
 }
+
+@defproc[(monster-group-change-max-HP [mg monster-group?] [f (-> (or/c 'normal 'elite) natural-number/c number?)] [env env/c])
+         monster-group?]{
+Updates a @racket[monster-group]'s maximum HP value in all statistics by
+applying a procedure.
+}
