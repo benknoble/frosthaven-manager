@@ -212,9 +212,15 @@
             (name-panel)
             (text (@~> @ability monster-ability-initiative->text))
             (add-monster-button)
-            (button "Swap Elite/Normal" (thunk (on-swap 'all)))
-            (button "Mass Conditions" do-mass-condition)
-            (button "Increase all maximum HP" bump-max-hp)))
+            (button "More Actions…"
+                    (thunk
+                     ;; not setting current renderer, nor using an eventspace: dialog
+                     (render
+                      (dialog
+                       #:title (@~> @mg (~>> monster-group-name escape-text (~a "More Actions for ")))
+                       (button "Swap Elite/Normal" (thunk (on-swap 'all)))
+                       (button "Mass Conditions" do-mass-condition)
+                       (button "Increase all maximum HP" bump-max-hp)))))))
   (define (ability-panel)
     (group
       "Ability"
