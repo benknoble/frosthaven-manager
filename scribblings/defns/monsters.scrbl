@@ -142,7 +142,7 @@ Populates the resulting @racket[monster] based on the statistics from
                                                  (unique-with/c car any/c))]
                              [env env/c])
          monster-group?]{
-Creates a @racket[monter-group] at level @racket[level] based on the statistics
+Creates a @racket[monster-group] at level @racket[level] based on the statistics
 from @racket[info].
 
 The @racket[num+elite?s] parameter provides a mapping from (unique) monster
