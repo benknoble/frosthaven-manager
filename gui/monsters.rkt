@@ -308,11 +308,13 @@
    (rich-text-display
     (obs-combine
      (λ (ability mg env)
-       (list*
-        (monster-ability-name->text ability) newline
-        (append*
-         (for/list ([ability-text (if ability (monster-ability-abilities ability) empty)])
-           (list ((monster-ability-ability->text ability-text) mg env) newline)))))
+       (if ability
+         (list*
+          (monster-ability-name->text ability) " (" (monster-ability-initiative->text ability) ")" newline
+          (append*
+           (for/list ([ability-text (if ability (monster-ability-abilities ability) empty)])
+             (list ((monster-ability-ability->text ability-text) mg env) newline))))
+         (list "???")))
      @ability @mg @env)
     #:min-size '(200 60))
    (observable-view
