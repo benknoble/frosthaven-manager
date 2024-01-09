@@ -162,6 +162,7 @@
     (define/obs @condition (first conditions))
     (render
      (dialog
+      #:min-size '(400 #f)
       #:mixin closing-mixin
       #:title (@~> @mg (~>> monster-group-name escape-text (~a "Mass Assign Conditions for ")))
       (choice conditions (λ:= @condition) #:choice->label ~a #:selection @condition)
@@ -186,6 +187,7 @@
     ;; not setting current renderer, nor using an eventspace: dialog
     (render
      (dialog
+      #:min-size '(400 #f)
       #:mixin closing-mixin
       #:title (@~> @mg (~>> monster-group-name escape-text (~a "Increase maximum HP for ")))
       #:style '()
@@ -217,6 +219,7 @@
                      ;; not setting current renderer, nor using an eventspace: dialog
                      (render
                       (dialog
+                       #:min-size '(400 #f)
                        #:title (@~> @mg (~>> monster-group-name escape-text (~a "More Actions for ")))
                        (button "Swap Elite/Normal" (thunk (on-swap 'all)))
                        (button "Mass Conditions" do-mass-condition)
