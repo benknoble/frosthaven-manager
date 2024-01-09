@@ -311,11 +311,12 @@
        (if ability
          (list*
           (monster-ability-name->text ability) " (" (monster-ability-initiative->text ability) ")" newline
-          (dropf-right
-           (append*
-            (for/list ([ability-text (if ability (monster-ability-abilities ability) empty)])
-              (list ((monster-ability-ability->text ability-text) mg env) newline)))
-            newline?))
+          (~> (ability)
+              (if _ monster-ability-abilities '())
+              (sep (-< (~> (-< monster-ability-ability->text (gen mg) (gen env)) apply)
+                       (gen newline)))
+              collect
+              (dropf-right newline?)))
          (list "???")))
      @ability @mg @env)
     #:min-size '(200 60))
