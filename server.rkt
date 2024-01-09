@@ -183,7 +183,9 @@
        #:dispatch (sequencer:make
                    (filter:make #rx"^/static/" static-dispatcher)
                    (dispatch/servlet app #:manager manager))
-       #:port 0
+       #:port (if (file-exists? ".frosthaven-manager-port")
+                (file->value ".frosthaven-manager-port")
+                0)
        #:confirmation-channel port-ch)))
   (match (async-channel-get port-ch)
     [(? port-number? port) (values (~a "http://" (best-interface-ip-address) ":" port) stop)]
