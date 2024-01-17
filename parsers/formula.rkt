@@ -52,7 +52,7 @@
 
 (define product/p
   (do [p <- term/p] skip-ws
-      [ps <- (many/p (list/p (or/p (string/p "*") (string/p "/")) term/p #:sep skip-ws))] skip-ws
+      [ps <- (many/p (list/p (or/p (string/p "*") (string/p "/")) term/p #:sep skip-ws) #:sep skip-ws)] skip-ws
       (pure
         (for/fold ([res p])
                   ([op-p (in-list ps)])
@@ -79,4 +79,7 @@
   (test-case "parse-expr"
     (check-equal? ((parse-expr "5-3-1") (hash)) 1)
     (check-equal? ((parse-expr "30/15/5") (hash)) 2/5)
-    (check-equal? ((parse-expr "5*6-2") (hash)) 28)))
+    (check-equal? ((parse-expr "5*6-2") (hash)) 28)
+    (check-equal? ((parse-expr "5 + 3 - 1") (hash)) 7)
+    (check-equal? ((parse-expr "down(4 * 3 / 2)") (hash)) 6)
+    (check-equal? ((parse-expr "4 * 3 / 2") (hash)) 6)))
