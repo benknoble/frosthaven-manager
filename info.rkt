@@ -20,7 +20,7 @@
                "gui-lib"
                "htdp-lib"
                "pict-lib"
-               ("qi-lib" #:version "3.0")
+               ("qi-lib" #:version "4.0")
                ("gui-easy-lib" #:version "0.9.1")
                "rebellion"
                "base"))
@@ -29,7 +29,7 @@
                      "gui-doc"
                      "gui-easy"
                      "megaparsack-doc"
-                     ("qi-doc" #:version "3.0")
+                     ("qi-doc" #:version "4.0")
                      "rackunit-lib"
                      "scribble-lib"
                      "racket-doc"))
