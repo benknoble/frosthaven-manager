@@ -15,6 +15,7 @@ and compelling reason.
 @include-section{enum-helpers.scrbl}
 @include-section{manager.scrbl}
 @include-section{gui.scrbl}
+@include-section{files.scrbl}
 @include-section{bestiary.scrbl}
 @include-section{monster-db.scrbl}
 @include-section{parsers.scrbl}
