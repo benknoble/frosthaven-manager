@@ -107,3 +107,8 @@ Decks of loot cards from which you draw to make the loot deck.
 Current values are the standard loot cards. Modifications via stickers are not
 yet supported.
 }
+
+@defproc[(apply-sticker [card (and/c loot-card? (not/c random-item?))])
+         loot-card?]{
+Returns @racket[card] with amounts increased by @racket[1].
+}

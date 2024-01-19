@@ -21,7 +21,8 @@
   [material-decks (hash/c material-kind? (apply list/c (make-list max-material-cards material?)))]
   [herb-decks (hash/c herb-kind? (apply list/c (make-list max-herb-cards herb?)))]
   [material-kinds (listof material-kind?)]
-  [herb-kinds (listof herb-kind?)]))
+  [herb-kinds (listof herb-kind?)]
+  [apply-sticker (-> (and/c loot-card? (not/c random-item?)) loot-card?)]))
 
 (require
  racket/serialize
@@ -103,3 +104,9 @@
 (define herb-decks
   (for/hash ([h (in-list herb-kinds)])
     (values h (build-list max-herb-cards (thunk* (herb h 1))))))
+
+(define (apply-sticker card)
+  (match card
+    [(money amount) (money (add1 amount))]
+    [(material name amount) (material name (map add1 amount))]
+    [(herb name amount) (herb name (add1 amount))]))

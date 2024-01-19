@@ -100,11 +100,7 @@
           [(>= stickers (length deck)) (values deck empty)]
           [else (values empty deck)]))
       (define stickered
-        (for/list ([card (in-list to-be-stickered)])
-          (match card
-            [(money amount) (money (add1 amount))]
-            [(material name amount) (material name (map add1 amount))]
-            [(herb name amount) (herb name (add1 amount))])))
+        (map apply-sticker to-be-stickered))
       (take (shuffle (append stickered unstickered)) count)))))
 
 (define (build-loot-deck! s)
