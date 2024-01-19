@@ -54,8 +54,7 @@
     (define loot-deck (build-loot-deck (hash money-deck 3
                                              (hash-ref material-decks lumber) 2
                                              (hash-ref material-decks hide) 2
-                                             (hash-ref herb-decks axenut) 2)
-                                       (hash)))
+                                             (hash-ref herb-decks axenut) 2)))
     (define n-players 3)
     (define loot-text (list->vector (map vector (map (format-loot-card n-players) loot-deck))))
     (define-flow reveal (~> (esc (format-loot-card n-players)) vector))

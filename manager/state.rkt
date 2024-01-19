@@ -29,7 +29,6 @@
                    [@info-db (obs/c info-db/c)]
                    [@ability-db (obs/c ability-db/c)]
                    [@ability-decks (obs/c (hash/c string? ability-decks?))]
-                   [@stickers-per-loot-deck (obs/c (hash/c (listof loot-card?) natural-number/c))]
                    [@prompts (obs/c (listof prompt/c))])]
     [make-state
       (->* ()
@@ -53,7 +52,6 @@
             (maybe-obs/c info-db/c)
             (maybe-obs/c ability-db/c)
             (maybe-obs/c (hash/c string? ability-decks?))
-            (maybe-obs/c (hash/c (listof loot-card?) natural-number/c))
             (maybe-obs/c (listof prompt/c)))
            state?)]
     [state-@env (-> state? (obs/c env/c))]
@@ -130,7 +128,6 @@
          @info-db
          @ability-db
          @ability-decks
-         @stickers-per-loot-deck
          @prompts]
         #:transparent ;; for struct->vector
         #:property prop:serializable
@@ -160,7 +157,6 @@
                     [@info-db (@ (hash))]
                     [@ability-db (@ (hash))]
                     [@ability-decks (@ (hash))]
-                    [@stickers-per-loot-deck (@ (hash))]
                     [@prompts (@ empty)])
   (state (@ @mode)
          (@ @level)
@@ -182,7 +178,6 @@
          (@ @info-db)
          (@ @ability-db)
          (@ @ability-decks)
-         (@ @stickers-per-loot-deck)
          (@ @prompts)))
 
 (define (state-@env s)
@@ -276,8 +271,6 @@
       (@! (state-@ability-db from)))
   (:=     (state-@ability-decks to)
       (@! (state-@ability-decks from)))
-  (:=     (state-@stickers-per-loot-deck to)
-      (@! (state-@stickers-per-loot-deck from)))
   (:=     (state-@prompts to)
       (@! (state-@prompts from))))
 

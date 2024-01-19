@@ -11,14 +11,11 @@
 
 @defproc[(loot-picker
            [|@|cards-per-deck (obs/c (hash/c (listof loot-card?) natural-number/c))]
-           [|@|stickers-per-deck (obs/c (hash/c (listof loot-card?) natural-number/c))]
-           [#:on-card on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any) void]
-           [#:on-sticker on-sticker (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any) void])
+           [#:on-card on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any) void])
          (is-a?/c view<%>)]{
 A GUI view to build a loot deck by including certain loot cards. The callback
 @racket[on-card] is invoked with an "event" that specifies a deck of cards from
-which one card should be added or removed. Similarly for @racket[on-sticker] to
-add stickers to decks.
+which one card should be added or removed.
 }
 
 @defproc[(loot-button

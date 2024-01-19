@@ -4,11 +4,7 @@
   (contract-out
     [update-loot-deck-and-num-loot-cards
       (-> state? (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any))]
-    [update-stickers-per-deck (-> state?
-                                  (-> (list/c (or/c 'add 'remove) (listof loot-card?))
-                                      any))]
     [build-loot-deck (-> (hash/c (listof loot-card?) natural-number/c)
-                         (hash/c (listof loot-card?) natural-number/c)
                          (listof loot-card?))]
     [build-loot-deck! (-> state? any)]
     [give-player-loot (-> state? (-> any/c any))]
@@ -84,28 +80,14 @@
       [`(remove ,deck) (hash-update cards-per-loot-deck deck sub1 0)]))
   (<@ @cards-per-loot-deck update))
 
-(define (update-stickers-per-deck s)
-  ;; Same representation, so reuse implementation (for now)
-  (loot-picker-updater (state-@stickers-per-loot-deck s)))
-
-(define (build-loot-deck cards-per-loot-deck stickers-per-loot-deck)
+(define (build-loot-deck cards-per-loot-deck)
   (shuffle
    (flatten
     (for/list ([(deck count) (in-hash cards-per-loot-deck)])
-      ;; NOTE assume each card only gets one sticker…
-      (define stickers (hash-ref stickers-per-loot-deck deck 0))
-      (define-values (to-be-stickered unstickered)
-        (cond
-          [(<= 0 stickers (length deck)) (split-at deck stickers)]
-          [(>= stickers (length deck)) (values deck empty)]
-          [else (values empty deck)]))
-      (define stickered
-        (map apply-sticker to-be-stickered))
-      (take (shuffle (append stickered unstickered)) count)))))
+      (take (shuffle deck) count)))))
 
 (define (build-loot-deck! s)
-  (:= (state-@loot-deck s) (build-loot-deck (@! (state-@cards-per-deck s))
-                                            (@! (state-@stickers-per-loot-deck s)))))
+  (:= (state-@loot-deck s) (build-loot-deck (@! (state-@cards-per-deck s)))))
 
 (define (player->rewards p num-players level)
   (define gold-factor (level-info-gold (get-level-info level)))

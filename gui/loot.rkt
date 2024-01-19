@@ -2,10 +2,8 @@
 
 (provide
   (contract-out
-    [loot-picker (->* ((obs/c (hash/c (listof loot-card?) natural-number/c))
-                       (obs/c (hash/c (listof loot-card?) natural-number/c)))
-                      (#:on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any)
-                       #:on-sticker (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any))
+    [loot-picker (->* ((obs/c (hash/c (listof loot-card?) natural-number/c)))
+                      (#:on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any))
                       (is-a?/c view<%>))]
     [loot-button
       (->* ((obs/c (listof loot-card?))
@@ -29,11 +27,8 @@
          frosthaven-manager/gui/render
          frosthaven-manager/gui/table)
 
-(define (loot-picker @cards-per-deck
-                     @stickers-per-deck
-                     #:on-card [on-card void]
-                     #:on-sticker [on-sticker void])
-  (define cards-picker (make-cards-picker! @cards-per-deck @stickers-per-deck #:on-card on-card #:on-sticker on-sticker))
+(define (loot-picker @cards-per-deck #:on-card [on-card void])
+  (define cards-picker (make-cards-picker! @cards-per-deck #:on-card on-card))
   (define money-view (cards-picker "Money Cards: " max-money-cards money-deck))
   (define material-views
     (for/list ([m (in-list material-kinds)])
@@ -55,26 +50,16 @@
     (apply group "Materials" material-views)
     (apply group "Herbs" herb-views)))
 
-(define ((make-cards-picker! @cards-per-deck @stickers-per-deck #:on-card on-card #:on-sticker on-sticker)
+(define ((make-cards-picker! @cards-per-deck #:on-card on-card)
          label max-cards deck)
   (define @n (@~> @cards-per-deck (hash-ref deck 0)))
-  (define @stickers (@~> @stickers-per-deck (hash-ref deck 0)))
   (define (subtract-card)
     (when (> (@! @n) 0)
       (on-card `(remove ,deck))))
-  (define (subtract-sticker)
-    (when (> (@! @stickers) 0)
-      (on-sticker `(remove ,deck))))
   (define (add-card)
     (when (< (@! @n) max-cards)
       (on-card `(add ,deck))))
-  (define (add-sticker)
-    (when (< (@! @stickers) max-cards)
-      (on-sticker `(add ,deck))))
-  (hpanel
-   ;; TODO: pad labels to organize columns
-   (counter (@~> @n (~a label _)) add-card subtract-card)
-   (counter (@~> @stickers (~a "+1 Stickers: " _)) add-sticker subtract-sticker)))
+  (hpanel (spacer) (counter (@~> @n (~a label _)) add-card subtract-card) (spacer)))
 
 (define (loot-button @loot-deck
                      @num-loot-cards
@@ -152,7 +137,7 @@
     [{(or (material kind _) (herb kind _))} (~a kind)]
     [{(== random-item)} "Random Item"])
   (define (table-with-actual-loot-deck)
-    (define @deck (obs-combine build-loot-deck @cards-per-loot-deck (state-@stickers-per-loot-deck s)))
+    (define @deck (@> @cards-per-loot-deck build-loot-deck))
     ;; not setting current renderer, nor using an eventspace: dialog
     (vpanel
       (hpanel (text "Duplicates?")
@@ -165,8 +150,7 @@
   (define/obs @cards-per-loot-deck (state-@cards-per-deck s))
   (void (render/eventspace
           ;; no separate eventspace: block main until this window closed
-          (window (hpanel (loot-picker #:on-card (update-loot-deck-and-num-loot-cards s)
-                                       #:on-sticker (update-stickers-per-deck s))
+          (window (hpanel (loot-picker #:on-card (update-loot-deck-and-num-loot-cards s))
                           (table '("Deck" "Cards")
                                  (@~> @cards-per-loot-deck (~> hash->list list->vector))
                                  #:entry->row count+decks->row
