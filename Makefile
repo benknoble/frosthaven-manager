@@ -6,7 +6,8 @@ PKG = frosthaven-manager
 COLLECT = frosthaven-manager
 LANGS = ++lang frosthaven-manager/bestiary \
         ++lang frosthaven-manager/foes \
-        ++lang frosthaven-manager/aoe
+        ++lang frosthaven-manager/aoe \
+        ++lang frosthaven-manager/loot-cards
 
 EXES = FrosthavenManager.app/Contents/MacOS/FrosthavenManager \
        FrosthavenManager \
