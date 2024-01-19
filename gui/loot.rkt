@@ -140,7 +140,7 @@
                 (spacer)))))))))
 
 (define (preview-rows loot-deck num-players revealed)
-  (define-flow reveal (~> (format-loot-card num-players) vector))
+  (define-flow reveal (~> (esc (format-loot-card num-players)) vector))
   (define-flow hide-loot (gen (vector "?")))
   (make-preview-rows loot-deck revealed #:reveal reveal #:hide hide-loot))
 
