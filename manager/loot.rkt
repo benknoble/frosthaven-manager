@@ -91,7 +91,7 @@
 (define (build-loot-deck! s)
   (:= (state-@loot-deck s)
       (build-loot-deck (@! (state-@type->number-of-cards s))
-                       standard-loot-deck)))
+                       (@! (state-@type->deck s)))))
 
 (define (player->rewards p num-players level)
   (define gold-factor (level-info-gold (get-level-info level)))

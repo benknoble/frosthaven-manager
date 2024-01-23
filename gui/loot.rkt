@@ -2,8 +2,10 @@
 
 (provide
   (contract-out
-    [loot-picker (->* ((obs/c (hash/c loot-type/c natural-number/c)))
-                      (#:on-card (-> (list/c (or/c 'add 'remove) loot-type/c) any))
+    [loot-picker (->* ((obs/c (hash/c loot-type/c natural-number/c))
+                       (obs/c (hash/c loot-type/c (listof loot-card?))))
+                      (#:on-card (-> (list/c (or/c 'add 'remove) loot-type/c) any)
+                       #:on-deck (-> (hash/c loot-type/c (listof loot-card?)) any))
                       (is-a?/c view<%>))]
     [loot-button
       (->* ((obs/c (listof loot-card?))
@@ -22,12 +24,22 @@
          frosthaven-manager/observable-operator
          racket/gui/easy/contract
          frosthaven-manager/defns
+         frosthaven-manager/files
          frosthaven-manager/gui/mixins
          frosthaven-manager/gui/counter
          frosthaven-manager/gui/render
-         frosthaven-manager/gui/table)
+         frosthaven-manager/gui/table
+         frosthaven-manager/gui/rich-text-display
+         frosthaven-manager/qi)
 
-(define (loot-picker @type->cards #:on-card [on-card void])
+(define (loot-picker @type->cards @type->deck
+                     #:on-card [on-card void]
+                     #:on-deck [on-deck void])
+  (hpanel
+   (loot-cards-loader @type->deck #:on-deck on-deck)
+   (base-loot-picker @type->cards #:on-card on-card)))
+
+(define (base-loot-picker @type->cards #:on-card [on-card void])
   (define cards-picker (make-cards-picker! @type->cards #:on-card on-card))
   (define money-view (cards-picker "Money Cards: " max-money-cards 'money))
   (define material-views
@@ -44,6 +56,7 @@
                 [#f (on-card `(remove random-item))])))
   (vpanel
     #:stretch '(#f #f)
+    (text "Loot Cards in the Loot Deck")
     random-item-view
     money-view
     (apply group "Materials" material-views)
@@ -59,6 +72,61 @@
     (when (< (@! @n) max-cards)
       (on-card `(add ,type))))
   (hpanel (spacer) (counter (@~> @n (~a label _)) add-card subtract-card) (spacer)))
+
+(define (loot-cards-loader @type->deck #:on-deck [on-deck void])
+  (define/obs @error-text "")
+  (define (call-with-error-text th)
+    (:= @error-text "")
+    (with-handlers ([exn:fail? (λ (e) (:= @error-text (exn-message e)))])
+      (th)))
+  (define-syntax-rule (with-error-text e ...)
+    (call-with-error-text (thunk e ...)))
+  (define (load-standard-cards)
+    (:= @error-text "")
+    (on-deck standard-loot-deck))
+  (define (load-cards)
+    (with-error-text
+     (define file
+       (get-file/filter "Loot Cards File" '("Loot Cards" "*.rkt")))
+     (when file
+       (define loot-cards (dynamic-require file 'loot-cards))
+       (on-deck loot-cards))))
+  (define (make-table-entries type->deck)
+    (for*/vector ([(type deck) (in-hash type->deck)]
+                  [card (in-list deck)])
+      (cons type card)))
+  (define (make-columns type+card)
+    (match-define (cons _type card) type+card)
+    (for/vector ([num-players '(2 3 4)])
+      ((format-loot-card num-players) card)))
+  (vpanel
+   (text "Useable Loot Cards")
+   (table
+    '("2 players" "3 players" "4 players")
+    (@> @type->deck make-table-entries)
+    (λ (action entries selection)
+      (case action
+        [(dclick)
+         (when (and selection (exact-nonnegative-integer? selection))
+           (match-define (cons type card) (vector-ref entries selection))
+           (define new-card (apply-sticker card))
+           (on-deck
+            (~> (entries) vector->list
+                (list-set selection (cons type new-card))
+                (group-by car _)
+                (list~>hash #:->key (~> car car)
+                            #:->value (map cdr _)))))]))
+    #:entry->row make-columns)
+   (vpanel
+    #:stretch '(#f #f)
+    (hpanel (button "Use Standard Loot Cards" load-standard-cards)
+            (button "Load Loot Cards" load-cards))
+    (cond-view
+      [(@> @error-text non-empty-string?)
+       (hpanel (text "Error Message:" #:color "red")
+               (rich-text-display (@~> @error-text (~> (string-split "\n") (add-between newline)))
+                                       #:min-size '(#f 60)))]
+      [else (spacer)]))))
 
 (define (loot-button @loot-deck
                      @num-loot-cards
@@ -132,7 +200,7 @@
   (require frosthaven-manager/manager)
   (define s (make-state))
   (define (table-with-actual-loot-deck)
-    (define @deck (@~> @type->cards (build-loot-deck standard-loot-deck)))
+    (define @deck (obs-combine build-loot-deck @type->cards @type->deck))
     ;; not setting current renderer, nor using an eventspace: dialog
     (vpanel
       (hpanel (text "Duplicates?")
@@ -143,9 +211,13 @@
              #:min-size '(250 300))))
   (define-flow count+decks->row (~> (-< car cdr) (>< ~a) vector))
   (define @type->cards (state-@type->number-of-cards s))
+  (define @type->deck (state-@type->deck s))
   (void (render/eventspace
           ;; no separate eventspace: block main until this window closed
-          (window (hpanel (loot-picker @type->cards #:on-card (update-loot-deck-and-num-loot-cards s))
+          (window (hpanel (loot-picker @type->cards
+                                       @type->deck
+                                       #:on-card (update-loot-deck-and-num-loot-cards s)
+                                       #:on-deck (λ:= (state-@type->deck s)))
                           (table '("Deck" "Cards")
                                  (@~> @type->cards (~> hash->list list->vector))
                                  #:entry->row count+decks->row

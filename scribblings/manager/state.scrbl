@@ -63,7 +63,8 @@ True iff @racket[c] holds a @racket[monster-group*].
               [|@|info-db (obs/c info-db/c)]
               [|@|ability-db (obs/c ability-db/c)]
               [|@|ability-decks (obs/c (hash/c string? ability-decks?))]
-              [|@|prompts (obs/c (listof prompt/c))])]{
+              [|@|prompts (obs/c (listof prompt/c))]
+              [|@|type->deck (maybe-obs/c (hash/c loot-type/c (listof loot-card?)))])]{
 All of the "global" manager state.
 }
 
@@ -88,7 +89,8 @@ All of the "global" manager state.
            [|@|info-db (maybe-obs/c info-db/c) (|@| (hash))]
            [|@|ability-db (maybe-obs/c ability-db/c) (|@| (hash))]
            [|@|ability-decks (maybe-obs/c (hash/c string? ability-decks?)) (|@| (hash))]
-           [|@|prompts (maybe-obs/c (listof prompt/c)) (|@| empty)])
+           [|@|prompts (maybe-obs/c (listof prompt/c)) (|@| empty)]
+           [|@|type->deck (maybe-obs/c (hash/c loot-type/c (listof loot-card?))) (|@| standard-loot-deck)])
          state?]{
 Create an initial state.
 }

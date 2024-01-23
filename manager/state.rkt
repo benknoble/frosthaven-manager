@@ -29,7 +29,8 @@
                    [@info-db (obs/c info-db/c)]
                    [@ability-db (obs/c ability-db/c)]
                    [@ability-decks (obs/c (hash/c string? ability-decks?))]
-                   [@prompts (obs/c (listof prompt/c))])]
+                   [@prompts (obs/c (listof prompt/c))]
+                   [@type->deck (obs/c (hash/c loot-type/c (listof loot-card?)))])]
     [make-state
       (->* ()
            ((maybe-obs/c symbol?)
@@ -52,7 +53,8 @@
             (maybe-obs/c info-db/c)
             (maybe-obs/c ability-db/c)
             (maybe-obs/c (hash/c string? ability-decks?))
-            (maybe-obs/c (listof prompt/c)))
+            (maybe-obs/c (listof prompt/c))
+            (maybe-obs/c (hash/c loot-type/c (listof loot-card?))))
            state?)]
     [state-@env (-> state? (obs/c env/c))]
     [serialize-state (-> state? output-port? void?)]
@@ -128,7 +130,8 @@
          @info-db
          @ability-db
          @ability-decks
-         @prompts]
+         @prompts
+         @type->deck]
         #:transparent ;; for struct->vector
         #:property prop:serializable
         (make-serialize-info
@@ -157,7 +160,8 @@
                     [@info-db (@ (hash))]
                     [@ability-db (@ (hash))]
                     [@ability-decks (@ (hash))]
-                    [@prompts (@ empty)])
+                    [@prompts (@ empty)]
+                    [@type->deck (@ standard-loot-deck)])
   (state (@ @mode)
          (@ @level)
          (@ @num-players)
@@ -187,7 +191,8 @@
          (@ @info-db)
          (@ @ability-db)
          (@ @ability-decks)
-         (@ @prompts)))
+         (@ @prompts)
+         (@ @type->deck)))
 
 (define (state-@env s)
   (obs-combine (λ (c l) (hash "C" c "L" l))
@@ -281,7 +286,9 @@
   (:=     (state-@ability-decks to)
       (@! (state-@ability-decks from)))
   (:=     (state-@prompts to)
-      (@! (state-@prompts from))))
+      (@! (state-@prompts from)))
+  (:=     (state-@type->deck to)
+      (@! (state-@type->deck from))))
 
 ;;; UNDO
 (define (make-undo s)

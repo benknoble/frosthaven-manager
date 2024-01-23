@@ -103,7 +103,10 @@
 
 (define (build-loot-deck-view s)
   (vpanel
-    (loot-picker (state-@type->number-of-cards s) #:on-card (update-loot-deck-and-num-loot-cards s))
+    (loot-picker (state-@type->number-of-cards s)
+                 (state-@type->deck s)
+                 #:on-card (update-loot-deck-and-num-loot-cards s)
+                 #:on-deck (λ:= (state-@type->deck s)))
     (spacer)
     (hpanel #:stretch '(#t #f)
             #:alignment '(center center)
