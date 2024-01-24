@@ -823,7 +823,7 @@
   (do-monster-group/mgid mgid (monster-group-remove mn) (flow (~> 2> monster-group-first-monster))))
 
 (define/monster decrement-monster-hp (_r => [mgid mn])
-  (do-monster-group/n mgid mn (flow (switch [(not monster-dead?) (monster-update-hp sub1)]))))
+  (do-monster-group/n mgid mn (flow (switch [(not monster-dead?) (esc (monster-update-hp sub1))]))))
 
 (define/monster increment-monster-hp (_r => [mgid mn])
   (define inc-hp (monster-update-hp add1))

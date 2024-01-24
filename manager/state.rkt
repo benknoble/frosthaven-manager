@@ -374,13 +374,36 @@
         [else +inf.0])))
 
 (define (monster-group*-initiative ads)
-  (flow (~> monster-group*-mg (monster-group-initiative ads))))
+  (flow (~> monster-group*-mg (esc (monster-group-initiative ads)))))
 
 (define (creature-initiative ads)
   (flow (~> creature-v
             (switch
               [player? player-initiative]
-              [monster-group*? (monster-group*-initiative ads)]))))
+              [monster-group*? (esc (monster-group*-initiative ads))]))))
+
+(module+ test
+  (require frosthaven-manager/testfiles/data)
+  (test-case
+    "Initiative"
+    (define s (make-sample-state))
+    (define (get-creature id)
+      (findf (flow (~> creature-id (= id)))
+             (@! (state-@creatures s))))
+    (let ([ads (@! (state-@ability-decks s))])
+      (check-equal? ((creature-initiative ads) (get-creature jack)) 0)
+      (check-equal? ((creature-initiative ads) (get-creature frigg)) 67)
+      (check-equal? ((creature-initiative ads) (get-creature archers)) +inf.0))
+    (<@ (state-@ability-decks s) (update-ability-decks ability-decks-draw-next))
+    (let ([ads (@! (state-@ability-decks s))])
+      (define expected
+        (~>> (archers)
+             get-creature creature-v monster-group*-mg
+             monster-group-set-name
+             (hash-ref ads)
+             ability-decks-current
+             monster-ability-initiative))
+      (check-equal? ((creature-initiative ads) (get-creature archers)) expected))))
 
 ;; (-> mg (-> creature bool))
 (define-flow creature-is-mg~?

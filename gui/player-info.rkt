@@ -191,9 +191,9 @@
    (dialog
     #:title "Summon"
     #:mixin (flow (~> closing-mixin
-                      (make-on-close-mixin
-                       (thunk
-                        (add-summon (@! @name) (@! @hp))))))
+                      (esc (make-on-close-mixin
+                            (thunk
+                             (add-summon (@! @name) (@! @hp)))))))
     (hpanel (input @name (match-lambda**
                            [{'input s} (:= @name s)]
                            [{'return s} (:= @name s) (close!)]))

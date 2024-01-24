@@ -137,7 +137,7 @@
       ;; valid because called when the dialog that changes @number->elite is closed
       (for ([(num elite?) (in-hash (@! @number->elite))])
         (on-new num elite?)))
-    (define-flow mixin (~> closing-mixin (make-on-close-mixin on-close)))
+    (define-flow mixin (~> closing-mixin (esc (make-on-close-mixin on-close))))
     ;; not setting current renderer, nor using an eventspace: dialog
     (render
      (dialog
@@ -455,7 +455,7 @@
       [(or `(include? ,_ to ,_) `(elite? ,_ to ,_)) (vector-update! new-group 2 (flow (update-selected-tracker e _)))]
       [`(level ,level) (vector-set! new-group 3 level)]))
   (define-close! close! closing-mixin)
-  (define-flow mixin (~> closing-mixin (make-on-close-mixin finish)))
+  (define-flow mixin (~> closing-mixin (esc (make-on-close-mixin finish))))
   ;; not setting current renderer, nor using an eventspace: dialog
   (render
     (dialog
