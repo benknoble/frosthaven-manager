@@ -6,7 +6,8 @@
     [struct element-pics ([name string?]
                           [infused pict?]
                           [waning pict?]
-                          [unfused pict?])]
+                          [unfused pict?]
+                          [consume pict?])]
     [fire (-> element-pics?)]
     [ice (-> element-pics?)]
     [air (-> element-pics?)]
@@ -23,7 +24,7 @@
          racket/draw
          frosthaven-manager/qi)
 
-(struct element-pics [name infused waning unfused] #:transparent)
+(struct element-pics [name infused waning unfused consume] #:transparent)
 
 (define size 50)
 (define trimmed-size (- size 5))
@@ -41,6 +42,14 @@
       (-< (half-wedge "black")
           (~> (half-wedge color) (rotate pi)))
       vc-append))
+
+(define (consume-icon)
+  (~> (size) half
+      (disk #:color "tomato" #:border-color "white" #:border-width 1)
+      (cc-superimpose (colorize (text "x") "white"))))
+
+(define (make-consume infused)
+  (rb-superimpose infused (consume-icon)))
 
 (define (fire-shape path border-color fill-color)
   (translate
@@ -108,7 +117,7 @@
   (define infused-fire (cc-superimpose (red (base)) colored-fire-overlay))
   (define waning-fire (cc-superimpose (wane "red") colored-fire-overlay))
   (define unfused-fire (cc-superimpose (base) bw-fire-overlay))
-  (element-pics "Fire" infused-fire waning-fire unfused-fire))
+  (element-pics "Fire" infused-fire waning-fire unfused-fire (make-consume infused-fire)))
 
 (define (ice-overlay)
   (let* ([bar (~> ((filled-rectangle 2 trimmed-size)) white (inset 5 0))]
@@ -127,7 +136,7 @@
   (define infused-ice (cc-superimpose (cyan (base)) overlay))
   (define waning-ice (cc-superimpose (wane "cyan") overlay))
   (define unfused-ice (cc-superimpose (base) overlay))
-  (element-pics "Ice" infused-ice waning-ice unfused-ice))
+  (element-pics "Ice" infused-ice waning-ice unfused-ice (make-consume infused-ice)))
 
 (define (air-overlay)
   (let* ([n-samples 500]
@@ -180,7 +189,7 @@
   (define infused-air (cc-superimpose (colorize (base) "light gray") overlay))
   (define waning-air (cc-superimpose (wane "light gray") overlay))
   (define unfused-air (cc-superimpose (base) overlay))
-  (element-pics "Air" infused-air waning-air unfused-air))
+  (element-pics "Air" infused-air waning-air unfused-air (make-consume infused-air)))
 
 (define-flow right-isoceles-hypotenuse->leg
   (/ (sqrt 2)))
@@ -221,7 +230,7 @@
   (define infused-earth (cc-superimpose (colorize (base) "dark green") overlay))
   (define waning-earth (cc-superimpose (wane "dark green") overlay))
   (define unfused-earth (cc-superimpose (base) overlay))
-  (element-pics "Earth" infused-earth waning-earth unfused-earth))
+  (element-pics "Earth" infused-earth waning-earth unfused-earth (make-consume infused-earth)))
 
 (define (light-overlay)
   (cc-superimpose (white (outline-flash trimmed-size trimmed-size 8 .55))
@@ -231,7 +240,7 @@
   (define infused-light (cc-superimpose (colorize (base) "gold") overlay))
   (define waning-light (cc-superimpose (wane "gold") overlay))
   (define unfused-light (cc-superimpose (base) overlay))
-  (element-pics "Light" infused-light waning-light unfused-light))
+  (element-pics "Light" infused-light waning-light unfused-light (make-consume infused-light)))
 
 (define (dark-disks color)
   (flow (~> (pin-over (- (half size) 6) (/ size 4)
@@ -242,7 +251,7 @@
   (define infused-dark (~> ((base)) (colorize "purple") (esc (dark-disks "purple"))))
   (define waning-dark (~> ("purple") wane (esc (dark-disks "purple"))))
   (define unfused-dark (~> ((base)) (esc (dark-disks "black"))))
-  (element-pics "Dark" infused-dark waning-dark unfused-dark))
+  (element-pics "Dark" infused-dark waning-dark unfused-dark (make-consume infused-dark)))
 
 (define (elements) (list (fire) (ice) (air) (earth) (light) (dark)))
 
@@ -254,5 +263,6 @@
             (apply vc-append
                    (for/list ([f (list element-pics-infused
                                        element-pics-waning
-                                       element-pics-unfused)])
+                                       element-pics-unfused
+                                       element-pics-consume)])
                      (f e)))))))

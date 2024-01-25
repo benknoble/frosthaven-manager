@@ -15,7 +15,8 @@ The size of the element pictures.
              ([name string?]
               [infused pict?]
               [waning pict?]
-              [unfused pict?])
+              [unfused pict?]
+              [consume pict?])
              #:transparent]{
 A container for a named set of element pictures.
 }
