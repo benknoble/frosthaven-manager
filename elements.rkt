@@ -245,3 +245,14 @@
   (element-pics "Dark" infused-dark waning-dark unfused-dark))
 
 (define (elements) (list (fire) (ice) (air) (earth) (light) (dark)))
+
+(module+ main
+  (require racket/gui)
+  (show-pict
+   (apply hc-append
+          (for/list ([e (elements)])
+            (apply vc-append
+                   (for/list ([f (list element-pics-infused
+                                       element-pics-waning
+                                       element-pics-unfused)])
+                     (f e)))))))
