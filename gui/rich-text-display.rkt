@@ -65,7 +65,7 @@
 (define (newline? x)
   (eq? x newline))
 
-(struct pict/alt-text [p alt-text])
+(struct pict/alt-text [p alt-text] #:transparent)
 
 (define (draw editor content font)
   (send editor begin-edit-sequence)
@@ -121,7 +121,7 @@
       (match-define (list h-m v-m) (peek @margin))
       (match-define (list h-i v-i) (peek @inset))
       (define canvas
-        (new editor-canvas%
+        (new (context-mixin editor-canvas%)
              [parent parent]
              [style style]
              [horizontal-inset h-i]
@@ -143,6 +143,7 @@
       (send* editor
              (scroll-to-position 0)
              (lock #t))
+      (send canvas set-context 'content (peek @content))
       canvas)
 
     (define (redraw v content font)
@@ -155,8 +156,11 @@
 
     (define/public (update v what val)
       (case/dep what
-        [@content (redraw v val             (peek @font))]
-        [@font    (redraw v (peek @content) val)]
+        [@content
+         (unless (equal? val (send v get-context 'content))
+           (redraw v val (peek @font))
+           (send v set-context 'content val))]
+        [@font (redraw v (peek @content) val)]
         [@min-size
           (match-define (list min-w min-h) val)
           (send* v
