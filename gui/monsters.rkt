@@ -304,28 +304,21 @@
                     (monsters))])))
 
 (define (monster-ability-view @ability @mg @env)
-  (hpanel
-   (rich-text-display
-    (obs-combine
-     (λ (ability mg env)
-       (if ability
-         (list*
-          (monster-ability-name->text ability) " (" (monster-ability-initiative->text ability) ")" newline
-          (~> (ability)
-              (if _ monster-ability-abilities '())
-              (sep (-< (~> (-< monster-ability-ability->text (gen mg) (gen env)) apply)
-                       (gen newline)))
-              collect
-              (dropf-right newline?)))
-         (list "???")))
-     @ability @mg @env)
-    #:min-size '(200 60))
-   (observable-view
-    @ability
-    (λ (ability)
-      (apply vpanel
-             (for/list ([ability-text (if ability (monster-ability-abilities ability) empty)])
-               (ability->extras @mg @ability ability-text)))))))
+  (rich-text-display
+   (obs-combine
+    (λ (ability mg env)
+      (if ability
+        (list*
+         (monster-ability-name->text ability) " (" (monster-ability-initiative->text ability) ")" newline
+         (~> (ability)
+             (if _ monster-ability-abilities '())
+             (sep (-< (~> (monster-ability-ability->rich-text ability mg env) sep)
+                      (gen newline)))
+             collect
+             (dropf-right newline?)))
+        (list "???")))
+    @ability @mg @env)
+   #:min-size '(200 60)))
 
 ;; TODO: should be able to manipulate individual HP (? dialog with counter)
 ;; Takes a non-observable info-db b/c instantiated by a thunk in
@@ -643,17 +636,6 @@
                                (-< pict-width pict-height)
                                (>< exact-ceiling) list)
                     (pict-canvas pict values)))))))
-
-(define (ability->extras @mg @ability-card ability-text)
-  (define @extras
-    (@~> @ability-card (monster-ability-ability->extras ability-text)))
-  (observable-view
-   @extras
-   (λ (extras)
-     (apply hpanel
-            (for/list ([extra extras])
-              (match extra
-                [(list 'aoe-pict pict) (aoe-button pict)]))))))
 
 (define (ability-deck-preview @ability-deck @mg @env #:on-move [on-move void])
   (define (make-discard-rows ability-deck)

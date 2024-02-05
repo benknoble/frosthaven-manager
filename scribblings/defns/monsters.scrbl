@@ -1,10 +1,14 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket null)
+@(require (for-label (except-in racket
+                                null
+                                newline)
                      pict
                      frosthaven-manager/contracts
                      frosthaven-manager/defns
-                     frosthaven-manager/parsers/formula))
+                     frosthaven-manager/parsers/formula
+                     frosthaven-manager/gui/rich-text-display
+                     (submod frosthaven-manager/gui/rich-text-display model)))
 
 @title{Monster Cards}
 @defmodule[frosthaven-manager/defns/monsters]
@@ -107,19 +111,15 @@ Returns a string suitable for display to indicate the initiative of a
 possibly-absent monster ability.
 }
 
-@defproc[((monster-ability-ability->text [ability string?])
-          [mg monster-group?] [env env/c])
-         string?]{
-Formats a single ability on a monster ability card, as from
-@racket[monster-ability-abilities], by replacing keywords like ``Attack +1''
-with calculated text and values.
+@defproc[(monster-ability-ability->rich-text
+           [ability-text string?]
+           [ability-card monster-ability?]
+           [mg monster-group?]
+           [env env/c])
+         (listof (or/c string? pict? pict/alt-text? newline?))]{
+Format a single monster ability from an ability card as a rich text sequence,
+compatible with @racket[rich-text-display].
 }
-
-@defproc[(monster-ability-ability->extras [ability-card (or/c #f monster-ability?)]
-                                          [ability-text string?])
-         (listof (or/c (list/c 'aoe-pict pict?)))]{
-Returns a list of ``extras'' for rendering a specific @racket[ability-text] from
-a @racket[monster-ability]. The meaning of each extra spec is as follows:
 
 @itemlist[
           @item{an extra @racket[`(aoe-pict ,aoe-pict)] means the ability had an area of effect specified by the pict.}

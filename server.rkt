@@ -19,10 +19,14 @@
   frosthaven-manager/gui/elements
   frosthaven-manager/manager
   frosthaven-manager/observable-operator
+  (submod frosthaven-manager/gui/rich-text-display model)
   json
   nat-traversal
   net/url
-  (except-in racket/gui null)
+  (prefix-in pict: pict)
+  (except-in racket/gui
+             null
+             newline)
   racket/gui/easy
   racket/runtime-path
   racket/async-channel
@@ -542,17 +546,17 @@
            ,@(monsters->xexprs id (monster-group-monsters mg) mg env))))
 
 (define (monster-ability-xexpr mg ability env)
-  (append*
-   (for/list ([the-ability (if ability (monster-ability-abilities ability) empty)])
-     (define extras (monster-ability-ability->extras ability the-ability))
-     (cons
-      `(li (span ([class "monster-ability-ability"])
-                 ,((monster-ability-ability->text the-ability) mg env)))
-      (for/list ([extra extras])
-        (match extra
-          [(list 'aoe-pict pict)
-           (define svg (string->xexpr (bytes->string/utf-8 (convert pict 'svg-bytes))))
-           `(li (span ([class "aoe"]) ,svg))]))))))
+  (for/list ([the-ability (if ability (monster-ability-abilities ability) empty)])
+    `(li
+      (span
+       ([class "monster-ability-ability"])
+       ,@(for/list ([content (in-list (monster-ability-ability->rich-text the-ability ability mg env))])
+           (match content
+             [(? string? s) s]
+             [(? newline?) `(br)]
+             [(or (? pict:pict? p) (pict/alt-text p _))
+              (define svg (string->xexpr (bytes->string/utf-8 (convert p 'svg-bytes))))
+              svg]))))))
 
 (define (monsters->xexprs group-id monsters mg env)
   (for/list ([monster monsters])

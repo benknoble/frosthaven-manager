@@ -1,11 +1,8 @@
 #lang racket
 
 (provide
+ (all-from-out 'model)
  (contract-out
-  [pict/alt-text? (-> any/c boolean?)]
-  [pict/alt-text (-> pict:pict? string? pict/alt-text?)]
-  [newline? (-> any/c boolean?)]
-  [newline newline?]
   [rich-text-display
    (->* ((maybe-obs/c (listof (or/c string?
                                     pict:pict?
@@ -23,13 +20,41 @@
                                    'resize-corner 'deleted 'transparent)))
         (is-a?/c view<%>))]))
 
-(require racket/gui
+(require (except-in racket/gui newline)
          racket/gui/easy
          racket/gui/easy/contract
          racket/gui/easy/observable
          pict/snip
          (prefix-in pict: pict)
          frosthaven-manager/gui/mixins)
+
+(module model racket
+  (provide
+   (contract-out
+    [struct pict/alt-text ([p pict?]
+                           [alt-text string?])]
+    [newline? (-> any/c boolean?)]
+    [newline newline?]
+    [scale-icon (-> pict? pict?)]))
+
+  (require racket/snip
+           pict)
+
+  (define newline
+    (let ([s (make-object string-snip% "\n")])
+      (begin0 s
+        (send s set-flags (cons 'hard-newline (send s get-flags))))))
+
+  (define (newline? x)
+    (eq? x newline))
+
+  (struct pict/alt-text [p alt-text])
+
+  (define icon-sizer (text "MM\nMM"))
+  (define (scale-icon p)
+    (scale-to-fit p icon-sizer)))
+
+(require 'model)
 
 (define (peek v)
   (if (obs? v)
@@ -57,16 +82,6 @@
          (set-delta 'change-smoothing smoothing))
   d)
 
-(define newline
-  (let ([s (make-object string-snip% "\n")])
-    (begin0 s
-      (send s set-flags (cons 'hard-newline (send s get-flags))))))
-
-(define (newline? x)
-  (eq? x newline))
-
-(struct pict/alt-text [p alt-text] #:transparent)
-
 (define (draw editor content font)
   (send editor begin-edit-sequence)
   (for ([c content])
@@ -84,17 +99,29 @@
   (for ([style (in-list styles)])
     (send editor change-style style start end #f)))
 
-(define icon-sizer
-  (pict:text "MM\nMM" normal-control-font))
+;; pixels per scroll step, can be set 1 for smooth scrolling
+(define ppss 10.0)
+
+(define pict-snip-v2%
+  (class pict-snip%
+    (init)
+    (super-new)
+
+    (define/override (get-num-scroll-steps)
+      (define height (pict:pict-height (send this get-pict)))
+      (exact-ceiling (/ height ppss)))
+
+    (define/override (get-scroll-step-offset offset)
+      (exact-floor (* offset ppss)))
+
+    (define/override (find-scroll-step y)
+      (exact-floor (/ y ppss)))))
 
 (define (insert-pict editor p)
-  (send editor insert (make-object pict-snip% (pict:scale-to-fit p icon-sizer))))
+  (send editor insert (make-object pict-snip-v2% p)))
 
 (define (insert-pict/alt-text editor p alt-text)
-  (send editor insert
-        (make-object pict-snip/alt-text%
-                     alt-text
-                     (pict:scale-to-fit p icon-sizer))))
+  (send editor insert (make-object pict-snip/alt-text% alt-text p)))
 
 (define (insert-newline editor)
   (define s (make-object string-snip% "\n"))
@@ -102,7 +129,7 @@
   (send editor insert s))
 
 (define pict-snip/alt-text%
-  (class pict-snip% (super-new)
+  (class pict-snip-v2% (super-new)
     [init-field alt-text]
     (define/override (copy)
       (make-object string-snip% alt-text))))

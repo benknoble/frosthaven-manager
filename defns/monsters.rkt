@@ -36,10 +36,9 @@
   [monster-stats-immunities-string (-> monster-stats? string?)]
   [monster-ability-name->text (-> (or/c #f monster-ability?) string?)]
   [monster-ability-initiative->text (-> (or/c #f monster-ability?) string?)]
-  [monster-ability-ability->text (-> string? (-> monster-group? env/c string?))]
-  [monster-ability-ability->extras (-> (or/c #f monster-ability?)
-                                       string?
-                                       (listof (or/c (list/c 'aoe-pict pict:pict?))))]
+  [monster-ability-ability->rich-text (-> string? (or/c #f monster-ability?)
+                                          monster-group? env/c
+                                          (listof (or/c string? pict:pict? pict/alt-text? newline?)))]
   [make-monster (-> monster-info? level/c
                     monster-number/c boolean?
                     env/c
@@ -77,7 +76,8 @@
  frosthaven-manager/qi
  frosthaven-manager/parsers/formula
  frosthaven-manager/defns/level
- frosthaven-manager/defns/scenario)
+ frosthaven-manager/defns/scenario
+ (submod frosthaven-manager/gui/rich-text-display model))
 
 (struct monster-stats [max-hp move attack bonuses effects immunities] #:prefab)
 (struct monster-info [set-name name normal-stats elite-stats] #:prefab)
@@ -129,24 +129,7 @@
 (define-flow (monster-ability-initiative->text ability)
   (if monster-ability? (~> monster-ability-initiative ~a) "??"))
 
-(define aoe-rx #rx"aoe\\(([^)]+)\\)")
-
-(define ((keyword-sub stats-f mg) _match word +- amount)
-  (define op (eval (string->symbol +-) (make-base-namespace)))
-  (define amount* (string->number amount))
-  (define normal-base (stats-f (monster-group-normal-stats mg)))
-  (define elite-base (stats-f (monster-group-elite-stats mg)))
-  (define normal (if normal-base (op normal-base amount*) "-"))
-  (define elite (if elite-base (op elite-base amount*) "-"))
-  (format "~a ~a (E:~a)" word normal elite))
-
-(define ((skip-if-grant-or-control f) match before . args)
-  (if (regexp-match #px"(?i:grant)|(?i:control)" before)
-    match
-    (format "~a~a" before (apply f (substring match (string-length before)) args))))
-
-(define ((monster-ability-ability->text ability) mg env)
-  (define aoe-replacement `(,aoe-rx ""))
+(define (monster-ability-ability->rich-text ability-text ability-card mg env)
   (define bulleted '(#rx"^" "· "))
   (define attack
     (list #px"(.*)((?i:attack))\\s+([+-])(\\d+)"
@@ -165,7 +148,6 @@
              (define common-effects (set-intersect effects elite-effects))
              (define only-normal-effects (set-subtract effects common-effects))
              (define only-elite-effects (set-subtract elite-effects common-effects))
-
              (~a base-attack
                  (if (not (empty? only-normal-effects))
                    (format " (N:~a)" (string-join only-normal-effects ", "))
@@ -178,11 +160,24 @@
                    ""))))))
   (define replacements
     (list bulleted
-          aoe-replacement
           attack
           effects
           move))
-  (regexp-replaces ability replacements))
+  (match (regexp-replaces ability-text replacements)
+    [(regexp #rx"^(.*)aoe\\(([^)]+)\\)(.*)$"
+             (list _ prefix aoe suffix))
+     (define base
+       (switch (ability-card)
+         [monster-ability? monster-ability-location]
+         [else "."]))
+     (define aoe-pict
+       (~> (base aoe)
+           build-path
+           (switch
+             [file-exists? (~> get-aoe apply)]
+             [else (gen (pict:text "AoE File Not Found"))])))
+     (list prefix newline aoe-pict newline suffix)]
+    [x (list x)]))
 
 (module+ test
   (require rackunit)
@@ -196,36 +191,53 @@
                                  empty
                                  env))
            (list 0 1 2 3))))
+  (define ability-card
+    (match-let-values ([{_ ability} (get-dbs  "../testfiles/sample-bestiary-import.rkt")])
+      (~> (ability) (hash-ref "archer") first)))
   (test-equal? "Simple Attack"
-               ((monster-ability-ability->text "Attack +1") mg env)
-               "· Attack 3 (E:4, wound)")
+               (monster-ability-ability->rich-text "Attack +1" ability-card mg env)
+               (list "· Attack 3 (E:4, wound)"))
   (test-equal? "Simple Attack 1"
-               ((monster-ability-ability->text "Attack +1") mg1 env)
-               "· Attack 4 (E:5), wound")
+               (monster-ability-ability->rich-text "Attack +1" ability-card mg1 env)
+               (list "· Attack 4 (E:5), wound"))
   (test-equal? "Simple Attack 2"
-               ((monster-ability-ability->text "Attack +1") mg2 env)
-               "· Attack 5 (E:6, stun), wound")
+               (monster-ability-ability->rich-text "Attack +1" ability-card mg2 env)
+               (list "· Attack 5 (E:6, stun), wound"))
   (test-equal? "Simple Attack 3"
-               ((monster-ability-ability->text "Attack +1") mg3 env)
-               "· Attack 6 (N:muddle) (E:7, stun), wound")
+               (monster-ability-ability->rich-text "Attack +1" ability-card mg3 env)
+               (list "· Attack 6 (N:muddle) (E:7, stun), wound"))
   (test-equal? "Attack, X"
-               ((monster-ability-ability->text "Attack +1, Push 1") mg3 env)
-               "· Attack 6 (N:muddle) (E:7, stun), wound, Push 1")
+               (monster-ability-ability->rich-text "Attack +1, Push 1" ability-card mg3 env)
+               (list "· Attack 6 (N:muddle) (E:7, stun), wound, Push 1"))
   (test-equal? "Simple Move"
-               ((monster-ability-ability->text "Move +1") mg env)
-               "· Move 3 (E:3)")
+               (monster-ability-ability->rich-text "Move +1" ability-card mg env)
+               (list "· Move 3 (E:3)"))
   (test-equal? "Granted Attack"
-               ((monster-ability-ability->text "Grant Piranha: Attack +1") mg env)
-               "· Grant Piranha: Attack +1")
+               (monster-ability-ability->rich-text "Grant Piranha: Attack +1" ability-card mg env)
+               (list "· Grant Piranha: Attack +1"))
   (test-equal? "Granted Move"
-               ((monster-ability-ability->text "Grant Piranha: Move +1") mg env)
-               "· Grant Piranha: Move +1")
+               (monster-ability-ability->rich-text "Grant Piranha: Move +1" ability-card mg env)
+               (list "· Grant Piranha: Move +1"))
   (test-equal? "Controlled Attack"
-               ((monster-ability-ability->text "Control Enemy: Attack +1") mg env)
-               "· Control Enemy: Attack +1")
+               (monster-ability-ability->rich-text "Control Enemy: Attack +1" ability-card mg env)
+               (list "· Control Enemy: Attack +1"))
   (test-equal? "Controlled Move"
-               ((monster-ability-ability->text "Control Enemy: Move +1") mg env)
-               "· Control Enemy: Move +1"))
+               (monster-ability-ability->rich-text "Control Enemy: Move +1" ability-card mg env)
+               (list "· Control Enemy: Move +1")))
+
+(define ((keyword-sub stats-f mg) _match word +- amount)
+  (define op (eval (string->symbol +-) (make-base-namespace)))
+  (define amount* (string->number amount))
+  (define normal-base (stats-f (monster-group-normal-stats mg)))
+  (define elite-base (stats-f (monster-group-elite-stats mg)))
+  (define normal (if normal-base (op normal-base amount*) "-"))
+  (define elite (if elite-base (op elite-base amount*) "-"))
+  (format "~a ~a (E:~a)" word normal elite))
+
+(define ((skip-if-grant-or-control f) match before . args)
+  (if (regexp-match #px"(?i:grant)|(?i:control)" before)
+    match
+    (format "~a~a" before (apply f (substring match (string-length before)) args))))
 
 (define (not-an-aoe)
   (pict:text "Not an AoE module"))
@@ -235,21 +247,6 @@
    (current-namespace)
    (thunk
     (dynamic-require path 'aoe (thunk not-an-aoe)))))
-
-(define (monster-ability-ability->extras ability-card ability-text)
-  (define aoe
-    (~> (ability-text) (regexp-match aoe-rx _) (and _ second)))
-  (define base (switch (ability-card)
-                 [monster-ability? monster-ability-location]
-                 [else "."]))
-  (define aoe-pict
-    (and aoe (~> (base aoe)
-                 build-path
-                 (switch
-                   [file-exists? (~> get-aoe apply)]
-                   [else (gen (pict:text "AoE File Not Found"))]))))
-  (filter values
-          (list (and aoe-pict `(aoe-pict ,aoe-pict)))))
 
 (define (make-monster* stats number elite? env)
   (monster number elite? (monster-stats-max-hp* stats env) empty))
