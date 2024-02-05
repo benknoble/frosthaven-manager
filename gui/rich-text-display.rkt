@@ -99,9 +99,26 @@
   (for ([style (in-list styles)])
     (send editor change-style style start end #f)))
 
+;; pixels per scroll step, can be set 1 for smooth scrolling
+(define ppss 10.0)
+
+(define pict-snip-v2%
+  (class pict-snip%
+    (init)
+    (super-new)
+
+    (define/override (get-num-scroll-steps)
+      (define height (pict:pict-height (send this get-pict)))
+      (exact-ceiling (/ height ppss)))
+
+    (define/override (get-scroll-step-offset offset)
+      (exact-floor (* offset ppss)))
+
+    (define/override (find-scroll-step y)
+      (exact-floor (/ y ppss)))))
 
 (define (insert-pict editor p)
-  (send editor insert (make-object pict-snip% p)))
+  (send editor insert (make-object pict-snip-v2% p)))
 
 (define (insert-pict/alt-text editor p alt-text)
   (send editor insert (make-object pict-snip/alt-text% alt-text p)))
@@ -112,7 +129,7 @@
   (send editor insert s))
 
 (define pict-snip/alt-text%
-  (class pict-snip% (super-new)
+  (class pict-snip-v2% (super-new)
     [init-field alt-text]
     (define/override (copy)
       (make-object string-snip% alt-text))))
