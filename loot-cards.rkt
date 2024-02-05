@@ -14,6 +14,9 @@
          (for-syntax racket/syntax)
          frosthaven-manager/defns)
 
+(module reader syntax/module-reader
+  frosthaven-manager/loot-cards)
+
 (define-syntax-parse-rule (mb e:expr ...)
   #:with result (format-id this-syntax "loot-cards" #:source this-syntax)
   (#%module-begin
