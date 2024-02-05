@@ -4,7 +4,8 @@
                      racket/gui/easy
                      racket/gui/easy/contract
                      (only-in pict pict?)
-                     frosthaven-manager/gui/rich-text-display))
+                     frosthaven-manager/gui/rich-text-display
+                     (submod frosthaven-manager/gui/rich-text-display model)))
 
 @title{@tt{gui/rich-text-display}}
 @defmodule[frosthaven-manager/gui/rich-text-display]
@@ -37,12 +38,14 @@ Contents are selectable and copyable with the usual keyboard shortcuts, and can
 also be selected with mouse. Contents are automatically reflowed.
 }
 
+@section{Rich Text Model}
+@defmodule[(submod frosthaven-manager/gui/rich-text-display model)]
+
 @defthing[newline newline?]{
 When used with @racket[rich-text-display], forces a hard newline.
 }
 
-@defproc[(pict/alt-text [p pict?] [alt-text string?])
-         pict/alt-text?]{
+@defstruct*[pict/alt-text ([p pict?] [alt-text string?])]{
 When used with @racket[rich-text-display], displays a @racket[pict?]. Copying
 the pict copies the @racket[alt-text] instead.
 }
@@ -51,6 +54,8 @@ the pict copies the @racket[alt-text] instead.
 A predicate that recognizes the @racket[newline] value.
 }
 
-@defproc[(pict/alt-text? [x any/c]) boolean?]{
-A predicate that recognizes values produced by @racket[pict/alt-text].
+@defproc[(scale-icon [p pict?]) pict?]{
+Produces a scaled pict suitable for an icon size. Note that this does not take a
+font object for scaling, so the size may not be correct when providing fonts to
+@racket[rich-text-display].
 }

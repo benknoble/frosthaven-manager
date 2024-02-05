@@ -1,11 +1,8 @@
 #lang racket
 
 (provide
+ (all-from-out 'model)
  (contract-out
-  [pict/alt-text? (-> any/c boolean?)]
-  [pict/alt-text (-> pict:pict? string? pict/alt-text?)]
-  [newline? (-> any/c boolean?)]
-  [newline newline?]
   [rich-text-display
    (->* ((maybe-obs/c (listof (or/c string?
                                     pict:pict?
@@ -23,13 +20,41 @@
                                    'resize-corner 'deleted 'transparent)))
         (is-a?/c view<%>))]))
 
-(require racket/gui
+(require (except-in racket/gui newline)
          racket/gui/easy
          racket/gui/easy/contract
          racket/gui/easy/observable
          pict/snip
          (prefix-in pict: pict)
          frosthaven-manager/gui/mixins)
+
+(module model racket
+  (provide
+   (contract-out
+    [struct pict/alt-text ([p pict?]
+                           [alt-text string?])]
+    [newline? (-> any/c boolean?)]
+    [newline newline?]
+    [scale-icon (-> pict? pict?)]))
+
+  (require racket/snip
+           pict)
+
+  (define newline
+    (let ([s (make-object string-snip% "\n")])
+      (begin0 s
+        (send s set-flags (cons 'hard-newline (send s get-flags))))))
+
+  (define (newline? x)
+    (eq? x newline))
+
+  (struct pict/alt-text [p alt-text])
+
+  (define icon-sizer (text "MM\nMM"))
+  (define (scale-icon p)
+    (scale-to-fit p icon-sizer)))
+
+(require 'model)
 
 (define (peek v)
   (if (obs? v)
@@ -57,16 +82,6 @@
          (set-delta 'change-smoothing smoothing))
   d)
 
-(define newline
-  (let ([s (make-object string-snip% "\n")])
-    (begin0 s
-      (send s set-flags (cons 'hard-newline (send s get-flags))))))
-
-(define (newline? x)
-  (eq? x newline))
-
-(struct pict/alt-text [p alt-text])
-
 (define (draw editor content font)
   (send editor begin-edit-sequence)
   (for ([c content])
@@ -84,17 +99,12 @@
   (for ([style (in-list styles)])
     (send editor change-style style start end #f)))
 
-(define icon-sizer
-  (pict:text "MM\nMM" normal-control-font))
 
 (define (insert-pict editor p)
-  (send editor insert (make-object pict-snip% (pict:scale-to-fit p icon-sizer))))
+  (send editor insert (make-object pict-snip% p)))
 
 (define (insert-pict/alt-text editor p alt-text)
-  (send editor insert
-        (make-object pict-snip/alt-text%
-                     alt-text
-                     (pict:scale-to-fit p icon-sizer))))
+  (send editor insert (make-object pict-snip/alt-text% alt-text p)))
 
 (define (insert-newline editor)
   (define s (make-object string-snip% "\n"))
