@@ -5,7 +5,8 @@
 (define racket-launcher-libraries '("gui/manager"))
 (define gracket-launcher-names '("FrosthavenManager"))
 (define gracket-launcher-libraries '("gui/manager"))
-(define deps '("pict-snip-lib"
+(define deps '("snip-lib"
+               "pict-snip-lib"
                "pretty-expressive"
                "alexis-multicast"
                "nat-traversal"
