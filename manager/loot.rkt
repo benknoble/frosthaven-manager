@@ -13,14 +13,15 @@
     [player->rewards (-> player? num-players/c level/c
                          (listof string?))]))
 
-(require frosthaven-manager/observable-operator
+(require racket/hash
+         frosthaven-manager/observable-operator
          frosthaven-manager/defns
          frosthaven-manager/manager/state)
 
 (module+ test (require rackunit))
 
 (define ((update-loot-deck-and-num-loot-cards s) evt)
-  ((loot-picker-updater (state-@cards-per-deck s)) evt)
+  ((loot-picker-updater (state-@type->number-of-cards s)) evt)
   (<@ (state-@num-loot-cards s) (case (car evt) [(add) add1] [(remove) sub1])))
 
 ;; valid: only called if loot-deck non-empty, loot assigned
@@ -74,18 +75,12 @@
 (define (place-loot-on-bottom s)
   (<~@ (state-@loot-deck s) rotate))
 
-(define ((loot-picker-updater @cards-per-loot-deck) evt)
-  (define (type->deck t)
-    (match t
-      ['money money-deck]
-      [(? material-kind? m) (hash-ref material-decks m)]
-      [(? herb-kind? h) (hash-ref herb-decks h)]
-      ['random-item (list random-item)]))
+(define ((loot-picker-updater @type->number-of-cards) evt)
   (define (update cards-per-loot-deck)
     (match evt
-      [`(add ,type) (hash-update cards-per-loot-deck (type->deck type) add1 0)]
-      [`(remove ,type) (hash-update cards-per-loot-deck (type->deck type) sub1 0)]))
-  (<@ @cards-per-loot-deck update))
+      [`(add ,type) (hash-update cards-per-loot-deck type add1 0)]
+      [`(remove ,type) (hash-update cards-per-loot-deck type sub1 0)]))
+  (<@ @type->number-of-cards update))
 
 (define (build-loot-deck type->number-of-cards type->deck)
   (shuffle
@@ -95,21 +90,14 @@
       (take (shuffle deck) count)))))
 
 (define (build-loot-deck! s)
-  (define cards-per-loot-deck
-    (@! (state-@cards-per-deck s)))
   (:= (state-@loot-deck s)
       (build-loot-deck
-       ;; assume that each deck in cards-per-loot-deck is homogenous.
        ;; type->number-of-cards
-       (for/hash ([(deck cards) (in-hash cards-per-loot-deck)]
-                  #:unless (empty? deck))
-         (values (card->type (first deck))
-                 cards))
+       (@! (state-@type->number-of-cards s))
        ;; type->deck
-       (for/hash ([deck (in-hash-keys cards-per-loot-deck)]
-                  #:unless (empty? deck))
-         (values (card->type (first deck))
-                 deck)))))
+       (hash-union (hash 'money money-deck 'random-item (list random-item))
+                   material-decks
+                   herb-decks))))
 
 (define (player->rewards p num-players level)
   (define gold-factor (level-info-gold (get-level-info level)))

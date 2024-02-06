@@ -13,7 +13,7 @@
                    [@level (obs/c level/c)]
                    [@num-players (obs/c num-players/c)]
                    [@creatures (obs/c (listof creature?))]
-                   [@cards-per-deck (obs/c (hash/c (listof loot-card?) natural-number/c))]
+                   [@type->number-of-cards (obs/c (hash/c loot-type/c natural-number/c))]
                    [@loot-deck (obs/c (listof loot-card?))]
                    [@num-loot-cards (obs/c natural-number/c)]
                    [@elements (listof (obs/c element-state/c))]
@@ -36,7 +36,7 @@
             (maybe-obs/c level/c)
             (maybe-obs/c num-players/c)
             (maybe-obs/c (listof creature?))
-            (maybe-obs/c (hash/c (listof loot-card?) natural-number/c))
+            (maybe-obs/c (hash/c loot-type/c natural-number/c))
             (maybe-obs/c (listof loot-card?))
             (maybe-obs/c natural-number/c)
             (listof (maybe-obs/c element-state/c))
@@ -112,7 +112,7 @@
          @level
          @num-players
          @creatures
-         @cards-per-deck
+         @type->number-of-cards
          @loot-deck
          @num-loot-cards
          @elements
@@ -141,7 +141,7 @@
                     [@level (@ 0)]
                     [@num-players (@ 2)]
                     [@creatures (@ empty)]
-                    [@cards-per-deck (@ (hash))]
+                    [@type->number-of-cards (@ (hash))]
                     [@loot-deck (@ empty)]
                     [@num-loot-cards (@ 0)]
                     [@elements (make-states '(fire ice air earth light dark))]
@@ -162,7 +162,16 @@
          (@ @level)
          (@ @num-players)
          (@ @creatures)
-         (@ @cards-per-deck)
+         (let* ([@h (@ @type->number-of-cards)]
+                [h (@! @h)])
+           (cond
+             [(hash-empty? h) @h]
+             [(andmap loot-type/c (hash-keys h)) @h]
+             [(andmap (listof loot-card?) (hash-keys h))
+              ;; convert old datatype, with some assumptions
+              (@ (for/hash ([(deck count) (in-hash-values h)]
+                            #:unless (empty? deck))
+                   (values (card->type (first deck)) count)))]))
          (@ @loot-deck)
          (@ @num-loot-cards)
          (map @ @elements)
@@ -237,8 +246,8 @@
       (@! (state-@num-players from)))
   (:=     (state-@creatures to)
       (@! (state-@creatures from)))
-  (:=     (state-@cards-per-deck to)
-      (@! (state-@cards-per-deck from)))
+  (:=     (state-@type->number-of-cards to)
+      (@! (state-@type->number-of-cards from)))
   (:=     (state-@loot-deck to)
       (@! (state-@loot-deck from)))
   (:=     (state-@num-loot-cards to)

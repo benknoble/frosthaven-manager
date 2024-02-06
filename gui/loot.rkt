@@ -129,27 +129,19 @@
   (make-preview-rows loot-deck revealed #:reveal reveal #:hide hide-loot))
 
 (module+ main
-  (require frosthaven-manager/manager)
+  (require racket/hash
+           frosthaven-manager/manager)
   (define s (make-state))
-  (define/match (find-deck card)
-    [{(money _)} "Money"]
-    [{(or (material kind _) (herb kind _))} (~a kind)]
-    [{(== random-item)} "Random Item"])
   (define (table-with-actual-loot-deck)
-    (define @deck (@> @cards-per-loot-deck
-                      (λ (cards-per-loot-deck)
+    (define @deck (@> @type->cards
+                      (λ (type->cards)
                         (build-loot-deck
-                         ;; assume that each deck in cards-per-loot-deck is homogenous.
                          ;; type->number-of-cards
-                         (for/hash ([(deck cards) (in-hash cards-per-loot-deck)]
-                                    #:unless (empty? deck))
-                           (values (card->type (first deck))
-                                   cards))
+                         type->cards
                          ;; type->deck
-                         (for/hash ([deck (in-hash-keys cards-per-loot-deck)]
-                                    #:unless (empty? deck))
-                           (values (card->type (first deck))
-                                   deck))))))
+                         (hash-union (hash 'money money-deck 'random-item (list random-item))
+                                     material-decks
+                                     herb-decks)))))
     ;; not setting current renderer, nor using an eventspace: dialog
     (vpanel
       (hpanel (text "Duplicates?")
@@ -158,19 +150,13 @@
              (@> @deck list->vector)
              #:entry->row (flow (~> (-< eq-hash-code _) (>< ~a) vector))
              #:min-size '(250 300))))
-  (define-flow count+decks->row (~> (-< (~> car car find-deck) (~> cdr ~a)) vector))
-  (define/obs @cards-per-loot-deck (state-@cards-per-deck s))
+  (define-flow count+decks->row (~> (-< car cdr) (>< ~a) vector))
+  (define @type->cards (state-@type->number-of-cards s))
   (void (render/eventspace
           ;; no separate eventspace: block main until this window closed
-          (window (hpanel (loot-picker (@> @cards-per-loot-deck
-                                           (λ (cards-per-loot-deck)
-                                             (for/hash ([(deck cards) (in-hash cards-per-loot-deck)]
-                                                        #:unless (empty? deck))
-                                               (values (card->type (first deck))
-                                                       cards))))
-                                       #:on-card (update-loot-deck-and-num-loot-cards s))
+          (window (hpanel (loot-picker @type->cards #:on-card (update-loot-deck-and-num-loot-cards s))
                           (table '("Deck" "Cards")
-                                 (@~> @cards-per-loot-deck (~> hash->list list->vector))
+                                 (@~> @type->cards (~> hash->list list->vector))
                                  #:entry->row count+decks->row
                                  #:min-size '(250 #f))
                           (table-with-actual-loot-deck))))))
