@@ -3,7 +3,7 @@
 (provide
   (contract-out
     [update-loot-deck-and-num-loot-cards
-      (-> state? (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any))]
+      (-> state? (-> (list/c (or/c 'add 'remove) loot-type/c) any))]
     [build-loot-deck (-> (hash/c loot-type/c natural-number/c)
                          (hash/c loot-type/c (listof loot-card?))
                          (listof loot-card?))]
@@ -75,10 +75,16 @@
   (<~@ (state-@loot-deck s) rotate))
 
 (define ((loot-picker-updater @cards-per-loot-deck) evt)
+  (define (type->deck t)
+    (match t
+      ['money money-deck]
+      [(? material-kind? m) (hash-ref material-decks m)]
+      [(? herb-kind? h) (hash-ref herb-decks h)]
+      ['random-item (list random-item)]))
   (define (update cards-per-loot-deck)
     (match evt
-      [`(add ,deck) (hash-update cards-per-loot-deck deck add1 0)]
-      [`(remove ,deck) (hash-update cards-per-loot-deck deck sub1 0)]))
+      [`(add ,type) (hash-update cards-per-loot-deck (type->deck type) add1 0)]
+      [`(remove ,type) (hash-update cards-per-loot-deck (type->deck type) sub1 0)]))
   (<@ @cards-per-loot-deck update))
 
 (define (build-loot-deck type->number-of-cards type->deck)

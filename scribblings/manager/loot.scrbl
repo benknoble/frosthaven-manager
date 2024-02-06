@@ -11,7 +11,7 @@
 This module provides facilities for manipulating the loot deck.
 
 @defproc[(update-loot-deck-and-num-loot-cards [s state?])
-         (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any)]{
+         (-> (list/c (or/c 'add 'remove) loot-type/c) any)]{
 Update the loot deck based on the @racket[loot-picker] event.
 }
 

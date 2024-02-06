@@ -71,5 +71,5 @@
    (for ([deck (append (list money-deck)
                        (hash-values material-decks)
                        (hash-values herb-decks))])
-     ((update-loot-deck-and-num-loot-cards s) `(add ,deck)))
+     ((update-loot-deck-and-num-loot-cards s) `(add ,(card->type (first deck)))))
    (build-loot-deck! s)))

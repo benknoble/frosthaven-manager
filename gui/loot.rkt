@@ -2,8 +2,8 @@
 
 (provide
   (contract-out
-    [loot-picker (->* ((obs/c (hash/c (listof loot-card?) natural-number/c)))
-                      (#:on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any))
+    [loot-picker (->* ((obs/c (hash/c loot-type/c natural-number/c)))
+                      (#:on-card (-> (list/c (or/c 'add 'remove) loot-type/c) any))
                       (is-a?/c view<%>))]
     [loot-button
       (->* ((obs/c (listof loot-card?))
@@ -27,22 +27,21 @@
          frosthaven-manager/gui/render
          frosthaven-manager/gui/table)
 
-(define (loot-picker @cards-per-deck #:on-card [on-card void])
-  (define cards-picker (make-cards-picker! @cards-per-deck #:on-card on-card))
-  (define money-view (cards-picker "Money Cards: " max-money-cards money-deck))
+(define (loot-picker @type->cards #:on-card [on-card void])
+  (define cards-picker (make-cards-picker! @type->cards #:on-card on-card))
+  (define money-view (cards-picker "Money Cards: " max-money-cards 'money))
   (define material-views
     (for/list ([m (in-list material-kinds)])
-      (cards-picker (~a m " Cards: ") max-material-cards (hash-ref material-decks m))))
+      (cards-picker (~a m " Cards: ") max-material-cards m)))
   (define herb-views
     (for/list ([h (in-list herb-kinds)])
-      (cards-picker (~a h " Cards: ") max-herb-cards (hash-ref herb-decks h))))
+      (cards-picker (~a h " Cards: ") max-herb-cards h)))
   (define random-item-view
-    (let ([deck (list random-item)])
-      (checkbox #:label "Random Item Card?"
-                #:checked? (@~> @cards-per-deck (~> (hash-ref deck 0) (> 0)))
-                (match-lambda
-                  [#t (on-card `(add ,deck))]
-                  [#f (on-card `(remove ,deck))]))))
+    (checkbox #:label "Random Item Card?"
+              #:checked? (@~> @type->cards (~> (hash-ref 'random-item 0) (> 0)))
+              (match-lambda
+                [#t (on-card `(add random-item))]
+                [#f (on-card `(remove random-item))])))
   (vpanel
     #:stretch '(#f #f)
     random-item-view
@@ -50,15 +49,15 @@
     (apply group "Materials" material-views)
     (apply group "Herbs" herb-views)))
 
-(define ((make-cards-picker! @cards-per-deck #:on-card on-card)
-         label max-cards deck)
-  (define @n (@~> @cards-per-deck (hash-ref deck 0)))
+(define ((make-cards-picker! @type->cards #:on-card on-card)
+         label max-cards type)
+  (define @n (@~> @type->cards (hash-ref type 0)))
   (define (subtract-card)
     (when (> (@! @n) 0)
-      (on-card `(remove ,deck))))
+      (on-card `(remove ,type))))
   (define (add-card)
     (when (< (@! @n) max-cards)
-      (on-card `(add ,deck))))
+      (on-card `(add ,type))))
   (hpanel (spacer) (counter (@~> @n (~a label _)) add-card subtract-card) (spacer)))
 
 (define (loot-button @loot-deck
@@ -163,7 +162,13 @@
   (define/obs @cards-per-loot-deck (state-@cards-per-deck s))
   (void (render/eventspace
           ;; no separate eventspace: block main until this window closed
-          (window (hpanel (loot-picker @cards-per-loot-deck #:on-card (update-loot-deck-and-num-loot-cards s))
+          (window (hpanel (loot-picker (@> @cards-per-loot-deck
+                                           (λ (cards-per-loot-deck)
+                                             (for/hash ([(deck cards) (in-hash cards-per-loot-deck)]
+                                                        #:unless (empty? deck))
+                                               (values (card->type (first deck))
+                                                       cards))))
+                                       #:on-card (update-loot-deck-and-num-loot-cards s))
                           (table '("Deck" "Cards")
                                  (@~> @cards-per-loot-deck (~> hash->list list->vector))
                                  #:entry->row count+decks->row

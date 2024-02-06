@@ -103,7 +103,13 @@
 
 (define (build-loot-deck-view s)
   (vpanel
-    (loot-picker (state-@cards-per-deck s) #:on-card (update-loot-deck-and-num-loot-cards s))
+    (loot-picker (@> (state-@cards-per-deck s)
+                     (λ (cards-per-loot-deck)
+                       (for/hash ([(deck cards) (in-hash cards-per-loot-deck)]
+                                  #:unless (empty? deck))
+                         (values (card->type (first deck))
+                                 cards))))
+                 #:on-card (update-loot-deck-and-num-loot-cards s))
     (spacer)
     (hpanel #:stretch '(#t #f)
             #:alignment '(center center)
