@@ -35,7 +35,7 @@
    #:attributes {constructor}
    #:literals {money}
    [pattern [money amount:number]
-            #:with constructor #'(money number)])
+            #:with constructor #'(money amount)])
  (define-syntax-class material-spec
    #:attributes {constructor}
    #:literals {lumber metal hide}
