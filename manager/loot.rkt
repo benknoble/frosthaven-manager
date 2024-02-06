@@ -4,7 +4,8 @@
   (contract-out
     [update-loot-deck-and-num-loot-cards
       (-> state? (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any))]
-    [build-loot-deck (-> (hash/c (listof loot-card?) natural-number/c)
+    [build-loot-deck (-> (hash/c (or/c (flow (equal? money)) material-kind? herb-kind? random-item?) natural-number/c)
+                         (hash/c (or/c (flow (equal? money)) material-kind? herb-kind? random-item?) (listof loot-card?))
                          (listof loot-card?))]
     [build-loot-deck! (-> state? any)]
     [give-player-loot (-> state? (-> any/c any))]
@@ -80,14 +81,37 @@
       [`(remove ,deck) (hash-update cards-per-loot-deck deck sub1 0)]))
   (<@ @cards-per-loot-deck update))
 
-(define (build-loot-deck cards-per-loot-deck)
+(define (build-loot-deck type->number-of-cards type->deck)
   (shuffle
    (flatten
-    (for/list ([(deck count) (in-hash cards-per-loot-deck)])
+    (for/list ([(type count) (in-hash type->number-of-cards)])
+      (define deck (hash-ref type->deck type))
       (take (shuffle deck) count)))))
 
 (define (build-loot-deck! s)
-  (:= (state-@loot-deck s) (build-loot-deck (@! (state-@cards-per-deck s)))))
+  (define cards-per-loot-deck
+    (@! (state-@cards-per-deck s)))
+  (:= (state-@loot-deck s)
+      (build-loot-deck
+       ;; assume that each deck in cards-per-loot-deck is homogenous.
+       ;; type->number-of-cards
+       (for/hash ([(deck cards) (in-hash cards-per-loot-deck)]
+                  #:unless (empty? deck))
+         (values (match (first deck)
+                   [(money _) money]
+                   [(material m _) m]
+                   [(herb t _) t]
+                   [(? random-item? i) i])
+                 cards))
+       ;; type->deck
+       (for/hash ([deck (in-hash-keys cards-per-loot-deck)]
+                  #:unless (empty? deck))
+         (values (match (first deck)
+                   [(money _) money]
+                   [(material m _) m]
+                   [(herb t _) t]
+                   [(? random-item? i) i])
+                 deck)))))
 
 (define (player->rewards p num-players level)
   (define gold-factor (level-info-gold (get-level-info level)))

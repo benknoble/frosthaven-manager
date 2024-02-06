@@ -137,7 +137,28 @@
     [{(or (material kind _) (herb kind _))} (~a kind)]
     [{(== random-item)} "Random Item"])
   (define (table-with-actual-loot-deck)
-    (define @deck (@> @cards-per-loot-deck build-loot-deck))
+    (define @deck (@> @cards-per-loot-deck
+                      (λ (cards-per-loot-deck)
+                        (build-loot-deck
+                         ;; assume that each deck in cards-per-loot-deck is homogenous.
+                         ;; type->number-of-cards
+                         (for/hash ([(deck cards) (in-hash cards-per-loot-deck)]
+                                    #:unless (empty? deck))
+                           (values (match (first deck)
+                                     [(money _) money]
+                                     [(material m _) m]
+                                     [(herb t _) t]
+                                     [(? random-item? i) i])
+                                   cards))
+                         ;; type->deck
+                         (for/hash ([deck (in-hash-keys cards-per-loot-deck)]
+                                    #:unless (empty? deck))
+                           (values (match (first deck)
+                                     [(money _) money]
+                                     [(material m _) m]
+                                     [(herb t _) t]
+                                     [(? random-item? i) i])
+                                   deck))))))
     ;; not setting current renderer, nor using an eventspace: dialog
     (vpanel
       (hpanel (text "Duplicates?")
