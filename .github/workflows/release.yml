@@ -23,7 +23,7 @@ jobs:
       - name: Bundling frosthaven-manager distribution
         run: make linux-FrosthavenManager.tar.gz
       - name: Upload FrosthavenManager artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linux-dist
           path: linux-FrosthavenManager.tar.gz
@@ -43,7 +43,7 @@ jobs:
       - name: Bundling frosthaven-manager distribution
         run: make macOS-FrosthavenManager.tar.gz
       - name: Upload FrosthavenManager.app artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: macOS-dist
           path: macOS-FrosthavenManager.tar.gz
@@ -65,7 +65,7 @@ jobs:
       - name: Bundling frosthaven-manager distribution
         run: make windows-FrosthavenManager.zip
       - name: Upload FrosthavenManager artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-dist
           path: windows-FrosthavenManager.zip
@@ -78,15 +78,15 @@ jobs:
       - build_windows
     steps:
       - name: Download FrosthavenManager artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: linux-dist
       - name: Download FrosthavenManager.app artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: macOS-dist
       - name: Download FrosthavenManager.exe artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: windows-dist
       - name: Release
