@@ -62,7 +62,7 @@
 
 (define (-extend-standard-deck)
   (const
-   (hash-union (hash money money-deck 'random-item (list random-item))
+   (hash-union (hash 'money money-deck 'random-item (list random-item))
                material-decks
                herb-decks)))
 

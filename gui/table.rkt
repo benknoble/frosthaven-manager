@@ -52,11 +52,11 @@
 
   (test-case "make-preview-rows for loot deck"
     (define loot-deck (build-loot-deck
-                       (hash money 3
+                       (hash 'money 3
                              lumber 2
                              hide 2
                              axenut 2)
-                       (hash money money-deck
+                       (hash 'money money-deck
                              lumber (hash-ref material-decks lumber)
                              hide (hash-ref material-decks hide)
                              axenut (hash-ref herb-decks axenut))))

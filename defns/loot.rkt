@@ -114,11 +114,11 @@
     [(herb name amount) (herb name (add1 amount))]))
 
 (define loot-type/c
-  (or/c (flow (equal? money)) material-kind? herb-kind? random-item?))
+  (or/c 'money material-kind? herb-kind? 'random-item))
 
 (define (card->type c)
   (match c
-    [(money _) money]
+    [(money _) 'money]
     [(material m _) m]
     [(herb t _) t]
-    [(? random-item? i) i]))
+    [(? random-item?) 'random-item]))

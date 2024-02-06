@@ -2,8 +2,7 @@
 
 @(require (for-label (except-in racket null)
                      frosthaven-manager/defns
-                     frosthaven-manager/parsers/formula
-                     qi))
+                     frosthaven-manager/parsers/formula))
 
 @title{Loot Deck}
 @defmodule[frosthaven-manager/defns/loot]
@@ -87,7 +86,7 @@ This predicate recognizes valid loot cards. It is also a valid
 
 @defthing[loot-type/c
            flat-contract?
-           #:value (or/c (flow (equal? money)) material-kind? herb-kind? random-item?)]{
+           #:value (or/c 'money material-kind? herb-kind? 'random-item)]{
 This contract recognizes the type of a loot card.
 }
 
