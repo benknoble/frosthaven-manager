@@ -73,11 +73,7 @@
     (match stickers-per-card
       ['() (hash-union res x #:combine append)]
       [(cons (cons n card) stickers-per-card)
-       (define type
-         (match card
-           [(money _) money]
-           [(material m _) m]
-           [(herb t _) t]))
+       (define type (card->type card))
        (define old-card
          (match (member card (hash-ref x type))
            [(cons old-card _) old-card]

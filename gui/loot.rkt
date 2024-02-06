@@ -144,20 +144,12 @@
                          ;; type->number-of-cards
                          (for/hash ([(deck cards) (in-hash cards-per-loot-deck)]
                                     #:unless (empty? deck))
-                           (values (match (first deck)
-                                     [(money _) money]
-                                     [(material m _) m]
-                                     [(herb t _) t]
-                                     [(? random-item? i) i])
+                           (values (card->type (first deck))
                                    cards))
                          ;; type->deck
                          (for/hash ([deck (in-hash-keys cards-per-loot-deck)]
                                     #:unless (empty? deck))
-                           (values (match (first deck)
-                                     [(money _) money]
-                                     [(material m _) m]
-                                     [(herb t _) t]
-                                     [(? random-item? i) i])
+                           (values (card->type (first deck))
                                    deck))))))
     ;; not setting current renderer, nor using an eventspace: dialog
     (vpanel

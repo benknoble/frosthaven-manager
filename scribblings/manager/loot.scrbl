@@ -16,8 +16,8 @@ Update the loot deck based on the @racket[loot-picker] event.
 }
 
 @defproc[(build-loot-deck
-           [type->number-of-cards (hash/c (or/c (flow (equal? money)) material-kind? herb-kind? random-item?) natural-number/c)]
-           [type->deck (hash/c (or/c (flow (equal? money)) material-kind? herb-kind? random-item?) (listof loot-card?))])
+           [type->number-of-cards (hash/c loot-type/c natural-number/c)]
+           [type->deck (hash/c loot-type/c (listof loot-card?))])
          (listof loot-card?)]{
 Converts two mappings into a shuffled deck of loot cards. This can be considered
 the interpreter for a language whose values are like those produced by

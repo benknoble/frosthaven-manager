@@ -2,7 +2,8 @@
 
 @(require (for-label (except-in racket null)
                      frosthaven-manager/defns
-                     frosthaven-manager/parsers/formula))
+                     frosthaven-manager/parsers/formula
+                     qi))
 
 @title{Loot Deck}
 @defmodule[frosthaven-manager/defns/loot]
@@ -82,6 +83,16 @@ Serializable.
            #:value (or/c money? material? herb? random-item?)]{
 This predicate recognizes valid loot cards. It is also a valid
 @racket[contract?].
+}
+
+@defthing[loot-type/c
+           flat-contract?
+           #:value (or/c (flow (equal? money)) material-kind? herb-kind? random-item?)]{
+This contract recognizes the type of a loot card.
+}
+
+@defproc[(card->type [c loot-card?]) loot-type/c]{
+Convert a loot card to its type.
 }
 
 @defproc[((format-loot-card [n num-players/c]) [card loot-card?]) string?]{

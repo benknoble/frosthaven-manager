@@ -4,8 +4,8 @@
   (contract-out
     [update-loot-deck-and-num-loot-cards
       (-> state? (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any))]
-    [build-loot-deck (-> (hash/c (or/c (flow (equal? money)) material-kind? herb-kind? random-item?) natural-number/c)
-                         (hash/c (or/c (flow (equal? money)) material-kind? herb-kind? random-item?) (listof loot-card?))
+    [build-loot-deck (-> (hash/c loot-type/c natural-number/c)
+                         (hash/c loot-type/c (listof loot-card?))
                          (listof loot-card?))]
     [build-loot-deck! (-> state? any)]
     [give-player-loot (-> state? (-> any/c any))]
@@ -97,20 +97,12 @@
        ;; type->number-of-cards
        (for/hash ([(deck cards) (in-hash cards-per-loot-deck)]
                   #:unless (empty? deck))
-         (values (match (first deck)
-                   [(money _) money]
-                   [(material m _) m]
-                   [(herb t _) t]
-                   [(? random-item? i) i])
+         (values (card->type (first deck))
                  cards))
        ;; type->deck
        (for/hash ([deck (in-hash-keys cards-per-loot-deck)]
                   #:unless (empty? deck))
-         (values (match (first deck)
-                   [(money _) money]
-                   [(material m _) m]
-                   [(herb t _) t]
-                   [(? random-item? i) i])
+         (values (card->type (first deck))
                  deck)))))
 
 (define (player->rewards p num-players level)
