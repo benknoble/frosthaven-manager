@@ -150,7 +150,7 @@
   (define/obs @cards-per-loot-deck (state-@cards-per-deck s))
   (void (render/eventspace
           ;; no separate eventspace: block main until this window closed
-          (window (hpanel (loot-picker #:on-card (update-loot-deck-and-num-loot-cards s))
+          (window (hpanel (loot-picker @cards-per-loot-deck #:on-card (update-loot-deck-and-num-loot-cards s))
                           (table '("Deck" "Cards")
                                  (@~> @cards-per-loot-deck (~> hash->list list->vector))
                                  #:entry->row count+decks->row
