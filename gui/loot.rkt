@@ -129,19 +129,10 @@
   (make-preview-rows loot-deck revealed #:reveal reveal #:hide hide-loot))
 
 (module+ main
-  (require racket/hash
-           frosthaven-manager/manager)
+  (require frosthaven-manager/manager)
   (define s (make-state))
   (define (table-with-actual-loot-deck)
-    (define @deck (@> @type->cards
-                      (λ (type->cards)
-                        (build-loot-deck
-                         ;; type->number-of-cards
-                         type->cards
-                         ;; type->deck
-                         (hash-union (hash 'money money-deck 'random-item (list random-item))
-                                     material-decks
-                                     herb-decks)))))
+    (define @deck (@~> @type->cards (build-loot-deck standard-loot-deck)))
     ;; not setting current renderer, nor using an eventspace: dialog
     (vpanel
       (hpanel (text "Duplicates?")

@@ -13,8 +13,7 @@
     [player->rewards (-> player? num-players/c level/c
                          (listof string?))]))
 
-(require racket/hash
-         frosthaven-manager/observable-operator
+(require frosthaven-manager/observable-operator
          frosthaven-manager/defns
          frosthaven-manager/manager/state)
 
@@ -91,13 +90,8 @@
 
 (define (build-loot-deck! s)
   (:= (state-@loot-deck s)
-      (build-loot-deck
-       ;; type->number-of-cards
-       (@! (state-@type->number-of-cards s))
-       ;; type->deck
-       (hash-union (hash 'money money-deck 'random-item (list random-item))
-                   material-decks
-                   herb-decks))))
+      (build-loot-deck (@! (state-@type->number-of-cards s))
+                       standard-loot-deck)))
 
 (define (player->rewards p num-players level)
   (define gold-factor (level-info-gold (get-level-info level)))

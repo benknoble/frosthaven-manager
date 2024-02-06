@@ -61,10 +61,7 @@
   (-sticker (list (cons stickers c.constructor) ...)))
 
 (define (-extend-standard-deck)
-  (const
-   (hash-union (hash 'money money-deck 'random-item (list random-item))
-               material-decks
-               herb-decks)))
+  (const standard-loot-deck))
 
 (define ((-sticker stickers-per-card) x)
   (let loop ([res (hash)]
