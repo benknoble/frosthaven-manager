@@ -68,8 +68,8 @@
 
 (define (make-sample-loot-deck s)
   (void
-   (for ([deck (append (list money-deck)
-                       (hash-values material-decks)
-                       (hash-values herb-decks))])
-     ((update-loot-deck-and-num-loot-cards s) `(add ,(card->type (first deck)))))
+   (for ([type (append (list 'money)
+                       (hash-keys material-decks)
+                       (hash-keys herb-decks))])
+     ((update-loot-deck-and-num-loot-cards s) `(add ,type)))
    (build-loot-deck! s)))
