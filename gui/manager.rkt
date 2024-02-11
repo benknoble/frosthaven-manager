@@ -146,7 +146,8 @@
             (cond-view
               [(@> @error-text non-empty-string?)
                (hpanel (text "Error message:" #:color "red")
-                       (rich-text-display (@> @error-text list) #:min-size '(#f 60)))]
+                       (rich-text-display (@~> @error-text (~> (string-split "\n") (add-between newline)))
+                                          #:min-size '(#f 60)))]
               [else (spacer)]))
     (hpanel #:stretch '(#t #f)
             #:alignment '(center center)
