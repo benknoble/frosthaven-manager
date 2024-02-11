@@ -5,7 +5,8 @@
           racket/file
           racket/port
           pict
-          (for-label frosthaven-manager/defns)
+          (for-label (except-in racket null)
+                     frosthaven-manager/defns)
           frosthaven-manager/aoe-images)
 
 @title{Programming a Scenario}
@@ -32,6 +33,10 @@ specifications starting in @secref{Foe_Specification_by_Example}.
 A good pattern for personal organization is to use bestiaries to
 define a collection of monsters, and foe specifications to define
 scenario-specific foes by importing the bestiary.
+
+You can also define a stickered set of loot cards for your scenario to avoid
+re-stickering cards each scenario. We'll cover how to do so in
+@secref{Programming_Loot}.
 
 @margin-note{Interested in contributing to Frosthaven Manager? Help me build
 editors to make creating custom bestiaries and scenarios easier!}
@@ -602,3 +607,60 @@ The default numbering option is ordered.
 See @secref{Bestiary_Format_Reference} for information on @nonterm{import},
 @nonterm{monster}, and @nonterm{ability deck}, as well as how to read this
 grammar.
+
+@section{Programming Loot}
+
+@defmodule[frosthaven-manager/loot-cards #:lang]
+
+Like other languages described here, all loot programs start with @(hash-lang)
+@racketmodname[frosthaven-manager/loot-cards] in the first line and typically
+have a @filepath{.rkt} suffix.
+
+The following commands may be used in
+@racketmodname[frosthaven-manager/loot-cards]. The documentation for each
+command shows how to use it.
+
+@defform[#:id extend-standard-deck extend-standard-deck]{
+This command, written by itself, declares that the following program is based on
+the standard set of Frosthaven loot cards. It is mandatory for all loot
+programs.
+
+This command may be repeated; each use discards the effects of all prior
+commands.
+}
+
+@defform[(sticker [stickers card] ...)
+         #:grammar ([card (money amount)
+                          (material 2p 3p 4p)
+                          herb
+                          (herb amount)])
+         #:contracts ([stickers number?]
+                      [amount number?]
+                      [2p number?]
+                      [3p number?]
+                      [4p number?])]{
+This command is written parenthesized as shown. It declares that the named
+@racket[card]s should have a number of @onscreen{+ 1} stickers added equal to
+@racket[stickers]. The @racket[card] must be in the deck.
+
+To specify a card, you write @racket[(money _amount)] for the money card worth a
+certain amount. You write @racket[(_material _2p _3p _4p)], where
+@racket[_material] is any of @racket[lumber], @racket[hide], or @racket[metal],
+for the material card that gives a number of resources for 2 players
+(@racket[_2p]), 3 players (@racket[_3p]), and 4 players (@racket[_4p]). You
+write @racket[arrowvine], @racket[axenut], @racket[corpsecap],
+@racket[flamefruit], @racket[rockroot], or @racket[snowthistle] for the herb
+card worth 1 herb. You can also parenthesize and provide an amount for herb
+cards worth more.
+
+This command may be repeated.
+}
+
+Here is an example loot program that adds 1 sticker to a 2/2/1 lumber card:
+@filebox["speartip.rkt"]{
+@codeblock|{
+#lang frosthaven-manager/loot-cards
+extend-standard-deck
+(sticker [1 (lumber 2 2 1)])
+}|
+}

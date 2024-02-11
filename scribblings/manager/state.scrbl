@@ -47,7 +47,7 @@ True iff @racket[c] holds a @racket[monster-group*].
               [|@|level (obs/c level/c)]
               [|@|num-players (obs/c num-players/c)]
               [|@|creatures (obs/c (listof creature?))]
-              [|@|cards-per-deck (obs/c (hash/c (listof loot-card?) natural-number/c))]
+              [|@|type->number-of-cards (obs/c (hash/c loot-type/c natural-number/c))]
               [|@|loot-deck (obs/c (listof loot-card?))]
               [|@|num-loot-cards (obs/c natural-number/c)]
               [|@|elements (listof (obs/c element-state/c))]
@@ -63,7 +63,8 @@ True iff @racket[c] holds a @racket[monster-group*].
               [|@|info-db (obs/c info-db/c)]
               [|@|ability-db (obs/c ability-db/c)]
               [|@|ability-decks (obs/c (hash/c string? ability-decks?))]
-              [|@|prompts (obs/c (listof prompt/c))])]{
+              [|@|prompts (obs/c (listof prompt/c))]
+              [|@|type->deck (maybe-obs/c (hash/c loot-type/c (listof loot-card?)))])]{
 All of the "global" manager state.
 }
 
@@ -72,7 +73,7 @@ All of the "global" manager state.
            [|@|level (maybe-obs/c level/c) (|@| 0)]
            [|@|num-players (maybe-obs/c num-players/c) (|@| 2)]
            [|@|creatures (maybe-obs/c (listof creature?)) (|@| empty)]
-           [|@|cards-per-deck (maybe-obs/c (hash/c (listof loot-card?) natural-number/c)) (|@| (hash))]
+           [|@|type->number-of-cards (maybe-obs/c (hash/c loot-type/c natural-number/c)) (|@| (hash))]
            [|@|loot-deck (maybe-obs/c (listof loot-card?)) (|@| empty)]
            [|@|num-loot-cards (maybe-obs/c natural-number/c) (|@| 0)]
            [|@|elements (listof (maybe-obs/c element-state/c)) (make-states '(fire ice air earth light dark))]
@@ -88,7 +89,8 @@ All of the "global" manager state.
            [|@|info-db (maybe-obs/c info-db/c) (|@| (hash))]
            [|@|ability-db (maybe-obs/c ability-db/c) (|@| (hash))]
            [|@|ability-decks (maybe-obs/c (hash/c string? ability-decks?)) (|@| (hash))]
-           [|@|prompts (maybe-obs/c (listof prompt/c)) (|@| empty)])
+           [|@|prompts (maybe-obs/c (listof prompt/c)) (|@| empty)]
+           [|@|type->deck (maybe-obs/c (hash/c loot-type/c (listof loot-card?))) (|@| standard-loot-deck)])
          state?]{
 Create an initial state.
 }

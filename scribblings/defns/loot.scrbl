@@ -84,6 +84,16 @@ This predicate recognizes valid loot cards. It is also a valid
 @racket[contract?].
 }
 
+@defthing[loot-type/c
+           flat-contract?
+           #:value (or/c 'money material-kind? herb-kind? 'random-item)]{
+This contract recognizes the type of a loot card.
+}
+
+@defproc[(card->type [c loot-card?]) loot-type/c]{
+Convert a loot card to its type.
+}
+
 @defproc[((format-loot-card [n num-players/c]) [card loot-card?]) string?]{
 Formats a loot card for display.
 }
@@ -101,11 +111,9 @@ Constants designating the maximum number of certain kinds of cards.
     @defthing[money-deck (apply list/c (make-list max-money-cards money?))]
     @defthing[material-decks (hash/c material-kind? (apply list/c (make-list max-material-cards material?)))]
     @defthing[herb-decks (hash/c herb-kind? (apply list/c (make-list max-herb-cards herb?)))]
+    @defthing[standard-loot-deck (hash/c loot-type/c (listof loot-card?))]
 )]{
-Decks of loot cards from which you draw to make the loot deck.
-
-Current values are the standard loot cards. Modifications via stickers are not
-yet supported.
+Standard decks of loot cards from which you draw to make the loot deck.
 }
 
 @defproc[(apply-sticker [card (and/c loot-card? (not/c random-item?))])

@@ -3,8 +3,9 @@
 (provide
   (contract-out
     [update-loot-deck-and-num-loot-cards
-      (-> state? (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any))]
-    [build-loot-deck (-> (hash/c (listof loot-card?) natural-number/c)
+      (-> state? (-> (list/c (or/c 'add 'remove) loot-type/c) any))]
+    [build-loot-deck (-> (hash/c loot-type/c natural-number/c)
+                         (hash/c loot-type/c (listof loot-card?))
                          (listof loot-card?))]
     [build-loot-deck! (-> state? any)]
     [give-player-loot (-> state? (-> any/c any))]
@@ -19,7 +20,7 @@
 (module+ test (require rackunit))
 
 (define ((update-loot-deck-and-num-loot-cards s) evt)
-  ((loot-picker-updater (state-@cards-per-deck s)) evt)
+  ((loot-picker-updater (state-@type->number-of-cards s)) evt)
   (<@ (state-@num-loot-cards s) (case (car evt) [(add) add1] [(remove) sub1])))
 
 ;; valid: only called if loot-deck non-empty, loot assigned
@@ -73,21 +74,24 @@
 (define (place-loot-on-bottom s)
   (<~@ (state-@loot-deck s) rotate))
 
-(define ((loot-picker-updater @cards-per-loot-deck) evt)
+(define ((loot-picker-updater @type->number-of-cards) evt)
   (define (update cards-per-loot-deck)
     (match evt
-      [`(add ,deck) (hash-update cards-per-loot-deck deck add1 0)]
-      [`(remove ,deck) (hash-update cards-per-loot-deck deck sub1 0)]))
-  (<@ @cards-per-loot-deck update))
+      [`(add ,type) (hash-update cards-per-loot-deck type add1 0)]
+      [`(remove ,type) (hash-update cards-per-loot-deck type sub1 0)]))
+  (<@ @type->number-of-cards update))
 
-(define (build-loot-deck cards-per-loot-deck)
+(define (build-loot-deck type->number-of-cards type->deck)
   (shuffle
    (flatten
-    (for/list ([(deck count) (in-hash cards-per-loot-deck)])
+    (for/list ([(type count) (in-hash type->number-of-cards)])
+      (define deck (hash-ref type->deck type))
       (take (shuffle deck) count)))))
 
 (define (build-loot-deck! s)
-  (:= (state-@loot-deck s) (build-loot-deck (@! (state-@cards-per-deck s)))))
+  (:= (state-@loot-deck s)
+      (build-loot-deck (@! (state-@type->number-of-cards s))
+                       (@! (state-@type->deck s)))))
 
 (define (player->rewards p num-players level)
   (define gold-factor (level-info-gold (get-level-info level)))

@@ -20,11 +20,15 @@
   [money-deck (apply list/c (make-list max-money-cards money?))]
   [material-decks (hash/c material-kind? (apply list/c (make-list max-material-cards material?)))]
   [herb-decks (hash/c herb-kind? (apply list/c (make-list max-herb-cards herb?)))]
+  [standard-loot-deck (hash/c loot-type/c (listof loot-card?))]
   [material-kinds (listof material-kind?)]
   [herb-kinds (listof herb-kind?)]
-  [apply-sticker (-> (and/c loot-card? (not/c random-item?)) loot-card?)]))
+  [apply-sticker (-> (and/c loot-card? (not/c random-item?)) loot-card?)]
+  [loot-type/c flat-contract?]
+  [card->type (-> loot-card? loot-type/c)]))
 
 (require
+ racket/hash
  racket/serialize
  rebellion/type/enum
  frosthaven-manager/qi
@@ -110,3 +114,18 @@
     [(money amount) (money (add1 amount))]
     [(material name amount) (material name (map add1 amount))]
     [(herb name amount) (herb name (add1 amount))]))
+
+(define loot-type/c
+  (or/c 'money material-kind? herb-kind? 'random-item))
+
+(define (card->type c)
+  (match c
+    [(money _) 'money]
+    [(material m _) m]
+    [(herb t _) t]
+    [(? random-item?) 'random-item]))
+
+(define standard-loot-deck
+  (hash-union (hash 'money money-deck 'random-item (list random-item))
+              material-decks
+              herb-decks))

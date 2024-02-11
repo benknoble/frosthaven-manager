@@ -35,7 +35,7 @@
    #:attributes {constructor}
    #:literals {money}
    [pattern [money amount:number]
-            #:with constructor #'(money number)])
+            #:with constructor #'(money amount)])
  (define-syntax-class material-spec
    #:attributes {constructor}
    #:literals {lumber metal hide}
@@ -61,10 +61,7 @@
   (-sticker (list (cons stickers c.constructor) ...)))
 
 (define (-extend-standard-deck)
-  (const
-   (hash-union (hash money money-deck 'random-item (list random-item))
-               material-decks
-               herb-decks)))
+  (const standard-loot-deck))
 
 (define ((-sticker stickers-per-card) x)
   (let loop ([res (hash)]
@@ -73,11 +70,7 @@
     (match stickers-per-card
       ['() (hash-union res x #:combine append)]
       [(cons (cons n card) stickers-per-card)
-       (define type
-         (match card
-           [(money _) money]
-           [(material m _) m]
-           [(herb t _) t]))
+       (define type (card->type card))
        (define old-card
          (match (member card (hash-ref x type))
            [(cons old-card _) old-card]

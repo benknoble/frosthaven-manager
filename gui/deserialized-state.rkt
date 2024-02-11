@@ -21,7 +21,7 @@
    (~a-view "level" state-@level s)
    (~a-view "num-players" state-@num-players s)
    (pp-view "creatures" state-@creatures s)
-   (pp-view "cards-per-deck" state-@cards-per-deck s)
+   (pp-view "type->number-of-cards" state-@type->number-of-cards s)
    (pp-view "loot-deck" state-@loot-deck s)
    (~a-view "num-loot-cards" state-@num-loot-cards s)
    (apply hpanel

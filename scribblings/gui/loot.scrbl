@@ -4,18 +4,27 @@
                      frosthaven-manager/defns
                      racket/gui/easy
                      racket/gui/easy/contract
-                     frosthaven-manager/gui/loot))
+                     frosthaven-manager/gui/loot
+                     frosthaven-manager/manager/loot))
 
 @title{@tt{gui/loot}}
 @defmodule[frosthaven-manager/gui/loot]
 
 @defproc[(loot-picker
-           [|@|cards-per-deck (obs/c (hash/c (listof loot-card?) natural-number/c))]
-           [#:on-card on-card (-> (list/c (or/c 'add 'remove) (listof loot-card?)) any) void])
+           [|@|type->cards (obs/c (hash/c loot-type/c natural-number/c))]
+           [|@|type->deck (obs/c (hash/c loot-type/c (listof loot-card?)))]
+           [#:on-card on-card (-> (list/c (or/c 'add 'remove) loot-type/c) any) void]
+           [#:on-deck on-deck (-> (hash/c loot-type/c (listof loot-card?)) any) void])
          (is-a?/c view<%>)]{
 A GUI view to build a loot deck by including certain loot cards. The callback
-@racket[on-card] is invoked with an "event" that specifies a deck of cards from
-which one card should be added or removed.
+@racket[on-card] is invoked with an "event" that specifies a type of cards from
+which one card should be added or removed. The callback @racket[on-deck] is
+invoked with a mapping from loot types to decks that should be used to interpret
+what decks to draw cards from. See @racket[build-loot-deck].
+
+This picker allows loading new decks of loot cards and stickering cards on the
+fly with @onscreen{+ 1} stickers. It does not allow removing such stickers;
+reset the deck to start over.
 }
 
 @defproc[(loot-button

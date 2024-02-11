@@ -47,7 +47,14 @@ On the next screen, build the loot deck:
           @item{To include materials, increase or decrease the number of each material card. @counter{the number of each material card in the deck}}
           @item{Similarly for herbs: @counter{the number of each herb card in the deck}}
 ]
-Include stickers using the provided controls.
+
+You can browse the list of possible loot cards on the left of the screen. You
+can also reset the deck to the standard configuration or load a custom deck
+using the provided controls. See @secref{Programming_Loot} to write loot
+programs. Double-clicking a loot card will add a @onscreen{+ 1} sticker to it.
+There is no facility to remove stickers; instead, reset to the standard
+configuration or reload your custom deck to remove all stickers.
+
 @next
 
 @step{Add Round Prompts}
