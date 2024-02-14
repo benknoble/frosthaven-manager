@@ -77,6 +77,7 @@
  frosthaven-manager/parsers/formula
  frosthaven-manager/defns/level
  frosthaven-manager/defns/scenario
+ (prefix-in elements: frosthaven-manager/elements)
  (submod frosthaven-manager/gui/rich-text-display model))
 
 (struct monster-stats [max-hp move attack bonuses effects immunities] #:prefab)
@@ -174,13 +175,31 @@
                [else (gen (pict:text "AoE File Not Found"))])))
        (list prefix newline aoe-pict newline suffix)]
       [x (list x)]))
+  (define (infuse-element x)
+    (match x
+      [(regexp #px"^(.*)(?i:infuse)\\s*(?i:(fire|ice|air|earth|light|dark))\\s*(.*)$"
+               (list _ prefix element suffix))
+       (list prefix
+             (elements:element-pics-infused (element->element-pics element))
+             suffix)]
+      [x (list x)]))
+  (define (consume-element x)
+    (match x
+      [(regexp #px"^(.*)(?i:consume)\\s*(?i:(fire|ice|air|earth|light|dark))\\s*(.*)$"
+               (list _ prefix element suffix))
+       (list prefix
+             (elements:element-pics-consume (element->element-pics element))
+             suffix)]
+      [x (list x)]))
   (define replacements
     (list bulleted
           attack
           effects
           move))
   (define pict-replacements
-    (list splice-aoe))
+    (list splice-aoe
+          infuse-element
+          consume-element))
   (for/fold ([result (list (regexp-replaces ability-text replacements))])
             ([pict-replacement (in-list pict-replacements)])
     (append-map (only-on-text pict-replacement) result)))
@@ -258,6 +277,15 @@
   (cond
     [(string? x) (f x)]
     [else (list x)]))
+
+(define (element->element-pics e)
+  ((case (string-downcase e)
+     [("fire") elements:fire]
+     [("ice") elements:ice]
+     [("air") elements:air]
+     [("earth") elements:earth]
+     [("light") elements:light]
+     [("dark") elements:dark])))
 
 (define (make-monster* stats number elite? env)
   (monster number elite? (monster-stats-max-hp* stats env) empty))
