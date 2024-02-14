@@ -175,6 +175,12 @@
                [else (gen (pict:text "AoE File Not Found"))])))
        (list prefix newline aoe-pict newline suffix)]
       [x (list x)]))
+  (define (infuse-wild x)
+    (match x
+      [(regexp #px"(.*)(?i:infuse)\\s*(?i:any)(?:\\s*element)?(.*)$"
+               (list _ prefix suffix))
+       (list prefix (elements:element-pics-infused (elements:wild)) suffix)]
+      [x (list x)]))
   (define (infuse-element x)
     (match x
       [(regexp #px"^(.*)(?i:infuse)\\s*(?i:(fire|ice|air|earth|light|dark))\\s*(.*)$"
@@ -183,6 +189,12 @@
              (elements:element-pics-infused (element->element-pics element))
              suffix)]
       [x (list x)]))
+  (define (consume-wild x)
+      (match x
+        [(regexp #px"(.*)(?i:consume)\\s*(?i:any)(?:\\s*element)?(.*)$"
+                 (list _ prefix suffix))
+         (list prefix (elements:element-pics-consume (elements:wild)) suffix)]
+        [x (list x)]))
   (define (consume-element x)
     (match x
       [(regexp #px"^(.*)(?i:consume)\\s*(?i:(fire|ice|air|earth|light|dark))\\s*(.*)$"
@@ -199,7 +211,9 @@
   (define pict-replacements
     (list splice-aoe
           infuse-element
-          consume-element))
+          infuse-wild
+          consume-element
+          consume-wild))
   (for/fold ([result (list (regexp-replaces ability-text replacements))])
             ([pict-replacement (in-list pict-replacements)])
     (append-map (only-on-text pict-replacement) result)))
