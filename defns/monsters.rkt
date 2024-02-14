@@ -158,26 +158,32 @@
                  (if (not (empty? common-effects))
                    (string-join common-effects ", " #:before-first ", ")
                    ""))))))
+  (define (splice-aoe x)
+    (match x
+      [(regexp #rx"^(.*)aoe\\(([^)]+)\\)(.*)$"
+               (list _ prefix aoe suffix))
+       (define base
+         (switch (ability-card)
+           [monster-ability? monster-ability-location]
+           [else "."]))
+       (define aoe-pict
+         (~> (base aoe)
+             build-path
+             (switch
+               [file-exists? (~> get-aoe apply)]
+               [else (gen (pict:text "AoE File Not Found"))])))
+       (list prefix newline aoe-pict newline suffix)]
+      [x (list x)]))
   (define replacements
     (list bulleted
           attack
           effects
           move))
-  (match (regexp-replaces ability-text replacements)
-    [(regexp #rx"^(.*)aoe\\(([^)]+)\\)(.*)$"
-             (list _ prefix aoe suffix))
-     (define base
-       (switch (ability-card)
-         [monster-ability? monster-ability-location]
-         [else "."]))
-     (define aoe-pict
-       (~> (base aoe)
-           build-path
-           (switch
-             [file-exists? (~> get-aoe apply)]
-             [else (gen (pict:text "AoE File Not Found"))])))
-     (list prefix newline aoe-pict newline suffix)]
-    [x (list x)]))
+  (define pict-replacements
+    (list splice-aoe))
+  (for/fold ([result (list (regexp-replaces ability-text replacements))])
+            ([pict-replacement (in-list pict-replacements)])
+    (append-map (only-on-text pict-replacement) result)))
 
 (module+ test
   (require rackunit)
@@ -247,6 +253,11 @@
    (current-namespace)
    (thunk
     (dynamic-require path 'aoe (thunk not-an-aoe)))))
+
+(define ((only-on-text f) x)
+  (cond
+    [(string? x) (f x)]
+    [else (list x)]))
 
 (define (make-monster* stats number elite? env)
   (monster number elite? (monster-stats-max-hp* stats env) empty))
