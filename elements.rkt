@@ -14,7 +14,8 @@
     [earth (-> element-pics?)]
     [light (-> element-pics?)]
     [dark (-> element-pics?)]
-    [elements (-> (listof element-pics?))]))
+    [elements (-> (listof element-pics?))]
+    [wild (-> element-pics?)]))
 
 (require pict
          pict/color
@@ -255,11 +256,34 @@
 
 (define (elements) (list (fire) (ice) (air) (earth) (light) (dark)))
 
+(define (wild-base)
+  (define (slice color)
+    (wedge (* size 1/2) 60 "solid" color))
+  (define wild-fire (slice "red"))
+  (define wild-ice (slice "cyan"))
+  (define wild-air (slice "light gray"))
+  (define wild-earth (slice "dark green"))
+  (define wild-light (slice "gold"))
+  (define wild-dark (slice "purple"))
+  ;; TODO: use a dc, draw-arc, etc.
+  (~> ((base))
+      ghost
+      (pin-over (* size 1/2) 0 wild-fire)
+      (pin-over 0 (* size 10/24) (rotate wild-ice pi))
+      (pin-over (* size 1/8) (* size -17/80) (rotate wild-air (* 1/3 pi)))
+      (pin-over (* size 1/4) (* size 10/24) (rotate wild-earth (* -2/3 pi)))
+      (pin-over (* size -1/8) (* size -1/80) (rotate wild-light (* 2/3 pi)))
+      (pin-over (* size 1/2) (* size 1/5) (rotate wild-dark (* -1/3 pi)))))
+
+(define (wild)
+  (define base (wild-base))
+  (element-pics "Wild" base base base (make-consume base)))
+
 (module+ main
   (require racket/gui)
   (show-pict
    (apply hc-append
-          (for/list ([e (elements)])
+          (for/list ([e (cons (wild) (elements))])
             (apply vc-append
                    (for/list ([f (list element-pics-infused
                                        element-pics-waning
