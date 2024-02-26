@@ -295,7 +295,7 @@
   (define/obs @undo (list (s@->v s)))
   (define (push-state . _args)
     (<~@ @undo
-         (~>> (-< _ (~> length (min 100)))
+         (~>> (-< _ (~> length (min 20)))
               take
               (cons (s@->v s)))))
   ;; Only observe meaningful changes in state. Observing every change means
