@@ -35,9 +35,19 @@
                            [alt-text string?])]
     [newline? (-> any/c boolean?)]
     [newline newline?]
-    [scale-icon (-> pict? pict?)]))
+    [scale-icon (-> pict? pict?)]
+    [model-equal? (-> (listof (or/c string?
+                                    pict?
+                                    pict/alt-text?
+                                    newline?))
+                      (listof (or/c string?
+                                    pict?
+                                    pict/alt-text?
+                                    newline?))
+                      any/c)]))
 
   (require racket/snip
+           racket/draw
            pict)
 
   (define newline
@@ -52,7 +62,26 @@
 
   (define icon-sizer (text "MM\nMM"))
   (define (scale-icon p)
-    (scale-to-fit p icon-sizer)))
+    (scale-to-fit p icon-sizer))
+
+  (define (model-equal? xs ys)
+    (and (= (length xs) (length ys))
+         (andmap (match-lambda**
+                   [{(? string? x) (? string? y)} (string=? x y)]
+                   [{(? newline?) (? newline?)} #t]
+                   [{(? pict? p) (? pict? q)} (pict-equal? p q)]
+                   [{(pict/alt-text p t) (pict/alt-text q u)} (and (string=? t u) (pict-equal? p q))]
+                   [{_ _} #f])
+                 xs ys)))
+
+  (define (pict-equal? p q)
+    (equal? (pict->recorded-datum p)
+            (pict->recorded-datum q)))
+
+  (define (pict->recorded-datum p)
+    (let ([dc (new record-dc%)])
+      (draw-pict p dc 0 0)
+      (send dc get-recorded-datum))))
 
 (require 'model)
 
@@ -184,7 +213,7 @@
     (define/public (update v what val)
       (case/dep what
         [@content
-         (unless (equal? val (send v get-context 'content))
+         (unless (model-equal? val (send v get-context 'content))
            (redraw v val (peek @font))
            (send v set-context 'content val))]
         [@font (redraw v (peek @content) val)]
