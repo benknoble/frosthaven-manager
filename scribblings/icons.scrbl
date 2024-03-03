@@ -1,7 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label racket
-                     pict
+@(require (for-label pict
                      frosthaven-manager/icons)
           frosthaven-manager/icons)
 
@@ -18,3 +17,4 @@ are preserved.
    @defproc[(proc) pict?]{@para[(proc)] Provides replacements for @itemlist[@item{@replacement} ...]})
 
 @deficon[target "Target N" "Target all" "+N target(s)"]
+@deficon[range "Range N"]

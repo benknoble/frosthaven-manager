@@ -216,6 +216,12 @@
                (list _ prefix +target suffix))
        (list prefix +target (scale-icon (icons:target)) suffix)]
       [x (list x)]))
+  (define (range x)
+    (match x
+      [(regexp #px"^(.*)(?i:range)(.*)$"
+               (list _ prefix suffix))
+       (list prefix (scale-icon (icons:range)) suffix)]
+      [x (list x)]))
   (define replacements
     (list bulleted
           attack
@@ -227,7 +233,8 @@
           infuse-wild
           consume-element
           consume-wild
-          target))
+          target
+          range))
   (for/fold ([result (list (regexp-replaces ability-text replacements))])
             ([pict-replacement (in-list pict-replacements)])
     (append-map (only-on-text pict-replacement) result)))
