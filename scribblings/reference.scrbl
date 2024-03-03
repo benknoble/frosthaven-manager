@@ -13,6 +13,7 @@ and compelling reason.
 @include-section{defns.scrbl}
 @include-section{elements.scrbl}
 @include-section{enum-helpers.scrbl}
+@include-section{icons.scrbl}
 @include-section{manager.scrbl}
 @include-section{gui.scrbl}
 @include-section{files.scrbl}

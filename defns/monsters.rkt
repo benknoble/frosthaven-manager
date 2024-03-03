@@ -78,7 +78,8 @@
  frosthaven-manager/defns/level
  frosthaven-manager/defns/scenario
  (prefix-in elements: frosthaven-manager/elements)
- (submod frosthaven-manager/gui/rich-text-display model))
+ (submod frosthaven-manager/gui/rich-text-display model)
+ (prefix-in icons: frosthaven-manager/icons))
 
 (struct monster-stats [max-hp move attack bonuses effects immunities] #:prefab)
 (struct monster-info [set-name name normal-stats elite-stats] #:prefab)
@@ -203,6 +204,18 @@
              (elements:element-pics-consume (element->element-pics element))
              suffix)]
       [x (list x)]))
+  (define (target x)
+    (match x
+      [(regexp #px"^(.*)(?i:target)(\\s*\\d+)(.*)$"
+               (list _ prefix digit suffix))
+       (list prefix (scale-icon (icons:target)) digit suffix)]
+      [(regexp #px"^(.*)(?i:target)(\\s*(?i:all))(.*)$"
+               (list _ prefix all suffix))
+       (list prefix (scale-icon (icons:target)) all suffix)]
+      [(regexp #px"^(.*)(\\+\\d+\\s*)(?i:target(?:s)?)(\\s*.*)$"
+               (list _ prefix +target suffix))
+       (list prefix +target (scale-icon (icons:target)) suffix)]
+      [x (list x)]))
   (define replacements
     (list bulleted
           attack
@@ -213,7 +226,8 @@
           infuse-element
           infuse-wild
           consume-element
-          consume-wild))
+          consume-wild
+          target))
   (for/fold ([result (list (regexp-replaces ability-text replacements))])
             ([pict-replacement (in-list pict-replacements)])
     (append-map (only-on-text pict-replacement) result)))
