@@ -31,6 +31,7 @@
   racket/runtime-path
   racket/async-channel
   syntax/parse/define
+  (prefix-in tx: txexpr)
   web-server/dispatch/syntax
   web-server/dispatch/url-patterns
   web-server/dispatch/extend
@@ -556,7 +557,9 @@
              [(? newline?) `(br)]
              [(or (? pict:pict? p) (pict/alt-text p _))
               (define svg (string->xexpr (bytes->string/utf-8 (convert p 'svg-bytes))))
-              svg]))))))
+              (cond
+                [(>= (pict:pict-height p) 50) svg]
+                [else (tx:attr-set svg 'class "icon")])]))))))
 
 (define (monsters->xexprs group-id monsters mg env)
   (for/list ([monster monsters])
