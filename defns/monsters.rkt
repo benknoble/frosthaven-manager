@@ -222,6 +222,16 @@
                (list _ prefix suffix))
        (list prefix (scale-icon (icons:range)) suffix)]
       [x (list x)]))
+  (define (push-pull x)
+    (match x
+      [(regexp #px"^(.*)((?i:push)|(?i:pull))(.*)$"
+               (list _ prefix push-pull suffix))
+       (list prefix
+             (match (string-downcase push-pull)
+               ["push" (icons:push)]
+               ["pull" (icons:pull)])
+             suffix)]
+      [x (list x)]))
   (define replacements
     (list bulleted
           attack
@@ -234,7 +244,8 @@
           consume-element
           consume-wild
           target
-          range))
+          range
+          push-pull))
   (for/fold ([result (list (regexp-replaces ability-text replacements))])
             ([pict-replacement (in-list pict-replacements)])
     (append-map (only-on-text pict-replacement) result)))

@@ -9,7 +9,7 @@
 
 This module provides various icons that are spliced into ability card texts.
 All replacements are case insensitive; any numbers or other accompanying text
-are preserved.
+are preserved. The signifier @racket[_N] denotes where a number is expected.
 
 @(require syntax/parse/define)
 
@@ -18,3 +18,5 @@ are preserved.
 
 @deficon[target "Target N" "Target all" "+N target(s)"]
 @deficon[range "Range N"]
+@deficon[push "Push N"]
+@deficon[pull "Pull N"]
