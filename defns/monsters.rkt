@@ -265,36 +265,40 @@
   (define ability-card
     (match-let-values ([{_ ability} (get-dbs  "../testfiles/sample-bestiary-import.rkt")])
       (~> (ability) (hash-ref "archer") first)))
-  (test-equal? "Simple Attack"
-               (monster-ability-ability->rich-text "Attack +1" ability-card mg env)
-               (list "· Attack 3 (E:4, wound)"))
-  (test-equal? "Simple Attack 1"
-               (monster-ability-ability->rich-text "Attack +1" ability-card mg1 env)
-               (list "· Attack 4 (E:5), wound"))
-  (test-equal? "Simple Attack 2"
-               (monster-ability-ability->rich-text "Attack +1" ability-card mg2 env)
-               (list "· Attack 5 (E:6, stun), wound"))
-  (test-equal? "Simple Attack 3"
-               (monster-ability-ability->rich-text "Attack +1" ability-card mg3 env)
-               (list "· Attack 6 (N:muddle) (E:7, stun), wound"))
-  (test-equal? "Attack, X"
-               (monster-ability-ability->rich-text "Attack +1, Push 1" ability-card mg3 env)
-               (list "· Attack 6 (N:muddle) (E:7, stun), wound, Push 1"))
-  (test-equal? "Simple Move"
-               (monster-ability-ability->rich-text "Move +1" ability-card mg env)
-               (list "· Move 3 (E:3)"))
-  (test-equal? "Granted Attack"
-               (monster-ability-ability->rich-text "Grant Piranha: Attack +1" ability-card mg env)
-               (list "· Grant Piranha: Attack +1"))
-  (test-equal? "Granted Move"
-               (monster-ability-ability->rich-text "Grant Piranha: Move +1" ability-card mg env)
-               (list "· Grant Piranha: Move +1"))
-  (test-equal? "Controlled Attack"
-               (monster-ability-ability->rich-text "Control Enemy: Attack +1" ability-card mg env)
-               (list "· Control Enemy: Attack +1"))
-  (test-equal? "Controlled Move"
-               (monster-ability-ability->rich-text "Control Enemy: Move +1" ability-card mg env)
-               (list "· Control Enemy: Move +1")))
+  (define model-equal? (dynamic-require '(submod frosthaven-manager/gui/rich-text-display model) 'model-equal?))
+  (define-binary-check (check-model-equal? model-equal? actual expected))
+  (define-syntax-rule (test-model-equal? name actual expected)
+    (test-check name check-model-equal? actual expected))
+  (test-model-equal? "Simple Attack"
+                     (monster-ability-ability->rich-text "Attack +1" ability-card mg env)
+                     (list "· Attack 3 (E:4, wound)"))
+  (test-model-equal? "Simple Attack 1"
+                     (monster-ability-ability->rich-text "Attack +1" ability-card mg1 env)
+                     (list "· Attack 4 (E:5), wound"))
+  (test-model-equal? "Simple Attack 2"
+                     (monster-ability-ability->rich-text "Attack +1" ability-card mg2 env)
+                     (list "· Attack 5 (E:6, stun), wound"))
+  (test-model-equal? "Simple Attack 3"
+                     (monster-ability-ability->rich-text "Attack +1" ability-card mg3 env)
+                     (list "· Attack 6 (N:muddle) (E:7, stun), wound"))
+  (test-model-equal? "Attack, X"
+                     (monster-ability-ability->rich-text "Attack +1, Push 1" ability-card mg3 env)
+                     (list "· Attack 6 (N:muddle) (E:7, stun), wound, " (icons:push) " 1"))
+  (test-model-equal? "Simple Move"
+                     (monster-ability-ability->rich-text "Move +1" ability-card mg env)
+                     (list "· Move 3 (E:3)"))
+  (test-model-equal? "Granted Attack"
+                     (monster-ability-ability->rich-text "Grant Piranha: Attack +1" ability-card mg env)
+                     (list "· Grant Piranha: Attack +1"))
+  (test-model-equal? "Granted Move"
+                     (monster-ability-ability->rich-text "Grant Piranha: Move +1" ability-card mg env)
+                     (list "· Grant Piranha: Move +1"))
+  (test-model-equal? "Controlled Attack"
+                     (monster-ability-ability->rich-text "Control Enemy: Attack +1" ability-card mg env)
+                     (list "· Control Enemy: Attack +1"))
+  (test-model-equal? "Controlled Move"
+                     (monster-ability-ability->rich-text "Control Enemy: Move +1" ability-card mg env)
+                     (list "· Control Enemy: Move +1")))
 
 (define ((keyword-sub stats-f mg) _match word +- amount)
   (define op (eval (string->symbol +-) (make-base-namespace)))
