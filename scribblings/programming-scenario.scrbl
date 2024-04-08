@@ -334,11 +334,11 @@ Any @nonterm{card} can refer to elements by writing @racket["Infuse"] or
 @racket["Consume"] followed by the name of the element. This is
 case-insensitive, so @racket["infuse"] works, too. The element names are
 @racket["fire"], @racket["ice"], @racket["air"], @racket["earth"],
-@racket["light"], and @racket["dark"]. You can also write @racket["Infuse any"]
-or @racket["Infuse any element"] for wild infusions and @racket["Consume any"] or
-@racket["Consume any element"] for wild consumptions. This is also
-case-insensitive. In all cases this text will be transformed to a corresponding
-pictorial representation.
+@racket["light"], and @racket["dark"] or @racket["darkness"]. You can also write
+@racket["Infuse any"] or @racket["Infuse any element"] for wild infusions and
+@racket["Consume any"] or @racket["Consume any element"] for wild consumptions.
+This is also case-insensitive. In all cases this text will be transformed to a
+corresponding pictorial representation.
 
 @(require scribble/bnf)
 

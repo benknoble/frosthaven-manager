@@ -184,7 +184,7 @@
       [x (list x)]))
   (define (infuse-element x)
     (match x
-      [(regexp #px"^(.*)(?i:infuse)\\s*(?i:(fire|ice|air|earth|light|dark))\\s*(.*)$"
+      [(regexp #px"^(.*)(?i:infuse)\\s*(?i:(fire|ice|air|earth|light|darkness|dark))\\s*(.*)$"
                (list _ prefix element suffix))
        (list prefix
              (elements:element-pics-infused (element->element-pics element))
@@ -335,7 +335,8 @@
      [("air") elements:air]
      [("earth") elements:earth]
      [("light") elements:light]
-     [("dark") elements:dark])))
+     [("dark") elements:dark]
+     [("darkness") elements:dark])))
 
 (define (make-monster* stats number elite? env)
   (monster number elite? (monster-stats-max-hp* stats env) empty))
