@@ -184,11 +184,13 @@
       [x (list x)]))
   (define (infuse-element x)
     (match x
-      [(regexp #px"^(.*)(?i:infuse)\\s*(?i:(fire|ice|air|earth|light|darkness|dark))\\s*(.*)$"
-               (list _ prefix element suffix))
-       (list prefix
-             (elements:element-pics-infused (element->element-pics element))
-             suffix)]
+      [(regexp #px"^(.*)(?i:infuse)\\s*(?i:(fire|ice|air|earth|light|darkness|dark))((?:\\s*,\\s*(?i:(?:fire|ice|air|earth|light|darkness|dark)))*)\\s*(.*)$"
+               (list _ prefix element more-elements? suffix))
+       (append (list prefix
+                     (elements:element-pics-infused (element->element-pics element)))
+               (map (flow (~> element->element-pics elements:element-pics-infused))
+                    (regexp-match* #px"(?i:fire|ice|air|earth|light|darkness|dark)" more-elements?))
+               (list suffix))]
       [x (list x)]))
   (define (consume-wild x)
       (match x
