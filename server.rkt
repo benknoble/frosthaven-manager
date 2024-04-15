@@ -109,16 +109,19 @@
       (λ (new-e-state)
         (multicast-channel-put ch `(element ,(elements:element-pics-name e) ,new-e-state)))))
   (obs-observe!
-    (state-@creatures an-s)
-    (λ (creatures)
-      (define env (@! (state-@env an-s)))
-      (define ads (@! (state-@ability-decks an-s)))
-      (for ([c creatures])
-        (cond
-          [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]
-          [(creature-is-mg*? c) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))
-      (define ids (map creature-css-id (sort creatures < #:key (creature-initiative ads))))
-      (multicast-channel-put ch `(reorder ,ids))))
+   (state-@creatures an-s)
+   (let ([ids (box null)])
+     (λ (creatures)
+       (define env (@! (state-@env an-s)))
+       (define ads (@! (state-@ability-decks an-s)))
+       (for ([c creatures])
+         (cond
+           [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]
+           [(creature-is-mg*? c) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))
+       (define new-ids (map creature-css-id (sort creatures < #:key (creature-initiative ads))))
+       (unless (equal? (unbox ids) new-ids)
+         (set-box! ids new-ids)
+         (multicast-channel-put ch `(reorder ,(unbox ids)))))))
   (obs-observe! (state-@round an-s) (λ (r) (multicast-channel-put ch `(number round ,r))))
   (obs-observe! (state-@num-players an-s)
                 (λ (n) (multicast-channel-put ch `(number inspiration ,(inspiration-reward n)))))
