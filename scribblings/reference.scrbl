@@ -22,6 +22,7 @@ and compelling reason.
 @include-section{parsers.scrbl}
 @include-section{observable-operator.scrbl}
 @include-section{pp.scrbl}
-@include-section{qi.scrbl}
+@include-section{qi/list2hash.scrbl}
+@include-section{qi/utils.scrbl}
 @include-section{server.scrbl}
 @include-section{syntax.scrbl}

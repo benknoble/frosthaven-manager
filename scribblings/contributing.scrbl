@@ -93,7 +93,8 @@ A full reference is provided at @secref{Developer_Reference}.
 
 Frosthaven Manager makes extensive use of
 @other-doc['(lib "qi/scribblings/qi.scrbl")]. Local customizations can be found
-in @racketmodname[frosthaven-manager/qi] and
+in @racketmodname[frosthaven-manager/qi/list2hash],
+@racketmodname[frosthaven-manager/qi/utils], and
 @racketmodname[frosthaven-manager/curlique].
 
 Frosthaven Manager uses
