@@ -26,7 +26,7 @@
    (button "Add Prompt"
            (thunk
             ;; not setting current renderer, nor using an eventspace: dialog
-            (render (round-prompt-selector (flow (when _ on-add))))))
+            (render (round-prompt-selector {(when _ on-add)}))))
    (list-view
      @keyed-prompts
      #:key car
