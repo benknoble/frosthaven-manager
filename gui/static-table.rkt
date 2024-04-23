@@ -25,7 +25,7 @@
 (require (only-in racket/gui label-string? dimension-integer?)
          racket/gui/easy
          racket/gui/easy/contract
-         frosthaven-manager/qi)
+         frosthaven-manager/curlique)
 
 ;; index->entry computes the "row index", which is always the first column
 ;; entry->value computes the value that each function in entry->columns will be
