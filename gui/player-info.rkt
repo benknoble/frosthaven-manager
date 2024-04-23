@@ -127,6 +127,12 @@
     (button "Summon" (thunk (do-summon add-summon))))
   (define ((summon-condition i) evt)
     (on-summon-condition i evt))
+  (define ((summon-add-hp i s))
+    (unless (summon-at-max-health? s)
+      (on-summon-hp i add1)))
+  (define ((summon-sub-hp i s))
+    (unless (summon-dead? s)
+      (on-summon-hp i sub1)))
   (define (summons-view)
     (cond-view
       [(@~> @player (~> player-summons (not empty?)))
@@ -137,16 +143,10 @@
          (λ (summons)
            (apply vpanel
                   (for/list ([(s i) (in-indexed (in-list summons))])
-                    (define ((summon-add-hp i))
-                      (unless (summon-at-max-health? s)
-                        (on-summon-hp i add1)))
-                    (define ((summon-sub-hp i))
-                      (unless (summon-dead? s)
-                        (on-summon-hp i sub1)))
                     (summon-view s
                                  (thunk (kill-summon i))
-                                 (summon-add-hp i)
-                                 (summon-sub-hp i)
+                                 (summon-add-hp i s)
+                                 (summon-sub-hp i s)
                                  (summon-condition i)))))))]
       [else (spacer)]))
   ;; final view
