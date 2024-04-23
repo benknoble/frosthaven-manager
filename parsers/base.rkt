@@ -6,7 +6,9 @@
                        data/monad
                        data/applicative
                        data/functor
-                       frosthaven-manager/qi)
+                       frosthaven-manager/curlique
+                       frosthaven-manager/qi/list2hash
+                       frosthaven-manager/qi/utils)
          (contract-out
            [name->set (-> string? (or/c #f string?))]
            [string-ci/p (-> string? (parser/c char? string?))]
@@ -35,7 +37,9 @@
          data/applicative
          (rename-in data/functor
                     [map fmap])
-         frosthaven-manager/qi)
+         frosthaven-manager/curlique
+         frosthaven-manager/qi/list2hash
+         frosthaven-manager/qi/utils)
 
 (module+ test (require rackunit))
 
@@ -101,7 +105,7 @@
 (define (non-empty-text/p why)
   (guard/p text/p non-empty-string? why))
 
-(define-flow name->set (~> string-split (and (~> length (> 0)) last)))
+(define name->set {~> string-split (and (~> length (> 0)) last)})
 
 (module+ test
   (test-case "name->set"
@@ -113,7 +117,7 @@
   (or/p (opt/p (non-empty-text/p "non-empty set name"))
         (guard/p
           (~> (name) name->set pure)
-          (flow (and _ (~> string-length (not zero?))))
+          {(and _ (~> string-length (not zero?)))}
           "name with monster set"
           (const name))))
 
