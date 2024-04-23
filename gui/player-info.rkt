@@ -61,7 +61,7 @@
   (define (make-condition-checkbox c)
     (checkbox #:label (~a c)
               #:checked? (@> @player (player-afflicted-by? c))
-              (flow (~>> (list c) on-condition))))
+              {~>> (list c) on-condition}))
   (define (subtract-hp)
     (unless (@! (@> @player player-dead?))
       (on-hp sub1)))
@@ -90,7 +90,7 @@
       (render/eventspace
         #:eventspace closing-eventspace
         (window
-          #:mixin (flow (~> close-custodian-mixin closing-mixin))
+          #:mixin {~> close-custodian-mixin closing-mixin}
           #:title @init-label
           (input
             (@> @init ~a)
@@ -165,7 +165,7 @@
   (define (make-condition-checkbox c)
     (checkbox #:label (~a c)
               #:checked? ((summon-afflicted-by? c) s)
-              (flow (~>> (list c) on-condition))))
+              {~>> (list c) on-condition}))
   (define (edit-conditions)
     (with-closing-custodian/eventspace
      (render/eventspace
@@ -190,10 +190,10 @@
   (render
    (dialog
     #:title "Summon"
-    #:mixin (flow (~> closing-mixin
-                      (esc (make-on-close-mixin
-                            (thunk
-                             (add-summon (@! @name) (@! @hp)))))))
+    #:mixin {~> closing-mixin
+                (esc (make-on-close-mixin
+                      (thunk
+                       (add-summon (@! @name) (@! @hp)))))}
     (hpanel (input @name (match-lambda**
                            [{'input s} (:= @name s)]
                            [{'return s} (:= @name s) (close!)]))
@@ -219,7 +219,7 @@
     (<@ @hp add1))
   (hpanel
     #:stretch '(#t #f)
-    (input #:label "Name" @name (flow (~> 2> on-name))
+    (input #:label "Name" @name {~> 2> on-name}
            #:min-size '(200 #f))
     (counter (@~> @hp (~a "Max HP: " _)) add-hp subtract-hp)))
 
@@ -247,8 +247,8 @@
                   (<~@ @players (update-players k (player-update-name name))))
       #:on-hp (λ (k f)
                 (<~@ @players (update-players k (player-act-on-max-hp f))))
-      #:names (map (flow (~> cdr player-name)) (@! @players))
-      #:hps (map (flow (~> cdr player-max-hp)) (@! @players))))
+      #:names (map {~> cdr player-name} (@! @players))
+      #:hps (map {~> cdr player-max-hp} (@! @players))))
   (void
     (with-closing-custodian/eventspace
       (render/eventspace
@@ -266,13 +266,13 @@
               (<~@ @players (update-players k proc)))
             (player-view
               (@> @e cdr)
-              #:on-condition (flow (~> player-condition-handler update))
-              #:on-hp (flow (~> player-act-on-hp update))
-              #:on-xp (flow (~> player-act-on-xp update))
-              #:on-initiative (λ (i) (update (flow (player-set-initiative i))))
+              #:on-condition {~> player-condition-handler update}
+              #:on-hp {~> player-act-on-hp update}
+              #:on-xp {~> player-act-on-xp update}
+              #:on-initiative (λ (i) (update {(player-set-initiative i)}))
               #:on-summon
               (λ (name hp)
-                (update (flow (player-summon name hp))))
+                (update {(player-summon name hp)}))
               #:on-summon-hp
               (λ (i proc)
                 (update
