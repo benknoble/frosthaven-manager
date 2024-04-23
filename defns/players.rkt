@@ -55,7 +55,8 @@
 
 (require
  racket/serialize
- frosthaven-manager/qi
+ frosthaven-manager/curlique
+ frosthaven-manager/qi/utils
  frosthaven-manager/defns/loot
  frosthaven-manager/defns/scenario)
 
