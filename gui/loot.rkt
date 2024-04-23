@@ -135,7 +135,7 @@
                      #:on-player [on-player void]
                      #:on-top [on-top void]
                      #:on-bottom [on-bottom void])
-  (define-flow (loot-text deck num-cards)
+  (define-flow (loot-text _deck _num-cards)
     (~>> (== length (or _ 0)) (format "Loot (~a/~a)!")))
   (define (show-assigner)
     ;; not setting current renderer, nor using an eventspace: dialog
@@ -146,14 +146,14 @@
 
 (define (loot-assigner @loot-deck @num-players @players on-player on-top on-bottom)
   (define-close! close! closing-mixin)
-  (define-flow mixin closing-mixin)
-  (define/match (make-player-button e)
+  (define mixin closing-mixin)
+  (define/match (make-player-button _e)
     [{(cons p id)}
       (define (action)
         (on-player id)
         (close!))
       (button (player-name p) action)])
-  (define-flow (card-text num-players deck)
+  (define-flow (card-text _num-players _deck)
     (if (~> 2> (not empty?))
       (~> (== format-loot-card first) apply)
       ""))
@@ -162,7 +162,7 @@
     #:title "Loot card"
     #:style empty
     (text (obs-combine card-text @num-players @loot-deck))
-    (observable-view @players (flow (~> (sep make-player-button) hpanel)))
+    (observable-view @players {~> (sep make-player-button) hpanel})
     (hpanel (spacer)
             (button "Top of Deck" (thunk (on-top) (close!)))
             (button "Bottom of Deck" (thunk (on-bottom) (close!)))
@@ -184,16 +184,16 @@
                (table '("Loot Card") @rows)
                (vpanel
                 (button "Reveal 1" (thunk (<~@ @revealed (switch [number? add1])))
-                        #:enabled? (obs-combine (flow (~> (== _ length)
-                                                          (and (~> 1> number?) <)))
+                        #:enabled? (obs-combine {~> (== _ length)
+                                                    (and (~> 1> number?) <)}
                                                 @revealed @loot-deck))
                 (button "Reveal All" (thunk (:= @revealed 'all))
                         #:enabled? (@> @revealed number?))
                 (spacer)))))))))
 
 (define (preview-rows loot-deck num-players revealed)
-  (define-flow reveal (~> (esc (format-loot-card num-players)) vector))
-  (define-flow hide-loot (gen (vector "?")))
+  (define reveal {~> (esc (format-loot-card num-players)) vector})
+  (define hide-loot {(gen (vector "?"))})
   (make-preview-rows loot-deck revealed #:reveal reveal #:hide hide-loot))
 
 (module+ main
@@ -207,9 +207,9 @@
               (text (@~> @deck (~>> (map eq-hash-code) check-duplicates ~a))))
       (table '("ID" "Cards")
              (@> @deck list->vector)
-             #:entry->row (flow (~> (-< eq-hash-code _) (>< ~a) vector))
+             #:entry->row {~> (-< eq-hash-code _) (>< ~a) vector}
              #:min-size '(250 300))))
-  (define-flow count+decks->row (~> (-< car cdr) (>< ~a) vector))
+  (define count+decks->row {~> (-< car cdr) (>< ~a) vector})
   (define @type->cards (state-@type->number-of-cards s))
   (define @type->deck (state-@type->deck s))
   (void (render/eventspace
