@@ -96,9 +96,9 @@
 (define (player->rewards p num-players level)
   (define gold-factor (level-info-gold (get-level-info level)))
   (define (find-materials m)
-    (flow (and material? (~> material-name (equal? m)))))
+    {(and material? (~> material-name (equal? m)))})
   (define (find-herbs h)
-    (flow (and herb? (~> herb-name (equal? h)))))
+    {(and herb? (~> herb-name (equal? h)))})
   (define loots (player-loot p))
   (map ~a
        (apply list
