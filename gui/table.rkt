@@ -8,7 +8,7 @@
                          #:hide (-> any/c (vectorof string?))
                          (vectorof (vectorof string?)))]))
 
-(require frosthaven-manager/qi)
+(require frosthaven-manager/curlique)
 
 (module+ test (require rackunit))
 
@@ -33,8 +33,8 @@
     (define in (shuffle (hash-ref abilities "archer")))
     (define name-text
       (list->vector (map vector (map monster-ability-name->text in))))
-    (define-flow reveal (~> monster-ability-name->text vector))
-    (define-flow hide (gen (vector "?")))
+    (define reveal {~> monster-ability-name->text vector})
+    (define hide {(gen (vector "?"))})
     (check-equal? (make-preview-rows in 0 #:reveal reveal #:hide hide)
                   (vector-map (const (vector "?")) name-text))
     (check-equal? (make-preview-rows in 5 #:reveal reveal #:hide hide)
@@ -62,8 +62,8 @@
                              axenut (hash-ref herb-decks axenut))))
     (define n-players 3)
     (define loot-text (list->vector (map vector (map (format-loot-card n-players) loot-deck))))
-    (define-flow reveal (~> (esc (format-loot-card n-players)) vector))
-    (define-flow hide-loot (gen (vector "?")))
+    (define reveal {~> (esc (format-loot-card n-players)) vector})
+    (define hide-loot {(gen (vector "?"))})
     (check-equal? (make-preview-rows loot-deck 0 #:reveal reveal #:hide hide-loot)
                   (vector-map (const (vector "?")) loot-text))
     ;; check that vector-map didn't modify loot-text
