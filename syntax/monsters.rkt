@@ -24,7 +24,7 @@
 (require syntax/parse/define
          racket/hash
          racket/runtime-path
-         frosthaven-manager/qi
+         frosthaven-manager/curlique
          frosthaven-manager/defns
          frosthaven-manager/monster-db
          frosthaven-manager/parsers/foes)
@@ -64,11 +64,11 @@
       (combine-abilities original-ability-db imported-ability-db ...))))
 
 ;; -> imports monster-infos ability-decks foes
-(define-flow (syntaxes->bestiary-parts syntaxes)
-  (~> sep (collect-matching/stx (list/c 'import string?)
+(define syntaxes->bestiary-parts
+  {~> sep (collect-matching/stx (list/c 'import string?)
                                 monster-info?
                                 (listof monster-ability?)
-                                foe/pc) collect))
+                                foe/pc) collect})
 
 (define (imports->dbs imports)
   (for/fold ([info-dbs empty]
@@ -90,7 +90,7 @@
 
 ;;;; helper definitions
 (define (syntaxish? p)
-  (flow (~> syntax->datum p)))
+  {~> syntax->datum p})
 
 (define-qi-syntax-parser collect-matching
   [(_ p-flo:expr ...) #'(partition [p-flo collect] ...)])
@@ -98,7 +98,7 @@
 (define-qi-syntax-parser collect-matching/stx
   [(_ p:expr ...) #'(collect-matching (esc (syntaxish? p)) ...)])
 
-(define-flow hash-keys/set (~> hash-keys list->set))
+(define hash-keys/set {~> hash-keys list->set})
 
 (define ((make-set-names get-set-name) dbs xs)
   (apply set-union
@@ -110,7 +110,7 @@
 (define (monster-names-from-infos info-dbs infos)
   (apply set-union
          (~>> (infos) (map monster-info-name) list->set)
-         (map (flow (~>> hash-values (append-map hash-keys) list->set)) info-dbs)))
+         (map {~>> hash-values (append-map hash-keys) list->set} info-dbs)))
 
 (define (subset-error-message who what should-be-smaller should-be-larger)
   (format "these ~a have no ~a: ~a"
