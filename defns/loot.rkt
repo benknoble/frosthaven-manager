@@ -31,9 +31,11 @@
  racket/hash
  racket/serialize
  rebellion/type/enum
- frosthaven-manager/qi
+ frosthaven-manager/curlique
  frosthaven-manager/enum-helpers
  frosthaven-manager/defns/level)
+
+(module+ test (require rackunit))
 
 (serializable-struct money [amount] #:transparent)
 
@@ -80,14 +82,23 @@
   (~> (== material-amount (- 2)) list-ref))
 
 (define (format-loot-card num-players)
-  (define-flow (s? _n)
-    (if (> 1) "s" ""))
+  (define s? {(if (> 1) "s" "")})
   (match-lambda
     [(money amount) (format "~a gold coin~a" amount (s? amount))]
-    [(and (material name _) (app (flow (material-amount* num-players)) amount))
+    [(and (material name _) (app {(material-amount* num-players)} amount))
      (format "~a ~a~a" amount name (s? amount))]
     [(herb name amount) (format "~a ~a~a" amount name (s? amount))]
     [(== random-item) "The random item!"]))
+
+(module+ test
+  (let ([F (format-loot-card 3)])
+    (check-equal? (F (money 1)) "1 gold coin")
+    (check-equal? (F (money 2)) "2 gold coins")
+    (check-equal? (F (material metal (list 2 1 1))) "1 metal")
+    (check-equal? (F (material metal (list 2 2 1))) "2 metals")
+    (check-equal? (F (herb axenut 1)) "1 axenut")
+    (check-equal? (F (herb axenut 2)) "2 axenuts")
+    (check-equal? (F random-item) "The random item!")))
 
 (define money-deck
   (append
