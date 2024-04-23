@@ -13,7 +13,8 @@
 
 In addition to the shorthands below, this module exports @racket[define/obs],
 @racket[|@|], @racket[:=], and @racket[λ:=] from
-@racketmodname[racket/gui/easy/operator].
+@racketmodname[racket/gui/easy/operator] and everything from @racketmodname[qi]
+via @racketmodname[frosthaven-manager/curlique].
 
 @defproc[(|<@| [|@o| obs?] [f (-> any/c any/c)]) any/c]{
 An alias for @racket[obs-update!].
