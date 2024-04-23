@@ -9,7 +9,8 @@
     [default-monster-db path-string?]))
 
 (require racket/runtime-path
-         frosthaven-manager/qi
+         frosthaven-manager/curlique
+         frosthaven-manager/qi/list2hash
          frosthaven-manager/defns)
 
 (define info-db/c
@@ -25,16 +26,16 @@
   (values (dynamic-require db-file 'info-db)
           (dynamic-require db-file 'ability-db)))
 
-(define-flow datums->dbs
-  (~> sep
+(define datums->dbs
+  {~> sep
       (partition
-        ;; info db
-        [monster-info? (~>> collect (group-by monster-info-set-name)
-                            (list~>hash #:->key (~> car monster-info-set-name)
-                                        #:->value (list~>hash #:->key monster-info-name)))]
-        ;; ability deck
-        [monster-ability? (~>> collect (group-by monster-ability-set-name)
-                               (list~>hash #:->key (~> car monster-ability-set-name)))])))
+       ;; info db
+       [monster-info? (~>> collect (group-by monster-info-set-name)
+                           (list~>hash #:->key (~> car monster-info-set-name)
+                                       #:->value (list~>hash #:->key monster-info-name)))]
+       ;; ability deck
+       [monster-ability? (~>> collect (group-by monster-ability-set-name)
+                              (list~>hash #:->key (~> car monster-ability-set-name)))])})
 
 (module+ test
   (require rackunit
