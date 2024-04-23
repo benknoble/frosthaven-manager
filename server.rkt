@@ -267,12 +267,12 @@
              (th "Random Item?")
              (th "XP")
              (th "Gold")
-             ,@(map (flow (~>> ~a (list 'th))) material-kinds)
-             ,@(map (flow (~>> ~a (list 'th))) herb-kinds)))
+             ,@(map {~>> ~a (list 'th)} material-kinds)
+             ,@(map {~>> ~a (list 'th)} herb-kinds)))
         (tbody
          ,@(for/list ([p players])
              (define loots (player->rewards p num-players level))
-             `(tr ,@(map (flow (~>> (list 'td))) loots))))))
+             `(tr ,@(map {~>> (list 'td)} loots))))))
       (p "Gold Conversion Rate: " ,(~a gold-factor))
       (p "Bonus Experience: " ,(~a bonus-xp))
       ;; individual loot cards
@@ -352,7 +352,7 @@
             (span ([class "player-initiative"])
                   ,(~a (player-initiative p)))
             ") "
-            (a ([href ,(embed/url (flow (set-initiative-form id)))])
+            (a ([href ,(embed/url {(set-initiative-form id)})])
                "Set Initiative")
             (p ,(action-button
                  (list "player" "hp" "-")
@@ -402,7 +402,7 @@
                 ([class "player-conditions"])
                 (span
                  ,@(~> (p) player-conditions* (active-conditions->xexpr id-binding))))))
-       (p (a ([href ,(embed/url (flow (new-summon-form id)))])
+       (p (a ([href ,(embed/url {(new-summon-form id)})])
              "Summon"))
        (ol ([class "summons"])
            ,@(summons->xexprs id (player-summons p)))))
@@ -489,7 +489,7 @@
       [(list name max-hp)
        (do-player/id player-id
                      (const #f)
-                     (flow (player-summon name max-hp)))]
+                     {(player-summon name max-hp)})]
       [_ (void)])
     (my-redirect/get ((reverse-uri) overview)))
   (response/xexpr
@@ -613,7 +613,7 @@
 
 (define (active-conditions->xexpr cs id-binding [who "player"])
   (~> (cs)
-      (map (flow (active-condition->xexpr id-binding who)) _)
+      (map {(active-condition->xexpr id-binding who)} _)
       (add-between ", " #:before-last " and ")))
 
 (define (active-condition->xexpr c id-binding [who "player"])
@@ -772,27 +772,27 @@
       (response/empty)]
     [(or `(id . ,_) #f) (not-found req)]))
 
-(define-flow (increment-player-hp req)
+(define-flow (increment-player-hp _req)
   (do-player player-at-max-health? (player-act-on-hp add1)))
 
-(define-flow (decrement-player-hp req)
+(define-flow (decrement-player-hp _req)
   (do-player player-dead? (player-act-on-hp sub1)))
 
-(define-flow (increment-player-xp req)
+(define-flow (increment-player-xp _req)
   (do-player (const #f) (player-act-on-xp add1)))
 
-(define-flow (decrement-player-xp req)
-  (do-player (flow (~> player-xp zero?)) (player-act-on-xp sub1)))
+(define-flow (decrement-player-xp _req)
+  (do-player {~> player-xp zero?} (player-act-on-xp sub1)))
 
-(define-flow (remove-player-condition req)
+(define-flow (remove-player-condition _req)
   (do-player-condition #f))
 
-(define-flow (add-player-condition req)
+(define-flow (add-player-condition _req)
   (do-player-condition #t))
 
 (define (set-player-initiative id init)
   (do (<~@ (state-@creatures (s))
-           (update-players id (flow (player-set-initiative init))))))
+           (update-players id {(player-set-initiative init)}))))
 
 (define (loot! req return)
   (match (req->player-id req)
@@ -811,12 +811,12 @@
 
 (define/summon decrement-summon-hp (_r => [pid sid])
   (do-player/id pid
-                (flow (~> player-summons (list-ref sid) summon-dead?))
+                {~> player-summons (list-ref sid) summon-dead?}
                 (update-player-summon sid (summon-act-on-hp sub1))))
 
 (define/summon increment-summon-hp (_r => [pid sid])
   (do-player/id pid
-                (flow (~> player-summons (list-ref sid) summon-at-max-health?))
+                {~> player-summons (list-ref sid) summon-at-max-health?}
                 (update-player-summon sid (summon-act-on-hp add1))))
 
 (define/summon add-summon-condition (req => [pid sid])
@@ -830,10 +830,10 @@
     [_ (void)]))
 
 (define/monster kill-monster (_r => [mgid mn])
-  (do-monster-group/mgid mgid (monster-group-remove mn) (flow (~> 2> monster-group-first-monster))))
+  (do-monster-group/mgid mgid (monster-group-remove mn) {~> 2> monster-group-first-monster}))
 
 (define/monster decrement-monster-hp (_r => [mgid mn])
-  (do-monster-group/n mgid mn (flow (switch [(not monster-dead?) (esc (monster-update-hp sub1))]))))
+  (do-monster-group/n mgid mn {switch [(not monster-dead?) (esc (monster-update-hp sub1))]}))
 
 (define/monster increment-monster-hp (_r => [mgid mn])
   (define inc-hp (monster-update-hp add1))
@@ -891,7 +891,7 @@
 
 (define (do-player/id id guard action)
   (do (<~@ (state-@creatures (s))
-           (update-players id (flow (switch [(not guard) action]))))))
+           (update-players id {switch [(not guard) action]}))))
 
 (define (do-player-condition req add-or-remove)
   (match* {(req->player-id req) (req->condition req)}
@@ -936,7 +936,7 @@
      (values monster-group-id monster-number)]
     [_ (values #f #f)]))
 
-(define (do-monster-group/mgid mgid action [action-n (flow 1>)])
+(define (do-monster-group/mgid mgid action [action-n {1>}])
   (do (<~@ (state-@creatures (s))
            (update-monster-groups mgid action action-n))))
 
@@ -950,7 +950,7 @@
 
 (define-flow player-css-id (~a "player-" _))
 (define-flow monster-group-css-id (~a "monster-group-" _))
-(define-switch (creature-css-id c)
+(define-switch (creature-css-id _c)
   (% creature-v creature-id)
   [player? player-css-id]
   [monster-group*? monster-group-css-id])
