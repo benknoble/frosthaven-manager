@@ -164,7 +164,7 @@
 (define (summon-view s die add-hp subtract-hp on-condition)
   (define (make-condition-checkbox c)
     (checkbox #:label (~a c)
-              #:checked? (~> (s) (summon-afflicted-by? c))
+              #:checked? ((summon-afflicted-by? c) s)
               (flow (~>> (list c) on-condition))))
   (define (edit-conditions)
     (with-closing-custodian/eventspace
