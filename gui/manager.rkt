@@ -86,7 +86,7 @@
 
 (define (input-player-info-view s)
   (define players
-    (filter-map (flow (~> creature-v (and player? _)))
+    (filter-map {~> creature-v (and player? _)}
                 (@! (state-@creatures s))))
   (define names (map player-name players))
   (define hps (map player-max-hp players))
@@ -254,11 +254,11 @@
 (define ((make-player-view s) k @e)
   (define (update proc)
     (<~@ (state-@creatures s) (update-players k proc)))
-  (define-flow update-player-condition (~> player-condition-handler update))
-  (define-flow update-player-hp (~> player-act-on-hp update))
-  (define-flow update-player-xp (~> player-act-on-xp update))
+  (define update-player-condition {~> player-condition-handler update})
+  (define update-player-hp {~> player-act-on-hp update})
+  (define update-player-xp {~> player-act-on-xp update})
   (define (update-player-initiative i)
-    (update (flow (player-set-initiative i))))
+    (update {(player-set-initiative i)}))
   (define (update-summon-hp i proc)
     (update (update-player-summon i (summon-act-on-hp proc))))
   (define (update-summon-condition i c)
@@ -269,14 +269,14 @@
     #:on-hp update-player-hp
     #:on-xp update-player-xp
     #:on-initiative update-player-initiative
-    #:on-summon (flow (~>> (clos player-summon) update))
-    #:kill-summon (flow (~> player-kill-summon update))
+    #:on-summon {~>> (clos player-summon) update}
+    #:kill-summon {~> player-kill-summon update}
     #:on-summon-hp update-summon-hp
     #:on-summon-condition update-summon-condition))
 
 (define ((make-monster-group-view s) k @e)
   (define @env (state-@env s))
-  (define (update proc [procn (flow 1>)])
+  (define (update proc [procn {1>}])
     (<~@ (state-@creatures s) (update-monster-groups k proc procn)))
   (define (update-by-num num proc)
     (update (monster-group-update-num num proc)))
@@ -289,7 +289,7 @@
     (update-by-num num (monster-update-hp proc)))
   (define (kill num)
     (update (monster-group-remove num)
-            (flow (~> 2> monster-group-first-monster))))
+            {~> 2> monster-group-first-monster}))
   (define (new num elite?)
     (update (monster-group-add num elite? (@! @env))
             (const num))
@@ -305,7 +305,7 @@
     [{n} (update-by-num n swap-monster-elite)])
   (define @ability-deck
     (obs-combine
-      (flow (~> (== _ monster-group-set-name) hash-ref))
+      {~> (== _ monster-group-set-name) hash-ref}
       (state-@ability-decks s) @mg))
   (define (move-ability-card)
     (<~@ (state-@ability-decks s)
@@ -313,7 +313,7 @@
          (hash-update (monster-group-set-name (@! @mg))
                       move-top-draw-to-bottom)))
   (define (update-max-hp f)
-    (update (flow (monster-group-change-max-HP f (@! @env)))))
+    (update {(monster-group-change-max-HP f (@! @env))}))
   (monster-group-view
     @mg
     @ability-deck
