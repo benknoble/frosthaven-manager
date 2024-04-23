@@ -9,12 +9,12 @@
                      [gui::= :=]
                      [gui:λ:= λ:=])
          @~> <~@
-         (all-from-out qi))
+         (all-from-out frosthaven-manager/curlique))
 
 (require (prefix-in gui: (combine-in racket/gui/easy
                                      racket/gui/easy/operator))
          syntax/parse/define
-         qi)
+         frosthaven-manager/curlique)
 
 (define-syntax-parse-rule (@~> @o:expr flo:expr)
   (gui:~> @o (flow flo)))

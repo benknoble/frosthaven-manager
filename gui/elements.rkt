@@ -9,7 +9,7 @@
 (require racket/gui/easy
          frosthaven-manager/observable-operator
          racket/gui/easy/contract
-         racket/gui
+         (except-in racket/gui #%app)
          frosthaven-manager/gui/render
          frosthaven-manager/gui/helpers
 

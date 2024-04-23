@@ -4,7 +4,7 @@
   (contract-out
     [launch-server (-> state? renderer?)]))
 
-(require racket/gui
+(require (except-in racket/gui #%app)
          racket/gui/easy
          net/sendurl
          frosthaven-manager/observable-operator

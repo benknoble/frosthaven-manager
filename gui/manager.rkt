@@ -21,7 +21,6 @@
                   put-file
                   application-about-handler)
          frosthaven-manager/observable-operator
-         frosthaven-manager/qi
          frosthaven-manager/defns
          frosthaven-manager/manager
          frosthaven-manager/files

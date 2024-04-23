@@ -30,7 +30,7 @@
          frosthaven-manager/gui/render
          frosthaven-manager/gui/table
          frosthaven-manager/gui/rich-text-display
-         frosthaven-manager/qi)
+         frosthaven-manager/qi/list2hash)
 
 (define (loot-picker @type->cards @type->deck
                      #:on-card [on-card void]

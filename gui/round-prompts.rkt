@@ -16,7 +16,7 @@
          racket/gui/easy/contract
          frosthaven-manager/manager/round-prompts
          frosthaven-manager/observable-operator
-         frosthaven-manager/qi
+         frosthaven-manager/qi/utils
          frosthaven-manager/gui/mixins)
 
 (define (prompts-input-view @prompts #:on-add [on-add void] #:on-remove [on-remove void])

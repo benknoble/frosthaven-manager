@@ -4,7 +4,7 @@
                      racket/gui/easy
                      racket/gui/easy/contract
                      frosthaven-manager/gui/stacked-tables
-                     frosthaven-manager/observable-operator))
+                     (except-in frosthaven-manager/observable-operator #%app)))
 
 @title{@tt{gui/stacked-tables}}
 @defmodule[frosthaven-manager/gui/stacked-tables]

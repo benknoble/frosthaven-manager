@@ -16,7 +16,6 @@
   file/convertible
   frosthaven-manager/defns
   (prefix-in elements: frosthaven-manager/elements)
-  frosthaven-manager/gui/elements
   frosthaven-manager/manager
   frosthaven-manager/observable-operator
   (submod frosthaven-manager/gui/rich-text-display model)
@@ -26,7 +25,8 @@
   (prefix-in pict: pict)
   (except-in racket/gui
              null
-             newline)
+             newline
+             #%app)
   racket/gui/easy
   racket/runtime-path
   racket/async-channel

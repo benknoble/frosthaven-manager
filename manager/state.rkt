@@ -90,7 +90,7 @@
          racket/gui/easy/observable
          frosthaven-manager/observable-operator
          frosthaven-manager/defns
-         frosthaven-manager/qi
+         frosthaven-manager/qi/utils
          frosthaven-manager/monster-db
          frosthaven-manager/manager/ability-decks
          frosthaven-manager/manager/round-prompts
