@@ -10,7 +10,7 @@
 (require pict
          pict/color
          pict/shadow
-         frosthaven-manager/qi
+         frosthaven-manager/curlique
          frosthaven-manager/aoe-images)
 
 (define-flow highlight
@@ -41,7 +41,7 @@
     (cc-superimpose (arrowhead size 0)
                     (white (scale (arrowhead size 0) 6/10))))
   (define arrows
-    (map (flow (~> outlined-arrowhead (rotate (* 1/2 pi))))
+    (map {~> outlined-arrowhead (rotate (* 1/2 pi))}
          (list 20 10 5)))
 
   (~> (arrows) sep
