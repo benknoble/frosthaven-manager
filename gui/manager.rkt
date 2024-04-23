@@ -1,16 +1,17 @@
 #lang racket
 
 (module+ main
-  ;; (require racket/gui/easy/debugger)
-  ;; (start-debugger)
+  (require racket/gui/easy/debugger)
   (define s (make-state))
   (command-line
-    #:args ([save #f])
-    (when (and save (file-exists? save))
-      ((load-game s) save))
-    (void (render/eventspace
-            ;; no separate eventspace: block main until this window closed
-            (manager s)))))
+   #:once-each
+   [("--debug") "Enable debugging" (start-debugger)]
+   #:args ([save #f])
+   (when (and save (file-exists? save))
+     ((load-game s) save))
+   (void (render/eventspace
+          ;; no separate eventspace: block main until this window closed
+          (manager s)))))
 
 (provide manager)
 
