@@ -18,7 +18,7 @@
 
 (require pict
          racket/draw
-         frosthaven-manager/qi)
+         frosthaven-manager/curlique)
 
 (define (custom-hex s)
   (define h (* (sqrt 3) s))
@@ -135,7 +135,7 @@
       (define dx (if dedent? 0 (- (r))))
       (vl-append p (translate (row->shape row-spec) dx 0)))))
 
-(define-flow spec->shape (~> fill-in-spec rows->shape))
+(define spec->shape {~> fill-in-spec rows->shape})
 
 (define (syntaxes->spec stxs)
   (define groups (group-by syntax-line stxs))
@@ -159,8 +159,8 @@
 (define spec?
   (listof (list/c exact-positive-integer? boolean? (listof (list/c spec-sym? natural-number/c)))))
 
-(define-flow (string->spec s)
-  (~>> open-input-string
+(define string->spec
+  {~>> open-input-string
        (ε port-count-lines!)
-       (port->list (flow (read-syntax #f _)))
-       syntaxes->spec))
+       (port->list {(read-syntax #f _)})
+       syntaxes->spec})
