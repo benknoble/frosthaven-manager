@@ -4,19 +4,19 @@
   (contract-out
     [list-remove (-> list? natural-number/c (values list? any/c))]))
 
-(require qi)
+(require frosthaven-manager/curlique)
 
 (module+ test (require rackunit))
 
-(define-flow (list-remove _xs _i)
-  (~> split-at
+(define list-remove
+  {~> split-at
       (-< (~> (== _ cdr) append)
-          (~> 2> car))))
+          (~> 2> car))})
 
 (module+ test
   (test-case "list-remove"
-    (define-flow list-remove1 (~> list-remove 1>))
-    (define-flow list-remove2 (~> list-remove 2>))
+    (define list-remove1 {~> list-remove 1>})
+    (define list-remove2 {~> list-remove 2>})
     (check-equal? (list-remove1 '(a b c) 0) '(b c))
     (check-equal? (list-remove1 '(a b c) 1) '(a c))
     (check-equal? (list-remove1 '(a b c) 2) '(a b))
