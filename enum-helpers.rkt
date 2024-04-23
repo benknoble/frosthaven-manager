@@ -13,7 +13,7 @@
   syntax/parse/define
   rebellion/type/enum
   rebellion/collection/keyset
-  frosthaven-manager/qi)
+  frosthaven-manager/curlique)
 
 (module+ test (require rackunit))
 
