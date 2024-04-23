@@ -29,12 +29,12 @@
     (table (list title)
            @data
            (λ (_action _entries selection) (:= @selection1 selection))
-           #:entry->row (flow (~> entry->label vector))
+           #:entry->row {~> entry->label vector}
            #:selection @selection1))
   (define-values (r-tables last-@selection last-@data last-entry->next)
     (make-tables @data @selection1 entry->next t1 columns))
   (define @selected
-    (obs-combine (flow (and in-vector-range (~> vector-ref last-entry->next)))
+    (obs-combine {(and in-vector-range (~> vector-ref last-entry->next))}
                  last-@data
                  last-@selection))
   (apply panel ((if topleft? reverse values) (cons (final-view @selected) r-tables))))
@@ -47,8 +47,8 @@
     ([col (in-list columns)])
     (match-define (column title entry->label entry->next) col)
     (define new-@data
-      (obs-combine (flow (and in-vector-range
-                              (~> vector-ref previous-entry->next ->vector)))
+      (obs-combine {(and in-vector-range
+                         (~> vector-ref previous-entry->next ->vector))}
                    previous-@data
                    previous-@selection))
     (define/obs new-@selection #f)
@@ -56,14 +56,14 @@
       (table (list title)
              (@~> new-@data (or _ (gen (vector))))
              (λ (_action _entries selection) (:= new-@selection selection))
-             #:entry->row (flow (~> entry->label vector))
+             #:entry->row {(~> entry->label vector)}
              #:selection new-@selection))
     (values (cons t r-tables) new-@selection new-@data entry->next)))
 
 (define (in-vector-range v i)
   (and i v (< -1 i (vector-length v))))
 
-(define-flow (->vector x) (if vector? _ vector))
+(define-flow (->vector _x) (if vector? _ vector))
 
 (module* main racket
   (require (submod "..") ;; for contracts
