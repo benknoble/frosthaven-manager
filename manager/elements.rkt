@@ -37,9 +37,9 @@
   (test-case "*-all"
     (define states (make-states (range 6)))
     (infuse-all states)
-    (check-true (andmap (flow (equal? 'infused)) (map @! states)))
+    (check-true (andmap {(equal? 'infused)} (map @! states)))
     (consume-all states)
-    (check-true (andmap (flow (equal? 'unfused)) (map @! states)))))
+    (check-true (andmap {(equal? 'unfused)} (map @! states)))))
 
 (define wane-element
   (match-lambda
