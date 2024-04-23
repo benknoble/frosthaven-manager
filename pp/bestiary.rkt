@@ -6,7 +6,7 @@
 
 (require pretty-expressive
          frosthaven-manager/defns
-         frosthaven-manager/qi
+         frosthaven-manager/curlique
          (only-in frosthaven-manager/parsers/base
                   name->set)
          frosthaven-manager/parsers/monster)
@@ -60,19 +60,19 @@
    (text "end-monster")))
 
 (define (pretty-statss normal-stats elite-stats)
-  (define-flow length-n/s
-    (switch
+  (define length-n/s
+    {switch
       [false? 1]
       [number? (~> ~a string-length)]
-      [string? (~> string-length (+ 2))]))
+      [string? (~> string-length (+ 2))]})
   (define max-hp-width
-    (apply max (map (flow (~> monster-stats-max-hp length-n/s))
+    (apply max (map {~> monster-stats-max-hp length-n/s}
                     (append normal-stats elite-stats))))
   (define max-move-width
-    (apply max (map (flow (~> monster-stats-move length-n/s))
+    (apply max (map {~> monster-stats-move length-n/s}
                     (append normal-stats elite-stats))))
   (define max-attack-width
-    (apply max (map (flow (~> monster-stats-attack length-n/s))
+    (apply max (map {~> monster-stats-attack length-n/s}
                     (append normal-stats elite-stats))))
   (v-concat
    (append*
