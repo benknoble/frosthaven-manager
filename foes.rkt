@@ -6,7 +6,7 @@
 
 (require syntax/parse/define
          frosthaven-manager/defns
-         frosthaven-manager/qi
+         frosthaven-manager/curlique
          frosthaven-manager/syntax/monsters
          (for-syntax racket/syntax
                      frosthaven-manager/syntax/monsters))
@@ -81,7 +81,7 @@
     (render
       (window
         (apply vpanel
-               (map (flow (~> @ simple-monster-group-view)) foes))))))
+               (map {~> @ simple-monster-group-view} foes))))))
 
 (module+ test
   (require racket/runtime-path rackunit)
