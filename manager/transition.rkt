@@ -40,7 +40,7 @@
 (define ((to-input-player-info s))
   (define cs (@! (state-@creatures s)))
   (define n-players (@! (state-@num-players s)))
-  (define n-cs (length (filter (flow (~> creature-v player?)) cs)))
+  (define n-cs (length (filter {~> creature-v player?} cs)))
   (cond
     [(< n-cs n-players)
      (:= (state-@creatures s)
@@ -55,7 +55,7 @@
   ;; give each player max-hp
   (<~@ (state-@creatures s)
        (update-all-players
-        (flow (~> (-< (~> player-max-hp const player-act-on-hp) _) apply))))
+        {~> (-< (~> player-max-hp const player-act-on-hp) _) apply}))
   (:= (state-@mode s) 'build-loot-deck))
 
 (define ((to-add-prompts s))
@@ -66,7 +66,7 @@
   (:= (state-@mode s) 'choose-monster-db))
 
 (define ((to-choose-monsters-or-play s))
-  (define-flow has-mg*? (~>> state-@creatures @! (memf creature-is-mg*?)))
+  (define has-mg*? {~>> state-@creatures @! (memf creature-is-mg*?)})
   ;; note parens around switch to invoke selected transition function
   ((switch (s)
      [has-mg*? to-play]
@@ -85,7 +85,7 @@
     (when (should-do-prompt? t round (@! (state-@prompts s)))
       (do-round-prompt t round)))
   ;; wane elements
-  (for-each (flow (<@ wane-element)) (state-@elements s))
+  (for-each {(<@ wane-element)} (state-@elements s))
   ;; reset player initiative
   (<~@ (state-@creatures s) (update-all-players player-clear-initiative))
   ;; discard monster cards
