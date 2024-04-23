@@ -73,7 +73,7 @@
  racket/serialize
  (prefix-in pict: pict)
  frosthaven-manager/contracts
- frosthaven-manager/qi
+ frosthaven-manager/curlique
  frosthaven-manager/parsers/formula
  frosthaven-manager/defns/level
  frosthaven-manager/defns/scenario
@@ -112,30 +112,30 @@
                                  "formula" s
                                  "environment" env)])]))
 
-(define (monster-stats-bonuses-string m)
-  (~> (m) monster-stats-bonuses (string-join ", ")))
+(define monster-stats-bonuses-string
+  {~> monster-stats-bonuses (string-join ", ")})
 
-(define (monster-stats-effects-string m)
-  (~> (m) monster-stats-effects (string-join ", ")))
+(define monster-stats-effects-string
+  {~> monster-stats-effects (string-join ", ")})
 
-(define (monster-stats-immunities-string m)
-  (~> (m) monster-stats-immunities (string-join ", ")))
+(define monster-stats-immunities-string
+  {~> monster-stats-immunities (string-join ", ")})
 
-(define-flow (monster-ability-name->text ability)
+(define-flow (monster-ability-name->text _ability)
   (if monster-ability?
     (~>> (-< monster-ability-name
              (~> (if monster-ability-shuffle? " (shuffle)" "")))
          (format "~a~a"))
     ""))
 
-(define-flow (monster-ability-initiative->text ability)
+(define-flow (monster-ability-initiative->text _ability)
   (if monster-ability? (~> monster-ability-initiative ~a) "??"))
 
 (define (monster-ability-ability->rich-text ability-text ability-card mg env)
   (define bulleted '(#rx"^" "· "))
   (define attack
     (list #px"(.*)((?i:attack))\\s+([+-])(\\d+)"
-          (skip-if-grant-or-control (keyword-sub (flow (monster-stats-attack* env)) mg))))
+          (skip-if-grant-or-control (keyword-sub {(monster-stats-attack* env)} mg))))
   (define move
     (list #px"(.*)((?i:move))\\s+([+-])(\\d+)"
           (skip-if-grant-or-control (keyword-sub monster-stats-move mg))))
@@ -193,7 +193,7 @@
                (list _ prefix element more-elements? suffix))
        (append (list prefix
                      (elements:element-pics-infused (element->element-pics element)))
-               (map (flow (~> element->element-pics elements:element-pics-infused))
+               (map {~> element->element-pics elements:element-pics-infused}
                     (regexp-match* #px"(?i:fire|ice|air|earth|light|darkness|dark)" more-elements?))
                (list suffix))]))
   (define (consume-wild x)
@@ -376,18 +376,18 @@
               (make-monster* (if elite? elite normal) num elite? env)])
            num+elite?s))))
 
-(define-switch (get-monster-stats mg m)
+(define-switch (get-monster-stats _mg _m)
   (% 2> 1>)
   [monster-elite? monster-group-elite-stats]
   [else monster-group-normal-stats])
 
-(define-flow (monster-at-max-health? m stats env)
+(define-flow (monster-at-max-health? _m _stats _env)
   (~> (group 1 monster-current-hp monster-stats-max-hp*) >=))
 
-(define-flow (monster-dead? m)
-  (~> monster-current-hp zero?))
+(define monster-dead?
+  {~> monster-current-hp zero?})
 
-(define-flow (sort-monsters monsters)
+(define-flow (sort-monsters _monsters)
   ;; two passes less efficient, but easier to reason about AND we expect most
   ;; monsters lists to be "short" (10 or less).
   (~> (sort #:key monster-number <)
@@ -463,9 +463,9 @@
     (sort-monsters (cons new-monster (monster-group-monsters group))))
   (struct-copy monster-group group [monsters new-monsters]))
 
-(define-flow (monster-group-first-monster mg)
-  (~> monster-group-monsters
-      (and (not empty?) (~> first monster-number))))
+(define monster-group-first-monster
+  {~> monster-group-monsters
+      (and (not empty?) (~> first monster-number))})
 
 (define ((monster-update-condition c on?) m)
   (define old-conditions (monster-conditions m))
@@ -482,7 +482,7 @@
     (struct-copy monster m [current-hp new-hp])
     m))
 
-(define-flow (monster->hp-text m ms env)
+(define-flow (monster->hp-text _m _ms _env)
   (~>> (group 1 monster-current-hp monster-stats-max-hp*)
        (format "HP: ~a/~a")))
 
