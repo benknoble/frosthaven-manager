@@ -21,7 +21,7 @@
 (require
  rebellion/type/enum
  frosthaven-manager/enum-helpers
- frosthaven-manager/qi)
+ frosthaven-manager/curlique)
 
 (define initiative? (integer-in 0 99))
 
@@ -59,8 +59,8 @@
         crit
         bless))
 
-(define-flow (modifier-ranking _mod)
-  (~>> (index-of modifier-rankings)))
+(define modifier-ranking
+  {~>> (index-of modifier-rankings)})
 
 (define-flow (better-modifier _x _y)
   (~>> list (argmax modifier-ranking)))
@@ -76,5 +76,5 @@
   (sort (list regenerate ward invisible strengthen wound brittle bane poison immobilize disarm impair stun muddle)
         string<=? #:key ~a))
 
-(define-flow (conditions->string _cs)
-  (~> (sep ~a) collect (string-join ", " #:before-last " and ")))
+(define conditions->string
+  {~> (sep ~a) collect (string-join ", " #:before-last " and ")})
