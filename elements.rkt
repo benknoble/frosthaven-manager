@@ -23,7 +23,7 @@
          (only-in 2htdp/image
                   wedge)
          racket/draw
-         frosthaven-manager/qi)
+         frosthaven-manager/curlique)
 
 (struct element-pics [name infused waning unfused consume] #:transparent)
 
@@ -31,7 +31,7 @@
 (define trimmed-size (- size 5))
 
 (define-flow half (* 1/2))
-(define-flow avg (~> (-< + count) /))
+(define avg {~> (-< + count) /})
 
 (define (base) (disk size))
 
@@ -103,7 +103,7 @@
                  (send p curve-to xm1 ym1 xm2 ym2 x22 y22)
                  ;;
                  (send p line-to p2x p2y))))]
-         [fire-shape (flow (fire-shape better-path "black" _))])
+         [fire-shape {(fire-shape better-path "black" _)}])
     (~> (color1 color2 color3 color4)
         (>< fire-shape)
         (== _
@@ -142,11 +142,11 @@
 (define (air-overlay)
   (let* ([n-samples 500]
          ;; https://en.wikipedia.org/wiki/Archimedean_spiral
-         [spiral (flow (* -3))]
+         [spiral {(* -3)}]
          [θs (range 0 (* 2 pi) (/ (* 2 pi) n-samples))]
          [rs (map spiral θs)]
          [polar->cartesian (λ (r θ) (~> (θ) (-< cos sin) (>< (* r))))]
-         [points (map (flow (~> polar->cartesian collect)) rs θs)]
+         [points (map {~> polar->cartesian collect} rs θs)]
          [path (let ([p (new dc-path%)])
                  (match-define (cons (list x0 y0) pts) points)
                  (define xm (apply min (map first pts)))
@@ -194,8 +194,8 @@
 
 (define-flow right-isoceles-hypotenuse->leg
   (/ (sqrt 2)))
-(define-flow size->dx
-  (~> right-isoceles-hypotenuse->leg -))
+(define size->dx
+  {~> right-isoceles-hypotenuse->leg -})
 
 (define (earth-overlay)
   (let* ([stem (white (filled-rectangle 2 trimmed-size))]
@@ -215,7 +215,7 @@
         (pin-over (size->dx small-size)
                   (/ trimmed-size 8)
                   (rotate small-branch (* pi 1/4)))
-        (pin-line stem (flow (~> cb-find (== _ (- 2))))
+        (pin-line stem {~> cb-find (== _ (- 2))}
                   stem ct-find
                   #:color "white"
                   #:start-angle (* pi 7/8)
@@ -244,10 +244,10 @@
   (element-pics "Light" infused-light waning-light unfused-light (make-consume infused-light)))
 
 (define (dark-disks color)
-  (flow (~> (pin-over (- (half size) 6) (/ size 4)
-                      (disk (half size) #:color "white" #:border-color color #:border-width 1))
-            (pin-over 6 (/ size 4)
-                      (disk (half size) #:color color #:border-color "white" #:border-width 1)))))
+  {~> (pin-over (- (half size) 6) (/ size 4)
+                (disk (half size) #:color "white" #:border-color color #:border-width 1))
+      (pin-over 6 (/ size 4)
+                (disk (half size) #:color color #:border-color "white" #:border-width 1))})
 (define (dark)
   (define infused-dark (~> ((base)) (colorize "purple") (esc (dark-disks "purple"))))
   (define waning-dark (~> ("purple") wane (esc (dark-disks "purple"))))
