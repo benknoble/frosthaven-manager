@@ -14,18 +14,18 @@
     [move-top-draw-to-bottom (-> ability-decks? ability-decks?)]))
 
 (require racket/serialize
-         frosthaven-manager/qi
+         frosthaven-manager/curlique
          frosthaven-manager/defns)
 
 (module+ test (require rackunit))
 
 (serializable-struct ability-decks [current draw discard] #:transparent)
 
-(define-flow (ability-decks-draw-next ad)
-  (~> (-< (~> ability-decks-draw (and (not empty?) first))
+(define ability-decks-draw-next
+  {~> (-< (~> ability-decks-draw (and (not empty?) first))
           (~> ability-decks-draw (switch [(not empty?) rest]))
           ability-decks-discard)
-      ability-decks))
+      ability-decks})
 
 (module+ test
   (test-case "ability-decks-draw-next"
