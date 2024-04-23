@@ -160,8 +160,15 @@
                  (if (not (empty? common-effects))
                    (string-join common-effects ", " #:before-first ", ")
                    ""))))))
+  (define-syntax-rule (match-loop var [pat e ... res] ...)
+    (let loop ([var var])
+      (match var
+        [pat e ... (append-map loop res)]
+        ...
+        ;; break
+        [_ (list var)])))
   (define (splice-aoe x)
-    (match x
+    (match-loop x
       [(regexp #rx"^(.*)aoe\\(([^)]+)\\)(.*)$"
                (list _ prefix aoe suffix))
        (define base
@@ -174,40 +181,35 @@
              (switch
                [file-exists? (~> get-aoe apply)]
                [else (gen (pict:text "AoE File Not Found"))])))
-       (list prefix newline aoe-pict newline suffix)]
-      [x (list x)]))
+       (list prefix newline aoe-pict newline suffix)]))
   (define (infuse-wild x)
-    (match x
+    (match-loop x
       [(regexp #px"(.*)(?i:infuse)\\s*(?i:any)(?:\\s*element)?(.*)$"
                (list _ prefix suffix))
-       (list prefix (elements:element-pics-infused (elements:wild)) suffix)]
-      [x (list x)]))
+       (list prefix (elements:element-pics-infused (elements:wild)) suffix)]))
   (define (infuse-element x)
-    (match x
+    (match-loop x
       [(regexp #px"^(.*)(?i:infuse)\\s*(?i:(fire|ice|air|earth|light|darkness|dark))((?:\\s*,\\s*(?i:(?:fire|ice|air|earth|light|darkness|dark)))*)\\s*(.*)$"
                (list _ prefix element more-elements? suffix))
        (append (list prefix
                      (elements:element-pics-infused (element->element-pics element)))
                (map (flow (~> element->element-pics elements:element-pics-infused))
                     (regexp-match* #px"(?i:fire|ice|air|earth|light|darkness|dark)" more-elements?))
-               (list suffix))]
-      [x (list x)]))
+               (list suffix))]))
   (define (consume-wild x)
-      (match x
+      (match-loop x
         [(regexp #px"(.*)(?i:consume)\\s*(?i:any)(?:\\s*element)?(.*)$"
                  (list _ prefix suffix))
-         (list prefix (elements:element-pics-consume (elements:wild)) suffix)]
-        [x (list x)]))
+         (list prefix (elements:element-pics-consume (elements:wild)) suffix)]))
   (define (consume-element x)
-    (match x
+    (match-loop x
       [(regexp #px"^(.*)(?i:consume)\\s*(?i:(fire|ice|air|earth|light|dark))\\s*(.*)$"
                (list _ prefix element suffix))
        (list prefix
              (elements:element-pics-consume (element->element-pics element))
-             suffix)]
-      [x (list x)]))
+             suffix)]))
   (define (target x)
-    (match x
+    (match-loop x
       [(regexp #px"^(.*)(?i:target)(\\s*\\d+)(.*)$"
                (list _ prefix digit suffix))
        (list prefix (scale-icon (icons:target)) digit suffix)]
@@ -216,24 +218,22 @@
        (list prefix (scale-icon (icons:target)) all suffix)]
       [(regexp #px"^(.*)(\\+\\d+\\s*)(?i:target(?:s)?)(\\s*.*)$"
                (list _ prefix +target suffix))
-       (list prefix +target (scale-icon (icons:target)) suffix)]
-      [x (list x)]))
+       (list prefix +target (scale-icon (icons:target)) suffix)]))
   (define (range x)
-    (match x
+    (match-loop x
       [(regexp #px"^(.*)(?i:range)(.*)$"
                (list _ prefix suffix))
-       (list prefix (scale-icon (icons:range)) suffix)]
-      [x (list x)]))
+       (list prefix (scale-icon (icons:range)) suffix)]))
   (define (push-pull x)
-    (match x
+    (match-loop x
       [(regexp #px"^(.*)((?i:push)|(?i:pull))(.*)$"
                (list _ prefix push-pull suffix))
        (list prefix
-             (match (string-downcase push-pull)
-               ["push" (icons:push)]
-               ["pull" (icons:pull)])
-             suffix)]
-      [x (list x)]))
+             (scale-icon
+              (match (string-downcase push-pull)
+                ["push" (icons:push)]
+                ["pull" (icons:pull)]))
+             suffix)]))
   (define replacements
     (list bulleted
           attack
@@ -285,7 +285,7 @@
                      (list "· Attack 6 (N:muddle) (E:7, stun), wound"))
   (test-model-equal? "Attack, X"
                      (monster-ability-ability->rich-text "Attack +1, Push 1" ability-card mg3 env)
-                     (list "· Attack 6 (N:muddle) (E:7, stun), wound, " (icons:push) " 1"))
+                     (list "· Attack 6 (N:muddle) (E:7, stun), wound, " (scale-icon (icons:push)) " 1"))
   (test-model-equal? "Simple Move"
                      (monster-ability-ability->rich-text "Move +1" ability-card mg env)
                      (list "· Move 3 (E:3)"))
@@ -300,7 +300,15 @@
                      (list "· Control Enemy: Attack +1"))
   (test-model-equal? "Controlled Move"
                      (monster-ability-ability->rich-text "Control Enemy: Move +1" ability-card mg env)
-                     (list "· Control Enemy: Move +1")))
+                     (list "· Control Enemy: Move +1"))
+  (test-model-equal? "Complicated Targeting"
+                     (monster-ability-ability->rich-text "Attack -2, Target 2, +2 Targets, Range 3, Push 2" ability-card mg env)
+                     (list
+                      "· Attack 0 (E:1, wound), "
+                      (scale-icon (icons:target)) " 2"
+                      ", " "+2 " (scale-icon (icons:target)) ", "
+                      (scale-icon (icons:range)) " 3, "
+                      (scale-icon (icons:push)) " 2")))
 
 (define ((keyword-sub stats-f mg) _match word +- amount)
   (define op (eval (string->symbol +-) (make-base-namespace)))
