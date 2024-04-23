@@ -5,7 +5,7 @@
   [unique-with/c (-> (-> any/c any/c) flat-contract? contract?)]))
 
 (require
- frosthaven-manager/qi)
+ frosthaven-manager/curlique)
 
 (define-flow no-duplicates?
   (not (and check-duplicates #t)))
