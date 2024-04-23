@@ -100,10 +100,10 @@
 (serializable-struct creature [id v] #:transparent)
 (serializable-struct monster-group* [active mg] #:transparent)
 
-(define-flow creature-is-mg*? (~> creature-v monster-group*?))
+(define creature-is-mg*? {~> creature-v monster-group*?})
 
 ;; private observable utilities for this module
-(define-flow s@->v (~> struct->vector (vector-drop 1) (vector-map @!* _)))
+(define s@->v {~> struct->vector (vector-drop 1) (vector-map @!* _)})
 (define (@!* o)
   (cond
     [(list? o) (map @! o)]
@@ -345,7 +345,7 @@
       e))
   (map maybe-update-player creatures))
 
-(define (update-monster-groups creatures k f [fn (flow 1>)])
+(define (update-monster-groups creatures k f [fn {1>}])
   (define (maybe-update-monster-group e)
     (if (~> (e)
             (-< creature-id creature-v)
@@ -390,13 +390,13 @@
         [else +inf.0])))
 
 (define (monster-group*-initiative ads)
-  (flow (~> monster-group*-mg (esc (monster-group-initiative ads)))))
+  {~> monster-group*-mg (esc (monster-group-initiative ads))})
 
 (define (creature-initiative ads)
-  (flow (~> creature-v
-            (switch
-              [player? player-initiative]
-              [monster-group*? (esc (monster-group*-initiative ads))]))))
+  {~> creature-v
+      (switch
+        [player? player-initiative]
+        [monster-group*? (esc (monster-group*-initiative ads))])})
 
 (module+ test
   (require frosthaven-manager/testfiles/data)
@@ -404,7 +404,7 @@
     "Initiative"
     (define s (make-sample-state))
     (define (get-creature id)
-      (findf (flow (~> creature-id (= id)))
+      (findf {~> creature-id (= id)}
              (@! (state-@creatures s))))
     (let ([ads (@! (state-@ability-decks s))])
       (check-equal? ((creature-initiative ads) (get-creature jack)) 0)
