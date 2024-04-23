@@ -28,7 +28,7 @@
       (append (@! (state-@monster-modifier-deck s))
               (@! (state-@monster-discard s))))
     (define count-state
-      (apply counter (filter (flow (not (or (equal? curse) (equal? bless))))
+      (apply counter (filter {(not (or (equal? curse) (equal? bless)))}
                              all-cards)))
     (check-equal? count-state count-deck)))
 
