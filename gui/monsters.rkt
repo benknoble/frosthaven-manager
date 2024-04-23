@@ -64,11 +64,11 @@
       [else (spacer)]))
   (vpanel
     (text (@~> @stats (~> monster-stats-move (if _ ~a "-"))))
-    (text (obs-combine (flow (~> monster-stats-attack* ~a)) @stats @env))
+    (text (obs-combine {~> monster-stats-attack* ~a} @stats @env))
     (empty-view monster-stats-bonuses monster-stats-bonuses-string)
     (empty-view monster-stats-effects monster-stats-effects-string)
     (empty-view monster-stats-immunities monster-stats-immunities-string)
-    (text (obs-combine (flow (~> monster-stats-max-hp* ~a)) @stats @env))))
+    (text (obs-combine {~> monster-stats-max-hp* ~a} @stats @env))))
 
 (define (monster-view @mg @monster @env
                       #:on-condition [on-condition void]
@@ -79,7 +79,7 @@
   (define (make-condition-checkbox c)
     (checkbox #:label (~a c)
               #:checked? (@~> @monster (~>> monster-conditions (member c) (not false?)))
-              (flow (on-condition c _))))
+              {(on-condition c _)}))
   (define (show-conditions)
     (with-closing-custodian/eventspace
       (render/eventspace
@@ -87,9 +87,9 @@
         (apply window
                #:mixin close-custodian-mixin
                #:title (obs-combine
-                         (flow (~>> (== monster-group-name monster-number)
-                                    (format "Conditions for ~a (~a)")))
-                         @mg @monster)
+                        {~>> (== monster-group-name monster-number)
+                             (format "Conditions for ~a (~a)")}
+                        @mg @monster)
                #:size '(400 #f)
                (map make-condition-checkbox conditions)))))
   (define (add-hp)
@@ -137,7 +137,7 @@
       ;; valid because called when the dialog that changes @number->elite is closed
       (for ([(num elite?) (in-hash (@! @number->elite))])
         (on-new num elite?)))
-    (define-flow mixin (~> closing-mixin (esc (make-on-close-mixin on-close))))
+    (define mixin {~> closing-mixin (esc (make-on-close-mixin on-close))})
     ;; not setting current renderer, nor using an eventspace: dialog
     (render
      (dialog
@@ -145,8 +145,8 @@
       #:title "Add Monster"
       #:style '(close-button resize-border)
       (observable-view @available-numbers
-                       (flow (~> sep (>< (make-monster-selector on-change))
-                                 vpanel)))
+                       {~> sep (>< (make-monster-selector on-change))
+                           vpanel})
       (button "Add" close!))))
   (define (do-mass-condition)
     (define-close! close! closing-mixin)
@@ -182,7 +182,7 @@
             ((parse-expr inc) env)))
         (on-max-hp (λ (_type num) (+ num true-inc)))
         (for ([n (in-list (map monster-number (@! @monsters)))])
-          (on-hp n (flow (+ true-inc)))))
+          (on-hp n {(+ true-inc)})))
       (close!))
     ;; not setting current renderer, nor using an eventspace: dialog
     (render
@@ -233,7 +233,7 @@
   (define (stats-panel)
     (define (empty-stats label f)
       (cond-view
-        [(obs-combine (flow (~> (>< f) (not (all empty?))))
+        [(obs-combine {~> (>< f) (not (all empty?))}
                       (@> @mg monster-group-normal-stats)
                       (@> @mg monster-group-elite-stats))
          (text label)]
@@ -254,7 +254,7 @@
   (define @monsters (@> @mg monster-group-monsters))
   (define @monster
     (obs-combine
-      (λ (ms n) (and n (findf (flow (~> monster-number (= n))) ms)))
+      (λ (ms n) (and n (findf {~> monster-number (= n)} ms)))
       @monsters @monster-num))
   (define-flow make-label-stats
     (-< (if monster-elite? " (E)" "")
@@ -273,8 +273,8 @@
     (tabs
       @monsters
       #:selection @monster
-      #:choice=? (flow (~> (>< monster-number) =))
-      #:choice->label (flow (~> (-< monster-number make-label-stats) ~a))
+      #:choice=? {~> (>< monster-number) =}
+      #:choice->label {~> (-< monster-number make-label-stats) ~a}
       (λ (e _ms m)
         (case e
           ;; no close: cannot close
@@ -363,8 +363,8 @@
                   #:label "Level"
                   #:min-value 0
                   #:max-value max-level)
-          (hpanel (apply vpanel (map (flow (make-monster-selector on-change)) (inclusive-range 1 5)))
-                  (apply vpanel (map (flow (make-monster-selector on-change)) (inclusive-range 6 10))))))
+          (hpanel (apply vpanel (map {(make-monster-selector on-change)} (inclusive-range 1 5)))
+                  (apply vpanel (map {(make-monster-selector on-change)} (inclusive-range 6 10))))))
 
 ;; on-change accepts
 ;; - `(include? ,num to ,included?)
@@ -445,10 +445,10 @@
     (match e
       [`(set from ,_old to ,new) (vector-set! new-group 0 new)]
       [`(monster from ,_old to ,new) (vector-set! new-group 1 new)]
-      [(or `(include? ,_ to ,_) `(elite? ,_ to ,_)) (vector-update! new-group 2 (flow (update-selected-tracker e _)))]
+      [(or `(include? ,_ to ,_) `(elite? ,_ to ,_)) (vector-update! new-group 2 {(update-selected-tracker e _)})]
       [`(level ,level) (vector-set! new-group 3 level)]))
   (define-close! close! closing-mixin)
-  (define-flow mixin (~> closing-mixin (esc (make-on-close-mixin finish))))
+  (define mixin {~> closing-mixin (esc (make-on-close-mixin finish))})
   ;; not setting current renderer, nor using an eventspace: dialog
   (render
     (dialog
@@ -601,14 +601,14 @@
     (column "Ability" monster-ability-name values)))
 
 (define ability-table
-  `(["Initiative:" ,(flow (~> monster-ability-initiative ~a))]
-    ["Shuffle?" ,(flow (if monster-ability-shuffle? "Yes" "No"))]))
+  `(["Initiative:" ,{~> monster-ability-initiative ~a}]
+    ["Shuffle?" ,{(if monster-ability-shuffle? "Yes" "No")}]))
 
 (define (foes-view @monster-groups)
   (list-view @monster-groups
     (λ (_k @e) (simple-monster-group-view @e))))
 
-(define-flow take-first (~> hash-keys (sort string<?) car))
+(define take-first {~> hash-keys (sort string<?) car})
 (define (initial-set+info info-db)
   (define set (take-first info-db))
   (define name->info (hash-ref info-db set))
@@ -643,12 +643,12 @@
       (vector (monster-ability-name->text ability))))
   (define (card-information @cards @selection @revealed @mg @env)
     (cond-view
-      [(obs-combine (flow (and 1> (<= 0 __)))
+      [(obs-combine {(and 1> (<= 0 __))}
                     @selection
                     @revealed)
-       (monster-ability-view (obs-combine (flow (if (and 2> (~> X (== _ length) <))
-                                                  list-ref
-                                                  (gen (monster-ability "" "" 0 empty #f #f))))
+       (monster-ability-view (obs-combine {(if (and 2> (~> X (== _ length) <))
+                                               list-ref
+                                               (gen (monster-ability "" "" 0 empty #f #f)))}
                                           @cards
                                           @selection)
                              @mg
@@ -691,8 +691,8 @@
          (vpanel
           (button "Reveal 1" (thunk (<~@ @revealed (switch [number? add1])))
                   #:enabled? (obs-combine
-                              (flow (~> (== _ (~> ability-decks-draw length))
-                                        (and (~> 1> number?) <)))
+                              {(~> (== _ (~> ability-decks-draw length))
+                                   (and (~> 1> number?) <))}
                               @revealed @ability-deck))
           (button "Reveal All" (thunk (:= @revealed 'all))
                   #:enabled? (@> @revealed number?))
@@ -714,8 +714,8 @@
 
 (define (preview-rows ability-deck revealed)
   (define draw (ability-decks-draw ability-deck))
-  (define-flow reveal (~> monster-ability-name->text vector))
-  (define-flow hide (gen (vector "?")))
+  (define reveal {~> monster-ability-name->text vector})
+  (define hide {(gen (vector "?"))})
   (make-preview-rows draw revealed #:reveal reveal #:hide hide))
 
 (define (update-selected-tracker e tracker)
@@ -789,13 +789,13 @@
               [`(set from ,_old to ,new) (<~@ @state (list-set 0 new))]
               [`(monster from ,_old to ,new) (<~@ @state (list-set 1 new))]
               [`(include? ,n to #t)
-                (<~@ @state (list-update 2 (flow (hash-update n values #f))))]
+                (<~@ @state (list-update 2 {(hash-update n values #f)}))]
               [`(include? ,n to #f)
-                (<~@ @state (list-update 2 (flow (hash-remove n))))]
+                (<~@ @state (list-update 2 {(hash-remove n)}))]
               [`(elite? ,n to ,elite?)
                 ;; looks like hash-set, but I want the missing-key semantics of
                 ;; hash-update with no failure-result as a guard against bugs
-                (<~@ @state (list-update 2 (flow (hash-update n (const elite?)))))])))))
+                (<~@ @state (list-update 2 {(hash-update n (const elite?))}))])))))
 
     (with-closing-custodian/eventspace
       (render/eventspace
