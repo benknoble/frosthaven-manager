@@ -56,7 +56,7 @@
       (table (list title)
              (@~> new-@data (or _ (gen (vector))))
              (λ (_action _entries selection) (:= new-@selection selection))
-             #:entry->row {(~> entry->label vector)}
+             #:entry->row {~> entry->label vector}
              #:selection new-@selection))
     (values (cons t r-tables) new-@selection new-@data entry->next)))
 
