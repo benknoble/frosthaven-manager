@@ -32,6 +32,7 @@
          frosthaven-manager/gui/loot
          (only-in frosthaven-manager/elements elements)
          frosthaven-manager/gui/elements
+         frosthaven-manager/gui/helpers
          frosthaven-manager/monster-db
          frosthaven-manager/gui/monsters
          frosthaven-manager/gui/render
@@ -124,13 +125,7 @@
            (button "Next" (to-choose-monster-db s)))))
 
 (define (choose-monster-db-view s)
-  (define/obs @error-text "")
-  (define (call-with-error-text th)
-    (:= @error-text "")
-    (with-handlers ([exn:fail? (λ (e) (:= @error-text (exn-message e)))])
-      (th)))
-  (define-syntax-rule (with-error-text e ...)
-    (call-with-error-text (thunk e ...)))
+  (define-error-text @error-text with-error-text)
   (vpanel
     (db-view (state-@info-db s)
              (state-@ability-db s)

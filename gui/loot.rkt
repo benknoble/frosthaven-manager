@@ -27,6 +27,7 @@
          frosthaven-manager/files
          frosthaven-manager/gui/mixins
          frosthaven-manager/gui/counter
+         frosthaven-manager/gui/helpers
          frosthaven-manager/gui/render
          frosthaven-manager/gui/table
          frosthaven-manager/gui/rich-text-display
@@ -74,13 +75,7 @@
   (hpanel (spacer) (counter (@> @n {(~a label _)}) add-card subtract-card) (spacer)))
 
 (define (loot-cards-loader @type->deck #:on-deck [on-deck void])
-  (define/obs @error-text "")
-  (define (call-with-error-text th)
-    (:= @error-text "")
-    (with-handlers ([exn:fail? (λ (e) (:= @error-text (exn-message e)))])
-      (th)))
-  (define-syntax-rule (with-error-text e ...)
-    (call-with-error-text (thunk e ...)))
+  (define-error-text @error-text with-error-text)
   (define (load-standard-cards)
     (:= @error-text "")
     (on-deck standard-loot-deck))
