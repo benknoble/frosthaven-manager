@@ -134,8 +134,8 @@
   (vpanel
     (db-view (state-@info-db s)
              (state-@ability-db s)
-             (@~> (state-@creatures s) (~> sep (pass creature-is-mg*?)
-                                           (>< (~> creature-v monster-group*-mg)) collect)))
+             (@> (state-@creatures s) {~> sep (pass creature-is-mg*?)
+                                          (>< (~> creature-v monster-group*-mg)) collect}))
     (vpanel #:stretch '(#f #f)
             (hpanel #:stretch '(#t #f)
                     (button "Open Bestiary or Foes"
@@ -149,13 +149,13 @@
             (cond-view
               [(@> @error-text non-empty-string?)
                (hpanel (text "Error message:" #:color "red")
-                       (rich-text-display (@~> @error-text (~> (string-split "\n") (add-between newline)))
+                       (rich-text-display (@> @error-text {~> (string-split "\n") (add-between newline)})
                                           #:min-size '(#f 60)))]
               [else (spacer)]))
     (hpanel #:stretch '(#t #f)
             #:alignment '(center center)
             (button "Back" (to-add-prompts s))
-            (button "Next" (to-choose-monsters-or-play s) #:enabled? (@~> (state-@info-db s) (not hash-empty?))))))
+            (button "Next" (to-choose-monsters-or-play s) #:enabled? (@> (state-@info-db s) {(not hash-empty?)})))))
 
 (define (choose-monsters-view s)
   (vpanel
@@ -191,9 +191,9 @@
         (button "Add Monster Group"
                 (thunk
                   (define @monster-names
-                    (@~> (state-@creatures s)
-                         (~> sep (pass creature-is-mg*?)
-                             (>< (~> creature-v monster-group*-mg monster-group-name)) collect)))
+                    (@> (state-@creatures s)
+                        {~> sep (pass creature-is-mg*?)
+                            (>< (~> creature-v monster-group*-mg monster-group-name)) collect}))
                   (add-monster-group
                     (state-@info-db s)
                     (state-@level s)
@@ -211,30 +211,30 @@
         (deck-adder-button (state-@blesses s) (do-bless-player s) "Bless Player" bless-deck)
         (deck-adder-button (state-@player-blesses s) (do-unbless-player s) "Unbless Player" bless-deck)
         (spacer)
-        (button (@~> (state-@monster-modifier-deck s) (~>> length (format "Draw Modifier (~a)")))
+        (button (@> (state-@monster-modifier-deck s) {~>> length (format "Draw Modifier (~a)")})
                 (draw-modifier s))
         (button "Advantage" (draw-modifier* s))
         (button "Disadvantage" (draw-modifier* s worse-modifier))
-        (text (@~> (state-@modifier s) (~>> (or _ "") (~a "Most Recent Modifier: "))))
-        (text (@~> (state-@monster-prev-discard s) (~>> (or _ "") (~a "Previous Modifier: "))))
+        (text (@> (state-@modifier s) {~>> (or _ "") (~a "Most Recent Modifier: ")}))
+        (text (@> (state-@monster-prev-discard s) {~>> (or _ "") (~a "Previous Modifier: ")}))
         (button "Show Discard Pile" (show-discard-pile s))
         (spacer)
-        (text (@~> (state-@round s) (~a "Round: " _)))
+        (text (@> (state-@round s) {(~a "Round: " _)}))
         (button "Next Round" #:enabled? (state-@in-draw? s) (next-round s))
         (button "Draw Abilities" #:enabled? (@> (state-@in-draw? s) not) (draw-abilities s))
-        (button "Undo" #:enabled? (@~> @undo undoable?) (thunk (undo! s @undo)))))
+        (button "Undo" #:enabled? (@> @undo undoable?) (thunk (undo! s @undo)))))
     ;; bottom
     (hpanel #:stretch '(#f #f)
             (show-loot-and-xp (state-@num-players s)
                               (state-@level s)
-                              (@~> (state-@creatures s)
-                                   (~> sep (pass (~> creature-v player?)) (>< creature-v) collect)))
+                              (@> (state-@creatures s)
+                                  {~> sep (pass (~> creature-v player?)) (>< creature-v) collect}))
             (loot-button (state-@loot-deck s)
                          (state-@num-loot-cards s)
                          (state-@num-players s)
-                         (@~> (state-@creatures s)
-                              (~> sep (pass (~> creature-v player?))
-                                  (>< (~> (-< creature-v creature-id) cons)) collect))
+                         (@> (state-@creatures s)
+                             {~> sep (pass (~> creature-v player?))
+                                 (>< (~> (-< creature-v creature-id) cons)) collect})
                          #:on-player (give-player-loot s)
                          ;; #:on-top: do nothing :)
                          #:on-bottom (thunk (place-loot-on-bottom s)))
@@ -245,15 +245,15 @@
 
 (define (deck-adder-button @cards do-adder text original-deck)
   (button
-    #:enabled? (@~> @cards (not empty?))
-    (@~> @cards
-         (~> length
-             (format "~a (~a/~a)" text _ (length original-deck))))
-    do-adder))
+   #:enabled? (@> @cards {(not empty?)})
+   (@> @cards
+       {~> length
+           (format "~a (~a/~a)" text _ (length original-deck))})
+   do-adder))
 
 (define ((make-player-view s) k @e)
   (define (update proc)
-    (<~@ (state-@creatures s) (update-players k proc)))
+    (<@ (state-@creatures s) {(update-players k proc)}))
   (define update-player-condition {~> player-condition-handler update})
   (define update-player-hp {~> player-act-on-hp update})
   (define update-player-xp {~> player-act-on-xp update})
@@ -277,7 +277,7 @@
 (define ((make-monster-group-view s) k @e)
   (define @env (state-@env s))
   (define (update proc [procn {1>}])
-    (<~@ (state-@creatures s) (update-monster-groups k proc procn)))
+    (<@ (state-@creatures s) {(update-monster-groups k proc procn)}))
   (define (update-by-num num proc)
     (update (monster-group-update-num num proc)))
   (define @mg* (@> @e creature-v))
@@ -297,7 +297,7 @@
     ;; draw-new-card-mid-round-if-needed checks that there isn't already a card
     ;; flipped. But this also probably doesn't hurt? Unless length becomes a
     ;; perf. issue, which is unlikely.
-    (when (@! (@~> @mg (~> monster-group-monsters length (= 1))))
+    (when (@! (@> @mg {~> monster-group-monsters length (= 1)}))
       (draw-new-card-mid-round-if-needed s (@! (@> @mg monster-group-set-name)))))
   (define (select num) (update values (const num)))
   (define/match (swap who)
@@ -308,10 +308,10 @@
       {~> (== _ monster-group-set-name) hash-ref}
       (state-@ability-decks s) @mg))
   (define (move-ability-card)
-    (<~@ (state-@ability-decks s)
-         ;; valid: in a dialog handler
-         (hash-update (monster-group-set-name (@! @mg))
-                      move-top-draw-to-bottom)))
+    (<@ (state-@ability-decks s)
+        ;; valid: in a dialog handler
+        {(hash-update (monster-group-set-name (@! @mg))
+                      move-top-draw-to-bottom)}))
   (define (update-max-hp f)
     (update {(monster-group-change-max-HP f (@! @env))}))
   (monster-group-view
@@ -330,8 +330,8 @@
 
 (define ((make-creature-view s) k @e)
   (cond-view
-    [(@~> @e (~> creature-v player?)) ((make-player-view s) k @e)]
-    [(@~> @e creature-is-mg*?) ((make-monster-group-view s) k @e)]
+    [(@> @e {~> creature-v player?}) ((make-player-view s) k @e)]
+    [(@> @e creature-is-mg*?) ((make-monster-group-view s) k @e)]
     [else (text "creature is neither player or monster-group*")]))
 
 (define ((show-discard-pile s))
@@ -339,13 +339,13 @@
     (render/eventspace
       #:eventspace closing-eventspace
       (window
-        #:mixin close-custodian-mixin
-        #:title "Discard Pile"
-        #:min-size (@~> (state-@monster-discard s) (~>> length (* 20) (list 200)))
-        (text "(Most recent first)")
-        (spacer)
-        (text (@~> (state-@monster-discard s) (~>> (map ~a) (string-join _ "\n"))))
-        (spacer)))))
+       #:mixin close-custodian-mixin
+       #:title "Discard Pile"
+       #:min-size (@> (state-@monster-discard s) {~>> length (* 20) (list 200)})
+       (text "(Most recent first)")
+       (spacer)
+       (text (@> (state-@monster-discard s) {~>> (map ~a) (string-join _ "\n")}))
+       (spacer)))))
 
 (define (show-loot-and-xp @num-players @level @players)
   (button

@@ -44,7 +44,7 @@
    (apply hpanel
           #:stretch '(#t #f)
           (for/list ([key '("L" "C")])
-            (input #:label key (@~> (state-@env s) (~> (hash-ref key) ~a)) #:enabled? #f)))))
+            (input #:label key (@> (state-@env s) {~> (hash-ref key) ~a}) #:enabled? #f)))))
 
 (module+ main
   (command-line

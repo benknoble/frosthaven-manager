@@ -21,7 +21,7 @@
 
 (define (prompts-input-view @prompts #:on-add [on-add void] #:on-remove [on-remove void])
   (define @keyed-prompts
-    (@~> @prompts (~>> (-< (~> length range) _) (map cons))))
+    (@> @prompts {~>> (-< (~> length range) _) (map cons)}))
   (vpanel
    (button "Add Prompt"
            (thunk
@@ -34,7 +34,7 @@
        (hpanel
         #:stretch '(#t #f)
         #:alignment '(center center)
-        (text (@~> @kp (~> cdr prompt->string)))
+        (text (@> @kp {~> cdr prompt->string}))
         (button "X" (thunk (on-remove k (cdr (@! @kp))))))))))
 
 (define (manage-prompt-menu-item @prompts #:on-add [on-add void] #:on-remove [on-remove void])
@@ -108,7 +108,7 @@
     (button "Cancel" (thunk (:= @time #f) (close!))))))
 
 (define (->input-value @N)
-  (@~> @N (if _ ~a "")))
+  (@> @N {(if _ ~a "")}))
 
 (define ((->input-handler close! @N) event str)
   (when (equal? event 'return)
@@ -118,7 +118,7 @@
 (module+ main
   (define/obs @prompts empty)
   (define (add p)
-    (<~@ @prompts (append (list p))))
+    (<@ @prompts {(append (list p))}))
   (define (remove i p)
     (define-values (new-ps p2)
       (list-remove (@! @prompts) i))

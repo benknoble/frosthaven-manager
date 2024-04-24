@@ -32,7 +32,7 @@
       #:eventspace closing-eventspace
       (window
         #:mixin close-custodian-mixin
-        (text (@~> @addr (~a "Server: " _)))
+        (text (@> @addr {(~a "Server: " _)}))
         (hpanel
          (button "Open in browser" (thunk (send-url (@! @addr))))
          (button "Copy address to clipboard"

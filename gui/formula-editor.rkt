@@ -18,7 +18,7 @@
   (define/obs @input "")
   (define @result (obs-combine eval-formula @input @env))
   (define (@var-display var)
-    (@~> @env (var-label-text var)))
+    (@> @env {(var-label-text var)}))
   (window
     #:title "Formula editor"
     #:mixin mix

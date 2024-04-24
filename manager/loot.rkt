@@ -25,17 +25,17 @@
 
 ;; valid: only called if loot-deck non-empty, loot assigned
 (define (take-loot s)
-  (<~@ (state-@loot-deck s) (if empty? _ rest)))
+  (<@ (state-@loot-deck s) {(if empty? _ rest)}))
 
 (define ((give-player-loot* s) p)
   (define card
-    (@! (@~> (state-@loot-deck s) (and (not empty?) first))))
+    (@! (@> (state-@loot-deck s) {(and (not empty?) first)})))
   (if card
     ((player-add-loot card) p)
     p))
 
 (define ((give-player-loot s) k)
-  (<~@ (state-@creatures s) (update-players k (give-player-loot* s)))
+  (<@ (state-@creatures s) {(update-players k (give-player-loot* s))})
   (take-loot s))
 
 (module+ test
@@ -72,7 +72,7 @@
     (check-equal? (rotate '()) '())))
 
 (define (place-loot-on-bottom s)
-  (<~@ (state-@loot-deck s) rotate))
+  (<@ (state-@loot-deck s) rotate))
 
 (define ((loot-picker-updater @type->number-of-cards) evt)
   (define (update cards-per-loot-deck)

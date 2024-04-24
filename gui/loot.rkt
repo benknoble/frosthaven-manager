@@ -50,7 +50,7 @@
       (cards-picker (~a h " Cards: ") max-herb-cards h)))
   (define random-item-view
     (checkbox #:label "Random Item Card?"
-              #:checked? (@~> @type->cards (~> (hash-ref 'random-item 0) (> 0)))
+              #:checked? (@> @type->cards {~> (hash-ref 'random-item 0) (> 0)})
               (match-lambda
                 [#t (on-card `(add random-item))]
                 [#f (on-card `(remove random-item))])))
@@ -64,14 +64,14 @@
 
 (define ((make-cards-picker! @type->cards #:on-card on-card)
          label max-cards type)
-  (define @n (@~> @type->cards (hash-ref type 0)))
+  (define @n (@> @type->cards {(hash-ref type 0)}))
   (define (subtract-card)
     (when (> (@! @n) 0)
       (on-card `(remove ,type))))
   (define (add-card)
     (when (< (@! @n) max-cards)
       (on-card `(add ,type))))
-  (hpanel (spacer) (counter (@~> @n (~a label _)) add-card subtract-card) (spacer)))
+  (hpanel (spacer) (counter (@> @n {(~a label _)}) add-card subtract-card) (spacer)))
 
 (define (loot-cards-loader @type->deck #:on-deck [on-deck void])
   (define/obs @error-text "")
@@ -124,8 +124,8 @@
     (cond-view
       [(@> @error-text non-empty-string?)
        (hpanel (text "Error Message:" #:color "red")
-               (rich-text-display (@~> @error-text (~> (string-split "\n") (add-between newline)))
-                                       #:min-size '(#f 60)))]
+               (rich-text-display (@> @error-text {~> (string-split "\n") (add-between newline)})
+                                  #:min-size '(#f 60)))]
       [else (spacer)]))))
 
 (define (loot-button @loot-deck
@@ -141,7 +141,7 @@
     ;; not setting current renderer, nor using an eventspace: dialog
     (render (loot-assigner @loot-deck @num-players @players on-player on-top on-bottom)))
   (button (obs-combine loot-text @loot-deck @num-loot-cards)
-          #:enabled? (@~> @loot-deck (not empty?))
+          #:enabled? (@> @loot-deck {(not empty?)})
           show-assigner))
 
 (define (loot-assigner @loot-deck @num-players @players on-player on-top on-bottom)
@@ -183,7 +183,7 @@
               (hpanel
                (table '("Loot Card") @rows)
                (vpanel
-                (button "Reveal 1" (thunk (<~@ @revealed (switch [number? add1])))
+                (button "Reveal 1" (thunk (<@ @revealed {switch [number? add1]}))
                         #:enabled? (obs-combine {~> (== _ length)
                                                     (and (~> 1> number?) <)}
                                                 @revealed @loot-deck))
@@ -204,7 +204,7 @@
     ;; not setting current renderer, nor using an eventspace: dialog
     (vpanel
       (hpanel (text "Duplicates?")
-              (text (@~> @deck (~>> (map eq-hash-code) check-duplicates ~a))))
+              (text (@> @deck {~>> (map eq-hash-code) check-duplicates ~a})))
       (table '("ID" "Cards")
              (@> @deck list->vector)
              #:entry->row {~> (-< eq-hash-code _) (>< ~a) vector}
@@ -219,7 +219,7 @@
                                        #:on-card (update-loot-deck-and-num-loot-cards s)
                                        #:on-deck (λ:= (state-@type->deck s)))
                           (table '("Deck" "Cards")
-                                 (@~> @type->cards (~> hash->list list->vector))
+                                 (@> @type->cards {~> hash->list list->vector})
                                  #:entry->row count+decks->row
                                  #:min-size '(250 #f))
                           (table-with-actual-loot-deck))))))

@@ -31,13 +31,3 @@ An alias for @racket[λ<~].
 @defproc[(|@!| [|@o| obs?]) any/c]{
 An alias for @racket[obs-peek].
 }
-
-@defform[(|@~>| |@o| flo)
-         #:contracts ([|@o| obs?])]{
-An alias for @racket[obs-map] that wraps @racket[flo] in @racket[flow].
-}
-
-@defform[(|<~@| |@o| flo)
-         #:contracts ([|@o| obs?])]{
-An alias for @racket[obs-update!] that wraps @racket[flo] in @racket[flow].
-}

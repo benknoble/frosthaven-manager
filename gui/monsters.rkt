@@ -60,10 +60,10 @@
 (define (stats-view @stats @env)
   (define (empty-view f sf)
     (cond-view
-      [(@~> @stats (~> f (not empty?))) (text (@~> @stats (~> sf escape-text)))]
+      [(@> @stats {~> f (not empty?)}) (text (@> @stats {~> sf escape-text}))]
       [else (spacer)]))
   (vpanel
-    (text (@~> @stats (~> monster-stats-move (if _ ~a "-"))))
+    (text (@> @stats {~> monster-stats-move (if _ ~a "-")}))
     (text (obs-combine {~> monster-stats-attack* ~a} @stats @env))
     (empty-view monster-stats-bonuses monster-stats-bonuses-string)
     (empty-view monster-stats-effects monster-stats-effects-string)
@@ -78,7 +78,7 @@
   (define @monster-stats (obs-combine get-monster-stats @mg @monster))
   (define (make-condition-checkbox c)
     (checkbox #:label (~a c)
-              #:checked? (@~> @monster (~>> monster-conditions (member c) (not false?)))
+              #:checked? (@> @monster {~>> monster-conditions (member c) (not false?)})
               {(on-condition c _)}))
   (define (show-conditions)
     (with-closing-custodian/eventspace
@@ -105,11 +105,11 @@
                add-hp
                subtract-hp)
       (button "💀Kill💀" on-kill))
-    (button (@~> @monster (~>> (if monster-elite? "Normal" "Elite")
-                               (~a "Swap to ")))
+    (button (@> @monster {~>> (if monster-elite? "Normal" "Elite")
+                              (~a "Swap to ")})
             on-swap)
     (vpanel
-      (rich-text-display (@~> @monster (~> monster-conditions conditions->string list))
+      (rich-text-display (@> @monster {~> monster-conditions conditions->string list})
                          #:min-size '(50 30))
       (button "Edit Conditions" show-conditions))))
 
@@ -125,13 +125,13 @@
   (define @ability (@> @ability-deck ability-decks-current))
   (define (do-new)
     (define @available-numbers
-      (@~> @mg (~>> monster-group-monsters
-                    (map monster-number)
-                    (set-subtract (inclusive-range 1 10))
-                    (sort _ <))))
+      (@> @mg {~>> monster-group-monsters
+                   (map monster-number)
+                   (set-subtract (inclusive-range 1 10))
+                   (sort _ <)}))
     (define/obs @number->elite (hash))
     (define (on-change e)
-      (<~@ @number->elite (update-selected-tracker e _)))
+      (<@ @number->elite {(update-selected-tracker e _)}))
     (define-close! close! closing-mixin)
     (define (on-close)
       ;; valid because called when the dialog that changes @number->elite is closed
@@ -164,7 +164,7 @@
      (dialog
       #:min-size '(400 #f)
       #:mixin closing-mixin
-      #:title (@~> @mg (~>> monster-group-name escape-text (~a "Mass Assign Conditions for ")))
+      #:title (@> @mg {~>> monster-group-name escape-text (~a "Mass Assign Conditions for ")})
       (choice conditions (λ:= @condition) #:choice->label ~a #:selection @condition)
       (hpanel
        (button "Add" add)
@@ -189,7 +189,7 @@
      (dialog
       #:min-size '(400 #f)
       #:mixin closing-mixin
-      #:title (@~> @mg (~>> monster-group-name escape-text (~a "Increase maximum HP for ")))
+      #:title (@> @mg {~>> monster-group-name escape-text (~a "Increase maximum HP for ")})
       #:style '()
       (input ""
              (match-lambda**
@@ -200,19 +200,19 @@
       (hpanel
        (button "Increase" increase!)
        (button "Cancel" close!)))))
-  (define (name-panel) (text (@~> @mg (~> monster-group-name escape-text)) #:font big-control-font))
+  (define (name-panel) (text (@> @mg {~> monster-group-name escape-text}) #:font big-control-font))
   (define (add-monster-button)
     (button "Add Monster" do-new
             #:enabled?
-            (@~> @mg (~>> monster-group-monsters
-                          (map monster-number)
-                          (set-subtract (inclusive-range 1 10))
-                          (not empty?)))))
+            (@> @mg {~>> monster-group-monsters
+                         (map monster-number)
+                         (set-subtract (inclusive-range 1 10))
+                         (not empty?)})))
   (define (name-initiative-panel)
     (vpanel #:alignment '(center center)
             #:stretch '(#f #t)
             (name-panel)
-            (text (@~> @ability monster-ability-initiative->text))
+            (text (@> @ability monster-ability-initiative->text))
             (add-monster-button)
             (button "More Actions…"
                     (thunk
@@ -220,7 +220,7 @@
                      (render
                       (dialog
                        #:min-size '(400 #f)
-                       #:title (@~> @mg (~>> monster-group-name escape-text (~a "More Actions for ")))
+                       #:title (@> @mg {~>> monster-group-name escape-text (~a "More Actions for ")})
                        (button "Swap Elite/Normal" (thunk (on-swap 'all)))
                        (button "Mass Conditions" do-mass-condition)
                        (ability-deck-preview @ability-deck @mg @env #:on-move on-move-ability-card)
@@ -283,9 +283,9 @@
       (if-view @monster
         (monster-view
           @mg
-          (@~> @monster (or _
+          (@> @monster {(or _
                             ;; use a fill-in monster if none
-                            (gen (monster 1 #f 0 empty))))
+                            (gen (monster 1 #f 0 empty)))})
           @env
           #:on-condition forward-condition
           #:on-hp forward-hp
@@ -331,7 +331,7 @@
   (define-values (set info) (initial-set+info info-db))
   (define/obs @set set)
   (define/obs @info info)
-  (define @name->info (@~> @set (hash-ref info-db _)))
+  (define @name->info (@> @set {(hash-ref info-db _)}))
   (define (choose-set set)
     (on-change `(set from ,(@! @set) to ,set))
     (:= @set set))
@@ -340,7 +340,7 @@
             #:min-size (~> (info-db "Set")
                            (== longest-set-length string-length)
                            + (* 10) (max 50) (list #f))))
-  (define @valid-monsters (@~> @name->info (~> hash-keys (set-subtract unavailable) (sort string<?))))
+  (define @valid-monsters (@> @name->info {~> hash-keys (set-subtract unavailable) (sort string<?)}))
   (define (choose-monster monster-name)
     (when monster-name
       (define new-info (hash-ref (@! @name->info) monster-name))
@@ -349,7 +349,7 @@
   ;; Set initial monster, which may not be info if info is already unavailable
   ;; according to @valid-monsters (or if the set operation re-orders the
   ;; keys…). Use #f like choice if no valid monster.
-  (choose-monster (@! (@~> @valid-monsters (and (not empty?) first))))
+  (choose-monster (@! (@> @valid-monsters {(and (not empty?) first)})))
   (define monster-picker
     (choice #:label "Monster" @valid-monsters choose-monster
             #:min-size (~> (info-db "Monster")
@@ -384,20 +384,20 @@
   ;; TODO why maintain own list? why not have passed in? (something to do with IDs?)
   (define/obs @monster-groups empty)
   (define @monster-names
-    (@~> @monster-groups
-         (~> (sep (~> cdr monster-group-name)) collect)))
+    (@> @monster-groups
+        {~> (sep (~> cdr monster-group-name)) collect}))
   (define/obs @next-id
-    (@~> @monster-groups
-         (~> (sep car) (rectify -1) max add1)))
+    (@> @monster-groups
+         {~> (sep car) (rectify -1) max add1}))
   (define (make-simple-monster-group-view _k @e)
     (define @m (@> @e cdr))
     (define @name (@> @m monster-group-name))
     (define (remove-group)
       (on-change `(remove ,(@! @m)))
-      (<~@ @monster-groups (remove (@! @e) _)))
+      (<@ @monster-groups {(remove (@! @e) _)}))
     (hpanel
       (vpanel #:stretch '(#f #t)
-              (button (@~> @name (~a "Remove " _)) remove-group)
+              (button (@> @name {(~a "Remove " _)}) remove-group)
               (spacer))
       (simple-monster-group-view @m)))
   (vpanel
@@ -418,7 +418,7 @@
             @env
             #:on-group (λ (g)
                          (on-change `(add ,g))
-                         (<~@ @monster-groups (append (list (cons (@! @next-id) g)))))))))))
+                         (<@ @monster-groups {(append (list (cons (@! @next-id) g)))}))))))))
 
 
 (define (add-monster-group @info-db @initial-level @monster-names @env #:on-group [on-group void])
@@ -473,11 +473,11 @@
     #:alignment '(left top)
     (hpanel
       #:stretch '(#f #f)
-      (text (@~> @monster-group (~> monster-group-name escape-text)))
-      (text (@~> @monster-group (~>> monster-group-level (~a "Level: ")))))
+      (text (@> @monster-group {~> monster-group-name escape-text}))
+      (text (@> @monster-group {~>> monster-group-level (~a "Level: ")})))
     (table
       '("Number" "Type" "HP")
-      (@~> @monster-group (~> monster-group-monsters list->vector))
+      (@> @monster-group {~> monster-group-monsters list->vector})
       void
       #:entry->row monster-info->row)))
 
@@ -494,23 +494,23 @@
   (group
     "Monster DB"
     (tabs
-      (@~> @monster-groups
-           (switch
-             [empty? '("Stats" "Abilities")]
-             [_ '("Stats" "Abilities" "Foes")]))
-      #:selection @tab
-      (λ (e _choices current)
-        (case e
-          [(select) (:= @tab current)]))
-      (case-view @tab
-        [("Stats") (info-view @info-db)]
-        [("Abilities") (ability-view @ability-db)]
-        [("Foes") (foes-view @monster-groups)]
-        [else (spacer)]))))
+     (@> @monster-groups
+         {switch
+           [empty? '("Stats" "Abilities")]
+           [_ '("Stats" "Abilities" "Foes")]})
+     #:selection @tab
+     (λ (e _choices current)
+       (case e
+         [(select) (:= @tab current)]))
+     (case-view @tab
+       [("Stats") (info-view @info-db)]
+       [("Abilities") (ability-view @ability-db)]
+       [("Foes") (foes-view @monster-groups)]
+       [else (spacer)]))))
 
 (define (info-view @info-db)
   (apply stacked-tables
-         (@~> @info-db (~> hash-keys (sort string<?) list->vector))
+         (@> @info-db {~> hash-keys (sort string<?) list->vector})
          info-view-stats-view
          (info-view-columns @info-db)))
 
@@ -520,7 +520,7 @@
          (map (match-lambda
                 [(list label func)
                  (hpanel (text (~a label ":"))
-                         (text (@~> @stats? (if _ (~> func fmt-stat escape-text) "N/A"))))])
+                         (text (@> @stats? {(if _ (~> func fmt-stat escape-text) "N/A")})))])
               stats-table)))
 
 (define (info-view-columns @info-db)
@@ -568,7 +568,7 @@
 (define (ability-view @ability-db)
   (apply stacked-tables
          #:panel vpanel
-         (@~> @ability-db (~> hash-keys (sort string<?) list->vector))
+         (@> @ability-db {~> hash-keys (sort string<?) list->vector})
          ability-view-ability-view
          (ability-view-columns @ability-db)))
 
@@ -577,7 +577,7 @@
   (define from-table
     (map (match-lambda
            [(list label func)
-            (hpanel (text label) (text (@~> @ability? (if _ (~> func escape-text) "N/A"))))])
+            (hpanel (text label) (text (@> @ability? {(if _ (~> func escape-text) "N/A")})))])
          ability-table))
   (define others
     (list
@@ -656,7 +656,7 @@
       [else (spacer)]))
   (define (revealed-ability-card-information @ability-deck @draw-selection @revealed @mg @env)
     (define @cards (@> @ability-deck ability-decks-draw))
-    (card-information @cards @draw-selection (@~> @revealed (switch [number? sub1] [else +inf.0])) @mg @env))
+    (card-information @cards @draw-selection (@> @revealed {switch [number? sub1] [else +inf.0]}) @mg @env))
   (define (discard-ability-card-information @ability-deck @discard-selection @mg @env)
     (define @cards (@> @ability-deck ability-decks-discard))
     (card-information @cards @discard-selection (@> @cards length) @mg @env))
@@ -689,7 +689,7 @@
          (revealed-ability-card-information @ability-deck @draw-selection @revealed @mg @env)
          ;; reveal draw
          (vpanel
-          (button "Reveal 1" (thunk (<~@ @revealed (switch [number? add1])))
+          (button "Reveal 1" (thunk (<@ @revealed {switch [number? add1]}))
                   #:enabled? (obs-combine
                               {(~> (== _ (~> ability-decks-draw length))
                                    (and (~> 1> number?) <))}
@@ -699,7 +699,7 @@
           (button "Move Top Card to Bottom"
                   (thunk
                    (on-move)
-                   (<~@ @revealed (switch [number? sub1])))))))
+                   (<@ @revealed {switch [number? sub1]}))))))
        ;; discard
        (group
         "Ability Card Discard Pile"
@@ -786,16 +786,16 @@
             info-db (@ 3)
             #:on-change
             (match-lambda
-              [`(set from ,_old to ,new) (<~@ @state (list-set 0 new))]
-              [`(monster from ,_old to ,new) (<~@ @state (list-set 1 new))]
+              [`(set from ,_old to ,new) (<@ @state {(list-set 0 new)})]
+              [`(monster from ,_old to ,new) (<@ @state {(list-set 1 new)})]
               [`(include? ,n to #t)
-                (<~@ @state (list-update 2 {(hash-update n values #f)}))]
+                (<@ @state {(list-update 2 {(hash-update n values #f)})})]
               [`(include? ,n to #f)
-                (<~@ @state (list-update 2 {(hash-remove n)}))]
+                (<@ @state {(list-update 2 {(hash-remove n)})})]
               [`(elite? ,n to ,elite?)
                 ;; looks like hash-set, but I want the missing-key semantics of
                 ;; hash-update with no failure-result as a guard against bugs
-                (<~@ @state (list-update 2 {(hash-update n (const elite?))}))])))))
+                (<@ @state {(list-update 2 {(hash-update n (const elite?))})})])))))
 
     (with-closing-custodian/eventspace
       (render/eventspace
@@ -868,7 +868,7 @@
                               ;; or there _must_ be cards to draw from
                               (~> (@deck) @! (and (not empty?) first)))
                           ;; update the deck
-                          (<~@ @deck (switch [(not empty?) rest]))
+                          (<@ @deck {switch [(not empty?) rest]})
                           (<@ @draw? not))
                         #:enabled? @draw?)
                       (button
@@ -876,7 +876,7 @@
                         (thunk
                           ;; discard current card if it's a card
                           (when (monster-ability? (@! @ability))
-                            (<~@ @discard (cons (@! @ability) _)))
+                            (<@ @discard {(cons (@! @ability) _)}))
                           ;; time to shuffle
                           (when (or (empty? (@! @deck))
                                     (and (monster-ability? (@! @ability))

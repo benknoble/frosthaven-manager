@@ -42,7 +42,7 @@
     (define s (make-state))
     (check-equal? (length (@! (state-@monster-modifier-deck s))) (length monster-modifier-deck))
     (define top-3 (take (@! (state-@monster-modifier-deck s)) 3))
-    (<~@ (state-@monster-modifier-deck s) (drop 3))
+    (<@ (state-@monster-modifier-deck s) {(drop 3)})
     (:= (state-@monster-discard s) (reverse top-3))
     (reshuffle-modifier-deck s)
     (check-equal? (length (@! (state-@monster-modifier-deck s))) (length monster-modifier-deck))
@@ -50,11 +50,11 @@
     (check-deck-and-discard-make-complete-deck s)))
 
 (define (discard s card)
-  (<~@ (switch (card s) (% 1> 2>)
-         [(equal? curse) state-@curses]
-         [(equal? bless) state-@blesses]
-         [else state-@monster-discard])
-       (cons card _)))
+  (<@ (switch (card s) (% 1> 2>)
+        [(equal? curse) state-@curses]
+        [(equal? bless) state-@blesses]
+        [else state-@monster-discard])
+      {(cons card _)}))
 
 ;; only modifies state-@monster-modifier-deck
 (define (draw-card s)
@@ -141,7 +141,7 @@
 (define (((deck-adder state->@cards) s))
   (define @cards (state->@cards s))
   (<@ @cards (match-lambda
-               [(cons card cards) (<~@ (state-@monster-modifier-deck s) (cons card _))
+               [(cons card cards) (<@ (state-@monster-modifier-deck s) {(cons card _)})
                                   (shuffle-modifier-deck s)
                                   cards]
                ['() '()])))
@@ -152,7 +152,7 @@
 (define ((do-bless-player s))
   (define @cards (state-@blesses s))
   (<@ @cards (match-lambda
-               [(cons card cards) (<~@ (state-@player-blesses s) (cons card _))
+               [(cons card cards) (<@ (state-@player-blesses s) {(cons card _)})
                                   cards]
                ['() '()])))
 
@@ -169,7 +169,7 @@
     (define ((add-card cards))
       (<@ (cards s)
           (match-lambda
-            [(cons card cards) (<~@ (state-@monster-modifier-deck s) (cons card _))
+            [(cons card cards) (<@ (state-@monster-modifier-deck s) {(cons card _)})
                                cards])))
     (define curse! (add-card state-@curses))
     (define bless! (add-card state-@blesses))

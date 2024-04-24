@@ -294,10 +294,10 @@
 (define (make-undo s)
   (define/obs @undo (list (s@->v s)))
   (define (push-state . _args)
-    (<~@ @undo
-         (~>> (-< _ (~> length (min 20)))
-              take
-              (cons (s@->v s)))))
+    (<@ @undo
+        {~>> (-< _ (~> length (min 20)))
+             take
+             (cons (s@->v s))}))
   ;; Only observe meaningful changes in state. Observing every change means
   ;; that, for example, it takes multiple undo! calls to undo assigning loot or
   ;; starting the round.
@@ -375,10 +375,10 @@
   (map update-only-monster-group creatures))
 
 (define ((update-player-name s) k name)
-  (<~@ (state-@creatures s) (update-players k (player-update-name name))))
+  (<@ (state-@creatures s) {(update-players k (player-update-name name))}))
 
 (define ((update-player-max-hp s) k f)
-  (<~@ (state-@creatures s) (update-players k (player-act-on-max-hp f))))
+  (<@ (state-@creatures s) {(update-players k (player-act-on-max-hp f))}))
 
 (define ((monster-group-initiative ads) mg)
   (~> (ads mg)
@@ -452,7 +452,7 @@
                   (and (not empty?) (~> first monster-number))))
             (define c (creature next-id (monster-group* selection mg)))
             (append creatures (list c))))]
-    [`(remove ,mg) (<~@ (state-@creatures s) (remf (creature-is-mg~? mg) _))]))
+    [`(remove ,mg) (<@ (state-@creatures s) {(remf (creature-is-mg~? mg) _)})]))
 
 (define (draw-new-card-mid-round-if-needed s set)
   ;; mid-round, we've added a monster, and they didn't already have a card
@@ -469,7 +469,7 @@
   in-draw?)
 
 (define ((add-prompt s) p)
-  (<~@ (state-@prompts s) (cons p _)))
+  (<@ (state-@prompts s) {(cons p _)}))
 
 (define ((remove-prompt s) i p)
   (define-values (new-ps p2)

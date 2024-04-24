@@ -45,7 +45,7 @@ is to compute a default value:
 @codeblock|{
 (stacked-tables
   @data
-  (λ (@x?) ... (@~> @x? (or _ default)) ...)
+  (λ (@x?) ... (@> @x? {(or _ default)}) ...)
   ...)
 }|
 }

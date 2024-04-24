@@ -54,7 +54,7 @@
     (define/obs new-@selection #f)
     (define t
       (table (list title)
-             (@~> new-@data (or _ (gen (vector))))
+             (@> new-@data {(or _ (gen (vector)))})
              (λ (_action _entries selection) (:= new-@selection selection))
              #:entry->row {~> entry->label vector}
              #:selection new-@selection))
@@ -78,7 +78,7 @@
     (window
       (stacked-tables
         (~> (info-db) hash-keys list->vector @)
-        (λ (@stats?) (text (@~> @stats? (if _ ~a "N/A"))))
+        (λ (@stats?) (text (@> @stats? {(if _ ~a "N/A")})))
         (column "Set" values (λ (set)
                                (define name->info (hash-ref info-db set))
                                (for/vector ([name (in-hash-keys name->info)])

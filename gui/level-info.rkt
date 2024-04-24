@@ -23,11 +23,11 @@
     "Level Stats"
     (hpanel
       #:stretch '(#f #f)
-      (text (@~> @level-info (~>> level-info-trap-damage (~a "Trap: "))))
-      (text (@~> @level-info (~>> level-info-hazardous-terrain (~a "Hazardous Terrain: "))))
-      (text (@~> @level-info (~>> level-info-gold (~a "Gold: "))))
-      (text (@~> @level-info (~>> level-info-exp (~a "Bonus XP: "))))
-      (text (@~> @num-players (~>> inspiration-reward (~a "Inspiration: ")))))))
+      (text (@> @level-info {~>> level-info-trap-damage (~a "Trap: ")}))
+      (text (@> @level-info {~>> level-info-hazardous-terrain (~a "Hazardous Terrain: ")}))
+      (text (@> @level-info {~>> level-info-gold (~a "Gold: ")}))
+      (text (@> @level-info {~>> level-info-exp (~a "Bonus XP: ")}))
+      (text (@> @num-players {~>> inspiration-reward (~a "Inspiration: ")})))))
 
 (define (level-table @level)
   (define (table)
@@ -52,11 +52,11 @@
 (define (inspiration-table @num-players)
   (define (table)
     (static-table
-      '("Players" "Inspiration")
-      (sub1 max-players)
-      (list inspiration-reward)
-      #:index->entry (curry + 2)
-      #:selection (@~> @num-players (- 2))))
+     '("Players" "Inspiration")
+     (sub1 max-players)
+     (list inspiration-reward)
+     #:index->entry (curry + 2)
+     #:selection (@> @num-players {(- 2)})))
   (define (action)
     (with-closing-custodian/eventspace
       (render/eventspace #:eventspace closing-eventspace

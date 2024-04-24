@@ -53,9 +53,9 @@
 
 (define ((to-build-loot-deck s))
   ;; give each player max-hp
-  (<~@ (state-@creatures s)
-       (update-all-players
-        {~> (-< (~> player-max-hp const player-act-on-hp) _) apply}))
+  (<@ (state-@creatures s)
+      {(update-all-players
+        {~> (-< (~> player-max-hp const player-act-on-hp) _) apply})})
   (:= (state-@mode s) 'build-loot-deck))
 
 (define ((to-add-prompts s))
@@ -87,7 +87,7 @@
   ;; wane elements
   (for-each {(<@ wane-element)} (state-@elements s))
   ;; reset player initiative
-  (<~@ (state-@creatures s) (update-all-players player-clear-initiative))
+  (<@ (state-@creatures s) {(update-all-players player-clear-initiative)})
   ;; discard monster cards
   (<@ (state-@ability-decks s)
       (update-ability-decks ability-decks-discard-and-maybe-shuffle))

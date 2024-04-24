@@ -791,14 +791,14 @@
   (do-player-condition #t))
 
 (define (set-player-initiative id init)
-  (do (<~@ (state-@creatures (s))
-           (update-players id {(player-set-initiative init)}))))
+  (do (<@ (state-@creatures (s))
+          {(update-players id {(player-set-initiative init)})})))
 
 (define (loot! req return)
   (match (req->player-id req)
     [(and id (not #f))
      (define card
-       (@! (@~> (state-@loot-deck (s)) (and (not empty?) first))))
+       (@! (@> (state-@loot-deck (s)) {(and (not empty?) first)})))
      (do ((give-player-loot (s)) id))
      (when card
        (return
@@ -890,15 +890,15 @@
     [_ (void)]))
 
 (define (do-player/id id guard action)
-  (do (<~@ (state-@creatures (s))
-           (update-players id {switch [(not guard) action]}))))
+  (do (<@ (state-@creatures (s))
+          {(update-players id {switch [(not guard) action]})})))
 
 (define (do-player-condition req add-or-remove)
   (match* {(req->player-id req) (req->condition req)}
     [{(and id (not #f)) (and c (not #f))}
       (define c? (list c add-or-remove))
-      (do (<~@ (state-@creatures (s))
-               (update-players id (player-condition-handler c?))))]
+      (do (<@ (state-@creatures (s))
+              {(update-players id (player-condition-handler c?))}))]
     [{_ _} (void)]))
 
 (define (req->player-id r)
@@ -937,8 +937,8 @@
     [_ (values #f #f)]))
 
 (define (do-monster-group/mgid mgid action [action-n {1>}])
-  (do (<~@ (state-@creatures (s))
-           (update-monster-groups mgid action action-n))))
+  (do (<@ (state-@creatures (s))
+          {(update-monster-groups mgid action action-n)})))
 
 (define (do-monster-group/n mgid mn action)
   (do-monster-group/mgid mgid (monster-group-update-num mn action)))

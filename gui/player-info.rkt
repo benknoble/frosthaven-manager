@@ -46,7 +46,7 @@
       #:name (if names (list-ref names k) "")
       #:hp (if hps (list-ref hps k) 1)))
   (list-view (@> @num-players range)
-    #:min-size (@~> @num-players (~>> (* 40) (list #f)))
+    #:min-size (@> @num-players {~>> (* 40) (list #f)})
     make-input-view))
 
 (define (player-view @player
@@ -71,19 +71,19 @@
   (define hp-panel
     (counter (@> @player player->hp-text) add-hp subtract-hp))
   (define (subtract-xp)
-    (unless (@! (@~> @player (~> player-xp zero?)))
+    (unless (@! (@> @player {~> player-xp zero?}))
       (on-xp sub1)))
   (define (add-xp)
     (on-xp add1))
   (define xp-panel
-    (counter (@~> @player (~>> player-xp (~a "XP: "))) add-xp subtract-xp))
+    (counter (@> @player {~>> player-xp (~a "XP: ")}) add-xp subtract-xp))
   (define hp-xp
     (vpanel
       #:alignment '(center center)
       #:stretch '(#f #t)
       hp-panel xp-panel))
   (define @init (@> @player player-initiative))
-  (define @init-label (@~> @player (~>> player-name (~a "Initiative for "))))
+  (define @init-label (@> @player {~>> player-name (~a "Initiative for ")}))
   (define (input-initiative)
     (define-close! close! closing-mixin)
     (with-closing-custodian/eventspace
@@ -106,8 +106,8 @@
     (vpanel
       #:stretch '(#f #t)
       (hpanel #:alignment '(center center)
-              (text (@~> @player (~> player-name escape-text)) #:font big-control-font)
-              (text (@~> @init (format "(~a)" _))))
+              (text (@> @player {~> player-name escape-text}) #:font big-control-font)
+              (text (@> @init {(format "(~a)" _)})))
       (button "Edit Initiative" input-initiative)))
   (define (show-conditions)
     (with-closing-custodian/eventspace
@@ -115,12 +115,12 @@
         #:eventspace closing-eventspace
         (apply window
                #:mixin close-custodian-mixin
-               #:title (@~> @player (~>> player-name (~a "Conditions for ")))
+               #:title (@> @player {~>> player-name (~a "Conditions for ")})
                #:size '(200 #f)
                (map make-condition-checkbox conditions)))))
   (define conditions-panel
     (vpanel
-      (rich-text-display (@~> @player (~> player-conditions* conditions->string list))
+      (rich-text-display (@> @player {~> player-conditions* conditions->string list})
                          #:min-size '(50 30))
       (button "Edit Conditions" show-conditions)))
   (define add-summon-button
@@ -135,7 +135,7 @@
       (on-summon-hp i sub1)))
   (define (summons-view)
     (cond-view
-      [(@~> @player (~> player-summons (not empty?)))
+      [(@> @player {~> player-summons (not empty?)})
        (group
         "Summons"
         (observable-view
@@ -197,9 +197,9 @@
     (hpanel (input @name (match-lambda**
                            [{'input s} (:= @name s)]
                            [{'return s} (:= @name s) (close!)]))
-            (counter (@~> @hp (~a "Max HP: " _))
+            (counter (@> @hp {(~a "Max HP: " _)})
                      (thunk (<@ @hp add1))
-                     (thunk (<~@ @hp (switch [(<= 1) _] [else sub1]))))
+                     (thunk (<@ @hp {switch [(<= 1) _] [else sub1]})))
             (button "Summon" close!)))))
 
 (define (player-input-view
@@ -211,9 +211,9 @@
   (define/obs @hp hp)
   (define (subtract-hp)
     (on-hp sub1)
-    (<~@ @hp (switch
-               [(<= 1) _]
-               [else sub1])))
+    (<@ @hp {switch
+              [(<= 1) _]
+              [else sub1]}))
   (define (add-hp)
     (on-hp add1)
     (<@ @hp add1))
@@ -221,7 +221,7 @@
     #:stretch '(#t #f)
     (input #:label "Name" @name {~> 2> on-name}
            #:min-size '(200 #f))
-    (counter (@~> @hp (~a "Max HP: " _)) add-hp subtract-hp)))
+    (counter (@> @hp {(~a "Max HP: " _)}) add-hp subtract-hp)))
 
 (module+ main
   (define (update-players players k f)
@@ -244,9 +244,9 @@
     (player-input-views
       (@> @players length)
       #:on-name (λ (k name)
-                  (<~@ @players (update-players k (player-update-name name))))
+                  (<@ @players {(update-players k (player-update-name name))}))
       #:on-hp (λ (k f)
-                (<~@ @players (update-players k (player-act-on-max-hp f))))
+                (<@ @players {(update-players k (player-act-on-max-hp f))}))
       #:names (map {~> cdr player-name} (@! @players))
       #:hps (map {~> cdr player-max-hp} (@! @players))))
   (void
@@ -258,28 +258,28 @@
     ;; no separate eventspace: block main until this window closed
     (render/eventspace
       (window
-        (list-view @players
-          #:key car
-          #:min-size (@~> @players (~>> length (* 100) (list #f)))
-          (λ (k @e)
-            (define (update proc)
-              (<~@ @players (update-players k proc)))
-            (player-view
-              (@> @e cdr)
-              #:on-condition {~> player-condition-handler update}
-              #:on-hp {~> player-act-on-hp update}
-              #:on-xp {~> player-act-on-xp update}
-              #:on-initiative (λ (i) (update {(player-set-initiative i)}))
-              #:on-summon
-              (λ (name hp)
-                (update {(player-summon name hp)}))
-              #:on-summon-hp
-              (λ (i proc)
-                (update
-                 (update-player-summon i (summon-act-on-hp proc))))
-              #:on-summon-condition
-              (λ (i c)
-                (update
-                 (update-player-summon i (summon-condition-handler c))))
-              #:kill-summon
-              (λ (i) (update (player-kill-summon i))))))))))
+       (list-view @players
+         #:key car
+         #:min-size (@> @players {~>> length (* 100) (list #f)})
+         (λ (k @e)
+           (define (update proc)
+             (<@ @players {(update-players k proc)}))
+           (player-view
+            (@> @e cdr)
+            #:on-condition {~> player-condition-handler update}
+            #:on-hp {~> player-act-on-hp update}
+            #:on-xp {~> player-act-on-xp update}
+            #:on-initiative (λ (i) (update {(player-set-initiative i)}))
+            #:on-summon
+            (λ (name hp)
+              (update {(player-summon name hp)}))
+            #:on-summon-hp
+            (λ (i proc)
+              (update
+               (update-player-summon i (summon-act-on-hp proc))))
+            #:on-summon-condition
+            (λ (i c)
+              (update
+               (update-player-summon i (summon-condition-handler c))))
+            #:kill-summon
+            (λ (i) (update (player-kill-summon i))))))))))
