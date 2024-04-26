@@ -8,7 +8,7 @@
     [ability-decks-draw-next (-> ability-decks? ability-decks?)]
     [ability-decks-discard-and-maybe-shuffle (-> ability-decks? ability-decks?)]
     [update-ability-decks
-      (-> (-> ability-decks? ability-decks?)
+      (-> (-> string? ability-decks? ability-decks?)
           (-> (hash/c string? ability-decks?)
               (hash/c string? ability-decks?)))]
     [move-top-draw-to-bottom (-> ability-decks? ability-decks?)]))
@@ -90,7 +90,7 @@
 
 (define ((update-ability-decks f) ads)
   (for/hash ([(set ad) (in-hash ads)])
-    (values set (f ad))))
+    (values set (f set ad))))
 
 (define (move-top-draw-to-bottom ads)
   (define the-draw (ability-decks-draw ads))

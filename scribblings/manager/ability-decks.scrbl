@@ -27,9 +27,9 @@ lost.
 Discards the active card and shuffles the ability deck if necessary.
 }
 
-@defproc[(update-ability-decks [f (-> ability-decks? ability-decks?)])
+@defproc[(update-ability-decks [f (-> string? ability-decks? ability-decks?)])
          (-> (hash/c string? ability-decks?) (hash/c string? ability-decks?))]{
-Updates each deck via @racket[f].
+Updates each deck via @racket[f], which is called with the monster set and deck.
 }
 
 @defproc[(move-top-draw-to-bottom [ad ability-decks?]) ability-decks?]{

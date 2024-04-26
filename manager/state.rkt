@@ -417,7 +417,7 @@
       (check-equal? ((creature-initiative ads) (get-creature jack)) 0)
       (check-equal? ((creature-initiative ads) (get-creature frigg)) 67)
       (check-equal? ((creature-initiative ads) (get-creature archers)) +inf.0))
-    (<@ (state-@ability-decks s) (update-ability-decks ability-decks-draw-next))
+    (<@ (state-@ability-decks s) (update-ability-decks {~> 2> ability-decks-draw-next}))
     (let ([ads (@! (state-@ability-decks s))])
       (define expected
         (~>> (archers)
