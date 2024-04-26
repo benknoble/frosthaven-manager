@@ -18,7 +18,7 @@
                 state-@num-players
                 state-@creatures
                 creature
-                monster-group*
+                add-or-remove-monster-group
                 update-loot-deck-and-num-loot-cards
                 build-loot-deck!)
   (values
@@ -27,7 +27,7 @@
    (dynamic-require 'frosthaven-manager/manager 'state-@num-players)
    (dynamic-require 'frosthaven-manager/manager 'state-@creatures)
    (dynamic-require 'frosthaven-manager/manager 'creature)
-   (dynamic-require 'frosthaven-manager/manager 'monster-group*)
+   (dynamic-require 'frosthaven-manager/manager 'add-or-remove-monster-group)
    (dynamic-require 'frosthaven-manager/manager 'update-loot-deck-and-num-loot-cards)
    (dynamic-require 'frosthaven-manager/manager 'build-loot-deck!)))
 
@@ -56,9 +56,9 @@
        (list (creature 0 (~> ((make-player "Jack Skellington" 8))
                              (player-summon "Corpse Bro" 4)))
              (creature 1 (~> ((player "Frigg" 12 10 3 (list muddle ward) 67 empty empty))
-                             (player-summon "Banner of Courage" 7)))
-             (creature 2 (monster-group* 1 mg))
-             (creature 3 (monster-group* 1 boss-mg)))))
+                             (player-summon "Banner of Courage" 7)))))
+   ((add-or-remove-monster-group sample-state) `(add ,mg))
+   ((add-or-remove-monster-group sample-state) `(add ,boss-mg)))
   sample-state)
 
 (define jack 0)

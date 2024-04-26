@@ -38,8 +38,7 @@
    (pp-view "blesses" state-@blesses s)
    (pp-view "modifier" state-@modifier s)
    (pp-view "monster-prev-discard" state-@monster-prev-discard s)
-   (pp-view "info-db" state-@info-db s)
-   (pp-view "ability-db" state-@ability-db s)
+   (pp-view "bestiary-path" state-@bestiary-path s)
    (pp-view "ability-decks" state-@ability-decks s)
    (apply hpanel
           #:stretch '(#t #f)

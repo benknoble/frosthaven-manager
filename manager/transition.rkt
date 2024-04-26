@@ -109,6 +109,8 @@
   (<@ (state-@ability-decks s)
       (update-ability-decks
         (λ (ad)
+          ;; TODO: if we keep only ability-decks for groups with monsters, this
+          ;; can simplify?
           (define monster-set
             (for/or ([ability (cons (ability-decks-current ad)
                                     (append (ability-decks-draw ad)

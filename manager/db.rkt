@@ -6,19 +6,13 @@
     [init-dbs-and-foes (-> path-string? state? any)]))
 
 (require frosthaven-manager/observable-operator
-         frosthaven-manager/monster-db
-         frosthaven-manager/manager/state
-         frosthaven-manager/manager/ability-decks)
+         frosthaven-manager/manager/state)
 
 (define (init-dbs db s)
-  (define-values (info-db ability-db) (get-dbs db))
   ;; remove all monster groups from creatures
   (<@ (state-@creatures s) {(remf* creature-is-mg*? _)})
-  (:= (state-@info-db s) info-db)
-  (:= (state-@ability-db s) ability-db)
-  (:= (state-@ability-decks s)
-      (for/hash ([(set abilities) (in-hash ability-db)])
-        (values set (ability-decks #f (shuffle abilities) empty)))))
+  (:= (state-@bestiary-path s) db)
+  (:= (state-@ability-decks s) (hash)))
 
 (define (init-foes db s)
   (define make-foes (dynamic-require db 'make-foes (const #f)))

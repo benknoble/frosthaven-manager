@@ -26,8 +26,7 @@
                    [@blesses (obs/c (listof monster-modifier?))]
                    [@modifier (obs/c (or/c #f monster-modifier? ))]
                    [@monster-prev-discard (obs/c (or/c #f monster-modifier?))]
-                   [@info-db (obs/c info-db/c)]
-                   [@ability-db (obs/c ability-db/c)]
+                   [@bestiary-path (obs/c (or/c #f path-string?))]
                    [@ability-decks (obs/c (hash/c string? ability-decks?))]
                    [@prompts (obs/c (listof prompt/c))]
                    [@type->deck (obs/c (hash/c loot-type/c (listof loot-card?)))])]
@@ -50,13 +49,14 @@
             (maybe-obs/c (listof monster-modifier?))
             (maybe-obs/c (or/c #f monster-modifier?))
             (maybe-obs/c (or/c #f monster-modifier?))
-            (maybe-obs/c info-db/c)
-            (maybe-obs/c ability-db/c)
+            (maybe-obs/c (or/c #f path-string?))
             (maybe-obs/c (hash/c string? ability-decks?))
             (maybe-obs/c (listof prompt/c))
             (maybe-obs/c (hash/c loot-type/c (listof loot-card?))))
            state?)]
     [state-@env (-> state? (obs/c env/c))]
+    [state-@info-db (-> state? (obs/c info-db/c))]
+    [state-@ability-db (-> state? (obs/c ability-db/c))]
     [serialize-state (-> state? output-port? void?)]
     [deserialize-state (-> input-port? state?)]
     [copy-state (-> state? state? any)]
@@ -127,8 +127,7 @@
          @blesses
          @modifier
          @monster-prev-discard
-         @info-db
-         @ability-db
+         @bestiary-path
          @ability-decks
          @prompts
          @type->deck]
@@ -157,8 +156,7 @@
                     [@blesses (@ bless-deck)]
                     [@modifier (@ #f)]
                     [@monster-prev-discard (@ #f)]
-                    [@info-db (@ (hash))]
-                    [@ability-db (@ (hash))]
+                    [@bestiary-path (@ #f)]
                     [@ability-decks (@ (hash))]
                     [@prompts (@ empty)]
                     [@type->deck (@ standard-loot-deck)])
@@ -188,8 +186,7 @@
          (@ @blesses)
          (@ @modifier)
          (@ @monster-prev-discard)
-         (@ @info-db)
-         (@ @ability-db)
+         (@ @bestiary-path)
          (@ @ability-decks)
          (@ @prompts)
          (@ @type->deck)))
@@ -279,16 +276,26 @@
       (@! (state-@modifier from)))
   (:=     (state-@monster-prev-discard to)
       (@! (state-@monster-prev-discard from)))
-  (:=     (state-@info-db to)
-      (@! (state-@info-db from)))
-  (:=     (state-@ability-db to)
-      (@! (state-@ability-db from)))
+  (:=     (state-@bestiary-path to)
+      (@! (state-@bestiary-path from)))
   (:=     (state-@ability-decks to)
       (@! (state-@ability-decks from)))
   (:=     (state-@prompts to)
       (@! (state-@prompts from)))
   (:=     (state-@type->deck to)
       (@! (state-@type->deck from))))
+
+(define (state-@info-db s)
+  (@> (state-@bestiary-path s)
+      {(if _
+           (~> get-dbs 1>)
+           (gen (hash)))}))
+
+(define (state-@ability-db s)
+  (@> (state-@bestiary-path s)
+      {(if _
+           (~> get-dbs 2>)
+           (gen (hash)))}))
 
 ;;; UNDO
 (define (make-undo s)
@@ -444,15 +451,38 @@
 (define ((add-or-remove-monster-group s) evt)
   (match evt
     [`(add ,mg)
-      (<@ (state-@creatures s)
-          (λ (creatures)
-            (define next-id (~> (creatures) (sep creature-id) max add1))
-            (define selection
-              (~> (mg) monster-group-monsters
-                  (and (not empty?) (~> first monster-number))))
-            (define c (creature next-id (monster-group* selection mg)))
-            (append creatures (list c))))]
-    [`(remove ,mg) (<@ (state-@creatures s) {(remf (creature-is-mg~? mg) _)})]))
+     (define set (monster-group-set-name mg))
+     ;; valid: typically called from a dialog closer
+     (define abilities (hash-ref (@! (state-@ability-db s)) set))
+     ;; need to update ability-decks first so that when creatures is updated
+     ;; anything using (creature-initiative …) will work. only update
+     ;; ability-decks if there isn't one already, though!
+     (<@ (state-@ability-decks s)
+         {(hash-update
+           set
+           {(or _ (gen (ability-decks #f (shuffle abilities) empty)))}
+           #f)})
+     (<@ (state-@creatures s)
+         (λ (creatures)
+           (define next-id (~> (creatures) (sep creature-id) max add1))
+           (define selection
+             (~> (mg) monster-group-monsters
+                 (and (not empty?) (~> first monster-number))))
+           (define c (creature next-id (monster-group* selection mg)))
+           (append creatures (list c))))]
+    [`(remove ,mg)
+     ;; update creatures first: see above comment.
+     (<@ (state-@creatures s) {(remf (creature-is-mg~? mg) _)})
+     (define set (monster-group-set-name mg))
+     ;; valid: typically called from a dialog closer
+     (define active-sets
+       (~>> (s) state-@creatures @!
+            (filter creature-is-mg*?)
+            (map {~> creature-v monster-group*-mg monster-group-set-name})
+            list->set))
+     ;; only remove ability-decks when no one is using that set
+     (unless (set-member? active-sets set)
+       (<@ (state-@ability-decks s) {(hash-remove set)}))]))
 
 (define (draw-new-card-mid-round-if-needed s set)
   ;; mid-round, we've added a monster, and they didn't already have a card

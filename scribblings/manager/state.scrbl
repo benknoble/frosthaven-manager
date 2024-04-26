@@ -60,8 +60,7 @@ True iff @racket[c] holds a @racket[monster-group*].
               [|@|blesses (obs/c (listof monster-modifier?))]
               [|@|modifier (obs/c (or/c #f monster-modifier?))]
               [|@|monster-prev-discard (obs/c (or/c #f monster-modifier?))]
-              [|@|info-db (obs/c info-db/c)]
-              [|@|ability-db (obs/c ability-db/c)]
+              [|@|bestiary-path (obs/c (or/c #f path-string?))]
               [|@|ability-decks (obs/c (hash/c string? ability-decks?))]
               [|@|prompts (obs/c (listof prompt/c))]
               [|@|type->deck (maybe-obs/c (hash/c loot-type/c (listof loot-card?)))])]{
@@ -86,8 +85,7 @@ All of the "global" manager state.
            [|@|blesses (maybe-obs/c (listof monster-modifier?)) (|@| bless-deck)]
            [|@|modifier (maybe-obs/c (or/c #f monster-modifier?)) (|@| #f)]
            [|@|monster-prev-discard (maybe-obs/c (or/c #f monster-modifier?)) (|@| #f)]
-           [|@|info-db (maybe-obs/c info-db/c) (|@| (hash))]
-           [|@|ability-db (maybe-obs/c ability-db/c) (|@| (hash))]
+           [|@|bestiary-path (maybe-obs/c (or/c #f path-string?)) (|@| #f)]
            [|@|ability-decks (maybe-obs/c (hash/c string? ability-decks?)) (|@| (hash))]
            [|@|prompts (maybe-obs/c (listof prompt/c)) (|@| empty)]
            [|@|type->deck (maybe-obs/c (hash/c loot-type/c (listof loot-card?))) (|@| standard-loot-deck)])
@@ -97,6 +95,12 @@ Create an initial state.
 
 @defproc[(state-|@|env [s state?]) (obs/c env/c)]{
 Derives a formula environment observable from pieces of @racket[s].
+}
+
+@deftogether[(@defproc[(state-|@|info-db [s state?]) (obs/c info-db/c)]
+              @defproc[(state-|@|ability-db [s state?]) (obs/c ability-db/c)])]{
+Derive corresponding databases from @racket[state-|@|bestiary-path]. The
+databases are empty if the path is not present.
 }
 
 @deftogether[(@defproc[(serialize-state [s state?] [out output-port?]) any]
