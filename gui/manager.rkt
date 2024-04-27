@@ -338,12 +338,11 @@
       (window
        #:mixin close-custodian-mixin
        #:title "Discard Pile"
-       #:min-size (@> (state-@monster-discard s) {~>> length (* 20) (list 200)})
-       (text "(Most recent first)")
-       (spacer)
-       ;; TODO: this should be a table
-       (text (@> (state-@monster-discard s) {~>> (map ~a) (string-join _ "\n")}))
-       (spacer)))))
+       #:min-size '(200 300)
+       (table
+        '("Ability Modifier (Most recent first)")
+        (@> (state-@monster-discard s) list->vector)
+        #:entry->row {~> ~a vector})))))
 
 (define (show-loot-and-xp @num-players @level @players)
   (button
