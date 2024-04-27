@@ -5,7 +5,8 @@
          jack
          frigg
          archers
-         boss)
+         boss
+         more-monsters)
 
 (require racket/runtime-path
          frosthaven-manager/defns

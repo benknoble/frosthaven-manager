@@ -24,6 +24,10 @@
          frosthaven-manager/manager/round-prompts
          frosthaven-manager/gui/round-prompts)
 
+(module+ test (require rackunit
+                       frosthaven-manager/testfiles/data
+                       (submod frosthaven-manager/manager/state test-helpers)))
+
 (define transition/c (-> state? (-> any)))
 
 ;; 0. Start
@@ -112,14 +116,26 @@
           ;; TODO: if we keep only ability-decks for groups with monsters, this
           ;; can simplify?
           (define monster-set-has-monsters?
-            (for/or ([creature (@! (state-@creatures s))]
-                     #:when (creature-is-mg*? creature)
-                     #:do [(define v (creature-v creature))
-                           (define mg (monster-group*-mg v))]
-                     #:when (~> (mg) monster-group-set-name (equal? set)))
-              (~> (mg) monster-group-monsters (not empty?))))
+            (~>> (s) state-@active-monster-groups @! sep
+                 (pass (~> monster-group-set-name (equal? set)))
+                 (any (~> monster-group-monsters (not empty?)))))
           (cond
             [monster-set-has-monsters? (ability-decks-draw-next ad)]
             [else ad]))))
   ;; toggle state
   (<@ (state-@in-draw? s) not))
+
+(module+ test
+  (test-case "Draw Abilities: Cards not drawn for dead monster groups"
+    (define s (make-sample-state))
+    (define initial-deck (get-ability-decks s archers))
+    ;; kill all archers
+    (<@ (state-@creatures s)
+        {(update-monster-groups
+          archers
+          (λ (mg)
+            (for/fold ([mg mg])
+                      ([m (monster-group-monsters mg)])
+              ((monster-group-remove (monster-number m)) mg))))})
+    ((draw-abilities s))
+    (check-equal? (get-ability-decks s archers) initial-deck)))

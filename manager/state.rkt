@@ -57,6 +57,7 @@
     [state-@env (-> state? (obs/c env/c))]
     [state-@info-db (-> state? (obs/c info-db/c))]
     [state-@ability-db (-> state? (obs/c ability-db/c))]
+    [state-@active-monster-groups (-> state? (obs/c (listof monster-group?)))]
     [serialize-state (-> state? output-port? void?)]
     [deserialize-state (-> input-port? state?)]
     [copy-state (-> state? state? any)]
@@ -208,8 +209,22 @@
 (define (deserialize-state in)
   (deserialize (fasl->s-exp in)))
 
+(module+ test-helpers
+  (provide get-creature
+           get-ability-decks)
+
+  (define (get-creature s id)
+    (findf {~> creature-id (= id)}
+           (@! (state-@creatures s))))
+
+  (define get-ability-decks
+    {~> (-< (~> 1> state-@ability-decks @!)
+            (~> get-creature creature-v monster-group*-mg monster-group-set-name))
+        hash-ref}))
+
 (module+ test
-  (require rackunit)
+  (require rackunit
+           (submod ".." test-helpers))
   ;; dynamic-require: break module cycle
   ;; frosthaven-manager/manager/db -> frosthaven-manager/manager/state
   (define init-dbs (dynamic-require 'frosthaven-manager/manager/db 'init-dbs))
@@ -296,6 +311,11 @@
       {(if _
            (~> get-dbs 2>)
            (gen (hash)))}))
+
+(define (state-@active-monster-groups s)
+  (@> (state-@creatures s)
+      {~>> (filter creature-is-mg*?)
+           (map {~> creature-v monster-group*-mg})}))
 
 ;;; UNDO
 (define (make-undo s)
@@ -410,23 +430,18 @@
   (test-case
     "Initiative"
     (define s (make-sample-state))
-    (define (get-creature id)
-      (findf {~> creature-id (= id)}
-             (@! (state-@creatures s))))
     (let ([ads (@! (state-@ability-decks s))])
-      (check-equal? ((creature-initiative ads) (get-creature jack)) 0)
-      (check-equal? ((creature-initiative ads) (get-creature frigg)) 67)
-      (check-equal? ((creature-initiative ads) (get-creature archers)) +inf.0))
+      (check-equal? ((creature-initiative ads) (get-creature s jack)) 0)
+      (check-equal? ((creature-initiative ads) (get-creature s frigg)) 67)
+      (check-equal? ((creature-initiative ads) (get-creature s archers)) +inf.0))
     (<@ (state-@ability-decks s) (update-ability-decks {~> 2> ability-decks-draw-next}))
     (let ([ads (@! (state-@ability-decks s))])
       (define expected
-        (~>> (archers)
-             get-creature creature-v monster-group*-mg
-             monster-group-set-name
-             (hash-ref ads)
+        (~>> (s archers)
+             get-ability-decks
              ability-decks-current
              monster-ability-initiative))
-      (check-equal? ((creature-initiative ads) (get-creature archers)) expected))))
+      (check-equal? ((creature-initiative ads) (get-creature s archers)) expected))))
 
 ;; (-> mg (-> creature bool))
 (define-flow creature-is-mg~?
@@ -476,13 +491,28 @@
      (define set (monster-group-set-name mg))
      ;; valid: typically called from a dialog closer
      (define active-sets
-       (~>> (s) state-@creatures @!
-            (filter creature-is-mg*?)
-            (map {~> creature-v monster-group*-mg monster-group-set-name})
+       (~>> (s) state-@active-monster-groups @!
+            (map monster-group-set-name)
             list->set))
      ;; only remove ability-decks when no one is using that set
      (unless (set-member? active-sets set)
        (<@ (state-@ability-decks s) {(hash-remove set)}))]))
+
+(module+ test
+  (test-case "Add/Remove Monsters: Removing duplicate sets does not remove all ability cards"
+    (define s (make-sample-state))
+    (define initial-deck (get-ability-decks s archers))
+    (define new-mg
+      (make-monster-group
+       (~> (more-monsters) get-dbs 1>
+           (hash-ref "archer") (hash-ref "wyrmling archer"))
+       0
+       '([5 . #f])
+       (hash)))
+    ;; add and then remove extra archers
+    ((add-or-remove-monster-group s) `(add ,new-mg))
+    ((add-or-remove-monster-group s) `(remove ,new-mg))
+    (check-equal? (get-ability-decks s archers) initial-deck)))
 
 (define (draw-new-card-mid-round-if-needed s set)
   ;; mid-round, we've added a monster, and they didn't already have a card
