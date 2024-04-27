@@ -165,20 +165,18 @@ Bless deck. Click @onscreen{Bless Player} when giving a player a Bless; click
 Towards the middle of the right group of controls you will find a group of
 controls for the monster's modifier deck. Three (3) buttons draw cards from the
 modifier deck. The first says @onscreen{Draw Modifier} and indicates how many
-modifier cards are in the deck. It draws a single card, which is shown next to
-@onscreen{Most Recent Modifier}. As you draw more cards, only the most recent
-card (currently used) and the previous card are shown. The next modifier-drawing
-button reads @onscreen{Advantage}. This button draws two modifier cards and uses
-the better of the two, like drawing with advantage. @emph{The final card will
-always appear next to @onscreen{Most Recent Modifier}.} You can see the
-discarded, worse card as the @onscreen{Previous Modifier}. The third and final
-modifier card button is @onscreen{Disadvantage}. Like the @onscreen{Advantage}
-button, two cards are drawn. This time, the worse of the two is used, and the
-better is discarded. The used card will appear next to @onscreen{Most Recent
-Modifier}, with the better next to @onscreen{Previous Modifier}.
+modifier cards are in the deck. It draws a single card, which is shown next on
+the Discard Pile. As you draw more cards, only the top of the discard pile is
+shown. The next modifier-drawing button reads @onscreen{Advantage}. This button
+draws two modifier cards and uses the better of the two, like drawing with
+advantage. @emph{The final card will always appear on top of the discard pile.}
+The third and final modifier card button is @onscreen{Disadvantage}. Like the
+@onscreen{Advantage} button, two cards are drawn. This time, the worse of the
+two is used, and the better is discarded. The used card will appear on top of
+the discard pile.
 
-You can also click @onscreen{Show Discard Pile} to see the entire discard pile
-with the most recently discarded cards on top.
+You can also click @onscreen{Show Discard} to see the entire discard pile with
+the most recently discarded cards on top.
 
 @subsubsection{Advancing the Scenario}
 

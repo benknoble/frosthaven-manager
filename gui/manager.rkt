@@ -212,9 +212,9 @@
                 (draw-modifier s))
         (button "Advantage" (draw-modifier* s))
         (button "Disadvantage" (draw-modifier* s worse-modifier))
-        (text (@> (state-@modifier s) {~>> (or _ "") (~a "Most Recent Modifier: ")}))
-        (text (@> (state-@monster-prev-discard s) {~>> (or _ "") (~a "Previous Modifier: ")}))
-        (button "Show Discard Pile" (show-discard-pile s))
+        (button (@> (state-@modifier s)
+                    {~>> (or _ "N/A") (format "Show Discard (top: ~a)")})
+                (show-discard-pile s))
         (spacer)
         (text (@> (state-@round s) {(~a "Round: " _)}))
         (button "Next Round" #:enabled? (state-@in-draw? s) (next-round s))
@@ -341,6 +341,7 @@
        #:min-size (@> (state-@monster-discard s) {~>> length (* 20) (list 200)})
        (text "(Most recent first)")
        (spacer)
+       ;; TODO: this should be a table
        (text (@> (state-@monster-discard s) {~>> (map ~a) (string-join _ "\n")}))
        (spacer)))))
 
