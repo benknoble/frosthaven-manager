@@ -61,3 +61,8 @@ evtSource.addEventListener('number', (event) => {
   const {id, n} = JSON.parse(event.data);
   document.querySelector(`#${id}`).innerHTML = n;
 });
+
+evtSource.addEventListener('text', (event) => {
+  const {id, text} = JSON.parse(event.data);
+  document.querySelector(`#${id}`).innerHTML = text;
+});

@@ -134,7 +134,7 @@
         (multicast-channel-put ch `(number ,id ,n)))))
   (obs-observe!
     (state-@in-draw? an-s)
-    (λ (_in-draw?)
+    (λ (in-draw?)
       (define env (@! (state-@env an-s)))
       (define ads (@! (state-@ability-decks an-s)))
       (define cs (@! (state-@creatures an-s)))
@@ -143,7 +143,8 @@
           [(player? (creature-v c)) (multicast-channel-put ch `(player ,c))]
           [(creature-is-mg*? c) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))
       (define ids (map creature-css-id (sort cs < #:key (creature-initiative ads))))
-      (multicast-channel-put ch `(reorder ,ids))))
+      (multicast-channel-put ch `(reorder ,ids))
+      (multicast-channel-put ch `(text progress-game ,(if in-draw? "Next Round" "Draw Abilities")))))
   (obs-observe!
    (state-@env an-s)
    (λ (env)
@@ -158,15 +159,22 @@
      (for ([c (@! (state-@creatures an-s))])
        (cond
          [(creature-is-mg*? c) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))))
+  (obs-observe!
+   (state-@modifier an-s)
+   (λ (m)
+     (multicast-channel-put ch `(text modifier-discard ,(~a (or m "N/A"))))))
 
   (define-values (app the-reverse-uri)
     (dispatch-rules
       [("") overview]
       [("rewards") rewards]
+      [("discard-pile") discard-pile]
       [("action" "player" (string-arg) (string-arg) ...) #:method "post" player-action]
       [("action" "summon" (string-arg) (string-arg) ...) #:method "post" summon-action]
       [("action" "monster" (string-arg) (string-arg) ...) #:method "post" monster-action]
       [("action" "element" "transition") #:method "post" element-transition]
+      [("action" "draw-modifier") #:method "post" web-draw-modifier]
+      [("action" "progress-game") #:method "post" progress-game]
       [("events") (event-source ch)]
       [("element-pics" (element-name-arg) (element-style-arg)) element-pic]
       [else not-found]))
@@ -283,35 +291,67 @@
               ,@(for/list ([loot-text (map (format-loot-card num-players) (player-loot p))])
                   `(li ,loot-text))))))))))
 
+(define/page (discard-pile)
+  (define discard (@! (state-@monster-discard (s))))
+  (response/xexpr
+   `(html
+     (head
+      (title "Frosthaven Manager Discard Pile")
+      ,@common-heads)
+     (body
+      (h1 "Discard Pile")
+      (p "Most Recent First")
+      (ol
+       ,@(for/list ([m discard])
+           `(li ,(~a m))))))))
+
 (define (bottom-info-body embed/url)
   (define level-info (@! (@> (state-@level (s)) get-level-info)))
   (define num-players (@! (state-@num-players (s))))
-  `((p ([class "bottom-info"])
-       "Round "
-       (span ([id "round"])
-             ,(number->string (@! (state-@round (s)))))
-       ". "
-       "Trap: "
-       (span ([id "trap"])
-             ,(number->string (level-info-trap-damage level-info)))
-       ". "
-       "Hazardous Terrain: "
-       (span ([id "hazardous-terrain"])
-             ,(number->string (level-info-hazardous-terrain level-info)))
-       ". "
-       "Gold: "
-       (span ([id "gold"])
-             ,(number->string (level-info-gold level-info)))
-       ". "
-       "Bonus XP: "
-       (span ([id "xp"])
-             ,(number->string (level-info-exp level-info)))
-       ". "
-       "Inspiration: "
-       (span ([id "inspiration"])
-             ,(number->string (inspiration-reward num-players)))
-       ". "
-       (a ([href "/rewards"]) "Rewards."))))
+  (define in-draw? (@! (state-@in-draw? (s))))
+  (define discard (@! (@> (state-@modifier (s)) {(or _ "N/A")})))
+  `((div
+     ([class "bottom-info"])
+     (p ,(action-button
+          (list "draw-modifier")
+          empty
+          "Draw Modifier")
+        (span ([id "modifier-discard"])
+              ,(~a discard))
+        " "
+        (a ([href "/discard-pile"]) "Discard Pile")
+        ,(action-button
+          (list "progress-game")
+          empty
+          (if in-draw?
+              "Next Round"
+              "Draw Abilities")
+          '([id "progress-game"])))
+     (p "Round "
+        (span ([id "round"])
+              ,(number->string (@! (state-@round (s)))))
+        ". "
+        "Trap: "
+        (span ([id "trap"])
+              ,(number->string (level-info-trap-damage level-info)))
+        ". "
+        "Hazardous Terrain: "
+        (span ([id "hazardous-terrain"])
+              ,(number->string (level-info-hazardous-terrain level-info)))
+        ". "
+        "Gold: "
+        (span ([id "gold"])
+              ,(number->string (level-info-gold level-info)))
+        ". "
+        "Bonus XP: "
+        (span ([id "xp"])
+              ,(number->string (level-info-exp level-info)))
+        ". "
+        "Inspiration: "
+        (span ([id "inspiration"])
+              ,(number->string (inspiration-reward num-players)))
+        ". "
+        (a ([href "/rewards"]) "Rewards.")))))
 
 (define (elements-body embed/url)
   `((h2 "Elements")
@@ -722,7 +762,12 @@
       (define data (hash 'id (~a id) 'n n))
       (displayln "event: number" out)
       (display (format "data: ~a" (jsexpr->string data)) out)
-      (displayln "\n\n" out)]))
+      (displayln "\n\n" out)]
+    [`(text ,id ,(? string? s))
+     (define data (hash 'id (~a id) 'text s))
+     (displayln "event: text" out)
+     (display (format "data: ~a" (jsexpr->string data)) out)
+     (displayln "\n\n" out)]))
 
 ;;;; ACTIONS
 
@@ -771,6 +816,19 @@
       (do (<@ @e-state transition-element-state))
       (response/empty)]
     [(or `(id . ,_) #f) (not-found req)]))
+
+(define (web-draw-modifier _req)
+  (do ((draw-modifier (s))))
+  (response/empty))
+
+(define (progress-game _req)
+  (do
+    (let ([s (s)])
+      ;; double-parens: apply function that this if expression evaluates to
+      ((if (@! (state-@in-draw? s))
+           (next-round s)
+           (draw-abilities s)))))
+  (response/empty))
 
 (define-flow (increment-player-hp _req)
   (do-player player-at-max-health? (player-act-on-hp add1)))
