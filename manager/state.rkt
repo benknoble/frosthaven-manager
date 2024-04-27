@@ -65,11 +65,11 @@
     [undoable? (-> list? any/c)]
     [make-player-creature (-> any/c creature?)]
     [update-players (-> (listof creature?) any/c (-> player? player?) (listof creature?))]
-    [update-monster-groups (-> (listof creature?)
-                               any/c
-                               (-> monster-group? monster-group?)
-                               (-> (or/c #f monster-number/c) monster-group? (or/c #f monster-number/c))
-                               (listof creature?))]
+    [update-monster-groups (->* {(listof creature?)
+                                 any/c
+                                 (-> monster-group? monster-group?)}
+                                {(-> (or/c #f monster-number/c) monster-group? (or/c #f monster-number/c))}
+                                (listof creature?))]
     [update-all-players (-> (listof creature?) (-> player? player?) (listof creature?))]
     [update-all-monster-groups (-> (listof creature?) (-> monster-group? monster-group?) (listof creature?))]
     [update-player-name (-> state? (-> any/c string? any))]
