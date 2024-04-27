@@ -9,28 +9,25 @@
          more-monsters)
 
 (require racket/runtime-path
+         syntax/parse/define
          frosthaven-manager/defns
          frosthaven-manager/monster-db
          frosthaven-manager/observable-operator)
 
-;; (submod manager/loot test) uses this; break the cycle
-(define-values (make-state
-                init-dbs
-                state-@num-players
-                state-@creatures
-                creature
-                add-or-remove-monster-group
-                update-loot-deck-and-num-loot-cards
-                build-loot-deck!)
-  (values
-   (dynamic-require 'frosthaven-manager/manager 'make-state)
-   (dynamic-require 'frosthaven-manager/manager 'init-dbs)
-   (dynamic-require 'frosthaven-manager/manager 'state-@num-players)
-   (dynamic-require 'frosthaven-manager/manager 'state-@creatures)
-   (dynamic-require 'frosthaven-manager/manager 'creature)
-   (dynamic-require 'frosthaven-manager/manager 'add-or-remove-monster-group)
-   (dynamic-require 'frosthaven-manager/manager 'update-loot-deck-and-num-loot-cards)
-   (dynamic-require 'frosthaven-manager/manager 'build-loot-deck!)))
+;; (submod manager/loot test) uses this module; break the cycle
+(define-syntax-parse-rule (define-manager-values (name:id ...))
+  (define-values (name ...)
+    (values (dynamic-require 'frosthaven-manager/manager 'name) ...)))
+
+(define-manager-values
+ (make-state
+  init-dbs
+  state-@num-players
+  state-@creatures
+  creature
+  add-or-remove-monster-group
+  update-loot-deck-and-num-loot-cards
+  build-loot-deck!))
 
 (define-runtime-path more-monsters "sample-bestiary-import.rkt")
 
