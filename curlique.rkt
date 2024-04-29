@@ -14,25 +14,23 @@
          (for-syntax syntax/parse/class/paren-shape)
          qi)
 
-(define-syntax curlique-app
-  (syntax-parser
-   [{~braces _ x ...}
-    (syntax/loc this-syntax
-      (flow x ...))]
-   [(_ x ...)
-    (syntax/loc this-syntax
-      (racket:app x ...))]))
+(define-syntax-parser curlique-app
+  [{~braces _ x ...}
+   (syntax/loc this-syntax
+     (flow x ...))]
+  [(_ x ...)
+   (syntax/loc this-syntax
+     (racket:app x ...))])
 
 (define-syntax-parse-rule (define-curlique-syntax name:id qi-form:id)
   #:with ooo #'(... ...)
-  (define-syntax name
-    (syntax-parser
-     [{~braces _ x ooo}
-      (syntax/loc this-syntax
-        (flow (qi-form x ooo)))]
-     [(_ x ooo)
-      (syntax/loc this-syntax
-        (qi-form x ooo))])))
+  (define-syntax-parser name
+    [{~braces _ x ooo}
+     (syntax/loc this-syntax
+       (flow (qi-form x ooo)))]
+    [(_ x ooo)
+     (syntax/loc this-syntax
+       (qi-form x ooo))]))
 
 (define-syntax-parse-rule (define-curlique-syntaxes [name:id qi-form:id] ...)
   (begin (define-curlique-syntax name qi-form) ...))

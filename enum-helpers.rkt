@@ -56,37 +56,37 @@
     (check-equal? (~s typed/racket) "#<langs:typed/racket>")
     (check-equal? (~s datalog) "#<langs:datalog>")))
 
-(define-syntax-parse-rule
-  (define-serializable-enum-type
-    type:id
-    (constant:id ...)
-    {~alt
-      {~optional {~and #:omit-root-binding omit-root-binding-kw}}
-      {~optional {~seq #:descriptor-name descriptor:id}}
-      {~optional {~seq #:predicate-name predicate:id}}
-      {~optional {~seq #:discriminator-name discriminator:id}}
-      {~optional {~seq #:selector-name selector:id}}
-      {~optional {~seq #:inspector inspector:expr}}
-      {~optional {~seq #:property-maker prop-maker:expr}}} ...)
-  #:with deserialize-info (format-id #'type "deserialize-info:~a" #'type #:source #'type)
-  #:with default-selector (format-id #'type "selector:~a" #'type)
-  (begin
-    (define-enum-type type
-      (constant ...)
-      {~? omit-root-binding-kw}
-      {~? {~@ #:descriptor-name descriptor}}
-      {~? {~@ #:predicate-name predicate}}
-      {~? {~@ #:discriminator-name discriminator}}
-      {~? {~@ #:selector-name selector}}
-      {~? {~@ #:inspector inspector}}
-      #:property-maker (compose-property-makers
-                         {~? prop-maker default-enum-properties}
-                         (serializable-property-maker #'deserialize-info)))
-    (provide deserialize-info)
-    (define deserialize-info
-      (make-deserialize-info
-        {~? selector default-selector}
-        (thunk (error 'type "cycles not supported"))))))
+(define-syntax-parser define-serializable-enum-type
+  [(_ type:id
+      (constant:id ...)
+      {~alt
+       {~optional {~and #:omit-root-binding omit-root-binding-kw}}
+       {~optional {~seq #:descriptor-name descriptor:id}}
+       {~optional {~seq #:predicate-name predicate:id}}
+       {~optional {~seq #:discriminator-name discriminator:id}}
+       {~optional {~seq #:selector-name selector:id}}
+       {~optional {~seq #:inspector inspector:expr}}
+       {~optional {~seq #:property-maker prop-maker:expr}}} ...)
+   #:with deserialize-info (format-id #'type "deserialize-info:~a" #'type #:source #'type)
+   #:with default-selector (format-id #'type "selector:~a" #'type)
+   (syntax/loc this-syntax
+     (begin
+       (define-enum-type type
+         (constant ...)
+         {~? omit-root-binding-kw}
+         {~? {~@ #:descriptor-name descriptor}}
+         {~? {~@ #:predicate-name predicate}}
+         {~? {~@ #:discriminator-name discriminator}}
+         {~? {~@ #:selector-name selector}}
+         {~? {~@ #:inspector inspector}}
+         #:property-maker (compose-property-makers
+                           {~? prop-maker default-enum-properties}
+                           (serializable-property-maker #'deserialize-info)))
+       (provide deserialize-info)
+       (define deserialize-info
+         (make-deserialize-info
+          {~? selector default-selector}
+          (thunk (error 'type "cycles not supported"))))))])
 
 (module+ test
   (require racket/serialize)

@@ -7,15 +7,17 @@
 (require syntax/parse/define
          (prefix-in syntax/module-reader: syntax/module-reader))
 
-(define-syntax-parse-rule (mb expander [parser:id {~datum from} parser-mod])
-  (syntax/module-reader:#%module-begin
-    expander
-    #:whole-body-readers? #t
-    #:read-syntax read-syntax
-    #:read read
-    (require parser-mod)
-    (define read-syntax (make-read-syntax parser))
-    (define read (make-read parser))))
+(define-syntax-parser mb
+  [(_ expander [parser:id {~datum from} parser-mod])
+   (syntax/loc this-syntax
+     (syntax/module-reader:#%module-begin
+      expander
+      #:whole-body-readers? #t
+      #:read-syntax read-syntax
+      #:read read
+      (require parser-mod)
+      (define read-syntax (make-read-syntax parser))
+      (define read (make-read parser))))])
 
 (define ((make-read-syntax parser) src in)
   (port-count-lines! in)

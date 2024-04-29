@@ -504,3 +504,5 @@
   (struct-copy monster-group mg
                [normal-stats (update-stats (monster-group-normal-stats mg) 'normal)]
                [elite-stats (update-stats (monster-group-elite-stats mg) 'elite)]))
+
+;; vim: lw+=match-loop

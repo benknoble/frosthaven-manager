@@ -57,9 +57,11 @@
 (define send-event (make-parameter #f))
 
 ;; "do" e in a different context… (namely, the one which invoked the server)
-(define-syntax-parse-rule (do e:expr ...+)
-  ((send-event)
-   (thunk e ...)))
+(define-syntax-parser do
+  [(_ e:expr ...+)
+   (syntax/loc this-syntax
+     ((send-event)
+      (thunk e ...)))])
 
 (define-syntax-rule (define-bidi-match-expander/coercions id in-test? in out-test? out)
   (begin
@@ -76,15 +78,19 @@
   (or/c 'infused 'waning 'unfused) symbol->string)
 
 ;; evaluates e if player id (pid) and summon id (sid) can be extracted from req
-(define-syntax-parse-rule (define/summon name:id (req:id {~literal =>} [pid:id sid:id]) e:expr ...+)
-  (define (name req)
-    (-do-summon req (λ (req pid sid) e ...))))
+(define-syntax-parser define/summon
+  [(_ name:id (req:id {~literal =>} [pid:id sid:id]) e:expr ...+)
+   (syntax/loc this-syntax
+     (define (name req)
+       (-do-summon req (λ (req pid sid) e ...))))])
 
 ;; evalutes e if monster group id and monster number can be extracted from req
-(define-syntax-parse-rule (define/monster name:id (req:id {~literal =>} [monster-group-id:id monster-number:id])
-                                          e:expr ...+)
-  (define (name req)
-    (-do-monster req (λ (req monster-group-id monster-number) e ...))))
+(define-syntax-parser define/monster
+  [(_ name:id (req:id {~literal =>} [monster-group-id:id monster-number:id])
+      e:expr ...+)
+   (syntax/loc this-syntax
+     (define (name req)
+       (-do-monster req (λ (req monster-group-id monster-number) e ...))))])
 
 ;; safe way to evaluate selector:condition, which contract errors when the
 ;; input is outside the domain; if this produces #t, input is a valid condition

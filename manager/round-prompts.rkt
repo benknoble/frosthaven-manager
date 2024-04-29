@@ -52,8 +52,9 @@
    [pattern [{~var time (expr/c #'time/c)} s:round-prompt-spec]
             #:attr compiled #'(cons time.c s.compiled)]))
 
-(define-syntax-parse-rule (prompt s:prompt-spec ...)
-  (list s.compiled ...))
+(define-syntax-parser prompt
+  [(_ s:prompt-spec ...)
+   (syntax/loc this-syntax (list s.compiled ...))])
 
 (define (prompt->string p)
   (~a (match (car p)

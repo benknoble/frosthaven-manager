@@ -29,39 +29,45 @@
          frosthaven-manager/monster-db
          frosthaven-manager/parsers/foes)
 
-(define-syntax-parse-rule (define/ability-sets (f sets ability-sets) body ...+)
-  (define (f imported-info-dbs imported-ability-dbs infos actions)
-    (define sets (set-names-from-infos imported-info-dbs infos))
-    (define ability-sets (ability-set-names-from-abilities imported-ability-dbs actions))
-    body ...))
+(define-syntax-parser define/ability-sets
+  [(_ (f sets ability-sets) body ...+)
+   (syntax/loc this-syntax
+     (define (f imported-info-dbs imported-ability-dbs infos actions)
+       (define sets (set-names-from-infos imported-info-dbs infos))
+       (define ability-sets (ability-set-names-from-abilities imported-ability-dbs actions))
+       body ...))])
 
-(define-syntax-parse-rule (define/monster-names (f monster-names foe-names) body ...+)
-  (define (f imported-info-dbs infos foes)
-    (define monster-names (monster-names-from-infos imported-info-dbs infos))
-    (define foe-names (list->set (map second foes)))
-    body ...))
+(define-syntax-parser define/monster-names
+  [(_ (f monster-names foe-names) body ...+)
+   (syntax/loc this-syntax
+     (define (f imported-info-dbs infos foes)
+       (define monster-names (monster-names-from-infos imported-info-dbs infos))
+       (define foe-names (list->set (map second foes)))
+       body ...))])
 
 ;;;; exports
-(define-syntax-parse-rule (make-dbs ({~literal provide} info-db ability-db)
-                                    ({~datum import} imports ...)
-                                    ({~datum info} infos ...)
-                                    ({~datum ability} (actions ...) ...))
-  #:with (imported-info-db ...) (generate-temporaries #'(imports ...))
-  #:with (imported-ability-db ...) (generate-temporaries #'(imports ...))
-  ;; also binds `here` correctly
-  #:with runtime-path-define (datum->syntax #'info-db (syntax-e #'(define-runtime-path here ".")) #'info-db)
-  (begin
-    (provide info-db ability-db)
-    (require (rename-in imports
-                        [info-db imported-info-db]
-                        [ability-db imported-ability-db]) ...)
-    runtime-path-define
-    (define-values (original-info-db original-ability-db)
-      (datums->dbs (list infos ... (struct-copy monster-ability actions [location here]) ... ...)))
-    (define info-db
-      (combine-infos original-info-db imported-info-db ...))
-    (define ability-db
-      (combine-abilities original-ability-db imported-ability-db ...))))
+(define-syntax-parser make-dbs
+  [(_ ({~literal provide} info-db ability-db)
+      ({~datum import} imports ...)
+      ({~datum info} infos ...)
+      ({~datum ability} (actions ...) ...))
+   #:with (imported-info-db ...) (generate-temporaries #'(imports ...))
+   #:with (imported-ability-db ...) (generate-temporaries #'(imports ...))
+   ;; also binds `here` correctly
+   #:with runtime-path-define (datum->syntax #'info-db (syntax-e #'(define-runtime-path here ".")) #'info-db)
+   (syntax/loc this-syntax
+     (begin
+       (provide info-db ability-db)
+       (require (rename-in imports
+                           [info-db imported-info-db]
+                           [ability-db imported-ability-db]) ...)
+       runtime-path-define
+       (define-values (original-info-db original-ability-db)
+         (datums->dbs (list infos ... (struct-copy monster-ability actions [location here]) ... ...)))
+       (define info-db
+         (combine-infos original-info-db imported-info-db ...))
+       (define ability-db
+         (combine-abilities original-ability-db imported-ability-db ...))))])
 
 ;; -> imports monster-infos ability-decks foes
 (define syntaxes->bestiary-parts

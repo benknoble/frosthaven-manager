@@ -17,18 +17,20 @@
 (module reader syntax/module-reader
   frosthaven-manager/loot-cards)
 
-(define-syntax-parse-rule (mb e:expr ...)
-  #:with result (format-id this-syntax "loot-cards" #:source this-syntax)
-  (#%module-begin
-   (provide result)
-   (define result
-     (for/fold ([x (hash)])
-               ([f (list e ...)])
-       (f x)))))
+(define-syntax-parser mb
+  [(_ e:expr ...)
+   #:with result (format-id this-syntax "loot-cards" #:source this-syntax)
+   (syntax/loc this-syntax
+     (#%module-begin
+      (provide result)
+      (define result
+        (for/fold ([x (hash)])
+                  ([f (list e ...)])
+          (f x)))))])
 
 (define-syntax-parser extend-standard-deck
-  [_ #'(-extend-standard-deck)]
-  [(_) #'(-extend-standard-deck)])
+  [_ (syntax/loc this-syntax (-extend-standard-deck))]
+  [(_) (syntax/loc this-syntax (-extend-standard-deck))])
 
 (begin-for-syntax
  (define-syntax-class money-spec
@@ -57,8 +59,10 @@
    [pattern m:material-spec #:with constructor #'m.constructor]
    [pattern h:herb-spec #:with constructor #'h.constructor]))
 
-(define-syntax-parse-rule (sticker [stickers:number c:card-spec] ...)
-  (-sticker (list (cons stickers c.constructor) ...)))
+(define-syntax-parser sticker
+  [(_ [stickers:number c:card-spec] ...)
+   (syntax/loc this-syntax
+     (-sticker (list (cons stickers c.constructor) ...)))])
 
 (define (-extend-standard-deck)
   (const standard-loot-deck))

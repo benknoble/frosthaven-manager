@@ -15,9 +15,11 @@
          frosthaven-manager/observable-operator)
 
 ;; (submod manager/loot test) uses this module; break the cycle
-(define-syntax-parse-rule (define-manager-values (name:id ...))
-  (define-values (name ...)
-    (values (dynamic-require 'frosthaven-manager/manager 'name) ...)))
+(define-syntax-parser define-manager-values
+  [(_ (name:id ...))
+   (syntax/loc this-syntax
+     (define-values (name ...)
+       (values (dynamic-require 'frosthaven-manager/manager 'name) ...)))])
 
 (define-manager-values
  (make-state

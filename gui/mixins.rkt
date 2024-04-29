@@ -31,18 +31,24 @@
     (define/augment (on-close)
       (proc))))
 
-(define-syntax-parse-rule (define-close! close!:id set-close-mixin:id)
-  (begin
-    (define close!- (box #f))
-    (define (set-close!- close) (set-box! close!- close))
-    (define set-close-mixin (make-closing-proc-mixin set-close!-))
-    ;; On η-expansion of close!: close! can be #f until it is set, so
-    ;; expand the call to close! (by the time it is called it should
-    ;; have the correct value, a procedure).
-    (define-syntax (close! stx)
-      (syntax-parse stx
-        [_:id #'(λ () ((unbox close!-)))]
-        [(_) #'((unbox close!-))]))))
+(define-syntax-parser define-close!
+  [(_ close!:id set-close-mixin:id)
+   (syntax/loc this-syntax
+     (begin
+       (define close!- (box #f))
+       (define (set-close!- close) (set-box! close!- close))
+       (define set-close-mixin (make-closing-proc-mixin set-close!-))
+       ;; On η-expansion of close!: close! can be #f until it is set, so
+       ;; expand the call to close! (by the time it is called it should
+       ;; have the correct value, a procedure).
+       (define-syntax close! (-close! #'close!-))))])
+
+(define-for-syntax (-close! close!-id)
+  (syntax-parser
+   [_:id (quasisyntax/loc this-syntax
+           (λ () ((unbox #,close!-id))))]
+   [(_) (quasisyntax/loc this-syntax
+          ((unbox #,close!-id)))]))
 
 (define (hide-caret/selection %)
   ;; not using mixin: after-set-position is a method of text% that is not

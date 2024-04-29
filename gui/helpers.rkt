@@ -26,14 +26,13 @@
     (check-equal? (escape-text "Flourish & Fletch & Foo") "Flourish && Fletch && Foo")
     (check-equal? (escape-text "Flourish && Fletch") "Flourish &&& Fletch")))
 
-(define-syntax define-error-text
-  (syntax-parser
-   [(_ @error-text:id with-error-text:id)
-    #:fail-when (equal? 'expression (syntax-local-context)) "not allowed in an expression context"
-    (syntax/loc this-syntax
-      (begin
-        (define/obs @error-text "")
-        (define-syntax with-error-text (-with-error-text #'@error-text))))]))
+(define-syntax-parser define-error-text
+  [(_ @error-text:id with-error-text:id)
+   #:fail-when (equal? 'expression (syntax-local-context)) "not allowed in an expression context"
+   (syntax/loc this-syntax
+     (begin
+       (define/obs @error-text "")
+       (define-syntax with-error-text (-with-error-text #'@error-text))))])
 
 (define-for-syntax (-with-error-text error-text-id)
   (syntax-parser

@@ -6,15 +6,17 @@
          (for-syntax racket/syntax)
          frosthaven-manager/aoe-images)
 
-(define-syntax-parse-rule (mb spec:expr)
-  #:with aoe (format-id this-syntax "aoe" #:source this-syntax)
-  (#%module-begin
-   (provide aoe)
-   (define (aoe)
-     (spec->shape 'spec))
-   (module+ main
-     (require racket/gui pict)
-     (show-pict (aoe)))))
+(define-syntax-parser mb
+  [(_ spec:expr)
+   #:with aoe (format-id this-syntax "aoe" #:source this-syntax)
+   (syntax/loc this-syntax
+     (#%module-begin
+      (provide aoe)
+      (define (aoe)
+        (spec->shape 'spec))
+      (module+ main
+        (require racket/gui pict)
+        (show-pict (aoe)))))])
 
 (module reader syntax/module-reader
   frosthaven-manager/aoe
