@@ -130,7 +130,7 @@
   (cc-superimpose
     (rectangle frame-length frame-length)
     (for/fold ([p (blank)])
-      ([row (in-list rs)])
+              ([row (in-list rs)])
       (match-define `[,_line ,dedent? ,row-spec] row)
       (define dx (if dedent? 0 (- (r))))
       (vl-append p (translate (row->shape row-spec) dx 0)))))
