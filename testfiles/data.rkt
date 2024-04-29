@@ -39,13 +39,13 @@
   (make-monster-group (~> (info) (hash-ref "archer") (hash-ref "hynox archer"))
                       0
                       '([1 . #t] [2 . #f] [3 . #t])
-                      (hash)))
+                      (hash "C" 2 "L" 0)))
 
 (define boss-mg
   (make-monster-group (~> (info) (hash-ref "boss") (hash-ref "giant squid"))
                       0
                       '([1 . #f])
-                      (hash "C" 2)))
+                      (hash "C" 2 "L" 0)))
 
 (define (make-sample-state)
   (define sample-state (make-state (@ 'play)))
