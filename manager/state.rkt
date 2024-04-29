@@ -479,7 +479,7 @@
            #f)})
      (<@ (state-@creatures s)
          (λ (creatures)
-           (define next-id (~> (creatures) (sep creature-id) max add1))
+           (define next-id (~> (creatures) (sep creature-id) (rectify -1) max add1))
            (define selection
              (~> (mg) monster-group-monsters
                  (and (not empty?) (~> first monster-number))))
