@@ -132,7 +132,7 @@
   (if monster-ability? (~> monster-ability-initiative ~a) "??"))
 
 (define (monster-ability-ability->rich-text ability-text ability-card mg env)
-  (define bulleted '(#rx"^" "· "))
+  (define bulleted '(#rx"^" "• "))
   (define attack
     (list #px"(.*)((?i:attack))\\s+([+-])(\\d+)"
           (skip-if-grant-or-control (keyword-sub {(monster-stats-attack* env)} mg))))
