@@ -110,3 +110,8 @@ True if-and-only-if @racket[deck] contains a @racket[null] or @racket[crit].
 )]{
 Returns the better or worse of the two modifier cards.
 }
+
+@defproc[(absent-from-modifier-deck [cards (listof monster-modifier?)])
+         (listof monster-modifier?)]{
+Returns the cards in @racket[monster-modifier-deck] not in @racket[cards].
+}

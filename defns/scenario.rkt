@@ -14,14 +14,18 @@
   [shuffle-modifier-deck? (-> (listof monster-modifier?) boolean?)]
   [better-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
   [worse-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
+  [absent-from-modifier-deck (-> (listof monster-modifier?) (listof monster-modifier?))]
   [monster-curse-deck (listof monster-modifier?)]
   [bless-deck (listof monster-modifier?)]
   [conditions->string (-> (listof condition?) string?)]))
 
 (require
+ racket/hash
  rebellion/type/enum
  frosthaven-manager/enum-helpers
  frosthaven-manager/curlique)
+
+(module+ test (require rackunit rackunit/text-ui))
 
 (define initiative? (integer-in 0 99))
 
@@ -68,6 +72,43 @@
 (define-flow (worse-modifier _x _y)
   (~>> list (argmin modifier-ranking)))
 
+(define (absent-from-modifier-deck cards)
+  (define default-modifier-deck-counter (counter monster-modifier-deck))
+  (define current-counter (counter cards))
+  (unless (subset? (hash-keys current-counter)
+                   (hash-keys default-modifier-deck-counter))
+    (raise-argument-error 'absent-from-modifier-deck
+                          "subset of monster-modifier-deck"
+                          cards))
+  (define difference
+    (hash-union default-modifier-deck-counter
+                current-counter
+                #:combine -))
+  (when (~> (difference) hash-values sep (any negative?))
+    (raise-argument-error 'absent-from-modifier-deck
+                          "subset of monster-modifier-deck"
+                          cards))
+  (append* (for/list ([(card num) (in-hash difference)])
+             (build-list num (const card)))))
+
+(module+ test
+  (run-tests
+   (test-suite "absent-from-modifier-deck"
+     (test-exn "fails on non-subset keys" #rx"subset"
+               (thunk (absent-from-modifier-deck (list curse))))
+     (test-exn "fails on too many cards" #rx"subset"
+               (thunk (absent-from-modifier-deck (build-list 10 (const crit)))))
+     (test-case "computes the difference from the standard modifier deck"
+       (check-equal? (counter (absent-from-modifier-deck monster-modifier-deck)) (counter (list)))
+       (check-equal? (counter (absent-from-modifier-deck empty)) (counter monster-modifier-deck))
+       (check-equal? (counter (absent-from-modifier-deck
+                               (append (build-list 6 (const zero))
+                                       (build-list 2 (const minus1))
+                                       (build-list 5 (const plus1))
+                                       (list plus2 null crit))))
+                     (counter (append (build-list 3 (const minus1))
+                                      (list minus2))))))))
+
 (define-serializable-enum-type condition
   (regenerate ward invisible strengthen wound brittle bane poison immobilize disarm impair stun muddle)
   #:property-maker make-property-maker-that-displays-as-constant-names)
@@ -78,3 +119,8 @@
 
 (define conditions->string
   {~> (sep ~a) collect (string-join ", " #:before-last " and ")})
+
+(define (counter xs)
+  (for/fold ([h (hash)])
+            ([x (in-list xs)])
+    (hash-update h x add1 0)))
