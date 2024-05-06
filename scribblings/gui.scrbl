@@ -15,6 +15,7 @@ This collection provides modules for operating GUIs.
 @include-section{gui/manager.scrbl}
 @include-section{gui/markdown.scrbl}
 @include-section{gui/mixins.scrbl}
+@include-section{gui/monster-modifier.scrbl}
 @include-section{gui/monsters.scrbl}
 @include-section{gui/player-info.scrbl}
 @include-section{gui/render.scrbl}
