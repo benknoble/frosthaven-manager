@@ -80,6 +80,7 @@
   (:= (state-@mode s) 'choose-monsters))
 
 (define ((to-play s))
+  (<@ (state-@monster-modifier-deck s) shuffle)
   (:= (state-@mode s) 'play))
 
 (define ((next-round s))

@@ -78,7 +78,7 @@ All of the "global" manager state.
            [|@|elements (listof (maybe-obs/c element-state/c)) (make-states '(fire ice air earth light dark))]
            [|@|in-draw? (maybe-obs/c boolean?) (|@| #f)]
            [|@|round (maybe-obs/c natural-number/c) (|@| 1)]
-           [|@|monster-modifier-deck (maybe-obs/c (listof monster-modifier?)) (|@| (shuffle monster-modifier-deck))]
+           [|@|monster-modifier-deck (maybe-obs/c (listof monster-modifier?)) (|@| monster-modifier-deck)]
            [|@|monster-discard (maybe-obs/c (listof monster-modifier?)) (|@| empty)]
            [|@|player-blesses (maybe-obs/c (listof monster-modifier?)) (|@| empty)]
            [|@|curses (maybe-obs/c (listof monster-modifier?)) (|@| monster-curse-deck)]

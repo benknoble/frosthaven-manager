@@ -150,7 +150,7 @@
                     [@elements (make-states '(fire ice air earth light dark))]
                     [@in-draw? (@ #f)]
                     [@round (@ 1)]
-                    [@monster-modifier-deck (@ (shuffle monster-modifier-deck))]
+                    [@monster-modifier-deck (@ monster-modifier-deck)]
                     [@monster-discard (@ empty)]
                     [@player-blesses (@ empty)]
                     [@curses (@ monster-curse-deck)]
