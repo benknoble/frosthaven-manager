@@ -97,13 +97,14 @@
   (test-exn "absent-from-modifier-deck: fails on too many cards" #rx"subset"
             (thunk (absent-from-modifier-deck (build-list 10 (const crit)))))
   (test-case "absent-from-modifier-deck: computes the difference from the standard modifier deck"
-    (check-equal? (counter (absent-from-modifier-deck monster-modifier-deck)) (counter (list)))
+    (check-equal? (counter (absent-from-modifier-deck monster-modifier-deck)) (counter empty))
+    (check-equal? (counter (absent-from-modifier-deck (shuffle monster-modifier-deck))) (counter empty))
     (check-equal? (counter (absent-from-modifier-deck empty)) (counter monster-modifier-deck))
     (check-equal? (counter (absent-from-modifier-deck
-                            (append (build-list 6 (const zero))
-                                    (build-list 2 (const minus1))
-                                    (build-list 5 (const plus1))
-                                    (list plus2 null crit))))
+                            (shuffle (append (build-list 6 (const zero))
+                                             (build-list 2 (const minus1))
+                                             (build-list 5 (const plus1))
+                                             (list plus2 null crit)))))
                   (counter (append (build-list 3 (const minus1))
                                    (list minus2))))))
 
