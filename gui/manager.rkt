@@ -35,6 +35,7 @@
          frosthaven-manager/gui/helpers
          frosthaven-manager/monster-db
          frosthaven-manager/gui/monsters
+         frosthaven-manager/gui/monster-modifier
          frosthaven-manager/gui/render
          frosthaven-manager/gui/rewards
          frosthaven-manager/gui/round-prompts
@@ -57,7 +58,13 @@
       (menu "Edit"
             (manage-prompt-menu-item (state-@prompts s)
                                      #:on-add (add-prompt s)
-                                     #:on-remove (remove-prompt s)))
+                                     #:on-remove (remove-prompt s))
+            (modify-monster-deck-menu-item (obs-combine append
+                                                        (state-@monster-modifier-deck s)
+                                                        (state-@monster-discard s))
+                                           #:on-add (add-monster-modifier s)
+                                           #:on-remove (remove-monster-modifier s)
+                                           #:on-shuffle (thunk (reshuffle-modifier-deck s))))
       (menu "Help"
             (about-menu-item)
             (how-to-play-menu-item)

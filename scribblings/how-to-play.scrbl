@@ -273,3 +273,11 @@ In the @onscreen{File} menu, you will also find the following utilities:
     @item{Formula editor. Evaluates formulas as specified in @secref{Bestiary_Format_Reference} without the @tech{game text} quotes.}
     @item{Launch server. Launches a local server. Have your players open the address shown in their web browsers and enjoy interacting with the app!}
 ]
+
+In the @onscreen{Edit} menu, you will also find:
+@itemlist[
+    @item{@onscreen{Modify Monster Deck}. Allows removing and re-adding cards to
+    the monster modifier deck. This is best done before play begins, but may be
+    done at any time. Use the @onscreen{Shuffle Deck} button mid-scenario to
+    manually reshuffle the deck if needed.}
+]
