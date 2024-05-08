@@ -2,17 +2,23 @@
 
 (provide
  (contract-out
-  [card-swapper
+  [modify-monster-deck-menu-item
    (->* {(obs/c (obs/c (listof monster-modifier?)))}
         {#:on-add (-> monster-modifier? any)
-         #:on-remove (-> exact-nonnegative-integer? any)}
+         #:on-remove (-> exact-nonnegative-integer? any)
+         #:on-shuffle (-> any)}
         (is-a?/c view<%>))]
   [favors-dialog
    (->* {(obs/c (obs/c (listof monster-modifier?)))}
         {#:on-add (-> monster-modifier? any)
          #:on-remove (-> exact-nonnegative-integer? any)
          #:on-shuffle (-> any)}
-        (is-a?/c window-view<%>))]))
+        (is-a?/c window-view<%>))]
+  [card-swapper
+   (->* {(obs/c (obs/c (listof monster-modifier?)))}
+        {#:on-add (-> monster-modifier? any)
+         #:on-remove (-> exact-nonnegative-integer? any)}
+        (is-a?/c view<%>))]))
 
 (require racket/gui/easy
          racket/gui/easy/contract
@@ -20,6 +26,32 @@
          frosthaven-manager/qi/utils
 
          frosthaven-manager/defns)
+
+(define (modify-monster-deck-menu-item @monster-ability-cards
+                                       #:on-add [add void]
+                                       #:on-remove [remove void]
+                                       #:on-shuffle [shuffle void])
+  (menu-item
+   "Modify Monster Deck"
+   (thunk
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
+     (favors-dialog @monster-ability-cards
+                    #:on-add add
+                    #:on-remove remove
+                    #:on-shuffle shuffle)))))
+
+(define (favors-dialog @monster-ability-cards #:on-add [add void] #:on-remove [remove void] #:on-shuffle [shuffle void])
+  (dialog
+   #:title "Favors: Adjust Monster Modifier Deck"
+   #:size '(450 500)
+   #:style '(resize-border close-button)
+   (vpanel
+    #:alignment '(right top)
+    (card-swapper @monster-ability-cards #:on-add add #:on-remove remove)
+    ;; TODO: compute points spent? Only "valid" for removing minus cards, and
+    ;; card-swapper permits removing any card…
+    (button "Shuffle Deck" shuffle))))
 
 (define (card-swapper @monster-ability-cards #:on-add [add void] #:on-remove [remove void])
   (define/obs @current-index #f)
@@ -65,18 +97,6 @@
           (action @absent-index @absent)
           #:entry->row make-row
           #:selection @absent-index)))
-
-(define (favors-dialog @monster-ability-cards #:on-add [add void] #:on-remove [remove void] #:on-shuffle [shuffle void])
-  (dialog
-   #:title "Favors: Adjust Monster Modifier Deck"
-   #:size '(450 500)
-   #:style '(resize-border close-button)
-   (vpanel
-    #:alignment '(right top)
-    (card-swapper @monster-ability-cards #:on-add add #:on-remove remove)
-    ;; TODO: compute points spent? Only "valid" for removing minus cards, and
-    ;; card-swapper permits removing any card…
-    (button "Shuffle Deck" shuffle))))
 
 (module+ main
   (define/obs @monster-ability-cards monster-modifier-deck)
