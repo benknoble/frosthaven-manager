@@ -11,9 +11,12 @@
     [do-curse-monster (-> state? (-> any))]
     [do-bless-monster (-> state? (-> any))]
     [do-bless-player (-> state? (-> any))]
-    [do-unbless-player (-> state? (-> any))]))
+    [do-unbless-player (-> state? (-> any))]
+    [add-monster-modifier (-> state? (-> monster-modifier? any))]
+    [remove-monster-modifier (-> state? (-> exact-nonnegative-integer? any))]))
 
 (require frosthaven-manager/observable-operator
+         frosthaven-manager/qi/utils
          frosthaven-manager/defns
          frosthaven-manager/manager/state)
 
@@ -202,3 +205,33 @@
     (check-equal? (@! (state-@curses s)) monster-curse-deck)
     (check-equal? (@! (state-@blesses s)) bless-deck)
     (check-deck-and-discard-make-complete-deck s)))
+
+(define ((add-monster-modifier s) card)
+  (<@ (state-@monster-modifier-deck s) {(append (list card))}))
+
+(define ((remove-monster-modifier s) index)
+  (define-values {@deck @discard} (on (s) (-< state-@monster-modifier-deck state-@monster-discard)))
+  (define deck (@! @deck))
+  (define L (length deck))
+  (define-values {@to-change change-index}
+    (cond
+      [(< -1 index L) (values @deck index)]
+      [else (values @discard (- index L))]))
+  (<@ @to-change {~> (list-remove change-index) 1>}))
+
+(module+ test
+  (test-case "remove-monster-modifier"
+    (define s (make-state))
+    (define t (remove-monster-modifier s))
+    (for ([_i 5])
+      ((draw-modifier s)))
+    (let ([expected-deck (~> (s) state-@monster-modifier-deck @! (list-remove 12) 1>)]
+          [expected-discard (@! (state-@monster-discard s))])
+      (t 12)
+      (check-equal? (@! (state-@monster-modifier-deck s)) expected-deck)
+      (check-equal? (@! (state-@monster-discard s)) expected-discard))
+    (let ([expected-deck (@! (state-@monster-modifier-deck s))]
+          [expected-discard (~> (s) state-@monster-discard @! (list-remove 3) 1>)])
+      (t (sub1 18)) ;; normally the 18th, but we just removed one above!
+      (check-equal? (@! (state-@monster-modifier-deck s)) expected-deck)
+      (check-equal? (@! (state-@monster-discard s)) expected-discard))))

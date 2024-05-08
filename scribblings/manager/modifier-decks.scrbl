@@ -1,8 +1,10 @@
 #lang scribble/manual
 
 @(require (for-label (except-in racket null)
+                     racket/gui/easy
                      frosthaven-manager/defns
-                     frosthaven-manager/manager))
+                     frosthaven-manager/manager
+                     frosthaven-manager/gui/monster-modifier))
 
 @title{@tt{manager/modifier-decks}}
 @defmodule[frosthaven-manager/manager/modifier-decks]
@@ -31,4 +33,15 @@ Draws two modifier cards and discards them with the kept card on top.
               @defproc[(do-bless-player [s state?]) (-> any)]
               @defproc[(do-unbless-player [s state?]) (-> any)])]{
 Add a curse or bless to the appropriate deck.
+}
+
+@deftogether[(@defproc[(add-monster-modifier [s state?]) (-> monster-modifier? any)]
+              @defproc[(remove-monster-modifier [s state?]) (-> exact-nonnegative-integer? any)])]{
+Handles events emitted by @racket[card-swapper]. These are intended for use when
+the deck handed to @racket[card-swapper] consists of something like this:
+@racketblock[
+    (obs-combine append (state-@monster-modifier-deck s) (state-@monster-discard s))
+]
+In particular, @racket[remove-monster-modifier] translates indexes to both the
+modifier deck and the discard pile.
 }
