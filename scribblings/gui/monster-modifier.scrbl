@@ -4,7 +4,8 @@
                      frosthaven-manager/defns
                      racket/gui/easy
                      racket/gui/easy/contract
-                     frosthaven-manager/manager))
+                     frosthaven-manager/manager
+                     frosthaven-manager/gui/monster-modifier))
 
 @title{@tt{gui/monster-modifier}}
 @defmodule[frosthaven-manager/gui/monster-modifier]
