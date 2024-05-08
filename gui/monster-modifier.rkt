@@ -3,19 +3,19 @@
 (provide
  (contract-out
   [modify-monster-deck-menu-item
-   (->* {(obs/c (obs/c (listof monster-modifier?)))}
+   (->* {(obs/c (listof monster-modifier?))}
         {#:on-add (-> monster-modifier? any)
          #:on-remove (-> exact-nonnegative-integer? any)
          #:on-shuffle (-> any)}
         (is-a?/c view<%>))]
   [favors-dialog
-   (->* {(obs/c (obs/c (listof monster-modifier?)))}
+   (->* {(obs/c (listof monster-modifier?))}
         {#:on-add (-> monster-modifier? any)
          #:on-remove (-> exact-nonnegative-integer? any)
          #:on-shuffle (-> any)}
         (is-a?/c window-view<%>))]
   [card-swapper
-   (->* {(obs/c (obs/c (listof monster-modifier?)))}
+   (->* {(obs/c (listof monster-modifier?))}
         {#:on-add (-> monster-modifier? any)
          #:on-remove (-> exact-nonnegative-integer? any)}
         (is-a?/c view<%>))]))
