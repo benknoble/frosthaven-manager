@@ -15,14 +15,14 @@ EXES = FrosthavenManager.app/Contents/MacOS/FrosthavenManager \
 
 RACO = raco
 
+setup:
+	$(RACO) setup $(RACO_SETUP_ARGS) --pkgs $(PKG)
+
 install:
 	$(RACO) pkg install --name $(PKG) --auto $(RACO_INSTALL_ARGS)
 
 uninstall:
 	$(RACO) pkg remove $(PKG)
-
-setup:
-	$(RACO) setup $(RACO_SETUP_ARGS) --pkgs $(PKG)
 
 test:
 	$(RACO) test $(RACO_TEST_ARGS) --package $(PKG)
