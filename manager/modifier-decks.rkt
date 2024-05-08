@@ -37,8 +37,9 @@
 
 (define (reshuffle-modifier-deck s)
   (define-values (@deck @discard) (on (s) (-< state-@monster-modifier-deck state-@monster-discard)))
-  (<@ @deck (λ (d) (shuffle (append d (@! @discard)))))
-  (:= @discard empty))
+  (define discard (@! @discard))
+  (:= @discard empty)
+  (<@ @deck (λ (d) (shuffle (append d discard)))))
 
 (module+ test
   (test-case "reshuffle-modifier-deck"
