@@ -154,9 +154,7 @@
   (send editor insert (make-object pict-snip/alt-text% alt-text p)))
 
 (define (insert-newline editor)
-  (define s (make-object string-snip% "\n"))
-  (send s set-flags (cons 'hard-newline (send s get-flags)))
-  (send editor insert s))
+  (send editor insert (send newline copy)))
 
 (define pict-snip/alt-text%
   (class pict-snip-v2% (super-new)
@@ -271,4 +269,5 @@
       (rich-text-display
        (list
         "· Move -1" newline
-        "· Attack +1, " (pict/alt-text (element-pics-unfused (fire)) "Consume Fire") ": Poison")))))
+        "· Attack +1, " (pict/alt-text (element-pics-unfused (fire)) "Consume Fire") ": Poison" newline
+        "· More actions here")))))
