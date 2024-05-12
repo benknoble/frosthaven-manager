@@ -112,10 +112,11 @@
   d)
 
 (define (draw editor content font)
+  (define δs (list (font->delta font)))
   (send editor begin-edit-sequence)
   (for ([c content])
     (match c
-      [(? string? c) (insert-string-and-apply-styles editor c (list (font->delta font)))]
+      [(? string? c) (insert-string-and-apply-styles editor c δs)]
       [(? newline?) (insert-newline editor)]
       [(? pict:pict? p) (insert-pict editor p)]
       [(pict/alt-text p alt-text) (insert-pict/alt-text editor p alt-text)]))
