@@ -234,6 +234,11 @@
                 ["push" (icons:push)]
                 ["pull" (icons:pull)]))
              suffix)]))
+  (define (move-icon x)
+    (match-loop x
+      [(regexp #px"^(.*)(?i:move)(.*)$"
+               (list _ prefix suffix))
+       (list prefix (scale-icon (icons:move)) suffix)]))
   (define replacements
     (list bulleted
           attack
@@ -247,7 +252,8 @@
           consume-wild
           target
           range
-          push-pull))
+          push-pull
+          move-icon))
   (for/fold ([result (list (regexp-replaces ability-text replacements))])
             ([pict-replacement (in-list pict-replacements)])
     (append-map (only-on-text pict-replacement) result)))
@@ -288,19 +294,19 @@
                      (list "• Attack 6 (N:muddle) (E:7, stun), wound, " (scale-icon (icons:push)) " 1"))
   (test-model-equal? "Simple Move"
                      (monster-ability-ability->rich-text "Move +1" ability-card mg env)
-                     (list "• Move 3 (E:3)"))
+                     (list "• " (scale-icon (icons:move)) " 3 (E:3)"))
   (test-model-equal? "Granted Attack"
                      (monster-ability-ability->rich-text "Grant Piranha: Attack +1" ability-card mg env)
                      (list "• Grant Piranha: Attack +1"))
   (test-model-equal? "Granted Move"
                      (monster-ability-ability->rich-text "Grant Piranha: Move +1" ability-card mg env)
-                     (list "• Grant Piranha: Move +1"))
+                     (list "• Grant Piranha: " (scale-icon (icons:move)) " +1"))
   (test-model-equal? "Controlled Attack"
                      (monster-ability-ability->rich-text "Control Enemy: Attack +1" ability-card mg env)
                      (list "• Control Enemy: Attack +1"))
   (test-model-equal? "Controlled Move"
                      (monster-ability-ability->rich-text "Control Enemy: Move +1" ability-card mg env)
-                     (list "• Control Enemy: Move +1"))
+                     (list "• Control Enemy: " (scale-icon (icons:move)) " +1"))
   (test-model-equal? "Complicated Targeting"
                      (monster-ability-ability->rich-text "Attack -2, Target 2, +2 Targets, Range 3, Push 2" ability-card mg env)
                      (list
