@@ -239,6 +239,13 @@
       [(regexp #px"^(.*)(?i:move)(.*)$"
                (list _ prefix suffix))
        (list prefix (scale-icon (icons:move)) suffix)]))
+  (define (jump x)
+    (match-loop x
+      [(regexp #px"^(.*)(?i:jump)(.*)$"
+               (list _ prefix suffix))
+       ;; NOTE unscaled: this icon is a reasonable size and is hard to make
+       ;; visually useful when scaled down.
+       (list prefix (icons:jump) suffix)]))
   (define replacements
     (list bulleted
           attack
@@ -253,7 +260,8 @@
           target
           range
           push-pull
-          move-icon))
+          move-icon
+          jump))
   (for/fold ([result (list (regexp-replaces ability-text replacements))])
             ([pict-replacement (in-list pict-replacements)])
     (append-map (only-on-text pict-replacement) result)))

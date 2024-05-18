@@ -6,7 +6,8 @@
    [range (-> pict?)]
    [push (-> pict?)]
    [pull (-> pict?)]
-   [move (-> pict?)]))
+   [move (-> pict?)]
+   [jump (-> pict?)]))
 
 (require pict
          pict/color
@@ -114,11 +115,34 @@
       (ht-append -3 (trails) _)
       highlight))
 
+(define (jump)
+  (define squish {(scale 1 1/3)})
+  (define-values (left chain right)
+    (parameterize ([hex-size 10])
+      (define left (squish (S)))
+      (define middle (squish (S)))
+      (define right (squish (S)))
+      (values left
+              (hc-append left middle right)
+              right)))
+  (~> (chain)
+      (pin-arrow-line
+       5
+       _
+       left cc-find
+       right cc-find
+       #:start-angle (* pi 1/6)
+       #:end-angle (* pi -1/6)
+       #:start-pull 1/2)
+      (inset 0 5)
+      highlight))
+
 (module+ main
   (require (only-in racket/gui))
   (for ([p (list target
                  range
                  push
                  pull
-                 move)])
+                 move
+                 jump)])
     (show-pict (p))))

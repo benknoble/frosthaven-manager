@@ -24,3 +24,4 @@ are preserved. The signifier @racket[_N] denotes where a number is expected.
 @deficon[push "Push N"]
 @deficon[pull "Pull N"]
 @deficon[move "Move +N" "Move -N"]
+@deficon[jump "Jump"]
