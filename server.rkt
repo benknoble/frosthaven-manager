@@ -282,7 +282,8 @@
              (th "XP")
              (th "Gold")
              ,@(map {~>> ~a (list 'th)} material-kinds)
-             ,@(map {~>> ~a (list 'th)} herb-kinds)))
+             ,@(map {~>> ~a (list 'th)} herb-kinds)
+             (th "Special Loot")))
         (tbody
          ,@(for/list ([p players])
              (define loots (player->rewards p num-players level))

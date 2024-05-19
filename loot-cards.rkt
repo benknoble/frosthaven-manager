@@ -5,6 +5,7 @@
   (rename-out [mb #%module-begin])
   extend-standard-deck
   sticker
+  add-special-loot
   money
   lumber metal hide
   arrowvine axenut corpsecap flamefruit rockroot snowthistle)
@@ -64,6 +65,11 @@
    (syntax/loc this-syntax
      (-sticker (list (cons stickers c.constructor) ...)))])
 
+(define-syntax-parser add-special-loot
+  [(_ name:string ...)
+   (syntax/loc this-syntax
+     (-add-special-loot (list name ...)))])
+
 (define (-extend-standard-deck)
   (const standard-loot-deck))
 
@@ -94,3 +100,8 @@
        (define res*
          (hash-update res type (λ (old) (cons new old)) '()))
        (loop res* x* stickers-per-card)])))
+
+(define ((-add-special-loot names) x)
+  (for/fold ([x x])
+            ([name (in-list names)])
+    (hash-update x 'special (λ (deck) (cons (special-loot name) deck)) '())))

@@ -77,16 +77,25 @@ Represents a loot card worth 1 @racket[name] herb, but may have +1 stickers.
 Serializable.
 }
 
+@defstruct*[special-loot ([name string?])
+                         #:transparent]{
+Represents a specially named loot card. This can be used for custom cards or for
+the standard loot cards with special properties. These loot cards are always
+included in the deck when available.
+
+Serializable.
+}
+
 @defthing[loot-card?
            predicate/c
-           #:value (or/c money? material? herb? random-item?)]{
+           #:value (or/c money? material? herb? random-item? special-loot?)]{
 This predicate recognizes valid loot cards. It is also a valid
 @racket[contract?].
 }
 
 @defthing[loot-type/c
            flat-contract?
-           #:value (or/c 'money material-kind? herb-kind? 'random-item)]{
+           #:value (or/c 'money material-kind? herb-kind? 'random-item 'special)]{
 This contract recognizes the type of a loot card.
 }
 
@@ -116,7 +125,9 @@ Constants designating the maximum number of certain kinds of cards.
 Standard decks of loot cards from which you draw to make the loot deck.
 }
 
-@defproc[(apply-sticker [card (and/c loot-card? (not/c random-item?))])
+@defproc[(apply-sticker [card (and/c loot-card?
+                                     (not/c random-item?)
+                                     (not/c special-loot?))])
          loot-card?]{
 Returns @racket[card] with amounts increased by @racket[1].
 }

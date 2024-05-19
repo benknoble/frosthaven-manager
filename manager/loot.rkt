@@ -84,9 +84,12 @@
 (define (build-loot-deck type->number-of-cards type->deck)
   (shuffle
    (flatten
-    (for/list ([(type count) (in-hash type->number-of-cards)])
-      (define deck (hash-ref type->deck type))
-      (take (shuffle deck) count)))))
+    (append
+     (hash-ref type->deck 'special '())
+     (for/list ([(type count) (in-hash type->number-of-cards)]
+                #:unless (equal? type 'special))
+       (define deck (hash-ref type->deck type))
+       (take (shuffle deck) count))))))
 
 (define (build-loot-deck! s)
   (:= (state-@loot-deck s)
@@ -113,4 +116,7 @@
                    (material-amount* loot num-players)))
                (for/list ([h herb-kinds])
                  (for/sum ([loot (in-list (filter (find-herbs h) loots))])
-                   (herb-amount loot)))))))
+                   (herb-amount loot)))
+               (list (string-join (filter-map {(and special-loot? special-loot-name)}
+                                              loots)
+                                  ", "))))))

@@ -667,6 +667,17 @@ cards worth more.
 This command may be repeated.
 }
 
+@defform[(add-special-loot name ...)
+         #:contracts ([name string?])]{
+This command is written parenthesized as shown. It declares special loot cards
+for each @racket[name]. You can use this for custom loot cards or for standard
+cards with special rules.
+
+These cards are always included in the loot deck if available.
+
+This command may be repeated.
+}
+
 Here is an example loot program that adds 1 sticker to a 2/2/1 lumber card:
 @filebox["speartip.rkt"]{
 @codeblock|{

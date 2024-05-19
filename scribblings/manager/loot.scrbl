@@ -49,5 +49,6 @@ Rotate the top loot card to the bottom of the deck.
          (listof string?)]{
 Each string is a reward for player @racket[p] except the first, which is the
 player's name. The values are an indicator if the player got the random item,
-the player's XP, gold, each material amount, and each herb amount.
+the player's XP, gold, each material amount, each herb amount, and a
+comma-separated list of special cards.
 }

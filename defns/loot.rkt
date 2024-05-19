@@ -11,6 +11,7 @@
   [material-amount* (-> material? num-players/c natural-number/c)]
   [struct herb ([name herb-kind?]
                 [amount natural-number/c])]
+  [struct special-loot ([name string?])]
   [loot-card? predicate/c]
   [format-loot-card (-> num-players/c (-> loot-card? string?))]
   [max-money-cards natural-number/c]
@@ -23,7 +24,9 @@
   [standard-loot-deck (hash/c loot-type/c (listof loot-card?))]
   [material-kinds (listof material-kind?)]
   [herb-kinds (listof herb-kind?)]
-  [apply-sticker (-> (and/c loot-card? (not/c random-item?)) loot-card?)]
+  [apply-sticker (-> (and/c loot-card?
+                            (not/c random-item?)
+                            (not/c special-loot?)) loot-card?)]
   [loot-type/c flat-contract?]
   [card->type (-> loot-card? loot-type/c)]))
 
@@ -76,7 +79,9 @@
 
 (define max-random-item-cards 1)
 
-(define loot-card? (or/c money? material? herb? random-item?))
+(serializable-struct special-loot [name] #:transparent)
+
+(define loot-card? (or/c money? material? herb? random-item? special-loot?))
 
 (define-flow (material-amount* _loot _num-players)
   (~> (== material-amount (- 2)) list-ref))
@@ -88,7 +93,8 @@
     [(and (material name _) (app {(material-amount* num-players)} amount))
      (format "~a ~a~a" amount name (s? amount))]
     [(herb name amount) (format "~a ~a~a" amount name (s? amount))]
-    [(== random-item) "The random item!"]))
+    [(== random-item) "The random item!"]
+    [(special-loot name) (format "Special Loot: ~a" name)]))
 
 (module+ test
   (let ([F (format-loot-card 3)])
@@ -98,7 +104,8 @@
     (check-equal? (F (material metal (list 2 2 1))) "2 metals")
     (check-equal? (F (herb axenut 1)) "1 axenut")
     (check-equal? (F (herb axenut 2)) "2 axenuts")
-    (check-equal? (F random-item) "The random item!")))
+    (check-equal? (F random-item) "The random item!")
+    (check-equal? (F (special-loot "1418")) "Special Loot: 1418")))
 
 (define money-deck
   (append
@@ -127,14 +134,15 @@
     [(herb name amount) (herb name (add1 amount))]))
 
 (define loot-type/c
-  (or/c 'money material-kind? herb-kind? 'random-item))
+  (or/c 'money material-kind? herb-kind? 'random-item 'special))
 
 (define (card->type c)
   (match c
     [(money _) 'money]
     [(material m _) m]
     [(herb t _) t]
-    [(? random-item?) 'random-item]))
+    [(? random-item?) 'random-item]
+    [(special-loot _) 'special]))
 
 (define standard-loot-deck
   (hash-union (hash 'money money-deck 'random-item (list random-item))
