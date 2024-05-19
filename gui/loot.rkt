@@ -104,13 +104,14 @@
         [(dclick)
          (when (and selection (exact-nonnegative-integer? selection))
            (match-define (cons type card) (vector-ref entries selection))
-           (define new-card (apply-sticker card))
-           (on-deck
-            (~> (entries) vector->list
-                (list-set selection (cons type new-card))
-                (group-by car _)
-                (list~>hash #:->key (~> car car)
-                            #:->value (map cdr _)))))]))
+           (unless (memq type '(random-item special))
+             (define new-card (apply-sticker card))
+             (on-deck
+              (~> (entries) vector->list
+                  (list-set selection (cons type new-card))
+                  (group-by car _)
+                  (list~>hash #:->key (~> car car)
+                              #:->value (map cdr _))))))]))
     #:entry->row make-columns)
    (vpanel
     #:stretch '(#f #f)
