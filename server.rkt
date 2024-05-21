@@ -432,7 +432,7 @@
                  "+")
                (button ([type "button"]
                         [onclick
-                         ,(~a
+                         ,(string-join
                            (list
                             (string-trim (action-script (list "player" "loot") (list id-binding)) ";" #:left? #f)
                             ".then((r) => r.json())"
