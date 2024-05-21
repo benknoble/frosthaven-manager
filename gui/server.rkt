@@ -49,5 +49,6 @@
   (define manager (dynamic-require 'frosthaven-manager/gui/manager 'manager))
   (define s (make-sample-state))
   (make-sample-loot-deck s)
+  (void (reshuffle-modifier-deck s))
   (void (launch-server s)
         (render/eventspace (manager s))))
