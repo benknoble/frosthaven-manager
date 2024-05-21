@@ -319,10 +319,18 @@
   (define discard (@! (@> (state-@modifier (s)) {(or _ "N/A")})))
   `((div
      ([class "bottom-info"])
-     (p ,(action-button
-          (list "draw-modifier")
-          empty
-          "Draw Modifier")
+     (p (button
+         ([type "button"]
+          [onclick
+           ,(string-join
+             (list
+              (string-trim (action-script (list "draw-modifier") empty)
+                           ";"
+                           #:left? #f)
+              ".then((r) => r.json())"
+              ".then((j) => { alert(`The monster drew: ${j.modifier}.`); },"
+              "      (_) => { /* silence the error: empty response */ })"))])
+         "Draw Modifier")
         (span ([id "modifier-discard"])
               ,(~a discard))
         " "
@@ -826,7 +834,9 @@
 
 (define (web-draw-modifier _req)
   (do ((draw-modifier (s))))
-  (response/empty))
+  (cond
+    [(@! (state-@modifier (s))) => {~>> ~a (hash 'modifier) response/jsexpr}]
+    [else (response/empty)]))
 
 (define (progress-game _req)
   (do
