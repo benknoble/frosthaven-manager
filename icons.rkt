@@ -7,7 +7,8 @@
    [push (-> pict?)]
    [pull (-> pict?)]
    [move (-> pict?)]
-   [jump (-> pict?)]))
+   [jump (-> pict?)]
+   [teleport (-> pict?)]))
 
 (require pict
          pict/color
@@ -137,6 +138,29 @@
       (inset 0 5)
       highlight))
 
+(define (teleport)
+  (define squish {(scale 1 1/3)})
+  (define bottom
+    (parameterize ([hex-size 10])
+      (squish (S))))
+  (define middle
+    (parameterize ([hex-size 7])
+      (squish (S))))
+  (define top
+    (parameterize ([hex-size 4])
+      (squish (S))))
+  (define phantom
+    (ghost top))
+  (~> (phantom top middle bottom)
+      (vc-append 5 __)
+      (pin-arrow-line
+       5
+       _
+       phantom cc-find
+       bottom cc-find)
+      (inset 5 5)
+      highlight))
+
 (module+ main
   (require (only-in racket/gui))
   (for ([p (list target
@@ -144,5 +168,6 @@
                  push
                  pull
                  move
-                 jump)])
+                 jump
+                 teleport)])
     (show-pict (p))))

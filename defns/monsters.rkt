@@ -246,6 +246,12 @@
        ;; NOTE unscaled: this icon is a reasonable size and is hard to make
        ;; visually useful when scaled down.
        (list prefix (icons:jump) suffix)]))
+  (define (teleport x)
+    (match-loop x
+      [(regexp #px"^(.*)(?i:teleport)(.*)$"
+               (list _ prefix suffix))
+       ;; NOTE unscaled
+       (list prefix (icons:teleport) suffix)]))
   (define replacements
     (list bulleted
           attack
@@ -261,7 +267,8 @@
           range
           push-pull
           move-icon
-          jump))
+          jump
+          teleport))
   (for/fold ([result (list (regexp-replaces ability-text replacements))])
             ([pict-replacement (in-list pict-replacements)])
     (append-map (only-on-text pict-replacement) result)))
