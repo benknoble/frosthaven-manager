@@ -339,7 +339,8 @@ elements may follow, separated by commas, as in @racket["Infuse Dark, Ice"]. You
 can also write @racket["Infuse any"] or @racket["Infuse any element"] for wild
 infusions and @racket["Consume any"] or @racket["Consume any element"] for wild
 consumptions. This is also case-insensitive. In all cases this text will be
-transformed to a corresponding pictorial representation.
+transformed to a corresponding pictorial representation. Other icon replacements
+are documented at @racketmodname[frosthaven-manager/icons].
 
 @(require scribble/bnf)
 
