@@ -5,6 +5,12 @@
  (enum-out monster-modifier)
  (enum-out condition)
  (contract-out
+  [format-element (-> element? string?)]
+  [parse-element (-> string? element?)]
+  [format-monster-modifier (-> monster-modifier? string?)]
+  [parse-monster-modifier (-> string? monster-modifier?)]
+  [format-condition (-> condition? string?)]
+  [parse-condition (-> string? condition?)]
   [initiative? predicate/c]
   [ability? predicate/c]
   [conditions (listof condition?)]
@@ -24,6 +30,7 @@
  racket/hash
  rebellion/type/enum
  frosthaven-manager/enum-helpers
+ frosthaven-manager/constants
  frosthaven-manager/curlique)
 
 (module+ test (require rackunit))
@@ -33,12 +40,31 @@
 (define ability? string?)
 
 (define-serializable-enum-type element
-  (fire ice air earth light dark)
-  #:property-maker make-property-maker-that-displays-as-constant-names)
+  (fire ice air earth light dark))
+
+(define-constant-format/parse
+ format-element parse-element
+ ([fire "Fire"]
+  [ice "Ice"]
+  [air "Air"]
+  [earth "Earth"]
+  [light "Light"]
+  [dark "Dark"]))
 
 (define-serializable-enum-type monster-modifier
-  (zero minus1 plus1 minus2 plus2 null crit curse bless)
-  #:property-maker make-property-maker-that-displays-as-constant-names)
+  (zero minus1 plus1 minus2 plus2 null crit curse bless))
+
+(define-constant-format/parse
+ format-monster-modifier parse-monster-modifier
+ ([zero "+ 0"]
+  [minus1 "- 1"]
+  [plus1 "+ 1"]
+  [minus2 "- 2"]
+  [plus2 "+ 2"]
+  [null "Null (x 0)"]
+  [crit "Crit (x 2)"]
+  [curse "Curse (x 0)"]
+  [bless "Bless (x 2)"]))
 
 (define monster-modifier-deck
   (append (build-list 6 (const zero))
@@ -110,12 +136,27 @@
                                    (list minus2))))))
 
 (define-serializable-enum-type condition
-  (regenerate ward invisible strengthen wound brittle bane poison immobilize disarm impair stun muddle)
-  #:property-maker make-property-maker-that-displays-as-constant-names)
+  (regenerate ward invisible strengthen wound brittle bane poison immobilize disarm impair stun muddle))
+
+(define-constant-format/parse
+ format-condition parse-condition
+ ([regenerate "Regenerate"]
+  [ward "Ward"]
+  [invisible "Invisible"]
+  [strengthen "Strengthen"]
+  [wound "Wound"]
+  [brittle "Brittle"]
+  [bane "Bane"]
+  [poison "Poison"]
+  [immobilize "Immobilize"]
+  [disarm "Disarm"]
+  [impair "Impair"]
+  [stun "Stun"]
+  [muddle "Muddle"]))
 
 (define conditions
   (sort (list regenerate ward invisible strengthen wound brittle bane poison immobilize disarm impair stun muddle)
-        string<=? #:key ~a))
+        string<=? #:key format-condition))
 
 (define expirable-conditions
   (set
@@ -129,7 +170,7 @@
    muddle))
 
 (define conditions->string
-  {~> (sep ~a) collect (string-join ", " #:before-last " and ")})
+  {~> (sep format-condition) collect (string-join ", " #:before-last " and ")})
 
 (define (counter xs)
   (for/fold ([h (hash)])

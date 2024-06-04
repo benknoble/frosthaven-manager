@@ -5,6 +5,10 @@
  (enum-out herb-kind)
  (enum-out random-item-type)
  (contract-out
+  [format-material-kind (-> material-kind? string?)]
+  [parse-material-kind (-> string? material-kind?)]
+  [format-herb-kind (-> herb-kind? string?)]
+  [parse-herb-kind (-> string? herb-kind?)]
   [struct money ([amount natural-number/c])]
   [struct material ([name material-kind?]
                     [amount (apply list/c (build-list (sub1 max-players) (const natural-number/c)))])]
@@ -36,6 +40,7 @@
  rebellion/type/enum
  frosthaven-manager/curlique
  frosthaven-manager/enum-helpers
+ frosthaven-manager/constants
  frosthaven-manager/defns/level)
 
 (module+ test (require rackunit))
@@ -45,8 +50,13 @@
 (define max-money-cards 20)
 
 (define-serializable-enum-type material-kind
-  (lumber metal hide)
-  #:property-maker make-property-maker-that-displays-as-constant-names)
+  (lumber metal hide))
+
+(define-constant-format/parse
+ format-material-kind parse-material-kind
+ ([lumber "Lumber"]
+  [metal "Metal"]
+  [hide "Hide"]))
 
 (define material-kinds
   (list lumber metal hide))
@@ -56,8 +66,16 @@
 (define max-material-cards 8) ;; each
 
 (define-serializable-enum-type herb-kind
-  (arrowvine axenut corpsecap flamefruit rockroot snowthistle)
-  #:property-maker make-property-maker-that-displays-as-constant-names)
+  (arrowvine axenut corpsecap flamefruit rockroot snowthistle))
+
+(define-constant-format/parse
+ format-herb-kind parse-herb-kind
+ ([arrowvine "Arrowvine"]
+  [axenut "Axenut"]
+  [corpsecap "Corpsecap"]
+  [flamefruit "Flamefruit"]
+  [rockroot "Rockroot"]
+  [snowthistle "Snowthistle"]))
 
 (define herb-kinds
   (list arrowvine axenut corpsecap flamefruit rockroot snowthistle))
@@ -91,8 +109,8 @@
   (match-lambda
     [(money amount) (format "~a gold coin~a" amount (s? amount))]
     [(and (material name _) (app {(material-amount* num-players)} amount))
-     (format "~a ~a~a" amount name (s? amount))]
-    [(herb name amount) (format "~a ~a~a" amount name (s? amount))]
+     (format "~a ~a~a" amount (format-material-kind name) (s? amount))]
+    [(herb name amount) (format "~a ~a~a" amount (format-herb-kind name) (s? amount))]
     [(== random-item) "The random item!"]
     [(special-loot name) (format "Special Loot: ~a" name)]))
 
@@ -100,10 +118,10 @@
   (let ([F (format-loot-card 3)])
     (check-equal? (F (money 1)) "1 gold coin")
     (check-equal? (F (money 2)) "2 gold coins")
-    (check-equal? (F (material metal (list 2 1 1))) "1 metal")
-    (check-equal? (F (material metal (list 2 2 1))) "2 metals")
-    (check-equal? (F (herb axenut 1)) "1 axenut")
-    (check-equal? (F (herb axenut 2)) "2 axenuts")
+    (check-equal? (F (material metal (list 2 1 1))) "1 Metal")
+    (check-equal? (F (material metal (list 2 2 1))) "2 Metals")
+    (check-equal? (F (herb axenut 1)) "1 Axenut")
+    (check-equal? (F (herb axenut 2)) "2 Axenuts")
     (check-equal? (F random-item) "The random item!")
     (check-equal? (F (special-loot "1418")) "Special Loot: 1418")))
 

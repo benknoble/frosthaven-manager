@@ -61,7 +61,7 @@
                      #:on-summon-condition [on-summon-condition void]
                      #:kill-summon [kill-summon void])
   (define (make-condition-checkbox c)
-    (checkbox #:label (~a c)
+    (checkbox #:label (format-condition c)
               #:checked? (@> @player (player-afflicted-by? c))
               {~>> (list c) on-condition}))
   (define (subtract-hp)
@@ -169,7 +169,7 @@
 
 (define (summon-view s die add-hp subtract-hp on-condition)
   (define (make-condition-checkbox c)
-    (checkbox #:label (~a c)
+    (checkbox #:label (format-condition c)
               #:checked? ((summon-afflicted-by? c) s)
               {~>> (list c) on-condition}))
   (define (edit-conditions)

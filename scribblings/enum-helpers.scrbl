@@ -8,14 +8,6 @@
 @title{@tt{enum-helpers}}
 @defmodule[frosthaven-manager/enum-helpers]
 
-@defproc[(make-property-maker-that-displays-as-constant-names
-           [desc uninitialized-enum-descriptor?])
-         (listof (cons/c struct-type-property? any/c))]{
-This helper adjusts @tech[#:doc '(lib "rebellion/main.scrbl")]{enum types} so
-that the @racket[display] string is the same as the constant name as in
-@racket[define-enum-type].
-}
-
 @defform[(define-serializable-enum-type id (constant-id ...) enum-option ...)
          #:grammar ([enum-option #:omit-root-binding
                                  (code:line #:descriptor-name descriptor-id)

@@ -220,7 +220,8 @@
         (button "Advantage" (draw-modifier* s))
         (button "Disadvantage" (draw-modifier* s worse-modifier))
         (button (@> (state-@modifier s)
-                    {~>> (or _ "N/A") (format "Show Discard (top: ~a)")})
+                    {~>> (if _ format-monster-modifier "N/A")
+                         (format "Show Discard (top: ~a)")})
                 (show-discard-pile s))
         (spacer)
         (text (@> (state-@round s) {(~a "Round: " _)}))
@@ -351,7 +352,7 @@
        (table
         '("Ability Modifier (Most recent first)")
         (@> (state-@monster-discard s) list->vector)
-        #:entry->row {~> ~a vector})))))
+        #:entry->row {~> format-monster-modifier vector})))))
 
 (define (show-loot-and-xp @num-players @level @players)
   (button

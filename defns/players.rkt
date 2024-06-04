@@ -129,7 +129,7 @@
       (~a "HP: " current "/" max)]))
 
 (define (player-conditions* p)
-  (sort (player-conditions p) string<=? #:key ~a))
+  (sort (player-conditions p) string<=? #:key format-condition))
 
 (serializable-struct summon [name max-hp current-hp conditions] #:transparent)
 
@@ -176,7 +176,7 @@
       (~a "HP: " current "/" max)]))
 
 (define (summon-conditions* s)
-  (sort (summon-conditions s) string<=? #:key ~a))
+  (sort (summon-conditions s) string<=? #:key format-condition))
 
 (define (player-summon p name hp)
   (struct-copy player p

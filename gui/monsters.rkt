@@ -78,7 +78,7 @@
                       #:on-swap [on-swap void])
   (define @monster-stats (obs-combine get-monster-stats @mg @monster))
   (define (make-condition-checkbox c)
-    (checkbox #:label (~a c)
+    (checkbox #:label (format-condition c)
               #:checked? (@> @monster {~>> monster-conditions (member c) (not false?)})
               {(on-condition c _)}))
   (define (show-conditions)
@@ -172,7 +172,7 @@
       #:min-size '(400 #f)
       #:mixin closing-mixin
       #:title (@> @mg {~>> monster-group-name escape-text (~a "Mass Assign Conditions for ")})
-      (choice conditions (λ:= @condition) #:choice->label ~a #:selection @condition)
+      (choice conditions (λ:= @condition) #:choice->label format-condition #:selection @condition)
       (hpanel
        (button "Add" add)
        (button "Remove" remove)

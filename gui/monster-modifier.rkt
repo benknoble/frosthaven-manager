@@ -81,7 +81,7 @@
        (:= @absent #f)]
       [else (:= @absent (vector-ref absent-cards index))]))
   ;; card -> (vector/c string?)
-  (define make-row {~> ~a vector})
+  (define make-row {~> format-monster-modifier vector})
   (hpanel
    (table '("Current Cards")
           (@> @monster-ability-cards list->vector)

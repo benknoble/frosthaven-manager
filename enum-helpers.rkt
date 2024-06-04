@@ -1,11 +1,7 @@
 #lang racket
 
 (provide
-  define-serializable-enum-type
-  (contract-out
-    [make-property-maker-that-displays-as-constant-names
-      (-> uninitialized-enum-descriptor?
-          (listof (cons/c struct-type-property? any/c)))]))
+  define-serializable-enum-type)
 
 (require
   racket/serialize
@@ -16,45 +12,6 @@
   frosthaven-manager/curlique)
 
 (module+ test (require rackunit))
-
-(define (make-property-maker-that-displays-as-constant-names desc)
-  (define default-props-sans-custom-writer
-    (remove prop:custom-write
-            (default-enum-properties desc)
-            (match-lambda** [(key (cons prop _)) (equal? key prop)])))
-  (define custom-writer (default-enum-custom-write desc))
-  (define discrim (enum-descriptor-discriminator desc))
-  (define type (enum-descriptor-type desc))
-  (define constants (enum-type-constants type))
-  (cons (cons prop:custom-write
-              (match-lambda**
-                ;; display mode
-                [(v out #f) (display (~>> (v)
-                                          discrim
-                                          (keyset-ref constants)
-                                          keyword->string)
-                                     out)]
-                ;; everything else
-                [(v out mode) (custom-writer v out mode)]))
-        default-props-sans-custom-writer))
-
-(module+ test
-  (define-enum-type langs (racket typed/racket datalog) #:property-maker make-property-maker-that-displays-as-constant-names)
-  (define-binary-check (check-display-output actual expected)
-                       (equal? (with-output-to-string (thunk (display actual)))
-                               expected))
-  (test-case "displayble enums"
-    (check-display-output racket "racket")
-    (check-display-output typed/racket "typed/racket")
-    (check-display-output datalog "datalog")
-    ;;
-    (check-equal? (~a racket) "racket")
-    (check-equal? (~a typed/racket) "typed/racket")
-    (check-equal? (~a datalog) "datalog")
-    ;;
-    (check-equal? (~s racket) "#<langs:racket>")
-    (check-equal? (~s typed/racket) "#<langs:typed/racket>")
-    (check-equal? (~s datalog) "#<langs:datalog>")))
 
 (define-syntax-parser define-serializable-enum-type
   [(_ type:id

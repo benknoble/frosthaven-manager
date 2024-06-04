@@ -14,6 +14,7 @@
   (prefix-in sequencer: web-server/dispatchers/dispatch-sequencer)
   alexis/multicast
   file/convertible
+  frosthaven-manager/constants
   frosthaven-manager/defns
   (prefix-in elements: frosthaven-manager/elements)
   frosthaven-manager/manager
@@ -69,9 +70,25 @@
     (define-coercion-match-expander out/m out-test? out)
     (define-bidi-match-expander id in/m out/m)))
 
+(define-constant-format/parse
+ format-element parse-element
+ ([elements:fire "Fire"]
+  [elements:ice "Ice"]
+  [elements:air "Air"]
+  [elements:earth "Earth"]
+  [elements:light "Light"]
+  [elements:dark "Dark"]))
+
+(define-constant-format/parse
+ format-element-style parse-element-style
+ ([elements:element-pics-infused "infused"]
+  [elements:element-pics-waning "waning"]
+  [elements:element-pics-unfused "unfused"]))
+
 (define-bidi-match-expander/coercions element-name-arg
-  (or/c "Fire" "Ice" "Air" "Earth" "Light" "Dark") string->symbol
-  (or/c 'Fire 'Ice 'Air 'Earth 'Light 'Dark) symbol->string)
+  (or/c "Fire" "Ice" "Air" "Earth" "Light" "Dark") parse-element
+  {(one-of? elements:fire elements:ice elements:air
+            elements:earth elements:light elements:dark)} format-element)
 
 (define-bidi-match-expander/coercions element-style-arg
   (or/c "infused" "waning" "unfused") string->symbol
@@ -168,7 +185,9 @@
   (obs-observe!
    (state-@modifier an-s)
    (λ (m)
-     (multicast-channel-put ch `(text modifier-discard ,(~a (or m "N/A"))))))
+     (multicast-channel-put ch `(text modifier-discard ,(~a (if m
+                                                                (format-monster-modifier m)
+                                                                "N/A"))))))
 
   (define-values (app the-reverse-uri)
     (dispatch-rules
@@ -281,8 +300,8 @@
              (th "Random Item?")
              (th "XP")
              (th "Gold")
-             ,@(map {~>> ~a (list 'th)} material-kinds)
-             ,@(map {~>> ~a (list 'th)} herb-kinds)
+             ,@(map {~>> format-material-kind (list 'th)} material-kinds)
+             ,@(map {~>> format-herb-kind (list 'th)} herb-kinds)
              (th "Special Loot")))
         (tbody
          ,@(for/list ([p players])
@@ -310,13 +329,13 @@
       (p "Most Recent First")
       (ol
        ,@(for/list ([m discard])
-           `(li ,(~a m))))))))
+           `(li ,(format-monster-modifier m))))))))
 
 (define (bottom-info-body embed/url)
   (define level-info (@! (@> (state-@level (s)) get-level-info)))
   (define num-players (@! (state-@num-players (s))))
   (define in-draw? (@! (state-@in-draw? (s))))
-  (define discard (@! (@> (state-@modifier (s)) {(or _ "N/A")})))
+  (define discard (@! (@> (state-@modifier (s)) {(if _ format-monster-modifier "N/A")})))
   `((div
      ([class "bottom-info"])
      (p (button
@@ -332,7 +351,7 @@
               "      (_) => { /* silence the error: empty response */ })"))])
          "Draw Modifier")
         (span ([id "modifier-discard"])
-              ,(~a discard))
+              ,discard)
         " "
         (a ([href "/discard-pile"]) "Discard Pile")
         ,(action-button
@@ -371,13 +390,13 @@
 (define (elements-body embed/url)
   `((h2 "Elements")
     (div ([id "elements"])
-         ,@(for/list ([e (list 'Fire 'Ice 'Air 'Earth 'Light 'Dark)]
+         ,@(for/list ([e (list elements:fire elements:ice elements:air elements:earth elements:light elements:dark)]
                       [@e-state (state-@elements (s))])
-             `(img ([id ,(symbol->string e)]
+             `(img ([id ,(format-element e)]
                     [src ,((reverse-uri) element-pic e (@! @e-state))]
                     ,(action-click
                       (list "element" "transition")
-                      (list (list (~s "id") (~s (symbol->string e)))))))))))
+                      (list (list (~s "id") (~s (format-element e)))))))))))
 
 (define (creatures-body embed/url)
   `((h2 "Creatures")
@@ -444,7 +463,7 @@
                         [aria-label ,(~a "Add conditions to " (player-name p))])
                        ,@(for/list ([c conditions])
                            `(option ([value ,(~a (discriminator:condition c))])
-                                    ,(~a c))))
+                                    ,(format-condition c))))
                ,(action-button
                  (list "player" "condition" "add")
                  (list id-binding
@@ -512,7 +531,7 @@
                         [aria-label ,(~a "Add conditions to " (summon-name s))])
                        ,@(for/list ([c conditions])
                            `(option ([value ,(~a (discriminator:condition c))])
-                                    ,(~a c))))
+                                    ,(format-condition c))))
                ,(action-button
                  (list "summon" "condition" "add")
                  (list id-binding
@@ -647,7 +666,7 @@
                          [aria-label ,(~a "Add conditions to " (monster-group-name mg) " " (monster-number m))])
                         ,@(for/list ([c conditions])
                             `(option ([value ,(~a (discriminator:condition c))])
-                                     ,(~a c))))
+                                     ,(format-condition c))))
                 ,(action-button
                   (list "monster" "condition" "add")
                   (list id-binding
@@ -673,7 +692,7 @@
 
 (define (active-condition->xexpr c id-binding [who "player"])
   `(span ([class "condition"])
-         ,(~a c)
+         ,(format-condition c)
          ,(action-button
             (list who "condition" "remove")
             (list id-binding
@@ -688,14 +707,9 @@
       (write-bytes (convert (get-pic name style) 'svg-bytes) o))
     #:mime-type #"image/svg+xml"))
 
-(define (get-pic name style)
-  ((hash-ref (hasheq 'infused elements:element-pics-infused
-                     'waning elements:element-pics-waning
-                     'unfused elements:element-pics-unfused)
-             style)
-   ((hash-ref (hasheq 'Fire elements:fire 'Ice elements:ice 'Air elements:air
-                      'Earth elements:earth 'Light elements:light 'Dark elements:dark)
-              name))))
+(define (get-pic pics style)
+  ((parse-element-style (symbol->string style))
+   (pics)))
 
 ;;;; SSE
 
@@ -825,7 +839,8 @@
   (match (assq 'id (request-bindings req))
     [`(id . ,(element-name-arg e))
       (define @e-state
-        (~>> ((list 'Fire 'Ice 'Air 'Earth 'Light 'Dark)
+        (~>> ((list elements:fire elements:ice elements:air
+                    elements:earth elements:light elements:dark)
               (state-@elements (s)))
              (map cons) (assq e) cdr))
       (do (<@ @e-state transition-element-state))
@@ -835,7 +850,7 @@
 (define (web-draw-modifier _req)
   (do ((draw-modifier (s))))
   (cond
-    [(@! (state-@modifier (s))) => {~>> ~a (hash 'modifier) response/jsexpr}]
+    [(@! (state-@modifier (s))) => {~>> format-monster-modifier (hash 'modifier) response/jsexpr}]
     [else (response/empty)]))
 
 (define (progress-game _req)

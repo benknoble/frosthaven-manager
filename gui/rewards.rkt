@@ -19,8 +19,8 @@
 
 (define labels
   (append (list "Player" "Random Item?" "XP" "Gold")
-          (map ~a material-kinds)
-          (map ~a herb-kinds)
+          (map format-material-kind material-kinds)
+          (map format-herb-kind herb-kinds)
           (list "Special Loot")))
 
 (define (player-rewards-view @num-players @level @players #:mixin [mix values])

@@ -45,10 +45,10 @@
   (define money-view (cards-picker "Money Cards: " max-money-cards 'money))
   (define material-views
     (for/list ([m (in-list material-kinds)])
-      (cards-picker (~a m " Cards: ") max-material-cards m)))
+      (cards-picker (~a (format-material-kind m) " Cards: ") max-material-cards m)))
   (define herb-views
     (for/list ([h (in-list herb-kinds)])
-      (cards-picker (~a h " Cards: ") max-herb-cards h)))
+      (cards-picker (~a (format-herb-kind h) " Cards: ") max-herb-cards h)))
   (define random-item-view
     (checkbox #:label "Random Item Card?"
               #:checked? (@> @type->cards {~> (hash-ref 'random-item 0) (> 0)})
