@@ -330,7 +330,8 @@
     #:on-select select
     #:on-swap swap
     #:on-move-ability-card move-ability-card
-    #:on-max-hp update-max-hp))
+    #:on-max-hp update-max-hp
+    #:on-update update))
 
 (define ((make-creature-view s) k @e)
   (cond-view

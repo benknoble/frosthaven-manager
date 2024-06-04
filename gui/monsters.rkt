@@ -27,7 +27,8 @@
             #:on-select (-> (or/c #f monster-number/c) any)
             #:on-swap (-> (or/c 'all monster-number/c) any)
             #:on-move-ability-card (-> any)
-            #:on-max-hp (-> (-> (or/c 'normal 'elite) natural-number/c number?) any))
+            #:on-max-hp (-> (-> (or/c 'normal 'elite) natural-number/c number?) any)
+            #:on-update (-> (-> monster-group? monster-group?) any))
            (is-a?/c view<%>))]
     [db-view (-> (obs/c info-db/c) (obs/c ability-db/c) (obs/c (listof monster-group?)) (is-a?/c view<%>))]
     [add-monster-group (->* ((obs/c info-db/c)
@@ -121,7 +122,8 @@
                             #:on-new [on-new void]
                             #:on-swap [on-swap void]
                             #:on-move-ability-card [on-move-ability-card void]
-                            #:on-max-hp [on-max-hp void])
+                            #:on-max-hp [on-max-hp void]
+                            #:on-update [arbitrary-update void])
   (define @ability (@> @ability-deck ability-decks-current))
   (define (do-new)
     (define @available-numbers
@@ -153,8 +155,13 @@
     (define ((do-it on?))
       ;; valid because inside a dialog closer
       (define c (@! @condition))
-      (for ([monster-number (~>> (@mg) @! monster-group-monsters (map monster-number))])
-        (on-condition monster-number c on?))
+      (arbitrary-update
+       (λ (mg)
+         (for/fold ([mg mg])
+                   ([monster (monster-group-monsters mg)])
+           ((monster-group-update-num (monster-number monster)
+                                      (monster-update-condition c on?))
+            mg))))
       (close!))
     (define add (do-it #t))
     (define remove (do-it #f))
