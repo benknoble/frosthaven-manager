@@ -175,6 +175,10 @@ Transforms @racket[(monster-conditions m)] by adding the condition
 @racket[c] if @racket[on?] or removing it otherwise.
 }
 
+@defproc[(monster-expire-conditions [m monster?]) monster?]{
+Remove @racket[expirable-conditions] from @racket[m].
+}
+
 @defproc[((monster-update-hp [f (-> number? number?)])
           [m monster?])
          monster?]{

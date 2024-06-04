@@ -80,6 +80,10 @@ based on @racket[(second c?)]: @racket[#true] means
 True if-and-only-if @racket[(player-conditions c)] includes @racket[c].
 }
 
+@defproc[(player-expire-conditions [p player?]) player?]{
+Remove @racket[expirable-conditions] from @racket[p].
+}
+
 @defproc[(player-dead? [p player?]) boolean?]{
 True if-and-only-if @racket[(player-current-hp p)] is @racket[zero?].
 

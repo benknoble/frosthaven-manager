@@ -23,6 +23,7 @@
   [player-condition-handler (-> (list/c condition? boolean?)
                                 (-> player? player?))]
   [player-afflicted-by? (-> condition? (-> player? boolean?))]
+  [player-expire-conditions (-> player? player?)]
   [player-dead? (-> player? boolean?)]
   [player-at-max-health? (-> player? boolean?)]
   [player-set-initiative (-> player? initiative? player?)]
@@ -100,6 +101,11 @@
 
 (define ((player-afflicted-by? c) p)
   (and (member c (player-conditions p)) #t))
+
+(define (player-expire-conditions p)
+  (for/fold ([p p])
+            ([c (in-set expirable-conditions)])
+    ((player-remove-condition c) p)))
 
 (define (player-dead? p)
   (zero? (player-current-hp p)))

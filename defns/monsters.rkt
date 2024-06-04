@@ -57,6 +57,7 @@
        (-> monster-group? monster-group?))]
   [monster-update-condition (-> condition? boolean?
                                 (-> monster? monster?))]
+  [monster-expire-conditions (-> monster? monster?)]
   [monster-update-hp (-> (-> number? number?)
                          (-> monster? monster?))]
   [monster-group-remove (-> monster-number/c
@@ -495,6 +496,11 @@
       (cons c (remove* (list c) old-conditions))
       (remove* (list c) old-conditions)))
   (struct-copy monster m [conditions new-conditions]))
+
+(define (monster-expire-conditions m)
+  (for/fold ([m m])
+            ([c (in-set expirable-conditions)])
+    ((monster-update-condition c #f) m)))
 
 (define ((monster-update-hp proc) m)
   (define old-hp (monster-current-hp m))
