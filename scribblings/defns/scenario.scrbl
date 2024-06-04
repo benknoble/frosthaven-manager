@@ -81,6 +81,10 @@ A predicate recognizing valid initiative values.
 All the conditions together.
 }
 
+@defthing[expirable-conditions (setof conditions?)]{
+The conditions that expire at end-of-next-turn.
+}
+
 @defproc[(conditions->string [cs (listof condition?)]) string?]{
 Converts a set of conditions to a string.
 }

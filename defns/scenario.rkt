@@ -10,6 +10,7 @@
   [conditions (listof condition?)]
   [discriminator:condition (-> condition? integer?)]
   [selector:condition (-> integer? condition?)]
+  [expirable-conditions (set/c condition?)]
   [monster-modifier-deck (listof monster-modifier?)]
   [shuffle-modifier-deck? (-> (listof monster-modifier?) boolean?)]
   [better-modifier (-> monster-modifier? monster-modifier? monster-modifier?)]
@@ -115,6 +116,17 @@
 (define conditions
   (sort (list regenerate ward invisible strengthen wound brittle bane poison immobilize disarm impair stun muddle)
         string<=? #:key ~a))
+
+(define expirable-conditions
+  (set
+   invisible
+   strengthen
+   bane
+   immobilize
+   disarm
+   impair
+   stun
+   muddle))
 
 (define conditions->string
   {~> (sep ~a) collect (string-join ", " #:before-last " and ")})
