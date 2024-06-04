@@ -188,8 +188,13 @@
           (with-handlers ([exn:fail? (const 0)])
             ((parse-expr inc) env)))
         (on-max-hp (λ (_type num) (+ num true-inc)))
-        (for ([n (in-list (map monster-number (@! @monsters)))])
-          (on-hp n {(+ true-inc)})))
+        (arbitrary-update
+         (λ (mg)
+           (for/fold ([mg mg])
+                     ([monster (monster-group-monsters mg)])
+             ((monster-group-update-num (monster-number monster)
+                                        (monster-update-hp {(+ true-inc)}))
+              mg)))))
       (close!))
     ;; not setting current renderer, nor using an eventspace: dialog
     (render
