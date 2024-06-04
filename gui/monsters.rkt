@@ -177,6 +177,13 @@
        (button "Add" add)
        (button "Remove" remove)
        (button "Cancel" close!)))))
+  (define (do-expire-conditions)
+    (arbitrary-update
+     (λ (mg)
+       (for/fold ([mg mg])
+                 ([monster (monster-group-monsters mg)])
+         ((monster-group-update-num (monster-number monster) monster-expire-conditions)
+          mg)))))
   (define (bump-max-hp)
     (define-close! close! closing-mixin)
     (define/obs @inc #f)
@@ -233,6 +240,7 @@
                       (dialog
                        #:min-size '(400 #f)
                        #:title (@> @mg {~>> monster-group-name escape-text (~a "More Actions for ")})
+                       (button "Expire Conditions" do-expire-conditions)
                        (button "Swap Elite/Normal" (thunk (on-swap 'all)))
                        (button "Mass Conditions" do-mass-condition)
                        (ability-deck-preview @ability-deck @mg @env #:on-move on-move-ability-card)
