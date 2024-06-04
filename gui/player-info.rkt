@@ -15,6 +15,7 @@
                        #:on-hp (-> (-> number? number?) any)
                        #:on-xp (-> (-> number? number?) any)
                        #:on-initiative (-> number? any)
+                       #:on-update (-> (-> player? player?) any)
                        #:on-summon (-> string? positive-integer? any)
                        #:on-summon-hp (-> natural-number/c (-> number? number?) any)
                        #:on-summon-condition (-> natural-number/c (list/c condition? boolean?) any)
@@ -54,6 +55,7 @@
                      #:on-hp [on-hp void]
                      #:on-xp [on-xp void]
                      #:on-initiative [on-initiative void]
+                     #:on-update [arbitrary-update void]
                      #:on-summon [add-summon void]
                      #:on-summon-hp [on-summon-hp void]
                      #:on-summon-condition [on-summon-condition void]
@@ -118,11 +120,15 @@
                #:title (@> @player {~>> player-name (~a "Conditions for ")})
                #:size '(200 #f)
                (map make-condition-checkbox conditions)))))
+  (define (expire-conditions)
+    (arbitrary-update player-expire-conditions))
   (define conditions-panel
     (vpanel
       (rich-text-display (@> @player {~> player-conditions* conditions->string list})
                          #:min-size '(50 30))
-      (button "Edit Conditions" show-conditions)))
+      (hpanel
+       (button "Edit Conditions" show-conditions)
+       (button "Expire Conditions" expire-conditions))))
   (define add-summon-button
     (button "Summon" (thunk (do-summon add-summon))))
   (define ((summon-condition i) evt)

@@ -273,6 +273,7 @@
     #:on-hp update-player-hp
     #:on-xp update-player-xp
     #:on-initiative update-player-initiative
+    #:on-update update
     #:on-summon {~>> (clos player-summon) update}
     #:kill-summon {~> player-kill-summon update}
     #:on-summon-hp update-summon-hp

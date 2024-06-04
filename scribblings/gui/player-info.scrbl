@@ -29,6 +29,7 @@ via @racket[names] and @racket[hps].
            [#:on-hp on-hp (-> (-> number? number?) any) void]
            [#:on-xp on-xp (-> (-> number? number?) any) void]
            [#:on-initiative on-initiative (-> number? any) void]
+           [#:on-update arbitrary-update (-> (-> player? player?) any)]
            [#:on-summon add-summon (-> string? positive-integer? any)]
            [#:on-summon-hp update-summon-hp (-> natural-number/c (-> number? number?) any)]
            [#:on-summon-condition update-summon-condition (-> natural-number/c (list/c condition? boolean?) any)]
@@ -44,4 +45,8 @@ The number of players is used to format the player's loot appropriately.
 
 The summon callbacks are given the summon number, a list index, to indicate
 which summon to update. Adding a summon is done by name and max HP.
+
+The @racket[arbitrary-update] callback is invoked with a function that computes
+a new @racket[player?]; it is intended to update @racket[|@player|] for more
+complicated events that are logically a single step.
 }
