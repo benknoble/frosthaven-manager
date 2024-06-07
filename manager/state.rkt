@@ -322,9 +322,17 @@
   (define/obs @undo (list (s@->v s)))
   (define (push-state . _args)
     (<@ @undo
-        {~>> (-< _ (~> length (min 20)))
-             take
-             (cons (s@->v s))}))
+        (λ (undo)
+          (define to-save (s@->v s))
+          ;; INVARIANT: undo is never empty (see undo!)
+          (define top (car undo))
+          ;; don't save an undo state if the state hasn't changed
+          (cond
+            [(equal? to-save top) undo]
+            [else (on (undo)
+                    (~>> (-< _ (~> length (min 20)))
+                         take
+                         (cons to-save)))]))))
   (define undo-thread
     (thread
      (thunk
