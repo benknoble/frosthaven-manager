@@ -325,18 +325,28 @@
         {~>> (-< _ (~> length (min 20)))
              take
              (cons (s@->v s))}))
+  (define undo-thread
+    (thread
+     (thunk
+      (let loop ()
+        (apply push-state (thread-receive))
+        (loop)))))
+  (define (send-state . args)
+    ;; thread-send is non-blocking, so the observers that call this will return
+    ;; quickly. Meanwhile, undo-thread will keep processing the events.
+    (thread-send undo-thread args))
   ;; Only observe meaningful changes in state. Observing every change means
   ;; that, for example, it takes multiple undo! calls to undo assigning loot or
   ;; starting the round.
   (for ([element (state-@elements s)])
-    (obs-observe! element push-state))
+    (obs-observe! element send-state))
   (for ([field (list state-@level
                      state-@creatures
                      state-@modifier
                      state-@curses
                      state-@blesses
                      state-@in-draw?)])
-    (obs-observe! (field s) push-state))
+    (obs-observe! (field s) send-state))
   @undo)
 
 (define (undo! s @undo)
