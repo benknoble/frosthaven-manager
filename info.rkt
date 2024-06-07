@@ -5,7 +5,8 @@
 (define racket-launcher-libraries '("gui/manager"))
 (define gracket-launcher-names '("FrosthavenManager"))
 (define gracket-launcher-libraries '("gui/manager"))
-(define deps '("dbg"
+(define deps '("profile-flame-graph"
+               "dbg"
                "syntax-classes-lib"
                "snip-lib"
                "pict-snip-lib"
