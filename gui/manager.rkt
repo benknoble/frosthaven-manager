@@ -1,17 +1,32 @@
 #lang racket
 
 (module+ main
-  (require racket/gui/easy/debugger)
+  (require racket/gui/easy/debugger
+           profile-flame-graph)
   (define s (make-state))
+  (define runner (make-parameter (λ (th) (th)) #f 'runner))
+  (define profile-output (make-parameter #f #f 'profile-output))
+  (define (profile-runner th)
+    (profile-thunk th
+                   #:svg-path (cond
+                                [(profile-output) => string->path]
+                                [else #f])
+                   #:threads #t))
   (command-line
    #:once-each
    [("--debug") "Enable debugging" (start-debugger)]
+   [("--profile-output") profile-out "Path to SVG for profile output (requires flamegraph.pl to be in PATH)"
+                         (profile-output profile-out)
+                         (runner profile-runner)]
+   [("--profile") "Capture profile output (written on stdout)" (runner profile-runner)]
    #:args ([save #f])
    (when (and save (file-exists? save))
      ((load-game s) save))
    (void (render/eventspace
           ;; no separate eventspace: block main until this window closed
-          (manager s)))))
+          ((runner)
+           (thunk
+            (manager s)))))))
 
 (provide manager)
 
