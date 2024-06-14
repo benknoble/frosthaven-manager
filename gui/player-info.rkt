@@ -129,6 +129,27 @@
       (hpanel
        (button "Edit Conditions" show-conditions)
        (button "Expire Conditions" expire-conditions))))
+  (define (change-max-hp)
+    (define-close! close! closing-mixin)
+    ;; valid: inside a dialog
+    (define/obs @new-max-hp (player-max-hp (@! @player)))
+    (define (change!)
+      (define new-max-hp (@! @new-max-hp))
+      (arbitrary-update (player-act-on-max-hp (const new-max-hp)))
+      (close!))
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
+     (dialog
+      #:min-size '(400 #f)
+      #:mixin closing-mixin
+      #:title (@> @player {~>> player-name escape-text (~a "New maximum HP for ")})
+      #:style '()
+      (counter (@> @new-max-hp {(~a "New maximum HP: " _)})
+               {(<@ @new-max-hp add1)}
+               {(<@ @new-max-hp sub1)})
+      (hpanel
+       (button "Change" change!)
+       (button "Cancel" close!)))))
   (define (add-summon-button)
     (button "Summon" (thunk (do-summon add-summon))))
   (define ((summon-condition i) evt)
@@ -164,7 +185,7 @@
                #:min-size '(400 #f)
                #:title (@> @player {~>> player-name escape-text (~a "More Actions for ")})
                (add-summon-button)
-               )))))
+               (button "Change Max. HP" change-max-hp))))))
   ;; final view
   (group
     "Player"
@@ -282,6 +303,7 @@
              (<@ @players {(update-players k proc)}))
            (player-view
             (@> @e cdr)
+            #:on-update update
             #:on-condition {~> player-condition-handler update}
             #:on-hp {~> player-act-on-hp update}
             #:on-xp {~> player-act-on-xp update}
