@@ -851,9 +851,7 @@
               ;; single state structured like actions-db but with deck + discard
               (define abilities-for-group
                 (hash-ref ability-db (monster-group-set-name mg) empty))
-              (define/obs @deck (shuffle abilities-for-group))
-              (define/obs @discard empty)
-              (define/obs @ability #f)
+              (define/obs @deck (ability-decks #f (shuffle abilities-for-group) empty))
               (define/obs @draw? #t)
               (with-closing-custodian/eventspace
                 (render/eventspace
@@ -862,7 +860,7 @@
                     #:title "Monster view"
                     #:mixin close-custodian-mixin
                     (monster-group-view
-                      @mg @ability @n (@ #hash())
+                      @mg @deck @n (@ #hash())
                       #:on-condition
                       (λ (num c on?)
                         (<@ @mg (monster-group-update-num num (monster-update-condition c on?))))
@@ -882,33 +880,13 @@
                       (button
                         "Draw"
                         (thunk
-                          ;; draw a card
-                          (:= @ability
-                              ;; empty, so no cards at all, giving #f
-                              ;; or there _must_ be cards to draw from
-                              (~> (@deck) @! (and (not empty?) first)))
-                          ;; update the deck
-                          (<@ @deck {switch [(not empty?) rest]})
-                          (<@ @draw? not))
+                         (<@ @deck ability-decks-draw-next)
+                         (<@ @draw? not))
                         #:enabled? @draw?)
                       (button
                         "Next Round"
                         (thunk
-                          ;; discard current card if it's a card
-                          (when (monster-ability? (@! @ability))
-                            (<@ @discard {(cons (@! @ability) _)}))
-                          ;; time to shuffle
-                          (when (or (empty? (@! @deck))
-                                    (and (monster-ability? (@! @ability))
-                                         (monster-ability-shuffle? (@! @ability))))
-                            (:= @deck
-                                (shuffle
-                                  ;; @deck ++ @discard because @deck may not have
-                                  ;; been empty
-                                  (append (@! @deck) (@! @discard))))
-                            (:= @discard empty))
-                          ;; hide current ability
-                          (:= @ability #f)
-                          (<@ @draw? not))
+                         (<@ @deck ability-decks-discard-and-maybe-shuffle)
+                         (<@ @draw? not))
                         #:enabled? (@> @draw? not))))))]
             [_ (void)]))))))
