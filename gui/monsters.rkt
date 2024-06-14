@@ -853,6 +853,9 @@
                 (hash-ref ability-db (monster-group-set-name mg) empty))
               (define/obs @deck (ability-decks #f (shuffle abilities-for-group) empty))
               (define/obs @draw? #t)
+              (define/match (swap _who)
+                [{'all} (<@ @mg swap-monster-group-elites)]
+                [{n} (<@ @mg (monster-group-update-num n swap-monster-elite))])
               (with-closing-custodian/eventspace
                 (render/eventspace
                   #:eventspace closing-eventspace
@@ -875,7 +878,11 @@
                       (λ (n elite?)
                         (<@ @mg (monster-group-add n elite? #hash()))
                         (:= @n n))
-                      #:on-select (λ:= @n))
+                      #:on-select (λ:= @n)
+                      #:on-swap swap
+                      #:on-move-ability-card (thunk (<@ @deck move-top-draw-to-bottom))
+                      #:on-max-hp (λ (f) (<@ @mg {(monster-group-change-max-HP f (hash))}))
+                      #:on-update (λ (f) (<@ @mg f)))
                     (hpanel
                       (button
                         "Draw"
