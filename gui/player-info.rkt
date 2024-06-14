@@ -129,7 +129,7 @@
       (hpanel
        (button "Edit Conditions" show-conditions)
        (button "Expire Conditions" expire-conditions))))
-  (define add-summon-button
+  (define (add-summon-button)
     (button "Summon" (thunk (do-summon add-summon))))
   (define ((summon-condition i) evt)
     (on-summon-condition i evt))
@@ -155,6 +155,16 @@
                                  (summon-sub-hp i s)
                                  (summon-condition i)))))))]
       [else (spacer)]))
+  (define (more-actions)
+    (button "More Actions…"
+            (thunk
+             ;; not setting current renderer, nor using an eventspace: dialog
+             (render
+              (dialog
+               #:min-size '(400 #f)
+               #:title (@> @player {~>> player-name escape-text (~a "More Actions for ")})
+               (add-summon-button)
+               )))))
   ;; final view
   (group
     "Player"
@@ -163,7 +173,7 @@
             #:margin '(20 0)
             name-initiative-panel
             hp-xp
-            add-summon-button
+            (more-actions)
             conditions-panel)
     (summons-view)))
 
