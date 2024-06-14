@@ -184,10 +184,10 @@
                  ([monster (monster-group-monsters mg)])
          ((monster-group-update-num (monster-number monster) monster-expire-conditions)
           mg)))))
-  (define (bump-max-hp)
+  (define (change-max-hp)
     (define-close! close! closing-mixin)
     (define/obs @inc #f)
-    (define (increase!)
+    (define (change!)
       (define inc (@! @inc))
       (when inc
         (define env (@! @env))
@@ -208,16 +208,16 @@
      (dialog
       #:min-size '(400 #f)
       #:mixin closing-mixin
-      #:title (@> @mg {~>> monster-group-name escape-text (~a "Increase maximum HP for ")})
+      #:title (@> @mg {~>> monster-group-name escape-text (~a "Change maximum HP for ")})
       #:style '()
       (input ""
              (match-lambda**
                [{'input val} (:= @inc val)]
                [{'return val} (:= @inc val)
-                              (increase!)])
-             #:label "Enter a number or a formula")
+                              (change!)])
+             #:label "Enter a number or a formula to add")
       (hpanel
-       (button "Increase" increase!)
+       (button "Change" change!)
        (button "Cancel" close!)))))
   (define (name-panel) (text (@> @mg {~> monster-group-name escape-text}) #:font big-control-font))
   (define (add-monster-button)
@@ -244,7 +244,7 @@
                        (button "Swap Elite/Normal" (thunk (on-swap 'all)))
                        (button "Mass Conditions" do-mass-condition)
                        (ability-deck-preview @ability-deck @mg @env #:on-move on-move-ability-card)
-                       (button "Increase all maximum HP" bump-max-hp)))))))
+                       (button "Change all maximum HP" change-max-hp)))))))
   (define (ability-panel)
     (group
       "Ability"
