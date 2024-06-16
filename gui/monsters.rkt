@@ -51,6 +51,7 @@
          frosthaven-manager/gui/helpers
          frosthaven-manager/gui/table
          frosthaven-manager/gui/rich-text-display
+         frosthaven-manager/gui/pict-text-display
          frosthaven-manager/gui/level-picker
 
          frosthaven-manager/defns
@@ -160,7 +161,7 @@
                                     #:on-swap forward-swap))])))
 
 (define (monster-ability-view @ability @mg @env)
-  (rich-text-display
+  (pict-text-display
    (obs-combine
     (λ (ability mg env)
       (if ability
