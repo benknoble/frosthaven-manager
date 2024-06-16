@@ -42,9 +42,6 @@
          frosthaven-manager/gui/rich-text-display)
 
 (define (manager s)
-  ;; TODO: should @undo store all the stuff that happens before we get to the
-  ;; game?
-  (define undo (make-undo s))
   (application-about-handler do-about)
   (define modifier
     (case (system-type 'os)
@@ -86,7 +83,7 @@
       [(add-prompts) (add-prompts-view s)]
       [(choose-monster-db) (choose-monster-db-view s)]
       [(choose-monsters) (choose-monsters-view s)]
-      [(play) (play-view s undo)]
+      [(play) (play-view s)]
       [else (text "Broken")])))
 
 ;;;; GUI
@@ -178,7 +175,8 @@
             (button "Back" (to-choose-monster-db s))
             (button "Next" (to-play s)))))
 
-(define (play-view s undo)
+(define (play-view s)
+  (define undo (make-undo s))
   (vpanel
     (hpanel
       ;; left
