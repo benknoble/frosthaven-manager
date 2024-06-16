@@ -23,7 +23,7 @@
                "htdp-lib"
                "pict-lib"
                ("qi-lib" #:version "4.0")
-               ("gui-easy-lib" #:version "0.9.1")
+               ("gui-easy-lib" #:version "0.18")
                "rebellion"
                "base"))
 (define build-deps '("draw-doc"
