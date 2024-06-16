@@ -61,9 +61,10 @@
     [serialize-state (-> state? output-port? void?)]
     [deserialize-state (-> input-port? state?)]
     [copy-state (-> state? state? any)]
-    [make-undo (-> state? obs?)]
-    [undo! (-> state? obs? any)]
-    [undoable? (-> list? any/c)]
+    [undo? (-> any/c boolean?)]
+    [make-undo (-> state? undo?)]
+    [undo! (-> state? undo? any)]
+    [undoable? (-> undo? (obs/c boolean?))]
     [make-player-creature (-> any/c creature?)]
     [update-players (-> (listof creature?) any/c (-> player? player?) (listof creature?))]
     [update-monster-groups (->* {(listof creature?)
@@ -317,8 +318,11 @@
       {~>> (filter creature-is-mg*?)
            (map {~> creature-v monster-group*-mg})}))
 
+(struct undo [@undo lock])
+
 ;;; UNDO
 (define (make-undo s)
+  (define lock (make-semaphore 1))
   (define/obs @undo (list (s@->v s)))
   (define (push-state . _args)
     (<@ @undo
@@ -337,7 +341,11 @@
     (thread
      (thunk
       (let loop ()
-        (apply push-state (thread-receive))
+        (call-with-semaphore
+         lock
+         (λ (args) (apply push-state args))
+         #f
+         (thread-receive))
         (loop)))))
   (define (send-state . args)
     ;; thread-send is non-blocking, so the observers that call this will return
@@ -355,30 +363,34 @@
                      state-@blesses
                      state-@in-draw?)])
     (obs-observe! (field s) send-state))
-  @undo)
+  (undo @undo lock))
 
-(define (undo! s @undo)
-  ;; IMPORTANT
-  ;; The _saved_ copy `undo` holds the undo stack as of RIGHT NOW. When we call
-  ;; copy-state below, we will trigger changes in s that will (ostensibly) push
-  ;; more chagnes to @undo. But when we update @undo to be the tail of undo, we
-  ;; will discard those (spurious) changes _and_ the top of the stack which we
-  ;; are copying.
-  (define undo (@! @undo))
-  ;; INVARIANT
-  ;; The `undo` should never be empty. If it is, we've lost one state. Why? When
-  ;; we push states in reaction to observable changes, we are pushing the _new_
-  ;; state, not the old. So the only reference to the old state is "underneath"
-  ;; the current state. This also means that the state to restore is actually
-  ;; the 2nd element of the stack. There could be no second element, though.
-  (when (undoable? undo)
-    (define to-restore (second undo))
-    (define new-state (apply make-state (vector->list to-restore)))
-    (copy-state new-state s)
-    (:= @undo (cdr undo))))
+(define (undo! s u)
+  (call-with-semaphore
+   (undo-lock u)
+   (thunk
+    ;; IMPORTANT
+    ;; The _saved_ copy `undo` holds the undo stack as of RIGHT NOW. When we call
+    ;; copy-state below, we will trigger changes in s that will (ostensibly) push
+    ;; more chagnes to @undo. But when we update @undo to be the tail of undo, we
+    ;; will discard those (spurious) changes _and_ the top of the stack which we
+    ;; are copying.
+    (define @undo (undo-@undo u))
+    (define undo (@! @undo))
+    ;; INVARIANT
+    ;; The `undo` should never be empty. If it is, we've lost one state. Why? When
+    ;; we push states in reaction to observable changes, we are pushing the _new_
+    ;; state, not the old. So the only reference to the old state is "underneath"
+    ;; the current state. This also means that the state to restore is actually
+    ;; the 2nd element of the stack. There could be no second element, though.
+    (when (@! (undoable? u))
+      (define to-restore (second undo))
+      (define new-state (apply make-state (vector->list to-restore)))
+      (copy-state new-state s)
+      (:= @undo (cdr undo))))))
 
-(define (undoable? undo)
-  (not (empty? (cdr undo))))
+(define (undoable? u)
+  (@> (undo-@undo u) {~> cdr (not empty?)}))
 
 (define (make-player-creature i)
   (creature i (make-player "" 1)))

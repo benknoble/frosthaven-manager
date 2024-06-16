@@ -115,12 +115,13 @@ the values from a deserialized @racket[state?].
 }
 
 @deftogether[(
-    @defproc[(make-undo [s state?]) obs?]
-    @defproc[(undo! [s state?] [|@|undo obs?]) any]
-    @defproc[(undoable? [undo list?]) any/c])]{
+    @defproc[(undo? [v any/c]) boolean?]
+    @defproc[(make-undo [s state?]) undo?]
+    @defproc[(undo! [s state?] [u undo?]) any]
+    @defproc[(undoable? [u undo?]) (obs/c boolean?)])]{
 Undo procedures. To create an observable undo state that tracks @racket[s], use
 @racket[(make-undo s)]. Then, when @racket[undoable?] is true of the observable
-undo state, use @racket[(undo! s |@|undo)] to actually trigger change.
+undo state, use @racket[(undo! s undo)] to actually trigger change.
 
 Warning: sometimes multiple undos are necessary to be coherent. Not all state
 changes are recorded.

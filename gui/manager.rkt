@@ -44,7 +44,7 @@
 (define (manager s)
   ;; TODO: should @undo store all the stuff that happens before we get to the
   ;; game?
-  (define @undo (make-undo s))
+  (define undo (make-undo s))
   (application-about-handler do-about)
   (define modifier
     (case (system-type 'os)
@@ -86,7 +86,7 @@
       [(add-prompts) (add-prompts-view s)]
       [(choose-monster-db) (choose-monster-db-view s)]
       [(choose-monsters) (choose-monsters-view s)]
-      [(play) (play-view s @undo)]
+      [(play) (play-view s undo)]
       [else (text "Broken")])))
 
 ;;;; GUI
@@ -178,7 +178,7 @@
             (button "Back" (to-choose-monster-db s))
             (button "Next" (to-play s)))))
 
-(define (play-view s @undo)
+(define (play-view s undo)
   (vpanel
     (hpanel
       ;; left
@@ -233,7 +233,7 @@
         (text (@> (state-@round s) {(~a "Round: " _)}))
         (button "Next Round" #:enabled? (state-@in-draw? s) (next-round s))
         (button "Draw Abilities" #:enabled? (@> (state-@in-draw? s) not) (draw-abilities s))
-        (button "Undo" #:enabled? (@> @undo undoable?) (thunk (undo! s @undo)))))
+        (button "Undo" #:enabled? (undoable? undo) (thunk (undo! s undo)))))
     ;; bottom
     (hpanel #:stretch '(#f #f)
             (show-loot-and-xp (state-@num-players s)
