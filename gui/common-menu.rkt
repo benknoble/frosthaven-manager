@@ -9,11 +9,13 @@
     [contribute-menu-item (-> (is-a?/c view<%>))]
     [send-feedback-menu-item (-> (is-a?/c view<%>))]
     [how-to-play-menu-item (-> (is-a?/c view<%>))]
-    [launch-server-menu-item (-> state? (is-a?/c view<%>))]))
+    [launch-server-menu-item (-> state? (is-a?/c view<%>))]
+    [gc-menu-item (-> (is-a?/c view<%>))]))
 
 (require racket/runtime-path
          net/sendurl
          racket/gui/easy
+         (prefix-in gui: racket/gui)
          frosthaven-manager/gui/markdown
          frosthaven-manager/gui/render
          frosthaven-manager/gui/server
@@ -84,6 +86,26 @@
 
 (define (launch-server-menu-item s)
   (menu-item "Launch Server" (thunk (launch-server s))))
+
+(define (gc-menu-item)
+  (menu-item "Observe GC"
+             (thunk
+              (render/eventspace
+               #:eventspace (gui:make-eventspace)
+               (window
+                #:title "GC"
+                #:size '(120 120)
+                (canvas
+                 (obs #f)
+                 void
+                 #:mixin (mixin (gui:canvas<%>) (gui:canvas<%>)
+                           (super-new)
+                           (gui:register-collecting-blit
+                            this
+                            0 0
+                            80 80
+                            (gui:make-monochrome-bitmap 80 80 (make-bytes (sqr 80) #xff))
+                            (gui:make-monochrome-bitmap 80 80)))))))))
 
 (module+ main
   (render

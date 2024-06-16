@@ -15,6 +15,7 @@
     @defthing[send-feedback-menu-item (-> (is-a?/c view<%>))]
     @defthing[how-to-play-menu-item (-> (is-a?/c view<%>))]
     @defthing[launch-server-menu-item (-> (is-a?/c view<%>))]
+    @defthing[gc-menu-item (-> (is-a?/c view<%>))]
 )]{
 Menu items for Frosthaven Manager.
 }

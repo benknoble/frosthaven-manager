@@ -68,6 +68,8 @@
                                            #:on-add (add-monster-modifier s)
                                            #:on-remove (remove-monster-modifier s)
                                            #:on-shuffle (thunk (reshuffle-modifier-deck s))))
+      (menu "Debug"
+            (gc-menu-item))
       (menu "Help"
             (about-menu-item)
             (how-to-play-menu-item)
