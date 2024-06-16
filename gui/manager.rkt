@@ -46,13 +46,19 @@
   ;; game?
   (define @undo (make-undo s))
   (application-about-handler do-about)
+  (define modifier
+    (case (system-type 'os)
+      [(macosx) 'cmd]
+      [else 'ctl]))
   (window
     #:title "Frosthaven Manager"
     #:size '(800 600)
     (menu-bar
       (menu "File"
-            (menu-item "&Save Game" (thunk (do-save-game s)))
-            (menu-item "L&oad Game" (thunk (do-load-game s)))
+            (menu-item "&Save Game" (thunk (do-save-game s))
+                       #:shortcut (list modifier #\s))
+            (menu-item "L&oad Game" (thunk (do-load-game s))
+                       #:shortcut (list modifier #\o))
             (launch-server-menu-item s)
             (formula-menu-item (state-@env s)))
       (menu "Edit"
