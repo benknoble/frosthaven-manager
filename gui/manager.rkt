@@ -1,11 +1,14 @@
 #lang racket
 
 (module+ main
-  (require racket/gui/easy/debugger)
+  (require racket/gui/easy/debugger
+           (prefix-in dbg: debugging/server))
   (define s (make-state))
   (command-line
    #:once-each
-   [("--debug") "Enable debugging" (start-debugger)]
+   [("--debug") "Enable debugging"
+                (start-debugger)
+                (dbg:serve)]
    #:args ([save #f])
    (when (and save (file-exists? save))
      ((load-game s) save))

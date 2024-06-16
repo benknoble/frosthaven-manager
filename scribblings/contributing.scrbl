@@ -130,5 +130,6 @@ racket -l frosthaven-manager/gui/deserialized-state <save-file>
 to debug the state saved with the Save Game menu item; this is one useful way to
 capture internal state and inspect it.
 
-The main application accepts a @tt{--debug} flag to start GUI Easy's debugger,
-too.
+The main application accepts a @tt{--debug} flag to start GUI Easy's debugger
+and Racket debugger, too. The latter can be connected to with @tt{raco dbg} if
+you have the dbg-ui package.
