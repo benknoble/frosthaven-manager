@@ -114,3 +114,21 @@ by @racketmodname[frosthaven-manager/monster-db].
 The module @racketmodname[frosthaven-manager/enum-helpers] provides a utility
 for modifying @tech[#:doc '(lib "rebellion/main.scrbl")]{enum types} from
 @secref[#:doc '(lib "rebellion/main.scrbl")]{Enum_Types}.
+
+@section{Debugging}
+
+The main application has a debug menu that can run various tools, such as
+getting a flickering canvas when GC occurs to diagnose memory issues.
+
+There is also a @filepath{gui/deserialized-state.rkt} module that can be run
+with
+
+@terminal|{
+racket -l frosthaven-manager/gui/deserialized-state <save-file>
+}|
+
+to debug the state saved with the Save Game menu item; this is one useful way to
+capture internal state and inspect it.
+
+The main application accepts a @tt{--debug} flag to start GUI Easy's debugger,
+too.
