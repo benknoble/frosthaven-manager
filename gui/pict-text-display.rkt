@@ -16,16 +16,30 @@
                            #:margin [@margin '(0 0)]
                            #:inset [@inset '(5 5)]
                            #:style [style '()])
-  (pict-canvas (obs-combine list (@ @content) (@ @font) (@ @inset))
-               content->pict
-               #:label @label
-               #:min-size @min-size
-               #:stretch @stretch
-               #:margin @margin
-               #:style style))
-
-;; TODO: make auto-vscroll or something similar work…
-;; tried: init-auto-scrollbars, but not working
+  (define @args (obs-combine list (@ @content) (@ @font) (@ @inset)))
+  (pict-canvas
+   @args
+   content->pict
+   #:label @label
+   #:min-size @min-size
+   #:stretch @stretch
+   #:margin @margin
+   #:style style
+   #:mixin (mixin (gui:canvas<%>) (gui:canvas<%>)
+             (init [style null])
+             (super-new [style (list* 'vscroll 'hscroll style)])
+             (define (setup-scrollbars)
+               (let* ([p (content->pict (@! @args))]
+                      [h (min 1000000 (exact-ceiling (pict:pict-height p)))]
+                      [w (min 1000000 (exact-ceiling (pict:pict-width p)))])
+                 (send this init-auto-scrollbars w h 0 0)))
+             (setup-scrollbars)
+             (obs-observe! @args (thunk* (setup-scrollbars)))
+             (define/override (on-size window-width window-height)
+               (super on-size window-width window-height)
+               (define-values (w h) (send this get-client-size))
+               (define-values (vw vh) (send this get-virtual-size))
+               (send this show-scrollbars (> vw w) (> vh h))))))
 
 (define (content->pict args)
   (match-define (list cs font (list h-i v-i)) args)
