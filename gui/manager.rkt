@@ -59,9 +59,9 @@
                        #:shortcut (list modifier #\s))
             (menu-item "L&oad Game" (thunk (do-load-game s))
                        #:shortcut (list modifier #\o))
-            (launch-server-menu-item s)
-            (formula-menu-item (state-@env s)))
+            (launch-server-menu-item s))
       (menu "Edit"
+            (formula-menu-item (state-@env s))
             (manage-prompt-menu-item (state-@prompts s)
                                      #:on-add (add-prompt s)
                                      #:on-remove (remove-prompt s))
