@@ -37,6 +37,7 @@
          frosthaven-manager/gui/elements
          frosthaven-manager/gui/helpers
          frosthaven-manager/monster-db
+         frosthaven-manager/gui/mixins
          frosthaven-manager/gui/monsters
          frosthaven-manager/gui/monster-modifier
          frosthaven-manager/gui/render
@@ -61,6 +62,8 @@
                        #:shortcut (list modifier #\o))
             (launch-server-menu-item s))
       (menu "Edit"
+            (edit-level-menu-item (state-@level s)
+                                  (λ:= (state-@level s)))
             (formula-menu-item (state-@env s))
             (manage-prompt-menu-item (state-@prompts s)
                                      #:on-add (add-prompt s)
@@ -371,3 +374,22 @@
      (render/eventspace
       #:eventspace closing-eventspace
       (player-rewards-view @num-players @level @players #:mixin close-custodian-mixin))))))
+
+;;;; Menu Items
+
+(define (edit-level-menu-item @level [on-change void])
+  (menu-item
+   "Edit Scenario Level"
+   (thunk
+    (define-close! close! closing-mixin)
+    (render
+     (dialog
+      #:mixin closing-mixin
+      #:title "Change Scenario Level"
+      (hpanel
+       (choice #:label "Scenario Level"
+               (build-list number-of-levels identity)
+               #:choice->label ~a
+               on-change
+               #:selection @level)
+       (button "Ok" close!)))))))
