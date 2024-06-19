@@ -90,22 +90,24 @@
 (define (gc-menu-item)
   (menu-item "Observe GC"
              (thunk
-              (render/eventspace
-               #:eventspace (gui:make-eventspace)
-               (window
-                #:title "GC"
-                #:size '(120 120)
-                (canvas
-                 (obs #f)
-                 void
-                 #:mixin (mixin (gui:canvas<%>) (gui:canvas<%>)
-                           (super-new)
-                           (gui:register-collecting-blit
-                            this
-                            0 0
-                            80 80
-                            (gui:make-monochrome-bitmap 80 80 (make-bytes (sqr 80) #xff))
-                            (gui:make-monochrome-bitmap 80 80)))))))))
+              (with-closing-custodian/eventspace
+               (render/eventspace
+                #:eventspace closing-eventspace
+                (window
+                 #:mixin close-custodian-mixin
+                 #:title "GC"
+                 #:size '(120 120)
+                 (canvas
+                  (obs #f)
+                  void
+                  #:mixin (mixin (gui:canvas<%>) (gui:canvas<%>)
+                            (super-new)
+                            (gui:register-collecting-blit
+                             this
+                             0 0
+                             80 80
+                             (gui:make-monochrome-bitmap 80 80 (make-bytes (sqr 80) #xff))
+                             (gui:make-monochrome-bitmap 80 80))))))))))
 
 (module+ main
   (render
