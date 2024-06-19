@@ -197,7 +197,6 @@
   (define s (make-state))
   (define (table-with-actual-loot-deck)
     (define @deck (obs-combine build-loot-deck @type->cards @type->deck))
-    ;; not setting current renderer, nor using an eventspace: dialog
     (vpanel
       (hpanel (text "Duplicates?")
               (text (@> @deck {~>> (map eq-hash-code) check-duplicates ~a})))

@@ -165,8 +165,8 @@
       (close!))
     (define add (do-it #t))
     (define remove (do-it #f))
-    ;; not setting current renderer, nor using an eventspace: dialog
     (define/obs @condition (first conditions))
+    ;; not setting current renderer, nor using an eventspace: dialog
     (render
      (dialog
       #:min-size '(400 #f)
