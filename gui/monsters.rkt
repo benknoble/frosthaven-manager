@@ -28,6 +28,7 @@
             #:on-swap (-> (or/c 'all monster-number/c) any)
             #:on-move-ability-card (-> any)
             #:on-max-hp (-> (-> (or/c 'normal 'elite) natural-number/c number?) any)
+            #:on-change-level (-> level/c any)
             #:on-update (-> (-> monster-group? monster-group?) any))
            (is-a?/c view<%>))]
     [db-view (-> (obs/c info-db/c) (obs/c ability-db/c) (obs/c (listof monster-group?)) (is-a?/c view<%>))]
@@ -123,6 +124,7 @@
                             #:on-swap [on-swap void]
                             #:on-move-ability-card [on-move-ability-card void]
                             #:on-max-hp [on-max-hp void]
+                            #:on-change-level [on-change-level void]
                             #:on-update [arbitrary-update void])
   (define @ability (@> @ability-deck ability-decks-current))
   (define (do-new)
@@ -219,6 +221,27 @@
       (hpanel
        (button "Change" change!)
        (button "Cancel" close!)))))
+  (define (change-level)
+    (define-close! close! closing-mixin)
+    (define/obs @new-level #f)
+    (define (change!)
+      (close!)
+      (define new-level (@! @new-level))
+      (when new-level
+        (on-change-level new-level)))
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
+     (dialog
+      #:mixin closing-mixin
+      #:title (@> @mg {~>> monster-group-name (~a "Change level for")})
+      #:min-size '(300 #f)
+      (choice (build-list number-of-levels identity)
+              #:choice->label ~a
+              (λ:= @new-level)
+              #:selection (@> @mg monster-group-level))
+      (hpanel
+       (button "Ok" change!)
+       (button "Cancel" close!)))))
   (define (name-panel) (text (@> @mg {~> monster-group-name escape-text}) #:font big-control-font))
   (define (add-monster-button)
     (button "Add Monster" do-new
@@ -244,7 +267,8 @@
                        (button "Swap Elite/Normal" (thunk (on-swap 'all)))
                        (button "Mass Conditions" do-mass-condition)
                        (ability-deck-preview @ability-deck @mg @env #:on-move on-move-ability-card)
-                       (button "Change all maximum HP" change-max-hp)))))))
+                       (button "Change all maximum HP" change-max-hp)
+                       (button "Change level" change-level)))))))
   (define (ability-panel)
     (group
       "Ability"

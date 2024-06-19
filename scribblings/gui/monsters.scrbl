@@ -58,6 +58,7 @@ removal of a group. Other parameters are used as in
            [#:on-swap on-swap (-> (or/c 'all monster-number/c) any) void]
            [#:on-move-ability-card on-move-ability-card (-> any) void]
            [#:on-max-hp on-max-hp (-> (-> (or/c 'normal 'elite) natural-number/c number?) any) void]
+           [#:on-change-level on-change-level (-> level/c any)]
            [#:on-update arbitrary-update (-> (-> monster-group? monster-group?) any)])
          (is-a?/c view<%>)]{
 A GUI view used to display an entire monster group. See
@@ -75,6 +76,7 @@ The callbacks function as follows:
           @item{@racket[on-swap] is invoked with @racket['all] if all monsters should be swapped by @racket[swap-monster-group-elites], or with a monster number if only that monster should be swapped by @racket[swap-monster-elite].}
           @item{@racket[on-move-ability-card] is invoked when the top of the ability draw pile should be moved to the bottom using the ability deck previewer.}
           @item{@racket[on-max-hp] is invoked when adjusting all maximum HP of the group. The given procedure computes new maximum HP values as for @racket[monster-group-change-max-HP].}
+          @item{@racket[on-change-level] is invoked when adjusting the group's level with the new level.}
 ]
 
 The @racket[arbitrary-update] callback is invoked with a function that computes

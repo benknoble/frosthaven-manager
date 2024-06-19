@@ -65,6 +65,7 @@
   [monster-group-add (-> monster-number/c boolean? env/c
                          (-> monster-group? monster-group?))]
   [monster-group-first-monster (-> monster-group? (or/c #f monster-number/c))]
+  [monster-group-update-level (-> monster-group? monster-info? level/c monster-group?)]
   [monster->hp-text (-> monster? monster-stats? env/c string?)]
   [swap-monster-group-elites (-> monster-group? monster-group?)]
   [swap-monster-elite (-> monster? monster?)]
@@ -488,6 +489,17 @@
 (define monster-group-first-monster
   {~> monster-group-monsters
       (and (not empty?) (~> first monster-number))})
+
+(define (monster-group-update-level mg info new-level)
+  (define-values (normal elite)
+    (~> (info)
+        (-< monster-info-normal-stats
+            monster-info-elite-stats)
+        (>< (list-ref new-level))))
+  (struct-copy monster-group mg
+               [level new-level]
+               [normal-stats normal]
+               [elite-stats elite]))
 
 (define ((monster-update-condition c on?) m)
   (define old-conditions (monster-conditions m))

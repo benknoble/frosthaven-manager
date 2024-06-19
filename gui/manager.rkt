@@ -332,6 +332,13 @@
                       move-top-draw-to-bottom)}))
   (define (update-max-hp f)
     (update {(monster-group-change-max-HP f (@! @env))}))
+  (define (update-level new-level)
+    (update
+     (λ (mg)
+       (define info (~> (s) state-@info-db @!
+                        (hash-ref (monster-group-set-name mg))
+                        (hash-ref (monster-group-name mg))))
+       (monster-group-update-level mg info new-level))))
   (monster-group-view
     @mg
     @ability-deck
@@ -345,6 +352,7 @@
     #:on-swap swap
     #:on-move-ability-card move-ability-card
     #:on-max-hp update-max-hp
+    #:on-change-level update-level
     #:on-update update))
 
 (define ((make-creature-view s) k @e)
