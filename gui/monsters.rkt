@@ -127,225 +127,36 @@
                             #:on-change-level [on-change-level void]
                             #:on-update [arbitrary-update void])
   (define @ability (@> @ability-deck ability-decks-current))
-  (define (do-new)
-    (define @available-numbers
-      (@> @mg {~>> monster-group-monsters
-                   (map monster-number)
-                   (set-subtract (inclusive-range 1 10))
-                   (sort _ <)}))
-    (define/obs @number->elite (hash))
-    (define (on-change e)
-      (<@ @number->elite {(update-selected-tracker e _)}))
-    (define-close! close! closing-mixin)
-    (define (on-close)
-      ;; valid because called when the dialog that changes @number->elite is closed
-      (for ([(num elite?) (in-hash (@! @number->elite))])
-        (on-new num elite?)))
-    (define mixin {~> closing-mixin (esc (make-on-close-mixin on-close))})
-    ;; not setting current renderer, nor using an eventspace: dialog
-    (render
-     (dialog
-      #:mixin mixin
-      #:title "Add Monster"
-      #:style '(close-button resize-border)
-      (observable-view @available-numbers
-                       {~> sep (>< (make-monster-selector on-change))
-                           vpanel})
-      (button "Add" close!))))
-  (define (do-mass-condition)
-    (define-close! close! closing-mixin)
-    (define ((do-it on?))
-      ;; valid because inside a dialog closer
-      (define c (@! @condition))
-      (arbitrary-update
-       (λ (mg)
-         (for/fold ([mg mg])
-                   ([monster (monster-group-monsters mg)])
-           ((monster-group-update-num (monster-number monster)
-                                      (monster-update-condition c on?))
-            mg))))
-      (close!))
-    (define add (do-it #t))
-    (define remove (do-it #f))
-    (define/obs @condition (first conditions))
-    ;; not setting current renderer, nor using an eventspace: dialog
-    (render
-     (dialog
-      #:min-size '(400 #f)
-      #:mixin closing-mixin
-      #:title (@> @mg {~>> monster-group-name escape-text (~a "Mass Assign Conditions for ")})
-      (choice conditions (λ:= @condition) #:choice->label format-condition #:selection @condition)
-      (hpanel
-       (button "Add" add)
-       (button "Remove" remove)
-       (button "Cancel" close!)))))
-  (define (do-expire-conditions)
-    (arbitrary-update
-     (λ (mg)
-       (for/fold ([mg mg])
-                 ([monster (monster-group-monsters mg)])
-         ((monster-group-update-num (monster-number monster) monster-expire-conditions)
-          mg)))))
-  (define (change-max-hp)
-    (define-close! close! closing-mixin)
-    (define/obs @inc #f)
-    (define (change!)
-      (define inc (@! @inc))
-      (when inc
-        (define env (@! @env))
-        (define true-inc
-          (with-handlers ([exn:fail? (const 0)])
-            ((parse-expr inc) env)))
-        (on-max-hp (λ (_type num) (+ num true-inc)))
-        (arbitrary-update
-         (λ (mg)
-           (for/fold ([mg mg])
-                     ([monster (monster-group-monsters mg)])
-             ((monster-group-update-num (monster-number monster)
-                                        (monster-update-hp {(+ true-inc)}))
-              mg)))))
-      (close!))
-    ;; not setting current renderer, nor using an eventspace: dialog
-    (render
-     (dialog
-      #:min-size '(400 #f)
-      #:mixin closing-mixin
-      #:title (@> @mg {~>> monster-group-name escape-text (~a "Change maximum HP for ")})
-      #:style '()
-      (input ""
-             (match-lambda**
-               [{'input val} (:= @inc val)]
-               [{'return val} (:= @inc val)
-                              (change!)])
-             #:label "Enter a number or a formula to add")
-      (hpanel
-       (button "Change" change!)
-       (button "Cancel" close!)))))
-  (define (change-level)
-    (define-close! close! closing-mixin)
-    (define/obs @new-level #f)
-    (define (change!)
-      (close!)
-      (define new-level (@! @new-level))
-      (when new-level
-        (on-change-level new-level)))
-    ;; not setting current renderer, nor using an eventspace: dialog
-    (render
-     (dialog
-      #:mixin closing-mixin
-      #:title (@> @mg {~>> monster-group-name (~a "Change level for")})
-      #:min-size '(300 #f)
-      (choice (build-list number-of-levels identity)
-              #:choice->label ~a
-              (λ:= @new-level)
-              #:selection (@> @mg monster-group-level))
-      (hpanel
-       (button "Ok" change!)
-       (button "Cancel" close!)))))
-  (define (name-panel) (text (@> @mg {~> monster-group-name escape-text}) #:font big-control-font))
-  (define (add-monster-button)
-    (button "Add Monster" do-new
-            #:enabled?
-            (@> @mg {~>> monster-group-monsters
-                         (map monster-number)
-                         (set-subtract (inclusive-range 1 10))
-                         (not empty?)})))
-  (define (name-initiative-panel)
-    (vpanel #:alignment '(center center)
-            #:stretch '(#f #t)
-            (name-panel)
-            (text (@> @ability monster-ability-initiative->text))
-            (add-monster-button)
-            (button "More Actions…"
-                    (thunk
-                     ;; not setting current renderer, nor using an eventspace: dialog
-                     (render
-                      (dialog
-                       #:min-size '(400 #f)
-                       #:title (@> @mg {~>> monster-group-name escape-text (~a "More Actions for ")})
-                       (button "Expire Conditions" do-expire-conditions)
-                       (button "Swap Elite/Normal" (thunk (on-swap 'all)))
-                       (button "Mass Conditions" do-mass-condition)
-                       (ability-deck-preview @ability-deck @mg @env #:on-move on-move-ability-card)
-                       (button "Change all maximum HP" change-max-hp)
-                       (button "Change level" change-level)))))))
-  (define (ability-panel)
-    (group
-      "Ability"
-      #:min-size (list 200 #f)
-      (monster-ability-view @ability @mg @env)))
-  (define (stats-panel)
-    (define (empty-stats label f)
-      (cond-view
-        [(obs-combine {~> (>< f) (not (all empty?))}
-                      (@> @mg monster-group-normal-stats)
-                      (@> @mg monster-group-elite-stats))
-         (text label)]
-        [else (spacer)]))
-    (hpanel
-      (group "Normal" (stats-view (@> @mg monster-group-normal-stats) @env)
-             #:min-size (list (* 10 (string-length "Normal")) #f))
-      (group "Stats"
-             (text "Move")
-             (text "Attack")
-             (empty-stats "Bonuses" monster-stats-bonuses)
-             (empty-stats "Effects" monster-stats-effects)
-             (empty-stats "Immunities" monster-stats-immunities)
-             (text "Max HP"))
-      (group "Elite" (stats-view (@> @mg monster-group-elite-stats) @env)
-             #:min-size (list (* 10 (string-length "Elite")) #f))))
-  ;; TODO: choice "hide"/"collapse" ?
   (define @monsters (@> @mg monster-group-monsters))
   (define @monster
     (obs-combine
       (λ (ms n) (and n (findf {~> monster-number (= n)} ms)))
       @monsters @monster-num))
-  (define-flow make-label-stats
-    (-< (if monster-elite? " (E)" "")
-        " (HP: " monster-current-hp ")"
-        (if (~> monster-conditions empty?) "" "*")))
-  (define-syntax-rule (define/forward/guard-monster-num f g args ...)
-    (define (f args ...)
-      (let ([n (@! @monster-num)])
-        (when n
-          (g n args ...)))))
-  (define/forward/guard-monster-num forward-condition on-condition c on?)
-  (define/forward/guard-monster-num forward-hp on-hp proc)
-  (define/forward/guard-monster-num forward-kill on-kill)
-  (define/forward/guard-monster-num forward-swap on-swap)
-  (define (monsters)
-    (tabs
-      @monsters
-      #:selection @monster
-      #:choice=? {~> (>< monster-number) =}
-      #:choice->label {~> (-< monster-number make-label-stats) ~a}
-      (λ (e _ms m)
-        (case e
-          ;; no close: cannot close
-          ;; no reorder: cannot reorder
-          [(select) (on-select (monster-number m))]))
-      (if-view @monster
-        (monster-view
-          @mg
-          (@> @monster {(or _
-                            ;; use a fill-in monster if none
-                            (gen (monster 1 #f 0 empty)))})
-          @env
-          #:on-condition forward-condition
-          #:on-hp forward-hp
-          #:on-kill forward-kill
-          #:on-swap forward-swap)
-        (spacer))))
+  (define/forward/guard-monster-num @monster-num forward-condition on-condition c on?)
+  (define/forward/guard-monster-num @monster-num forward-hp on-hp proc)
+  (define/forward/guard-monster-num @monster-num forward-kill on-kill)
+  (define/forward/guard-monster-num @monster-num forward-swap on-swap)
   (group
     "Monster"
     #:stretch '(#t #f)
     (cond-view
-      [(@> @monsters empty?) (hpanel (name-panel) (add-monster-button))]
+      [(@> @monsters empty?) (hpanel (name-panel @mg) (add-monster-button @mg on-new))]
       [else (vpanel (hpanel #:alignment '(center center)
-                            (name-initiative-panel)
-                            (stats-panel))
-                    (ability-panel)
-                    (monsters))])))
+                            (name-initiative-panel @mg @env @ability @ability-deck
+                                                   #:on-new on-new
+                                                   #:arbitrary-update arbitrary-update
+                                                   #:on-swap on-swap
+                                                   #:on-move-ability-card on-move-ability-card
+                                                   #:on-max-hp on-max-hp
+                                                   #:on-change-level on-change-level)
+                            (stats-panel @mg @env))
+                    (ability-panel @mg @env @ability)
+                    (monsters-panel @mg @env @monsters @monster
+                                    #:on-select on-select
+                                    #:on-condition forward-condition
+                                    #:on-hp forward-hp
+                                    #:on-kill forward-kill
+                                    #:on-swap forward-swap))])))
 
 (define (monster-ability-view @ability @mg @env)
   (rich-text-display
@@ -363,6 +174,236 @@
         (list "???")))
     @ability @mg @env)
    #:min-size '(200 60)))
+
+
+(define ((do-new @mg on-new))
+  (define @available-numbers
+    (@> @mg {~>> monster-group-monsters
+                 (map monster-number)
+                 (set-subtract (inclusive-range 1 10))
+                 (sort _ <)}))
+  (define/obs @number->elite (hash))
+  (define (on-change e)
+    (<@ @number->elite {(update-selected-tracker e _)}))
+  (define-close! close! closing-mixin)
+  (define (on-close)
+    ;; valid because called when the dialog that changes @number->elite is closed
+    (for ([(num elite?) (in-hash (@! @number->elite))])
+      (on-new num elite?)))
+  (define mixin {~> closing-mixin (esc (make-on-close-mixin on-close))})
+  ;; not setting current renderer, nor using an eventspace: dialog
+  (render
+   (dialog
+    #:mixin mixin
+    #:title "Add Monster"
+    #:style '(close-button resize-border)
+    (observable-view @available-numbers
+                     {~> sep (>< (make-monster-selector on-change))
+                         vpanel})
+    (button "Add" close!))))
+
+(define ((do-mass-condition @mg arbitrary-update))
+  (define-close! close! closing-mixin)
+  (define ((do-it on?))
+    ;; valid because inside a dialog closer
+    (define c (@! @condition))
+    (arbitrary-update
+     (λ (mg)
+       (for/fold ([mg mg])
+                 ([monster (monster-group-monsters mg)])
+         ((monster-group-update-num (monster-number monster)
+                                    (monster-update-condition c on?))
+          mg))))
+    (close!))
+  (define add (do-it #t))
+  (define remove (do-it #f))
+  (define/obs @condition (first conditions))
+  ;; not setting current renderer, nor using an eventspace: dialog
+  (render
+   (dialog
+    #:min-size '(400 #f)
+    #:mixin closing-mixin
+    #:title (@> @mg {~>> monster-group-name escape-text (~a "Mass Assign Conditions for ")})
+    (choice conditions (λ:= @condition) #:choice->label format-condition #:selection @condition)
+    (hpanel
+     (button "Add" add)
+     (button "Remove" remove)
+     (button "Cancel" close!)))))
+
+(define ((do-expire-conditions arbitrary-update))
+  (arbitrary-update
+   (λ (mg)
+     (for/fold ([mg mg])
+               ([monster (monster-group-monsters mg)])
+       ((monster-group-update-num (monster-number monster) monster-expire-conditions)
+        mg)))))
+
+(define ((change-max-hp @mg @env on-max-hp arbitrary-update))
+  (define-close! close! closing-mixin)
+  (define/obs @inc #f)
+  (define (change!)
+    (define inc (@! @inc))
+    (when inc
+      (define env (@! @env))
+      (define true-inc
+        (with-handlers ([exn:fail? (const 0)])
+          ((parse-expr inc) env)))
+      (on-max-hp (λ (_type num) (+ num true-inc)))
+      (arbitrary-update
+       (λ (mg)
+         (for/fold ([mg mg])
+                   ([monster (monster-group-monsters mg)])
+           ((monster-group-update-num (monster-number monster)
+                                      (monster-update-hp {(+ true-inc)}))
+            mg)))))
+    (close!))
+  ;; not setting current renderer, nor using an eventspace: dialog
+  (render
+   (dialog
+    #:min-size '(400 #f)
+    #:mixin closing-mixin
+    #:title (@> @mg {~>> monster-group-name escape-text (~a "Change maximum HP for ")})
+    #:style '()
+    (input ""
+           (match-lambda**
+             [{'input val} (:= @inc val)]
+             [{'return val} (:= @inc val)
+                            (change!)])
+           #:label "Enter a number or a formula to add")
+    (hpanel
+     (button "Change" change!)
+     (button "Cancel" close!)))))
+
+(define ((change-level @mg on-change-level))
+  (define-close! close! closing-mixin)
+  (define/obs @new-level #f)
+  (define (change!)
+    (close!)
+    (define new-level (@! @new-level))
+    (when new-level
+      (on-change-level new-level)))
+  ;; not setting current renderer, nor using an eventspace: dialog
+  (render
+   (dialog
+    #:mixin closing-mixin
+    #:title (@> @mg {~>> monster-group-name (~a "Change level for")})
+    #:min-size '(300 #f)
+    (choice (build-list number-of-levels identity)
+            #:choice->label ~a
+            (λ:= @new-level)
+            #:selection (@> @mg monster-group-level))
+    (hpanel
+     (button "Ok" change!)
+     (button "Cancel" close!)))))
+
+(define (name-panel @mg)
+  (text (@> @mg {~> monster-group-name escape-text}) #:font big-control-font))
+
+
+(define (add-monster-button @mg on-new)
+  (button "Add Monster" (do-new @mg on-new)
+          #:enabled?
+          (@> @mg {~>> monster-group-monsters
+                       (map monster-number)
+                       (set-subtract (inclusive-range 1 10))
+                       (not empty?)})))
+
+(define (name-initiative-panel @mg
+                               @env
+                               @ability
+                               @ability-deck
+                               #:on-new on-new
+                               #:arbitrary-update arbitrary-update
+                               #:on-swap on-swap
+                               #:on-move-ability-card on-move-ability-card
+                               #:on-max-hp on-max-hp
+                               #:on-change-level on-change-level)
+  (vpanel #:alignment '(center center)
+          #:stretch '(#f #t)
+          (name-panel @mg)
+          (text (@> @ability monster-ability-initiative->text))
+          (add-monster-button @mg on-new)
+          (button "More Actions…"
+                  (thunk
+                   ;; not setting current renderer, nor using an eventspace: dialog
+                   (render
+                    (dialog
+                     #:min-size '(400 #f)
+                     #:title (@> @mg {~>> monster-group-name escape-text (~a "More Actions for ")})
+                     (button "Expire Conditions" (do-expire-conditions arbitrary-update))
+                     (button "Swap Elite/Normal" (thunk (on-swap 'all)))
+                     (button "Mass Conditions" (do-mass-condition @mg arbitrary-update))
+                     (ability-deck-preview @ability-deck @mg @env #:on-move on-move-ability-card)
+                     (button "Change all maximum HP"
+                             (change-max-hp @mg @env on-max-hp arbitrary-update))
+                     (button "Change level" (change-level @mg on-change-level))))))))
+
+(define (stats-panel @mg @env)
+  (define (empty-stats label f)
+    (cond-view
+      [(obs-combine {~> (>< f) (not (all empty?))}
+                    (@> @mg monster-group-normal-stats)
+                    (@> @mg monster-group-elite-stats))
+       (text label)]
+      [else (spacer)]))
+  (hpanel
+   (group "Normal" (stats-view (@> @mg monster-group-normal-stats) @env)
+          #:min-size (list (* 10 (string-length "Normal")) #f))
+   (group "Stats"
+          (text "Move")
+          (text "Attack")
+          (empty-stats "Bonuses" monster-stats-bonuses)
+          (empty-stats "Effects" monster-stats-effects)
+          (empty-stats "Immunities" monster-stats-immunities)
+          (text "Max HP"))
+   (group "Elite" (stats-view (@> @mg monster-group-elite-stats) @env)
+          #:min-size (list (* 10 (string-length "Elite")) #f))))
+
+(define (monsters-panel @mg @env @monsters @monster
+                        #:on-select on-select
+                        #:on-condition forward-condition
+                        #:on-hp forward-hp
+                        #:on-kill forward-kill
+                        #:on-swap forward-swap)
+  (tabs
+   @monsters
+   #:selection @monster
+   #:choice=? {~> (>< monster-number) =}
+   #:choice->label {~> (-< monster-number make-label-stats) ~a}
+   (λ (e _ms m)
+     (case e
+       ;; no close: cannot close
+       ;; no reorder: cannot reorder
+       [(select) (on-select (monster-number m))]))
+   (if-view @monster
+     (monster-view
+      @mg
+      (@> @monster {(or _
+                        ;; use a fill-in monster if none
+                        (gen (monster 1 #f 0 empty)))})
+      @env
+      #:on-condition forward-condition
+      #:on-hp forward-hp
+      #:on-kill forward-kill
+      #:on-swap forward-swap)
+     (spacer))))
+
+(define-flow make-label-stats
+  (-< (if monster-elite? " (E)" "")
+      " (HP: " monster-current-hp ")"
+      (if (~> monster-conditions empty?) "" "*")))
+
+(define-syntax-rule (define/forward/guard-monster-num @monster-num f g args ...)
+  (define (f args ...)
+    (let ([n (@! @monster-num)])
+      (when n
+        (g n args ...)))))
+
+(define (ability-panel @mg @env @ability)
+  (group
+   "Ability"
+   #:min-size (list 200 #f)
+   (monster-ability-view @ability @mg @env)))
 
 ;; TODO: should be able to manipulate individual HP (? dialog with counter)
 ;; Takes a non-observable info-db b/c instantiated by a thunk in
