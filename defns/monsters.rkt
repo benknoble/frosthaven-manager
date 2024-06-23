@@ -205,7 +205,7 @@
          (list prefix (elements:element-pics-consume (elements:wild)) suffix)]))
   (define (consume-element x)
     (match-loop x
-      [(regexp #px"^(.*)(?i:consume)\\s*(?i:(fire|ice|air|earth|light|dark))\\s*(.*)$"
+      [(regexp #px"^(.*)(?i:consume)\\s*(?i:(fire|ice|air|earth|light|darkness|dark))\\s*(.*)$"
                (list _ prefix element suffix))
        (list prefix
              (elements:element-pics-consume (element->element-pics element))
