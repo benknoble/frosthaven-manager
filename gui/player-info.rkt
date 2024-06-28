@@ -185,7 +185,9 @@
                #:min-size '(400 #f)
                #:title (@> @player {~>> player-name escape-text (~a "More Actions for ")})
                (add-summon-button)
-               (button "Change Max. HP" change-max-hp))))))
+               (button "Change Max. HP" change-max-hp)
+               (button "Edit Name" (thunk (edit-name (player-name (@! @player))
+                                                     arbitrary-update))))))))
   ;; final view
   (group
     "Player"
@@ -238,6 +240,24 @@
                      (thunk (<@ @hp add1))
                      (thunk (<@ @hp {switch [(<= 1) _] [else sub1]})))
             (button "Summon" close!)))))
+
+(define (edit-name name update)
+  (define/obs @name name)
+  (define-close! close! closing-mixin)
+  (define (finish!)
+    (update (player-update-name (@! @name)))
+    (close!))
+  ;; not setting current renderer, nor using an eventspace: dialog
+  (render
+   (dialog
+    #:title "Edit Player name"
+    #:mixin closing-mixin
+    #:style '(close-button resize-border)
+    (input @name (match-lambda**
+                   [{'input s} (:= @name s)]
+                   [{'return s} (:= @name s) (finish!)]))
+    (hpanel (button "Accept" finish!)
+            (button "Cancel" close!)))))
 
 (define (player-input-view
           #:on-name [on-name void]
