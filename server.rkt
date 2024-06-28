@@ -119,6 +119,13 @@
   (let ([numeric-text-input (form:text-input #:attributes '([inputmode "numeric"]))])
     (form:to-number (form:to-string (form:required numeric-text-input)))))
 
+(define (input-int-optional #:value [value #f])
+  (let ([numeric-text-input (form:text-input #:attributes '([inputmode "numeric"])
+                                             #:value value)])
+    (~>> (numeric-text-input)
+         (form:default (string->bytes/utf-8 (~a value)))
+         form:to-string form:to-number)))
+
 ;;;; MAIN ENTRYPOINT
 
 (define (launch-server an-s a-send-event)
@@ -428,8 +435,10 @@
   (define id-binding (list (~s "id") (~s (~s id))))
   `(li ([id ,(player-css-id id)])
        (div ([class "smash-inline"])
-            (span ([class "player-name"])
-                  ,(player-name p))
+            (a ([href ,(embed/url {(edit-player id)})])
+               (span ([class "player-name"])
+                     ,(on ((player-name p))
+                        (if non-empty-string? _ "???"))))
             " ("
             (span ([class "player-initiative"])
                   ,(~a (player-initiative p)))
@@ -488,6 +497,42 @@
              "Summon"))
        (ol ([class "summons"])
            ,@(summons->xexprs id (player-summons p)))))
+
+(define (edit-player-form p)
+  (form:formlet
+   (form:#%#
+    (p "Player Name" ,[=> (form:to-string
+                           (form:default
+                            (string->bytes/utf-8 (player-name p))
+                            (form:text-input #:value (player-name p))))
+                          name])
+    (p "Max HP" ,[=> (input-int-optional #:value (~a (player-max-hp p)))
+                     max-hp])
+    (p ,[=> (form:submit "Edit Player") _submit]))
+   (list name max-hp)))
+
+(define/page (edit-player player-id)
+  (define p
+    (~>> ((s)) state-@creatures @!
+         (findf {~> creature-id (equal? player-id)})
+         ;; fallible, but let's assume we have a valid player-id
+         creature-v))
+  (define (handle-form-response r)
+    (define form-response
+      (with-handlers ([exn:fail? values])
+        (form:formlet-process (edit-player-form p) r)))
+    (match form-response
+      [(list (? string? new-name) (? natural? new-max-hp))
+       (update-player-info player-id new-name new-max-hp)]
+      [_ (void)])
+    (my-redirect/get ((reverse-uri) overview)))
+  (response/xexpr
+   `(html
+     (head (title "Edit Player") ,@common-heads)
+     (body
+      (form ([action ,(embed/url handle-form-response)]
+             [method "post"])
+            ,@(form:formlet-display (edit-player-form p)))))))
 
 (define set-initiative
   (form:formlet
@@ -756,7 +801,8 @@
       (define data
         (hash 'id css-id
               'data (hash
-                      'player-name (player-name p)
+                      'player-name (on ((player-name p))
+                                     (if non-empty-string? _ "???"))
                       'player-initiative (~a (player-initiative p))
                       'player-HP (player->hp-text p)
                       'player-XP (~a (player-xp p))
@@ -891,6 +937,12 @@
 (define (set-player-initiative id init)
   (do (<@ (state-@creatures (s))
           {(update-players id {(player-set-initiative init)})})))
+
+(define (update-player-info id new-name new-max-hp)
+  (do (<@ (state-@creatures (s))
+          {(update-players id
+                           {~> (esc (player-update-name new-name))
+                               (esc (player-act-on-max-hp (const new-max-hp)))})})))
 
 (define (loot! req return)
   (match (req->player-id req)
