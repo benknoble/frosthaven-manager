@@ -115,7 +115,7 @@
 (define selector:condition? (make-coerce-safe? selector:condition))
 
 ;; formlet shorthand
-(define input-int
+(define (input-int)
   (let ([numeric-text-input (form:text-input #:attributes '([inputmode "numeric"]))])
     (form:to-number (form:to-string (form:required numeric-text-input)))))
 
@@ -537,7 +537,7 @@
 (define set-initiative
   (form:formlet
    (form:#%#
-    (p "Initiative" ,{=> input-int init})
+    (p "Initiative" ,{=> (input-int) init})
     (p ,{=> (form:submit "Set Initiative") _submit}))
    init))
 
@@ -603,7 +603,7 @@
   (form:formlet
    (form:#%#
     (p "Name:" ,{=> form:input-string name})
-    (p "Max HP:" ,{=> input-int max-hp})
+    (p "Max HP:" ,{=> (input-int) max-hp})
     (p ,{=> (form:submit "Summon") _submit}))
    (list name max-hp)))
 
