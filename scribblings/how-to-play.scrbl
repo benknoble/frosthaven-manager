@@ -6,6 +6,8 @@
 
 @title{How to Play}
 
+At any time, see the @onscreen{Help} menu for more information.
+
 Many of the elements of playing a scenario can be programmed, to be saved and
 re-used for later play or to save you the tedium of clicking through screens in
 the Frosthaven Manager. See @secref{Programming_a_Scenario} for more details.
@@ -198,6 +200,10 @@ re-order the creature list by initiative.
 In the middle of the screen is the creature list. There is an entry in this list
 for each player and for each monster group.
 
+Many items have a @onscreen{More Actions} button that groups advanced actions
+for play. You are encouraged to experiment with actions listed there like
+creating summons, manipulating health and conditions, and more.
+
 @subsubsection{Player Controls}
 
 Each player has the same controls, labelled by the player's name. On the far
@@ -270,12 +276,14 @@ button in the @onscreen{File} menu. You can also load a saved game using the
 
 In the @onscreen{File} menu, you will also find the following utilities:
 @itemlist[
-    @item{Formula editor. Evaluates formulas as specified in @secref{Bestiary_Format_Reference} without the @tech{game text} quotes.}
     @item{Launch server. Launches a local server. Have your players open the address shown in their web browsers and enjoy interacting with the app!}
 ]
 
 In the @onscreen{Edit} menu, you will also find:
 @itemlist[
+    @item{Edit Level. Allows editing the scenario level.}
+    @item{Formula editor. Evaluates formulas as specified in @secref{Bestiary_Format_Reference} without the @tech{game text} quotes.}
+    @item{Manage Prompts. Permits adding and removing round prompts.}
     @item{@onscreen{Modify Monster Deck}. Allows removing and re-adding cards to
     the monster modifier deck. This is best done before play begins, but may be
     done at any time. Use the @onscreen{Shuffle Deck} button mid-scenario to

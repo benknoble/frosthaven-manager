@@ -117,8 +117,8 @@ for modifying @tech[#:doc '(lib "rebellion/main.scrbl")]{enum types} from
 
 @section{Debugging}
 
-The main application has a debug menu that can run various tools, such as
-getting a flickering canvas when GC occurs to diagnose memory issues.
+The main application has a @onscreen{Debug} menu that can run various tools,
+such as getting a flickering canvas when GC occurs to diagnose memory issues.
 
 There is also a @filepath{gui/deserialized-state.rkt} module that can be run
 with
@@ -127,8 +127,8 @@ with
 racket -l frosthaven-manager/gui/deserialized-state <save-file>
 }|
 
-to debug the state saved with the Save Game menu item; this is one useful way to
-capture internal state and inspect it.
+to debug the state saved with the @onscreen{Save Game} menu item; this is one
+useful way to capture internal state and inspect it.
 
 The main application accepts a @tt{--debug} flag to start GUI Easy's debugger
 and Racket debugger, too. The latter can be connected to with @tt{raco dbg} if
