@@ -115,16 +115,26 @@
 (define selector:condition? (make-coerce-safe? selector:condition))
 
 ;; formlet shorthand
-(define (input-int)
-  (let ([numeric-text-input (form:text-input #:attributes '([inputmode "numeric"]))])
-    (form:to-number (form:to-string (form:required numeric-text-input)))))
+(define input-int
+  (make-keyword-procedure
+   (λ (kws kw-vals . rest)
+     (define numeric-text-input
+       (keyword-apply form:text-input kws kw-vals rest
+                      #:attributes '([inputmode "numeric"])))
+     (form:to-number (form:to-string (form:required numeric-text-input))))))
 
-(define (input-int-optional #:value [value #f])
-  (let ([numeric-text-input (form:text-input #:attributes '([inputmode "numeric"])
-                                             #:value value)])
-    (~>> (numeric-text-input)
-         (form:default (string->bytes/utf-8 (~a value)))
-         form:to-string form:to-number)))
+(define input-int-optional
+  (make-keyword-procedure
+   (λ (kws kw-vals . rest)
+     ;; extract #:value for form:default
+     (define value (~>> (kws kw-vals) (map cons) (assoc '#:value) (and _ cdr)))
+     (define numeric-text-input
+       ;; #:value will be supplied automatically if needed
+       (keyword-apply form:text-input kws kw-vals rest
+                      #:attributes '([inputmode "numeric"])))
+     (~>> (numeric-text-input)
+          (form:default (string->bytes/utf-8 (~a value)))
+          form:to-string form:to-number))))
 
 ;;;; MAIN ENTRYPOINT
 
