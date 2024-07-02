@@ -51,6 +51,7 @@
          frosthaven-manager/gui/helpers
          frosthaven-manager/gui/table
          frosthaven-manager/gui/rich-text-display
+         frosthaven-manager/gui/level-picker
 
          frosthaven-manager/defns
          frosthaven-manager/manager
@@ -288,10 +289,7 @@
     #:mixin closing-mixin
     #:title (@> @mg {~>> monster-group-name (~a "Change level for")})
     #:min-size '(300 #f)
-    (choice (build-list number-of-levels identity)
-            #:choice->label ~a
-            (λ:= @new-level)
-            #:selection (@> @mg monster-group-level))
+    (level-picker #:choose (λ:= @new-level) #:selection (@> @mg monster-group-level))
     (hpanel
      (button "Ok" change!)
      (button "Cancel" close!)))))

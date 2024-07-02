@@ -43,7 +43,8 @@
          frosthaven-manager/gui/render
          frosthaven-manager/gui/rewards
          frosthaven-manager/gui/round-prompts
-         frosthaven-manager/gui/rich-text-display)
+         frosthaven-manager/gui/rich-text-display
+         frosthaven-manager/gui/level-picker)
 
 (define (manager s)
   (application-about-handler do-about)
@@ -394,10 +395,7 @@
      (dialog
       #:mixin closing-mixin
       #:title "Change Scenario Level"
+      #:style '()
       (hpanel
-       (choice #:label "Scenario Level"
-               (build-list number-of-levels identity)
-               #:choice->label ~a
-               on-change
-               #:selection @level)
+       (level-picker #:choose on-change #:selection @level #:label "Scenario Level")
        (button "Ok" close!)))))))

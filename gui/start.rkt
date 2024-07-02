@@ -11,7 +11,8 @@
          racket/gui/easy
          racket/gui/easy/contract
          frosthaven-manager/defns
-         frosthaven-manager/gui/font)
+         frosthaven-manager/gui/font
+         frosthaven-manager/gui/level-picker)
 
 (define (start-view @level @num-players #:on-level [on-level void] #:on-player [on-player void])
   (vpanel
@@ -22,11 +23,7 @@
     (group
       "Party Information"
       #:stretch '(#f #f)
-      (choice #:label "Scenario Level"
-              (build-list number-of-levels identity)
-              #:choice->label ~a
-              on-level
-              #:selection @level)
+      (level-picker #:choose on-level #:selection @level #:label "Scenario Level")
       (choice #:label "Number of Players"
               (build-list (sub1 max-players) (curry + 2))
               #:choice->label ~a

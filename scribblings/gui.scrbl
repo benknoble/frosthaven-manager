@@ -11,6 +11,7 @@ This collection provides modules for operating GUIs.
 @include-section{gui/formula-editor.scrbl}
 @include-section{gui/helpers.scrbl}
 @include-section{gui/level-info.scrbl}
+@include-section{gui/level-picker.scrbl}
 @include-section{gui/loot.scrbl}
 @include-section{gui/manager.scrbl}
 @include-section{gui/markdown.scrbl}
