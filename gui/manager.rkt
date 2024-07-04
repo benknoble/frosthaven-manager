@@ -65,6 +65,7 @@
       (menu "Edit"
             (edit-level-menu-item (state-@level s)
                                   (λ:= (state-@level s)))
+            (edit-monster-groups-menu-item s)
             (formula-menu-item (state-@env s))
             (manage-prompt-menu-item (state-@prompts s)
                                      #:on-add (add-prompt s)
@@ -398,3 +399,22 @@
       (hpanel
        (level-picker #:choose on-change #:selection @level #:label "Scenario Level")
        (button "Ok" close!)))))))
+
+(define (edit-monster-groups-menu-item s)
+  (menu-item
+   #:enabled? (@> (state-@in-draw? s) not)
+   "Edit Monster Groups"
+   (thunk
+    (define-close! close! closing-mixin)
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
+     (dialog
+      #:title "Edit Monster Groups"
+      #:style '(close-button resize-border)
+      #:size '(500 450)
+      #:mixin closing-mixin
+      (multi-monster-picker (state-@info-db s)
+                            (state-@level s)
+                            (state-@env s)
+                            #:on-change (add-or-remove-monster-group s))
+      (button "Finish" close!))))))
