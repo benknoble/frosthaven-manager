@@ -314,9 +314,8 @@
             (const num))
     ;; Probably this could be done unconditionally, since
     ;; draw-new-card-mid-round-if-needed checks that there isn't already a card
-    ;; flipped. But this also probably doesn't hurt? Unless length becomes a
-    ;; perf. issue, which is unlikely.
-    (when (@! (@> @mg {~> monster-group-monsters length (= 1)}))
+    ;; flipped. But this also probably doesn't hurt?
+    (when (@! (@> @mg {~> monster-group-monsters cdr empty?}))
       (draw-new-card-mid-round-if-needed s (@! (@> @mg monster-group-set-name)))))
   (define (select num) (update values (const num)))
   (define/match (swap _who)
