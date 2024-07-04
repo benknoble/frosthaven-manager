@@ -46,12 +46,13 @@
          frosthaven-manager/gui/rich-text-display
          frosthaven-manager/gui/level-picker)
 
+(define modifier
+  (case (system-type 'os)
+    [(macosx) 'cmd]
+    [else 'ctl]))
+
 (define (manager s)
   (application-about-handler do-about)
-  (define modifier
-    (case (system-type 'os)
-      [(macosx) 'cmd]
-      [else 'ctl]))
   (window
     #:title "Frosthaven Manager"
     #:size '(800 600)
@@ -65,6 +66,7 @@
       (menu "Edit"
             (edit-level-menu-item (state-@level s)
                                   (λ:= (state-@level s)))
+            (add-monster-group-menu-item s)
             (formula-menu-item (state-@env s))
             (manage-prompt-menu-item (state-@prompts s)
                                      #:on-add (add-prompt s)
@@ -205,21 +207,7 @@
           #:key creature-id
           (make-creature-view s)
           #:style '(vertical vscroll))
-        (button "Add Monster Group"
-                (thunk
-                  (define @monster-names
-                    (@> (state-@creatures s)
-                        {~> sep (pass creature-is-mg*?)
-                            (>< (~> creature-v monster-group*-mg monster-group-name)) collect}))
-                  (add-monster-group
-                    (state-@info-db s)
-                    (state-@level s)
-                    @monster-names
-                    (state-@env s)
-                    #:on-group
-                    (λ (g)
-                      ((add-or-remove-monster-group s) `(add ,g))
-                      (draw-new-card-mid-round-if-needed s (monster-group-set-name g)))))))
+        (button "Add Monster Group" (thunk (do-add-monster-group s))))
       ;; right
       (vpanel
         #:stretch '(#f #t)
@@ -398,3 +386,24 @@
       (hpanel
        (level-picker #:choose on-change #:selection @level #:label "Scenario Level")
        (button "Ok" close!)))))))
+
+(define (add-monster-group-menu-item s)
+  (menu-item
+   "Add Monster Group"
+   (thunk (do-add-monster-group s))
+   #:shortcut (list modifier #\n)))
+
+(define (do-add-monster-group s)
+  (define @monster-names
+    (@> (state-@creatures s)
+        {~> sep (pass creature-is-mg*?)
+            (>< (~> creature-v monster-group*-mg monster-group-name)) collect}))
+  (add-monster-group
+   (state-@info-db s)
+   (state-@level s)
+   @monster-names
+   (state-@env s)
+   #:on-group
+   (λ (g)
+     ((add-or-remove-monster-group s) `(add ,g))
+     (draw-new-card-mid-round-if-needed s (monster-group-set-name g)))))
