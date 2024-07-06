@@ -7,21 +7,26 @@ evtSource.addEventListener("element", (event) => {
 });
 
 evtSource.addEventListener('player', (event) => {
-  const {id, data, summons} = JSON.parse(event.data);
-  for (const css_class in data) {
-    const element = document.querySelector(`#${id} .${css_class}`);
-    const d = data[css_class];
-    const typ = typeof d;
-    if (typ === 'string') {
-      element.innerHTML = d;
-    } else if (typ === 'object') {
-      for (const attr in d) {
-        element[attr] = d[attr];
+  const {id, data, summons, xexpr} = JSON.parse(event.data);
+  if (document.querySelector(`#${id}`) !== null) {
+    for (const css_class in data) {
+      const element = document.querySelector(`#${id} .${css_class}`);
+      const d = data[css_class];
+      const typ = typeof d;
+      if (typ === 'string') {
+        element.innerHTML = d;
+      } else if (typ === 'object') {
+        for (const attr in d) {
+          element[attr] = d[attr];
+        }
       }
     }
+    summons_element = document.querySelector(`#${id} ol.summons`);
+    summons_element.innerHTML = summons.join('');
+  } else {
+    const players = document.querySelector('ul.creatures');
+    players.insertAdjacentHTML('afterbegin', xexpr);
   }
-  summons_element = document.querySelector(`#${id} ol.summons`);
-  summons_element.innerHTML = summons.join('');
 });
 
 evtSource.addEventListener('monster-group', (event) => {
@@ -45,7 +50,6 @@ evtSource.addEventListener('monster-group', (event) => {
 
 evtSource.addEventListener('reorder-ids', (event) => {
   const ids = JSON.parse(event.data);
-  console.log(ids);
   const creatures = document.querySelector('ul.creatures');
   let newCreatures = [];
   for (const id of ids) {

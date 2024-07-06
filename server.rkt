@@ -821,7 +821,9 @@
                           (active-conditions->xexpr id-binding)
                           (cons 'span _)
                           xexpr->string))
-              'summons (map xexpr->string (summons->xexprs id (player-summons p)))))
+              'summons (map xexpr->string (summons->xexprs id (player-summons p)))
+              'xexpr (xexpr->string `(li (p ([id ,css-id])
+                                            "New players have been added; please refresh the page.")))))
       (displayln "event: player" out)
       (display (format "data: ~a" (jsexpr->string data)) out)
       (displayln "\n\n" out)]
