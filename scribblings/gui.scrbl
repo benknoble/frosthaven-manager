@@ -18,6 +18,7 @@ This collection provides modules for operating GUIs.
 @include-section{gui/mixins.scrbl}
 @include-section{gui/monster-modifier.scrbl}
 @include-section{gui/monsters.scrbl}
+@include-section{gui/number-players.scrbl}
 @include-section{gui/player-info.scrbl}
 @include-section{gui/render.scrbl}
 @include-section{gui/rewards.scrbl}
