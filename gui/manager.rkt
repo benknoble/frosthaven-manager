@@ -44,7 +44,8 @@
          frosthaven-manager/gui/rewards
          frosthaven-manager/gui/round-prompts
          frosthaven-manager/gui/rich-text-display
-         frosthaven-manager/gui/level-picker)
+         frosthaven-manager/gui/level-picker
+         frosthaven-manager/gui/number-players)
 
 (define modifier
   (case (system-type 'os)
@@ -66,6 +67,7 @@
       (menu "Edit"
             (edit-level-menu-item (state-@level s)
                                   (λ:= (state-@level s)))
+            (edit-players-menu-item s)
             (add-monster-group-menu-item s)
             (formula-menu-item (state-@env s))
             (manage-prompt-menu-item (state-@prompts s)
@@ -378,6 +380,7 @@
    "Edit Scenario Level"
    (thunk
     (define-close! close! closing-mixin)
+    ;; not setting current renderer, nor using an eventspace: dialog
     (render
      (dialog
       #:mixin closing-mixin
@@ -407,3 +410,24 @@
    (λ (g)
      ((add-or-remove-monster-group s) `(add ,g))
      (draw-new-card-mid-round-if-needed s (monster-group-set-name g)))))
+
+(define (edit-players-menu-item s)
+  (menu-item
+   "Edit Number of Players"
+   (thunk
+    (define-close! close! closing-mixin)
+    (define/obs @num-players (@! (state-@num-players s)))
+    (define (finish!)
+      (:= (state-@num-players s) (@! @num-players))
+      (setup-players s)
+      (close!))
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
+     (dialog
+      #:mixin closing-mixin
+      #:title "Change Number of Players"
+      #:style '()
+      (number-players-picker #:choose (λ:= @num-players) #:selection @num-players)
+      (hpanel
+       (button "Ok" finish!)
+       (button "Cancel" close!)))))))
