@@ -397,17 +397,24 @@
   (creature i (make-player "" 1)))
 
 (define (setup-players s)
+  (define n-desired-players (@! (state-@num-players s)))
   (define cs (@! (state-@creatures s)))
-  (define n-players (@! (state-@num-players s)))
-  (define n-cs (length (filter {~> creature-v player?} cs)))
+  (define-values (ps mgs)
+    (~> (cs) sep
+        (partition
+         [(~> creature-v player?) collect]
+         [(~> creature-v monster-group*?) collect])))
+  (define n-actual-players (length ps))
   (cond
-    [(< n-cs n-players)
-     (:= (state-@creatures s)
-         (cs . append . (build-list (- n-players n-cs) make-player-creature)))]
-    [(> n-cs n-players)
+    [(< n-actual-players n-desired-players)
+     (define next-id (~> (cs) (sep creature-id) (rectify -1) max add1))
+     (<@ (state-@creatures s)
+         {(append (build-list (- n-desired-players n-actual-players)
+                              (λ (i)
+                                (make-player-creature (+ next-id i)))))})]
+    [(> n-actual-players n-desired-players)
      ;; throw away old values
-     (:= (state-@creatures s)
-         (build-list n-players make-player-creature))]))
+     (:= (state-@creatures s) (append (take ps n-desired-players) mgs))]))
 
 (define (update-players creatures k f)
   (define (maybe-update-player e)
