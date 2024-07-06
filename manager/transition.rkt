@@ -42,17 +42,7 @@
   (:= (state-@mode s) 'start))
 
 (define ((to-input-player-info s))
-  (define cs (@! (state-@creatures s)))
-  (define n-players (@! (state-@num-players s)))
-  (define n-cs (length (filter {~> creature-v player?} cs)))
-  (cond
-    [(< n-cs n-players)
-     (:= (state-@creatures s)
-         (cs . append . (build-list (- n-players n-cs) make-player-creature)))]
-    [(> n-cs n-players)
-     ;; throw away old values
-     (:= (state-@creatures s)
-         (build-list n-players make-player-creature))])
+  (setup-players s)
   (:= (state-@mode s) 'input-player-info))
 
 (define ((to-build-loot-deck s))

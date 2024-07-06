@@ -66,6 +66,7 @@
     [undo! (-> state? undo? any)]
     [undoable? (-> undo? (obs/c boolean?))]
     [make-player-creature (-> any/c creature?)]
+    [setup-players (-> state? any)]
     [update-players (-> (listof creature?) any/c (-> player? player?) (listof creature?))]
     [update-monster-groups (->* {(listof creature?)
                                  any/c
@@ -394,6 +395,19 @@
 
 (define (make-player-creature i)
   (creature i (make-player "" 1)))
+
+(define (setup-players s)
+  (define cs (@! (state-@creatures s)))
+  (define n-players (@! (state-@num-players s)))
+  (define n-cs (length (filter {~> creature-v player?} cs)))
+  (cond
+    [(< n-cs n-players)
+     (:= (state-@creatures s)
+         (cs . append . (build-list (- n-players n-cs) make-player-creature)))]
+    [(> n-cs n-players)
+     ;; throw away old values
+     (:= (state-@creatures s)
+         (build-list n-players make-player-creature))]))
 
 (define (update-players creatures k f)
   (define (maybe-update-player e)

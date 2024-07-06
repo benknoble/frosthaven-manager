@@ -132,6 +132,13 @@ Make a creature with @racket[creature-id] @racket[i] and @racket[creature-v] a
 @racket[player?].
 }
 
+@defproc[(setup-players [s state?]) any]{
+Update @racket[(state-|@|creatures s)] based on the number of players
+@racket[(state-|@|num-players s)]: new blank players are added if the number of
+actual players is smaller than the requested number. Any extras are removed if
+the actual number is larger than the requested number.
+}
+
 @deftogether[(
     @defproc[(update-players [creatures (listof creature?)]
                              [k any/c]
