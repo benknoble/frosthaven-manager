@@ -70,3 +70,8 @@ evtSource.addEventListener('text', (event) => {
   const {id, text} = JSON.parse(event.data);
   document.querySelector(`#${id}`).innerHTML = text;
 });
+
+evtSource.addEventListener('alert', (event) => {
+  const text = JSON.parse(event.data);
+  alert(text);
+});

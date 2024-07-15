@@ -181,6 +181,11 @@
     (λ (in-draw?)
       (thread
        (thunk
+        (define N (@! (state-@round an-s)))
+        (multicast-channel-put ch `(alert ,(if in-draw?
+                                               (format "Start of Round ~a" N)
+                                               ;; state-@round has already incremented
+                                               (format "End of Round ~a" (sub1 N)))))
         (define env (@! (state-@env an-s)))
         (define ads (@! (state-@ability-decks an-s)))
         (define cs (@! (state-@creatures an-s)))
@@ -862,6 +867,10 @@
      (define data (hash 'id (~a id) 'text s))
      (displayln "event: text" out)
      (display (format "data: ~a" (jsexpr->string data)) out)
+     (displayln "\n\n" out)]
+    [`(alert ,(? string? text))
+     (displayln "event: alert" out)
+     (display (format "data: ~a" (jsexpr->string text)) out)
      (displayln "\n\n" out)]))
 
 ;;;; ACTIONS
