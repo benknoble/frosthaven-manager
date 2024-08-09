@@ -99,10 +99,7 @@
             (λ (event init-str)
               (when (equal? event 'return)
                 (close!))
-              (cond
-                [(string->number init-str)
-                 =>
-                 (λ (init) (when (<= 0 init 99) (on-initiative init)))]))
+              (cond [(string->number init-str) => on-initiative]))
             #:label @init-label)))))
   (define name-initiative-panel
     (vpanel

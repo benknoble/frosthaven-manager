@@ -35,7 +35,7 @@
 
 (module+ test (require rackunit))
 
-(define initiative? (integer-in 0 99))
+(define initiative? exact-integer?)
 
 (define ability? string?)
 
