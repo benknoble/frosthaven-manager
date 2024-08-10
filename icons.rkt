@@ -8,11 +8,14 @@
    [pull (-> pict?)]
    [move (-> pict?)]
    [jump (-> pict?)]
-   [teleport (-> pict?)]))
+   [teleport (-> pict?)]
+   [attack (-> pict?)]))
 
 (require pict
          pict/color
          pict/shadow
+         pict/flash
+         (only-in 2htdp/image triangle)
          racket/draw
          frosthaven-manager/curlique
          frosthaven-manager/aoe-images)
@@ -161,6 +164,28 @@
       (inset 5 5)
       highlight))
 
+(define (attack)
+  (define burst
+    (~> (70 70 6 0.68 (/ pi 4))
+        (-< (~> filled-flash orange) outline-flash)
+        cc-superimpose))
+  (define sword
+    (vc-append
+     (cc-superimpose (triangle 10 "solid" "white")
+                     (hc-append (rotate (vline 1 10) (* pi -1/6))
+                                (rotate (vline 1 10) (* pi 1/6))))
+     (filled-rectangle 10 35 #:color "white")
+     (filled-rounded-rectangle 28 6 -0.5 #:color "white")
+     (filled-rounded-rectangle 7 12 -0.5 #:color "white")
+     (filled-rounded-rectangle 14 6 -0.5 #:color "white")))
+  (~> (sword)
+      (translate 19 28)
+      (pin-under 0 0 burst)
+      (refocus sword) panorama
+      (rotate (* pi -1/3))
+      highlight
+      (scale 1/2 1/2)))
+
 (module+ main
   (require (only-in racket/gui))
   (for ([p (list target
@@ -169,5 +194,6 @@
                  pull
                  move
                  jump
-                 teleport)])
+                 teleport
+                 attack)])
     (show-pict (p))))

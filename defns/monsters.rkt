@@ -254,6 +254,12 @@
                (list _ prefix suffix))
        ;; NOTE unscaled
        (list prefix (icons:teleport) suffix)]))
+  (define (attack-icon x)
+    (match-loop x
+      [(regexp #px"^(.*)(?i:attack)(\\s+[+-]?\\d+.*)$"
+               (list _ prefix suffix))
+       ;; NOTE unscaled
+       (list prefix (icons:attack) suffix)]))
   (define replacements
     (list bulleted
           attack
@@ -270,7 +276,8 @@
           push-pull
           move-icon
           jump
-          teleport))
+          teleport
+          attack-icon))
   (for/fold ([result (list (regexp-replaces ability-text replacements))])
             ([pict-replacement (in-list pict-replacements)])
     (append-map (only-on-text pict-replacement) result)))
@@ -296,38 +303,38 @@
     (test-check name check-model-equal? actual expected))
   (test-model-equal? "Simple Attack"
                      (monster-ability-ability->rich-text "Attack +1" ability-card mg env)
-                     (list "• Attack 3 (E:4, wound)"))
+                     (list "• " (icons:attack) " 3 (E:4, wound)"))
   (test-model-equal? "Simple Attack 1"
                      (monster-ability-ability->rich-text "Attack +1" ability-card mg1 env)
-                     (list "• Attack 4 (E:5), wound"))
+                     (list "• " (icons:attack) " 4 (E:5), wound"))
   (test-model-equal? "Simple Attack 2"
                      (monster-ability-ability->rich-text "Attack +1" ability-card mg2 env)
-                     (list "• Attack 5 (E:6, stun), wound"))
+                     (list "• " (icons:attack) " 5 (E:6, stun), wound"))
   (test-model-equal? "Simple Attack 3"
                      (monster-ability-ability->rich-text "Attack +1" ability-card mg3 env)
-                     (list "• Attack 6 (N:muddle) (E:7, stun), wound"))
+                     (list "• " (icons:attack) " 6 (N:muddle) (E:7, stun), wound"))
   (test-model-equal? "Attack, X"
                      (monster-ability-ability->rich-text "Attack +1, Push 1" ability-card mg3 env)
-                     (list "• Attack 6 (N:muddle) (E:7, stun), wound, " (scale-icon (icons:push)) " 1"))
+                     (list "• " (icons:attack) " 6 (N:muddle) (E:7, stun), wound, " (scale-icon (icons:push)) " 1"))
   (test-model-equal? "Simple Move"
                      (monster-ability-ability->rich-text "Move +1" ability-card mg env)
                      (list "• " (scale-icon (icons:move)) " 3 (E:3)"))
   (test-model-equal? "Granted Attack"
                      (monster-ability-ability->rich-text "Grant Piranha: Attack +1" ability-card mg env)
-                     (list "• Grant Piranha: Attack +1"))
+                     (list "• Grant Piranha: " (icons:attack) " +1"))
   (test-model-equal? "Granted Move"
                      (monster-ability-ability->rich-text "Grant Piranha: Move +1" ability-card mg env)
                      (list "• Grant Piranha: " (scale-icon (icons:move)) " +1"))
   (test-model-equal? "Controlled Attack"
                      (monster-ability-ability->rich-text "Control Enemy: Attack +1" ability-card mg env)
-                     (list "• Control Enemy: Attack +1"))
+                     (list "• Control Enemy: " (icons:attack) " +1"))
   (test-model-equal? "Controlled Move"
                      (monster-ability-ability->rich-text "Control Enemy: Move +1" ability-card mg env)
                      (list "• Control Enemy: " (scale-icon (icons:move)) " +1"))
   (test-model-equal? "Complicated Targeting"
                      (monster-ability-ability->rich-text "Attack -2, Target 2, +2 Targets, Range 3, Push 2" ability-card mg env)
                      (list
-                      "• Attack 0 (E:1, wound), "
+                      "• " (icons:attack) " 0 (E:1, wound), "
                       (scale-icon (icons:target)) " 2"
                       ", " "+2 " (scale-icon (icons:target)) ", "
                       (scale-icon (icons:range)) " 3, "
