@@ -45,7 +45,8 @@
          frosthaven-manager/gui/round-prompts
          frosthaven-manager/gui/rich-text-display
          frosthaven-manager/gui/level-picker
-         frosthaven-manager/gui/number-players)
+         frosthaven-manager/gui/number-players
+         frosthaven-manager/gui/round-number)
 
 (define modifier
   (case (system-type 'os)
@@ -69,6 +70,7 @@
                                   (λ:= (state-@level s)))
             (edit-players-menu-item s)
             (add-monster-group-menu-item s)
+            (edit-round-number-menu-item s)
             (formula-menu-item (state-@env s))
             (manage-prompt-menu-item (state-@prompts s)
                                      #:on-add (add-prompt s)
@@ -431,3 +433,14 @@
       (hpanel
        (button "Ok" finish!)
        (button "Cancel" close!)))))))
+
+
+(define (edit-round-number-menu-item s)
+  (menu-item
+   "Edit round number"
+   (thunk
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render
+     (round-number-modifier
+      (state-@round s)
+      #:new-round-number (λ (p) (<@ (state-@round s) p)))))))
