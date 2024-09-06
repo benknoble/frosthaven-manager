@@ -152,32 +152,15 @@
            (button "Next" (to-choose-monster-db s)))))
 
 (define (choose-monster-db-view s)
-  (define-error-text @error-text with-error-text)
-  (vpanel
-    (db-view (state-@info-db s)
-             (state-@ability-db s)
-             (@> (state-@creatures s) {~> sep (pass creature-is-mg*?)
-                                          (>< (~> creature-v monster-group*-mg)) collect}))
-    (vpanel #:stretch '(#f #f)
-            (hpanel #:stretch '(#t #f)
-                    (button "Open Bestiary or Foes"
-                            (thunk
-                              (with-error-text
-                                (init-dbs-and-foes
-                                  (or (get-file/filter "Bestiary or Foes" '("Bestiary" "*.rkt")) default-monster-db)
-                                  s))))
-                    (button "Use Default Bestiary"
-                            (thunk (with-error-text (init-dbs default-monster-db s)))))
-            (cond-view
-              [(@> @error-text non-empty-string?)
-               (hpanel (text "Error message:" #:color "red")
-                       (rich-text-display (@> @error-text {~> (string-split "\n") (add-between newline)})
-                                          #:min-size '(#f 60)))]
-              [else (spacer)]))
-    (hpanel #:stretch '(#t #f)
-            #:alignment '(center center)
-            (button "Back" (to-add-prompts s))
-            (button "Next" (to-choose-monsters-or-play s) #:enabled? (@> (state-@bestiary-path s) path-string?)))))
+  (apply
+   vpanel
+   (append
+    (db-picker* s)
+    (list
+     (hpanel #:stretch '(#t #f)
+             #:alignment '(center center)
+             (button "Back" (to-add-prompts s))
+             (button "Next" (to-choose-monsters-or-play s) #:enabled? (@> (state-@bestiary-path s) path-string?)))))))
 
 (define (choose-monsters-view s)
   (vpanel
@@ -374,6 +357,30 @@
      (render/eventspace
       #:eventspace closing-eventspace
       (player-rewards-view @num-players @level @players #:mixin close-custodian-mixin))))))
+
+(define (db-picker* s)
+  (define-error-text @error-text with-error-text)
+  (list
+   (db-view (state-@info-db s)
+            (state-@ability-db s)
+            (@> (state-@creatures s) {~> sep (pass creature-is-mg*?)
+                                         (>< (~> creature-v monster-group*-mg)) collect}))
+   (vpanel #:stretch '(#f #f)
+           (hpanel #:stretch '(#t #f)
+                   (button "Open Bestiary or Foes"
+                           (thunk
+                            (with-error-text
+                             (init-dbs-and-foes
+                              (or (get-file/filter "Bestiary or Foes" '("Bestiary" "*.rkt")) default-monster-db)
+                              s))))
+                   (button "Use Default Bestiary"
+                           (thunk (with-error-text (init-dbs default-monster-db s)))))
+           (cond-view
+             [(@> @error-text non-empty-string?)
+              (hpanel (text "Error message:" #:color "red")
+                      (rich-text-display (@> @error-text {~> (string-split "\n") (add-between newline)})
+                                         #:min-size '(#f 60)))]
+             [else (spacer)]))))
 
 ;;;; Menu Items
 
