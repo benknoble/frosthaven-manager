@@ -69,6 +69,7 @@
             (edit-level-menu-item (state-@level s)
                                   (λ:= (state-@level s)))
             (edit-players-menu-item s)
+            (edit-bestiary-menu-item s)
             (add-monster-group-menu-item s)
             (edit-round-number-menu-item s)
             (formula-menu-item (state-@env s))
@@ -452,3 +453,21 @@
      (round-number-modifier
       (state-@round s)
       #:new-round-number (λ (p) (<@ (state-@round s) p)))))))
+
+(define (edit-bestiary-menu-item s)
+  (define (get-dialog)
+    (define-close! close! closing-mixin)
+    (apply
+     dialog
+     #:mixin closing-mixin
+     #:title "Choose Bestiary"
+     #:size '(600 400)
+     (append
+      (db-picker* s)
+      (list
+       (button "Ok" close!)))))
+  (menu-item
+   "Choose Bestiary"
+   (thunk
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render (get-dialog)))))
