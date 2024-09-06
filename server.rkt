@@ -1000,8 +1000,22 @@
     [(and c (not #f)) (do-player/id pid (const #f) (update-player-summon sid (summon-remove-condition c)))]
     [_ (void)]))
 
-(define/monster kill-monster (_r => [mgid mn])
-  (do-monster-group/mgid mgid (monster-group-remove mn) {~> 2> monster-group-first-monster}))
+(define/monster kill-monster (_r => [mgid num])
+  (do
+    (define g (box #f))
+    (<@ (state-@creatures (s))
+        (λ (cs)
+          (define cs* (update-monster-groups
+                       cs
+                       mgid
+                       (λ (mg)
+                         (define new-mg ((monster-group-remove num) mg))
+                         (set-box! g new-mg)
+                         new-mg)
+                       {~> 2> monster-group-first-monster}))
+          cs*))
+    (when (~> (g) unbox monster-group-monsters empty?)
+      ((add-or-remove-monster-group (s)) `(remove ,(unbox g))))))
 
 (define/monster decrement-monster-hp (_r => [mgid mn])
   (do-monster-group/n mgid mn {switch [(not monster-dead?) (esc (monster-update-hp sub1))]}))

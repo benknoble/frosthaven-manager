@@ -283,8 +283,20 @@
   (define (update-hp num proc)
     (update-by-num num (monster-update-hp proc)))
   (define (kill num)
-    (update (monster-group-remove num)
-            {~> 2> monster-group-first-monster}))
+    (define g (box #f))
+    (<@ (state-@creatures s)
+        (λ (cs)
+          (define cs* (update-monster-groups
+                       cs
+                       k
+                       (λ (mg)
+                         (define new-mg ((monster-group-remove num) mg))
+                         (set-box! g new-mg)
+                         new-mg)
+                       {~> 2> monster-group-first-monster}))
+          cs*))
+    (when (~> (g) unbox monster-group-monsters empty?)
+      ((add-or-remove-monster-group s) `(remove ,(unbox g)))))
   (define (new num elite?)
     (update (monster-group-add num elite? (@! @env))
             (const num))
