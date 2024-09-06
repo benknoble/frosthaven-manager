@@ -461,11 +461,13 @@
 (define ((monster-group-initiative ads) mg)
   (~> (ads mg)
       (== _ monster-group-set-name)
-      hash-ref
-      ability-decks-current
-      (switch
-        [monster-ability? monster-ability-initiative]
-        [else +inf.0])))
+      (hash-ref #f)
+      (if _
+          (~> ability-decks-current
+              (switch
+                [monster-ability? monster-ability-initiative]
+                [else +inf.0]))
+          +inf.0)))
 
 (define (monster-group*-initiative ads)
   {~> monster-group*-mg (esc (monster-group-initiative ads))})

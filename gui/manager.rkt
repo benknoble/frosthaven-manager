@@ -298,7 +298,8 @@
     [{n} (update-by-num n swap-monster-elite)])
   (define @ability-deck
     (obs-combine
-      {~> (== _ monster-group-set-name) hash-ref}
+      {~> (== _ monster-group-set-name)
+          (hash-ref (ability-decks #f empty empty))}
       (state-@ability-decks s) @mg))
   (define (move-ability-card)
     (<@ (state-@ability-decks s)
