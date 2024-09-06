@@ -902,7 +902,7 @@
 (define (monster-action req what args)
   (let/ec return
     (match (cons what args)
-      ['("kill") (kill-monster req)]
+      ['("kill") (do-kill-monster req)]
       ['("hp" "-") (decrement-monster-hp req)]
       ['("hp" "+") (increment-monster-hp req)]
       ['("condition" "add") (add-monster-condition req)]
@@ -1000,22 +1000,8 @@
     [(and c (not #f)) (do-player/id pid (const #f) (update-player-summon sid (summon-remove-condition c)))]
     [_ (void)]))
 
-(define/monster kill-monster (_r => [mgid num])
-  (do
-    (define g (box #f))
-    (<@ (state-@creatures (s))
-        (λ (cs)
-          (define cs* (update-monster-groups
-                       cs
-                       mgid
-                       (λ (mg)
-                         (define new-mg ((monster-group-remove num) mg))
-                         (set-box! g new-mg)
-                         new-mg)
-                       {~> 2> monster-group-first-monster}))
-          cs*))
-    (when (~> (g) unbox monster-group-monsters empty?)
-      ((add-or-remove-monster-group (s)) `(remove ,(unbox g))))))
+(define/monster do-kill-monster (_r => [mgid num])
+  (do (kill-monster (s) mgid num)))
 
 (define/monster decrement-monster-hp (_r => [mgid mn])
   (do-monster-group/n mgid mn {switch [(not monster-dead?) (esc (monster-update-hp sub1))]}))

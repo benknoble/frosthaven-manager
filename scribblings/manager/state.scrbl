@@ -156,6 +156,14 @@ When updating a monster-group, @racket[fn] can update the
 @racket[monster-group*-active] number.
 }
 
+@defproc[(kill-monster [s state?] [monster-group-id any/c] [monster-number monster-number/c])
+         any]{
+Composes @racket[monster-group-remove] with @racket[update-monster-groups], and
+intelligently sets the current active number or removes the monster group if the
+last monster is killed. Prefer this procedure to the lower-level primitives when
+manipulating state to remove or kill monsters in monster groups.
+}
+
 @deftogether[(
     @defproc[(update-all-players [creatures (listof creature?)]
                                  [f (-> player? player?)])

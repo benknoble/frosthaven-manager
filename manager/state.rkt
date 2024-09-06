@@ -73,6 +73,7 @@
                                  (-> monster-group? monster-group?)}
                                 {(-> (or/c #f monster-number/c) monster-group? (or/c #f monster-number/c))}
                                 (listof creature?))]
+    [kill-monster (-> state? any/c monster-number/c any)]
     [update-all-players (-> (listof creature?) (-> player? player?) (listof creature?))]
     [update-all-monster-groups (-> (listof creature?) (-> monster-group? monster-group?) (listof creature?))]
     [update-player-name (-> state? (-> any/c string? any))]
@@ -436,6 +437,25 @@
         (creature k (monster-group* new-n new-mg)))
       e))
   (map maybe-update-monster-group creatures))
+
+(define (kill-monster s monster-group-id monster-number)
+  ;; g records the result of monster-group-remove to avoid having to traverse
+  ;; state-@creatures again to find out what to do; with more efficient data
+  ;; structures, this would likely be unnecessary.
+  (define g (box #f))
+  (<@ (state-@creatures s)
+      (λ (cs)
+        (define cs* (update-monster-groups
+                     cs
+                     monster-group-id
+                     (λ (mg)
+                       (define new-mg ((monster-group-remove monster-number) mg))
+                       (set-box! g new-mg)
+                       new-mg)
+                     {~> 2> monster-group-first-monster}))
+        cs*))
+  (when (~> (g) unbox monster-group-monsters empty?)
+    ((add-or-remove-monster-group s) `(remove ,(unbox g)))))
 
 (define (update-all-players creatures f)
   (define (update-only-player c)
