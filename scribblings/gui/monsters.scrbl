@@ -6,7 +6,8 @@
                      racket/gui/easy/contract
                      frosthaven-manager/manager
                      frosthaven-manager/monster-db
-                     frosthaven-manager/parsers/formula))
+                     frosthaven-manager/parsers/formula
+                     frosthaven-manager/gui/monsters))
 
 @title{@tt{gui/monsters}}
 @defmodule[frosthaven-manager/gui/monsters]
