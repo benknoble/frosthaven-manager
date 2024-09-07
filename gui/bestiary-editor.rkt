@@ -11,7 +11,8 @@
          racket/gui/easy
          (only-in pretty-expressive pretty-print)
          frosthaven-manager/observable-operator
-         frosthaven-manager/qi
+         frosthaven-manager/curlique
+         frosthaven-manager/qi/utils
          frosthaven-manager/defns
          frosthaven-manager/monster-db
          frosthaven-manager/parsers/monster
@@ -51,7 +52,7 @@
         file
         (λ (op)
           (pretty-print
-           (pretty-bestiary (append (map (flow (list 'import _)) (@! @imports))
+           (pretty-bestiary (append (map {(list 'import _)} (@! @imports))
                                     (~> (@info-db) @! hash-values (append-map hash-values _))
                                     (~> (@ability-db) @! hash-values)))
            #:out op
@@ -62,7 +63,7 @@
     (define/obs @choice #f)
     (define (remove-import!)
       (when (@! @choice)
-        (<~@ @imports (remove (@! @choice) _)))
+        (<@ @imports {(remove (@! @choice) _)}))
       (close!))
     ;; not setting current renderer, nor using an eventspace: dialog
     (render
@@ -75,7 +76,7 @@
   (define (edit . xs)
     (match (car xs)
       ['remove-monster (match-define (list monster-set monster-name) (cdr xs))
-                       (<~@ @info-db (hash-update monster-set (flow (hash-remove monster-name))))]
+                       (<@ @info-db {(hash-update monster-set {(hash-remove monster-name)})})]
       ['stats
        (match (cdr xs)
          [(list* data f args)
@@ -146,21 +147,21 @@
            (contribute-menu-item)))
     (hpanel (button "Back"
                     (back @previous-files @current-file @next-files @info-db @ability-db @imports)
-                    #:enabled? (@~> @previous-files (not empty?)))
-            (input (@~> @previous-files (if empty? "(None)" (~> car ~a)))
+                    #:enabled? (@> @previous-files {(not empty?)}))
+            (input (@> @previous-files {(if empty? "(None)" (~> car ~a))})
                    #:enabled? #f
                    #:label "Back to:"))
     (hpanel (button "Forward"
                     (forward @previous-files @current-file @next-files @info-db @ability-db @imports)
-                    #:enabled? (@~> @next-files (not empty?)))
-            (input (@~> @next-files (if empty? "(None)" (~> car ~a)))
+                    #:enabled? (@> @next-files {(not empty?)}))
+            (input (@> @next-files {(if empty? "(None)" (~> car ~a))})
                    #:enabled? #f
                    #:label "Forward to:"))
     (hpanel (spacer)
             (button "Open Bestiary" open-bestiary)
             (button "Save Bestiary" save-bestiary)
             (spacer))
-    (input (@~> @current-file (if _ ~a "(None)"))
+    (input (@> @current-file {(if _ ~a "(None)")})
            #:enabled? #f
            #:label "Current File:")
     ;; imports-view
@@ -184,7 +185,7 @@
       (hpanel
        (input #:label "New Import:" @import (λ (_action inp) (:= @import inp)))
        (button "Import" (thunk
-                         (<~@ @imports (cons (@! @import) _))
+                         (<@ @imports {(cons (@! @import) _)})
                          (:= @import "")))))
     (button "Remove Import" remove-import)
     ;; db-view
@@ -217,7 +218,7 @@
 (define (stats-editor @info-db edit)
   (apply stacked-tables
          ;; #(set)
-         (@~> @info-db (~> hash-keys (sort string<?) list->vector))
+         (@> @info-db {~> hash-keys (sort string<?) list->vector})
          (stats-editor-stats-editor edit)
          (stats-editor-columns @info-db)))
 
@@ -243,12 +244,12 @@
 
 ;; (obs/c (or/c #f stats-editor-data?)) -> view
 (define ((stats-editor-stats-editor edit) @data?)
-  (define @stats? (@~> @data? (and _ stats-editor-data-stats)))
+  (define @stats? (@> @data? {(and _ stats-editor-data-stats)}))
   (apply vpanel
          (append (for/list ([part stats-editor-parts])
                    (match-define (list label f ed) part)
                    (ed label
-                       (@~> @stats? (and _ f))
+                       (@> @stats? {(and _ f)})
                        (λ args (apply edit 'stats (@! @data?) f args))))
                  (list
                   (button "Delete Selected Monster"
@@ -262,14 +263,14 @@
   (spacer))
 
 (define (number-editor label @n edit)
-  (counter (@~> @n (~>> (or _ "-") (format "~a: ~a" label)))
+  (counter (@> @n {~>> (or _ "-") (format "~a: ~a" label)})
            (thunk (edit add1))
            (thunk (edit sub1))))
 
 (define (optional-number-editor label @n edit)
   (hpanel
    (button "-" (thunk (edit sub1)) #:enabled? @n)
-   (text (@~> @n (~>> (or _ "-") (format "~a: ~a" label))))
+   (text (@> @n {~>> (or _ "-") (format "~a: ~a" label)}))
    (button "+" (thunk (edit add1)) #:enabled? @n)
    (checkbox #:label (format "Has ~a" label)
              #:checked? @n
@@ -309,7 +310,7 @@
                            [(input) (:= @value value)]
                            [(return) (finish-edit i value @input-enableds @button-enableds)]))
                        #:enabled? @input-enabled)
-                (button (@~> @input-enabled (if _ "Save" "Edit"))
+                (button (@> @input-enabled {(if _ "Save" "Edit")})
                         (thunk
                          (if (@! @input-enabled)
                            (finish-edit i (@! @value) @input-enableds @button-enableds)
@@ -330,26 +331,26 @@
   (define the-file (file-relative-to-current file current-file))
   (get-bestiary the-file @info-db @ability-db @imports)
   (when current-file
-    (<~@ @previous-files (cons current-file _)))
+    (<@ @previous-files {(cons current-file _)}))
   (:= @current-file the-file)
   (:= @next-files empty))
 
 (define ((back @previous-files @current-file @next-files @info-db @ability-db @imports))
-  (define previous-file (@! (@~> @previous-files (if empty? #f first))))
+  (define previous-file (@! (@> @previous-files {(if empty? #f first)})))
   (when previous-file
     (define current-file (@! @current-file))
-    (<~@ @next-files (cons current-file _))
+    (<@ @next-files {(cons current-file _)})
     (:= @current-file previous-file)
-    (<~@ @previous-files rest)
+    (<@ @previous-files rest)
     (get-bestiary previous-file @info-db @ability-db @imports)))
 
 (define ((forward @previous-files @current-file @next-files @info-db @ability-db @imports))
-  (define next-file (@! (@~> @next-files (if empty? #f first))))
+  (define next-file (@! (@> @next-files {(if empty? #f first)})))
   (when next-file
     (define current-file (@! @current-file))
-    (<~@ @previous-files (cons current-file _))
+    (<@ @previous-files {(cons current-file _)})
     (:= @current-file next-file)
-    (<~@ @next-files rest)
+    (<@ @next-files rest)
     (get-bestiary next-file @info-db @ability-db @imports)))
 
 (define (get-bestiary file @info-db @ability-db @imports)
