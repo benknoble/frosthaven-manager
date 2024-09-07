@@ -121,7 +121,7 @@ the values from a deserialized @racket[state?].
     @defproc[(undoable? [u undo?]) (obs/c boolean?)])]{
 Undo procedures. To create an observable undo state that tracks @racket[s], use
 @racket[(make-undo s)]. Then, when @racket[undoable?] is true of the observable
-undo state, use @racket[(undo! s undo)] to actually trigger change.
+undo state, use @racket[(undo! s _undo)] to actually trigger change.
 
 Warning: sometimes multiple undos are necessary to be coherent. Not all state
 changes are recorded.
