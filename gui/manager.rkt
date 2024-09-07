@@ -70,6 +70,7 @@
                                   (λ:= (state-@level s)))
             (edit-players-menu-item s)
             (edit-bestiary-menu-item s)
+            (edit-loot-deck-menu-item s)
             (add-monster-group-menu-item s)
             (edit-round-number-menu-item s)
             (manage-prompt-menu-item (state-@prompts s)
@@ -468,6 +469,27 @@
        (button "Ok" close!)))))
   (menu-item
    "Choose Bestiary"
+   (thunk
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render (get-dialog)))))
+
+(define (edit-loot-deck-menu-item s)
+  (define (get-dialog)
+    (define-close! close! closing-mixin)
+    (define (finish!)
+      (build-loot-deck! s)
+      (close!))
+    (dialog
+     #:mixin closing-mixin
+     #:title "Build Loot Deck"
+     #:style '() ;; no close button: need to finish! to build the loot deck
+     (loot-picker (state-@type->number-of-cards s)
+                  (state-@type->deck s)
+                  #:on-card (update-loot-deck-and-num-loot-cards s)
+                  #:on-deck (λ:= (state-@type->deck s)))
+     (button "Ok" finish!)))
+  (menu-item
+   "Build Loot Deck"
    (thunk
     ;; not setting current renderer, nor using an eventspace: dialog
     (render (get-dialog)))))
