@@ -92,9 +92,10 @@
        (take (shuffle deck) count))))))
 
 (define (build-loot-deck! s)
-  (:= (state-@loot-deck s)
-      (build-loot-deck (@! (state-@type->number-of-cards s))
-                       (@! (state-@type->deck s)))))
+  (define deck (build-loot-deck (@! (state-@type->number-of-cards s))
+                                (@! (state-@type->deck s))))
+  (:= (state-@loot-deck s) deck)
+  (:= (state-@num-loot-cards s) (length deck)))
 
 (define (player->rewards p num-players level)
   (define gold-factor (level-info-gold (get-level-info level)))
