@@ -72,7 +72,6 @@
             (edit-bestiary-menu-item s)
             (add-monster-group-menu-item s)
             (edit-round-number-menu-item s)
-            (formula-menu-item (state-@env s))
             (manage-prompt-menu-item (state-@prompts s)
                                      #:on-add (add-prompt s)
                                      #:on-remove (remove-prompt s))
@@ -82,6 +81,8 @@
                                            #:on-add (add-monster-modifier s)
                                            #:on-remove (remove-monster-modifier s)
                                            #:on-shuffle (thunk (reshuffle-modifier-deck s))))
+      (menu "Utilities"
+            (formula-menu-item (state-@env s)))
       (menu "Debug"
             (gc-menu-item))
       (menu "Help"
