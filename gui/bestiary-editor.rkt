@@ -19,6 +19,7 @@
          frosthaven-manager/pp/bestiary
          frosthaven-manager/gui/common-menu
          frosthaven-manager/gui/mixins
+         frosthaven-manager/gui/helpers
          frosthaven-manager/gui/stacked-tables
          frosthaven-manager/gui/counter
          frosthaven-manager/files)
@@ -30,13 +31,7 @@
   (define/obs @current-file #f)
   (define/obs @previous-files empty)
   (define/obs @next-files empty)
-  (define/obs @error-text "")
-  (define (call-with-error-text th)
-    (:= @error-text "")
-    (with-handlers ([exn:fail? (λ (e) (:= @error-text (exn-message e)))])
-      (th)))
-  (define-syntax-rule (with-error-text e ...)
-    (call-with-error-text (thunk e ...)))
+  (define-error-text @error-text with-error-text)
   (define (open-bestiary)
     (with-error-text
      (define file (get-file/filter "Bestiary" '("Bestiary" "*.rkt")))
