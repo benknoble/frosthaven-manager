@@ -169,23 +169,21 @@
           (thunk
            (define/obs @revealed 0)
            (define @rows (obs-combine preview-rows @loot-deck @num-players @revealed))
-           (with-closing-custodian/eventspace
-            (render/eventspace
-             #:eventspace closing-eventspace
-             (window
-              #:mixin close-custodian-mixin
-              #:title "Loot Deck Previewer"
-              #:size '(350 450)
-              (hpanel
-               (table '("Loot Card") @rows)
-               (vpanel
-                (button "Reveal 1" (thunk (<@ @revealed {switch [number? add1]}))
-                        #:enabled? (obs-combine {~> (== _ length)
-                                                    (and (~> 1> number?) <)}
-                                                @revealed @loot-deck))
-                (button "Reveal All" (thunk (:= @revealed 'all))
-                        #:enabled? (@> @revealed number?))
-                (spacer)))))))))
+           ;; not setting current renderer, nor using an eventspace: dialog
+           (render
+            (dialog
+             #:title "Loot Deck Previewer"
+             #:size '(350 450)
+             (hpanel
+              (table '("Loot Card") @rows)
+              (vpanel
+               (button "Reveal 1" (thunk (<@ @revealed {switch [number? add1]}))
+                       #:enabled? (obs-combine {~> (== _ length)
+                                                   (and (~> 1> number?) <)}
+                                               @revealed @loot-deck))
+               (button "Reveal All" (thunk (:= @revealed 'all))
+                       #:enabled? (@> @revealed number?))
+               (spacer))))))))
 
 (define (preview-rows loot-deck num-players revealed)
   (define reveal {~> (esc (format-loot-card num-players)) vector})
