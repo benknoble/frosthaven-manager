@@ -357,7 +357,7 @@
          (void (read-line ip 'any)))
        (parse-bestiary file ip #:syntax? #f))))
   (~> (bestiary)
-      sep (>< (switch [(listof monster-ability?) sep])) collect
+      sep (>< (switch [(esc (listof monster-ability?)) sep])) collect
       datums->dbs
       (== (ε (:= @info-db _) ground)
           (ε (:= @ability-db _) ground)))
