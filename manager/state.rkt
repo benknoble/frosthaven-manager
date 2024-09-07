@@ -143,7 +143,7 @@
           #f
           (or (current-load-relative-directory) (current-directory))))
 
-(define (make-state [@mode (@ 'start)]
+(define (make-state [@mode (@ 'play)]
                     [@level (@ 0)]
                     [@num-players (@ 2)]
                     [@creatures (@ empty)]
@@ -153,7 +153,7 @@
                     [@elements (make-states '(fire ice air earth light dark))]
                     [@in-draw? (@ #f)]
                     [@round (@ 1)]
-                    [@monster-modifier-deck (@ monster-modifier-deck)]
+                    [@monster-modifier-deck (@ (shuffle monster-modifier-deck))]
                     [@monster-discard (@ empty)]
                     [@player-blesses (@ empty)]
                     [@curses (@ monster-curse-deck)]
