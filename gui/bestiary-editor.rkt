@@ -317,6 +317,7 @@
                            [(input) (:= @value value)]
                            [(return) (finish-edit i value @input-enableds @button-enableds)]))
                        #:enabled? @input-enabled)
+                ;; TODO: "Edit" should focus the corresponding input?
                 (button (@> @input-enabled {(if _ "Save" "Edit")})
                         (thunk
                          (if (@! @input-enabled)
