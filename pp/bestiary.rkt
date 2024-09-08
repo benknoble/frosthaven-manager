@@ -92,7 +92,7 @@
   (match-define (monster-stats max-hp move attack bonuses effects immunities) stats)
   (<+> lbrack
        (group
-        (<$*>
+        (<$*> ;; TODO: too many trailing spaces in stats
          (text (~a level))
          (text label)
          (group
