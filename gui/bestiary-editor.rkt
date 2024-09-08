@@ -24,6 +24,11 @@
          frosthaven-manager/gui/counter
          frosthaven-manager/files)
 
+(define modifier
+  (case (system-type 'os)
+    [(macosx) 'cmd]
+    [else 'ctl]))
+
 (define (main)
   (define/obs @info-db (hash))
   (define/obs @ability-db (hash))
@@ -132,8 +137,10 @@
     #:size '(800 600)
     (menu-bar
      (menu "File"
-           (menu-item "&Open Bestiary" open-bestiary)
-           (menu-item "&Save Bestiary" save-bestiary))
+           (menu-item "&Open Bestiary" open-bestiary
+                      #:shortcut (list modifier #\o))
+           (menu-item "&Save Bestiary" save-bestiary
+                      #:shortcut (list modifier #\s)))
      (menu "Help"
            (about-menu-item)
            (menu-item-separator)
