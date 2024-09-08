@@ -87,7 +87,7 @@
   (match-define (monster-stats max-hp move attack bonuses effects immunities) stats)
   (<+> lbrack
        (group
-        (<$>
+        (<$> ;; TODO: too many newlines in stats (+ trailing spaces, etc.)
          (text (~a level))
          (text label)
          (group
