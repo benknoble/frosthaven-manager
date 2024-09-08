@@ -89,7 +89,9 @@
                the-statss
                level
                (λ (stats)
-                 ;; TODO: should not cause contract violation
+                 ;; TODO: should not cause contract violation: but the edit
+                 ;; function don't know what they're operating on
+                 ;; TODO: need to handle formulas for stats that can be?
                  (match* (f args)
                    [{(== monster-stats-max-hp) (list proc)}
                     (struct-copy monster-stats stats [max-hp (proc current-value)])]
@@ -173,7 +175,9 @@
      (obs-combine
       (λ (imports current-file)
         (for/vector ([import imports])
-          (vector (if (file-exists? (file-relative-to-current import current-file))
+          (vector (if (and (file-exists? (file-relative-to-current import current-file))
+                           (with-handlers ([exn:fail:contract? {#f}])
+                             (~> (import) (file-relative-to-current current-file) get-dbs #t)))
                     "✓"
                     "✗")
                   import)))
