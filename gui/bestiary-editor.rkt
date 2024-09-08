@@ -57,8 +57,9 @@
     (define-close! close! closing-mixin)
     (define/obs @choice #f)
     (define (remove-import!)
-      (when (@! @choice)
-        (<@ @imports {(remove (@! @choice) _)}))
+      (define choice (@! @choice))
+      (when choice
+        (<@ @imports {(remove choice _)}))
       (close!))
     ;; not setting current renderer, nor using an eventspace: dialog
     (render
