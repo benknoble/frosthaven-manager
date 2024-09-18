@@ -2,7 +2,17 @@
 
 (module+ main
   (require racket/gui/easy/debugger
-           (prefix-in dbg: debugging/server))
+           (prefix-in dbg: debugging/server)
+           (only-in racket/gui
+                    event-dispatch-handler))
+  (define base-event-handler (event-dispatch-handler))
+  (event-dispatch-handler
+   (λ (es)
+     ;; Request incremental GC until the next major GC. Since we do this in the
+     ;; GUI event loop, it should be enabled for the entire life of the
+     ;; application.
+     (collect-garbage 'incremental)
+     (base-event-handler es)))
   (define s (make-state))
   (command-line
    #:once-each
