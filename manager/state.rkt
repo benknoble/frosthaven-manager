@@ -146,7 +146,8 @@
 (define (make-state [@mode (@ 'play)]
                     [@level (@ 0)]
                     [@num-players (@ 2)]
-                    [@creatures (@ empty)]
+                    [@creatures (@ (list (creature 0 (make-player "" 1))
+                                         (creature 1 (make-player "" 1))))]
                     [@type->number-of-cards (@ (hash))]
                     [@loot-deck (@ empty)]
                     [@num-loot-cards (@ 0)]
