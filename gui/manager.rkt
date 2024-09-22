@@ -419,6 +419,9 @@
    #:shortcut (list modifier #\n)))
 
 (define (do-add-monster-group s)
+  (unless (@! (state-@bestiary-path s))
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render (get-bestiary-dialog s)))
   (define @monster-names
     (@> (state-@creatures s)
         {~> sep (pass creature-is-mg*?)
@@ -454,7 +457,6 @@
        (button "Ok" finish!)
        (button "Cancel" close!)))))))
 
-
 (define (edit-round-number-menu-item s)
   (menu-item
    "Edit round number"
@@ -466,22 +468,24 @@
       #:new-round-number (λ (p) (<@ (state-@round s) p)))))))
 
 (define (edit-bestiary-menu-item s)
-  (define (get-dialog)
-    (define-close! close! closing-mixin)
-    (apply
-     dialog
-     #:mixin closing-mixin
-     #:title "Choose Bestiary"
-     #:size '(600 400)
-     (append
-      (db-picker* s)
-      (list
-       (button "Ok" close!)))))
   (menu-item
    "Choose Bestiary"
    (thunk
     ;; not setting current renderer, nor using an eventspace: dialog
-    (render (get-dialog)))))
+    (render (get-bestiary-dialog s)))))
+
+(define (get-bestiary-dialog s)
+  (define-close! close! closing-mixin)
+  (apply
+   dialog
+   #:mixin closing-mixin
+   #:title "Choose Bestiary"
+   #:size '(600 400)
+   (append
+    (db-picker* s)
+    (list
+     (button "Ok" close!)))))
+
 
 (define (edit-loot-deck-menu-item s)
   (define (get-dialog)
