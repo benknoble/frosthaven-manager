@@ -27,6 +27,5 @@ This collection provides modules for operating GUIs.
 @include-section{gui/round-prompts.scrbl}
 @include-section{gui/server.scrbl}
 @include-section{gui/stacked-tables.scrbl}
-@include-section{gui/start.scrbl}
 @include-section{gui/static-table.scrbl}
 @include-section{gui/table.scrbl}

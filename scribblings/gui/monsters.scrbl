@@ -31,21 +31,6 @@ A GUI view of a monster group showing a table of monsters and some other
 information about the group.
 }
 
-@defproc[(multi-monster-picker
-           [info-db info-db/c]
-           [|@initial-level| (obs/c level/c)]
-           [|@env| (obs/c env/c)]
-           [#:on-change on-change (-> (or/c add-monster-event/c
-                                            remove-monster-event/c)
-                                      any) void])
-         (is-a?/c view<%>)]{
-A GUI view used to choose the monsters in a scenario: it composes
-@racket[single-monster-picker] in order to allow selection and removal of entire
-groups. The callback @racket[on-change] is invoked to notify of the addition or
-removal of a group. Other parameters are used as in
-@racket[single-monster-picker].
-}
-
 @defproc[(monster-group-view
            [|@mg| (obs/c monster-group?)]
            [|@ability-deck| (obs/c ability-decks?)]
@@ -106,7 +91,4 @@ Renders a dialog to add a monster group by invoking the callback
 used for the initial level of the group, which can be adjusted in the dialog.
 Similarly, @racket[|@monster-names|] specifies which names are not available for
 the new group.
-
-Originally an internal part of the implementation of
-@racket[multi-monster-picker] until it had uses in the main playing view.
 }

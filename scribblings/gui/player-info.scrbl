@@ -9,20 +9,6 @@
 @title{@tt{gui/player-info}}
 @defmodule[frosthaven-manager/gui/player-info]
 
-@defproc[(player-input-views
-           [|@num-players| (obs/c natural-number/c)]
-           [#:on-name on-name (-> natural-number/c string? any) void]
-           [#:on-hp on-hp (-> natural-number/c (-> number? number?) any) void]
-           [#:names names (or/c #f (listof string?)) #f]
-           [#:hps hps (or/c #f (listof positive-integer?)) #f])
-         (is-a?/c view<%>)]{
-A GUI view to enter player names and max HP. The number of entry slots is
-determined by @racket[|@num-players|]. The callbacks @racket[on-name] and
-@racket[on-hp] are invoked with a player number and a name or a procedure to
-modify @racket[player-max-hp]. Default names and max HP values can be specified
-via @racket[names] and @racket[hps].
-}
-
 @defproc[(player-view
            [|@player| (obs/c player?)]
            [#:on-condition on-condition (-> (list/c condition? boolean?) any) void]
