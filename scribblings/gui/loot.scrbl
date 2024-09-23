@@ -47,7 +47,7 @@ Additionally, buttons for the top and bottom of the deck trigger the
 @racket[on-top] and @racket[on-bottom] callbacks, which then also close the
 view.
 
-See @secref{Scenario_Information_and_Loot} for how @racket[loot-button]
+See @secref{Scenario_information_and_loot} for how @racket[loot-button]
 functions in Frosthaven Manager.
 }
 

@@ -20,7 +20,7 @@ an issue} or @link["mailto:ben.knoble+frosthaven@gmail.com"]{send an email}.
 
 For help with installation, see @secref{Installing_Frosthaven_Manager}.
 
-For help using Frosthaven Manager, see @secref{How_to_Play}.
+For help using Frosthaven Manager, see @secref{How_to_play}.
 
 For help with bestiaries and scenario programs, such as when they won't load,
 see @secref{Programming_a_Scenario}.

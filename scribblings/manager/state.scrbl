@@ -19,7 +19,7 @@ This module provides facilities for manipulating manager-level state.
               [v (or/c player? monster-group*?)])
              #:transparent]{
 A @racket[creature] is displayed in the central area of the Frosthaven Manager
-GUI, as described in @secref{Creature_List}. Therefore a @racket[creature-v] can
+GUI, as described in @secref{Creature_list}. Therefore a @racket[creature-v] can
 be either a @racket[player] or a @racket[monster-group*].
 
 A @racket[creature] is identified by its unique @racket[creature-id].
@@ -33,7 +33,7 @@ Serializable.
              #:transparent]{
 A @racket[monster-group*] wraps a @racket[monster-group] with a possibly active
 @racket[monster-number/c], which identifies the monster currently displayed in
-@secref{Monster_Group_Controls}.
+@secref{Monster_group_controls}.
 
 Serializable.
 }

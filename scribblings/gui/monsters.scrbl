@@ -48,7 +48,7 @@ information about the group.
            [#:on-update arbitrary-update (-> (-> monster-group? monster-group?) any)])
          (is-a?/c view<%>)]{
 A GUI view used to display an entire monster group. See
-@secref{Monster_Group_Controls}. An ability is displayed if an ability card is
+@secref{Monster_group_controls}. An ability is displayed if an ability card is
 present in @racket[|@ability-deck|]. The @racket[|@monster-num|] determines the
 currently selected monster in the detailed portion of the view.
 

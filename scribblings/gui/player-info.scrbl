@@ -21,7 +21,7 @@
            [#:on-summon-condition update-summon-condition (-> natural-number/c (list/c condition? boolean?) any)]
            [#:kill-summon kill-summon (-> natural-number/c any)])
          (is-a?/c view<%>)]{
-A GUI view of a single player. See @secref{Player_Controls}. The callback
+A GUI view of a single player. See @secref{Player_controls}. The callback
 @racket[on-condition] is given an condition and value that determines whether
 the condition should be applied (@racket[#true]) or removed (@racket[#false]).
 The callbacks @racket[on-hp] and @racket[on-xp] are given procedures to modify
