@@ -82,7 +82,7 @@
     (thunk (send-url "mailto:ben.knoble+frosthaven@gmail.com"))))
 
 (define (how-to-play-menu-item)
-  (menu-item "How to Play" (thunk (send-url "https://benknoble.github.io/frosthaven-manager/How_to_Play.html"))))
+  (menu-item "How to Play" (thunk (send-url "https://benknoble.github.io/frosthaven-manager/How_to_play.html"))))
 
 (define (launch-server-menu-item s)
   (menu-item "Launch Server" (thunk (launch-server s))))

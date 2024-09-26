@@ -17,7 +17,6 @@
 (define (plain-view s)
   (vpanel
    #:style '(vscroll)
-   (~a-view "mode" state-@mode s)
    (~a-view "level" state-@level s)
    (~a-view "num-players" state-@num-players s)
    (pp-view "creatures" state-@creatures s)

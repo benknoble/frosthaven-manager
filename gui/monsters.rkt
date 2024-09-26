@@ -8,11 +8,6 @@
                                 (is-a?/c view<%>))]
     [simple-monster-group-view (-> (obs/c monster-group?)
                                    (is-a?/c view<%>))]
-    [multi-monster-picker (->* ((obs/c info-db/c) (obs/c level/c) (obs/c env/c))
-                               (#:on-change (-> (or/c add-monster-event/c
-                                                      remove-monster-event/c)
-                                                any))
-                               (is-a?/c view<%>))]
     [monster-group-view
       (->* ((obs/c monster-group?)
             (obs/c ability-decks?)
@@ -404,8 +399,7 @@
    (monster-ability-view @ability @mg @env)))
 
 ;; TODO: should be able to manipulate individual HP (? dialog with counter)
-;; Takes a non-observable info-db b/c instantiated by a thunk in
-;; multi-monster-picker, at which point we _want_ a fixed info-db.
+;; Takes a non-observable info-db b/c we _want_ a fixed info-db.
 (define (single-monster-picker info-db
                                @initial-level
                                #:on-change [on-change void]
@@ -462,47 +456,6 @@
   (hpanel #:alignment '(center top)
           (checkbox set-included #:label (~a num))
           (checkbox set-elite #:label "Elite?" #:enabled? @included?)))
-
-(define (multi-monster-picker @info-db @initial-level @env #:on-change [on-change void])
-  ;; TODO why maintain own list? why not have passed in? (something to do with IDs?)
-  (define/obs @monster-groups empty)
-  (define @monster-names
-    (@> @monster-groups
-        {~> (sep (~> cdr monster-group-name)) collect}))
-  (define/obs @next-id
-    (@> @monster-groups
-         {~> (sep car) (rectify -1) max add1}))
-  (define (make-simple-monster-group-view _k @e)
-    (define @m (@> @e cdr))
-    (define @name (@> @m monster-group-name))
-    (define (remove-group)
-      (on-change `(remove ,(@! @m)))
-      (<@ @monster-groups {(remove (@! @e) _)}))
-    (hpanel
-      (vpanel #:stretch '(#f #t)
-              (button (@> @name {(~a "Remove " _)}) remove-group)
-              (spacer))
-      (simple-monster-group-view @m)))
-  (vpanel
-    (list-view @monster-groups
-      #:key car
-      ;; TODO edit monster
-      make-simple-monster-group-view)
-    (hpanel
-      #:stretch '(#t #f)
-      (spacer)
-      (button
-        "Add Monster"
-        (thunk
-          (add-monster-group
-            @info-db
-            @initial-level
-            @monster-names
-            @env
-            #:on-group (λ (g)
-                         (on-change `(add ,g))
-                         (<@ @monster-groups {(append (list (cons (@! @next-id) g)))}))))))))
-
 
 (define (add-monster-group @info-db @initial-level @monster-names @env #:on-group [on-group void])
   ;; 0: set
@@ -890,73 +843,4 @@
             (@> @state
                 (match-lambda
                   [(list _set info num->elite?)
-                   (make-monster-group info 3 (hash->list num->elite?) #hash())])))))))
-
-  (void
-    ;; no separate eventspace: block main until this window closed
-    (render/eventspace
-      (window
-        #:title "Multi Picker"
-        (multi-monster-picker
-          (@ info-db) (@ 3) (@ #hash())
-          #:on-change
-          (match-lambda
-            [`(add ,mg)
-              (define/obs @mg mg)
-              (define @ms (@> @mg monster-group-monsters))
-              (define (get-first-monster)
-                (and (not (empty? (@! @ms)))
-                     (monster-number (first (@! @ms)))))
-              (define/obs @n (get-first-monster))
-              ;; actually, each same-set group across the whole scenario uses
-              ;; the same deck (?), so it may be better to use state that looks
-              ;; like ability-db + discarded-actions (same structure), or a
-              ;; single state structured like actions-db but with deck + discard
-              (define abilities-for-group
-                (hash-ref ability-db (monster-group-set-name mg) empty))
-              (define/obs @deck (ability-decks #f (shuffle abilities-for-group) empty))
-              (define/obs @draw? #t)
-              (define/match (swap _who)
-                [{'all} (<@ @mg swap-monster-group-elites)]
-                [{n} (<@ @mg (monster-group-update-num n swap-monster-elite))])
-              (with-closing-custodian/eventspace
-                (render/eventspace
-                  #:eventspace closing-eventspace
-                  (window
-                    #:title "Monster view"
-                    #:mixin close-custodian-mixin
-                    (monster-group-view
-                      @mg @deck @n (@ #hash())
-                      #:on-condition
-                      (λ (num c on?)
-                        (<@ @mg (monster-group-update-num num (monster-update-condition c on?))))
-                      #:on-hp
-                      (λ (num proc)
-                        (<@ @mg (monster-group-update-num num (monster-update-hp proc))))
-                      #:on-kill
-                      (λ (n)
-                        (<@ @mg (monster-group-remove n))
-                        (:= @n (get-first-monster)))
-                      #:on-new
-                      (λ (n elite?)
-                        (<@ @mg (monster-group-add n elite? #hash()))
-                        (:= @n n))
-                      #:on-select (λ:= @n)
-                      #:on-swap swap
-                      #:on-move-ability-card (thunk (<@ @deck move-top-draw-to-bottom))
-                      #:on-max-hp (λ (f) (<@ @mg {(monster-group-change-max-HP f (hash))}))
-                      #:on-update (λ (f) (<@ @mg f)))
-                    (hpanel
-                      (button
-                        "Draw"
-                        (thunk
-                         (<@ @deck ability-decks-draw-next)
-                         (<@ @draw? not))
-                        #:enabled? @draw?)
-                      (button
-                        "Next Round"
-                        (thunk
-                         (<@ @deck ability-decks-discard-and-maybe-shuffle)
-                         (<@ @draw? not))
-                        #:enabled? (@> @draw? not))))))]
-            [_ (void)]))))))
+                   (make-monster-group info 3 (hash->list num->elite?) #hash())]))))))))

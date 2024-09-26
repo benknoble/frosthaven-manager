@@ -24,6 +24,6 @@ A container for a named set of element pictures.
 @defproc[(elements) (listof element-pics?)]{
 Returns all of the elements bundled together. This module also provides bindings
 from the names of the elemnts to procedures returning @racket[element-pics]
-values, but they are not documented here. See @secref{Elements_Tracker} for the
+values, but they are not documented here. See @secref{Elements_tracker} for the
 various element names and pictures.
 }

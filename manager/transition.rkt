@@ -3,14 +3,6 @@
 (provide
  (contract-out
   [transition/c contract?]
-  [to-start transition/c]
-  [to-input-player-info transition/c]
-  [to-build-loot-deck transition/c]
-  [to-add-prompts transition/c]
-  [to-choose-monster-db transition/c]
-  [to-choose-monsters-or-play transition/c]
-  [to-choose-monsters transition/c]
-  [to-play transition/c]
   [next-round transition/c]
   [draw-abilities transition/c]))
 
@@ -20,7 +12,6 @@
          frosthaven-manager/manager/ability-decks
          frosthaven-manager/manager/modifier-decks
          frosthaven-manager/manager/elements
-         frosthaven-manager/manager/loot
          frosthaven-manager/manager/round-prompts
          frosthaven-manager/gui/round-prompts)
 
@@ -30,48 +21,7 @@
 
 (define transition/c (-> state? (-> any)))
 
-;; 0. Start
-;; 1. Input Player Info
-;; 2. Build Loot Deck
-;; 3. Add Prompts
-;; 4. Choose Monster DB
-;; 5. Choose Monsters (optional)
-;; 6. Play (Draw -> Next Round -> …)
-
-(define ((to-start s))
-  (:= (state-@mode s) 'start))
-
-(define ((to-input-player-info s))
-  (setup-players s)
-  (:= (state-@mode s) 'input-player-info))
-
-(define ((to-build-loot-deck s))
-  ;; give each player max-hp
-  (<@ (state-@creatures s)
-      {(update-all-players
-        {~> (-< (~> player-max-hp const player-act-on-hp) _) apply})})
-  (:= (state-@mode s) 'build-loot-deck))
-
-(define ((to-add-prompts s))
-  (build-loot-deck! s)
-  (:= (state-@mode s) 'add-prompts))
-
-(define ((to-choose-monster-db s))
-  (:= (state-@mode s) 'choose-monster-db))
-
-(define ((to-choose-monsters-or-play s))
-  (define has-mg*? {~>> state-@creatures @! (memf creature-is-mg*?)})
-  ;; note parens around switch to invoke selected transition function
-  ((switch (s)
-     [has-mg*? to-play]
-     [else to-choose-monsters])))
-
-(define ((to-choose-monsters s))
-  (:= (state-@mode s) 'choose-monsters))
-
-(define ((to-play s))
-  (<@ (state-@monster-modifier-deck s) shuffle)
-  (:= (state-@mode s) 'play))
+;; Play (Draw -> Next Round -> …)
 
 (define ((next-round s))
   ;; check prompts

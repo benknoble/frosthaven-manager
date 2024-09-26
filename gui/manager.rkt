@@ -39,7 +39,6 @@
          frosthaven-manager/files
          frosthaven-manager/gui/common-menu
          frosthaven-manager/gui/formula-editor
-         frosthaven-manager/gui/start
          frosthaven-manager/gui/player-info
          frosthaven-manager/gui/level-info
          frosthaven-manager/gui/loot
@@ -104,87 +103,9 @@
             (issue-menu-item)
             (feature-menu-item)
             (contribute-menu-item)))
-    (case-view (state-@mode s)
-      [(start) (the-start-view s)]
-      [(input-player-info) (input-player-info-view s)]
-      [(build-loot-deck) (build-loot-deck-view s)]
-      [(add-prompts) (add-prompts-view s)]
-      [(choose-monster-db) (choose-monster-db-view s)]
-      [(choose-monsters) (choose-monsters-view s)]
-      [(play) (play-view s)]
-      [else (text "Broken")])))
+    (play-view s)))
 
 ;;;; GUI
-
-(define (the-start-view s)
-  (vpanel
-   (start-view
-    (state-@level s)
-    (state-@num-players s)
-    #:on-level (λ:= (state-@level s))
-    #:on-player (λ:= (state-@num-players s)))
-   (button "Play" (to-input-player-info s))))
-
-(define (input-player-info-view s)
-  (define players
-    (filter-map {~> creature-v (and player? _)}
-                (@! (state-@creatures s))))
-  (define names (map player-name players))
-  (define hps (map player-max-hp players))
-  (vpanel
-    (player-input-views (state-@num-players s)
-                        #:on-name (update-player-name s)
-                        #:on-hp (update-player-max-hp s)
-                        #:names names
-                        #:hps hps)
-    (hpanel #:stretch '(#t #f)
-            #:alignment '(center center)
-            (button "Back" (to-start s))
-            (button "Next" (to-build-loot-deck s)))))
-
-(define (build-loot-deck-view s)
-  (vpanel
-    (loot-picker (state-@type->number-of-cards s)
-                 (state-@type->deck s)
-                 #:on-card (update-loot-deck-and-num-loot-cards s)
-                 #:on-deck (λ:= (state-@type->deck s)))
-    (spacer)
-    (hpanel #:stretch '(#t #f)
-            #:alignment '(center center)
-            (button "Back" (to-input-player-info s))
-            (button "Next" (to-add-prompts s)))))
-
-(define (add-prompts-view s)
-  (vpanel
-   (prompts-input-view (state-@prompts s)
-                       #:on-add (add-prompt s)
-                       #:on-remove (remove-prompt s))
-   (hpanel #:stretch '(#t #f)
-           #:alignment '(center center)
-           (button "Back" (to-build-loot-deck s))
-           (button "Next" (to-choose-monster-db s)))))
-
-(define (choose-monster-db-view s)
-  (apply
-   vpanel
-   (append
-    (db-picker* s)
-    (list
-     (hpanel #:stretch '(#t #f)
-             #:alignment '(center center)
-             (button "Back" (to-add-prompts s))
-             (button "Next" (to-choose-monsters-or-play s) #:enabled? (@> (state-@bestiary-path s) path-string?)))))))
-
-(define (choose-monsters-view s)
-  (vpanel
-    (multi-monster-picker (state-@info-db s)
-                          (state-@level s)
-                          (state-@env s)
-                          #:on-change (add-or-remove-monster-group s))
-    (hpanel #:stretch '(#t #f)
-            #:alignment '(center center)
-            (button "Back" (to-choose-monster-db s))
-            (button "Next" (to-play s)))))
 
 (define (play-view s)
   (define undo (make-undo s))
@@ -419,6 +340,9 @@
    #:shortcut (list modifier #\n)))
 
 (define (do-add-monster-group s)
+  (unless (@! (state-@bestiary-path s))
+    ;; not setting current renderer, nor using an eventspace: dialog
+    (render (get-bestiary-dialog s)))
   (define @monster-names
     (@> (state-@creatures s)
         {~> sep (pass creature-is-mg*?)
@@ -454,7 +378,6 @@
        (button "Ok" finish!)
        (button "Cancel" close!)))))))
 
-
 (define (edit-round-number-menu-item s)
   (menu-item
    "Edit round number"
@@ -466,22 +389,23 @@
       #:new-round-number (λ (p) (<@ (state-@round s) p)))))))
 
 (define (edit-bestiary-menu-item s)
-  (define (get-dialog)
-    (define-close! close! closing-mixin)
-    (apply
-     dialog
-     #:mixin closing-mixin
-     #:title "Choose Bestiary"
-     #:size '(600 400)
-     (append
-      (db-picker* s)
-      (list
-       (button "Ok" close!)))))
   (menu-item
    "Choose Bestiary"
    (thunk
     ;; not setting current renderer, nor using an eventspace: dialog
-    (render (get-dialog)))))
+    (render (get-bestiary-dialog s)))))
+
+(define (get-bestiary-dialog s)
+  (define-close! close! closing-mixin)
+  (apply
+   dialog
+   #:mixin closing-mixin
+   #:title "Choose Bestiary"
+   #:size '(600 400)
+   (append
+    (db-picker* s)
+    (list
+     (button "Ok" close!)))))
 
 (define (edit-loot-deck-menu-item s)
   (define (get-dialog)

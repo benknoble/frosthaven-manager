@@ -2,14 +2,6 @@
 
 (provide
   (contract-out
-    [player-input-views (->* ((obs/c natural-number/c))
-                             (#:on-name (-> natural-number/c string? any)
-                              #:on-hp (-> natural-number/c
-                                          (-> number? number?)
-                                          any)
-                              #:names (listof string?)
-                              #:hps (listof positive-integer?))
-                             (is-a?/c view<%>))]
     [player-view (->* ((obs/c player?))
                       (#:on-condition (-> (list/c condition? boolean?) any)
                        #:on-hp (-> (-> number? number?) any)
@@ -32,23 +24,6 @@
          frosthaven-manager/gui/font
          frosthaven-manager/gui/helpers
          frosthaven-manager/gui/rich-text-display)
-
-(define (player-input-views @num-players
-                            #:on-name [on-name void]
-                            #:on-hp [on-hp void]
-                            #:names [names #f]
-                            #:hps [hps #f])
-  (define (make-input-view k _@i)
-    (define-flow do-name (on-name k _))
-    (define-flow do-hp (on-hp k _))
-    (player-input-view
-      #:on-name do-name
-      #:on-hp do-hp
-      #:name (if names (list-ref names k) "")
-      #:hp (if hps (list-ref hps k) 1)))
-  (list-view (@> @num-players range)
-    #:min-size (@> @num-players {~>> (* 40) (list #f)})
-    make-input-view))
 
 (define (player-view @player
                      #:on-condition [on-condition void]
@@ -256,27 +231,6 @@
     (hpanel (button "Accept" finish!)
             (button "Cancel" close!)))))
 
-(define (player-input-view
-          #:on-name [on-name void]
-          #:on-hp [on-hp void]
-          #:name [name ""]
-          #:hp [hp 1])
-  (define/obs @name name)
-  (define/obs @hp hp)
-  (define (subtract-hp)
-    (on-hp sub1)
-    (<@ @hp {switch
-              [(<= 1) _]
-              [else sub1]}))
-  (define (add-hp)
-    (on-hp add1)
-    (<@ @hp add1))
-  (hpanel
-    #:stretch '(#t #f)
-    (input #:label "Name" @name {~> 2> on-name}
-           #:min-size '(200 #f))
-    (counter (@> @hp {(~a "Max HP: " _)}) add-hp subtract-hp)))
-
 (module+ main
   (define (update-players players k f)
     (map (λ (e)
@@ -294,21 +248,7 @@
                             (first (hash-ref material-decks lumber)))
                       empty))
       (cons 2 (player "C" 8 0 5 empty 99 empty empty))))
-  (define i-view
-    (player-input-views
-      (@> @players length)
-      #:on-name (λ (k name)
-                  (<@ @players {(update-players k (player-update-name name))}))
-      #:on-hp (λ (k f)
-                (<@ @players {(update-players k (player-act-on-max-hp f))}))
-      #:names (map {~> cdr player-name} (@! @players))
-      #:hps (map {~> cdr player-max-hp} (@! @players))))
   (void
-    (with-closing-custodian/eventspace
-      (render/eventspace
-        #:eventspace closing-eventspace
-        (window #:mixin close-custodian-mixin
-                i-view)))
     ;; no separate eventspace: block main until this window closed
     (render/eventspace
       (window
