@@ -9,8 +9,7 @@
     [struct monster-group* ([active (or/c #f monster-number/c)]
                             [mg monster-group?])]
     [creature-is-mg*? (-> creature? any/c)]
-    [struct state ([@mode (obs/c symbol?)]
-                   [@level (obs/c level/c)]
+    [struct state ([@level (obs/c level/c)]
                    [@num-players (obs/c num-players/c)]
                    [@creatures (obs/c (listof creature?))]
                    [@type->number-of-cards (obs/c (hash/c loot-type/c natural-number/c))]
@@ -32,8 +31,7 @@
                    [@type->deck (obs/c (hash/c loot-type/c (listof loot-card?)))])]
     [make-state
       (->* ()
-           ((maybe-obs/c symbol?)
-            (maybe-obs/c level/c)
+           ((maybe-obs/c level/c)
             (maybe-obs/c num-players/c)
             (maybe-obs/c (listof creature?))
             (maybe-obs/c (hash/c loot-type/c natural-number/c))
@@ -114,8 +112,7 @@
     [else (@! o)]))
 
 (struct state
-        [@mode
-         @level
+        [@level
          @num-players
          @creatures
          @type->number-of-cards
@@ -143,8 +140,7 @@
           #f
           (or (current-load-relative-directory) (current-directory))))
 
-(define (make-state [@mode (@ 'play)]
-                    [@level (@ 0)]
+(define (make-state [@level (@ 0)]
                     [@num-players (@ 2)]
                     [@creatures (@ (list (creature 0 (make-player "" 1))
                                          (creature 1 (make-player "" 1))))]
@@ -165,8 +161,7 @@
                     [@ability-decks (@ (hash))]
                     [@prompts (@ empty)]
                     [@type->deck (@ standard-loot-deck)])
-  (state (@ @mode)
-         (@ @level)
+  (state (@ @level)
          (@ @num-players)
          (@ @creatures)
          (let* ([@h (@ @type->number-of-cards)]
@@ -259,8 +254,6 @@
     (check-equal? (s@->v s2) (s@->v s1))))
 
 (define (copy-state from to)
-  (:=     (state-@mode to)
-      (@! (state-@mode from)))
   (:=     (state-@level to)
       (@! (state-@level from)))
   (:=     (state-@num-players to)

@@ -43,8 +43,7 @@ True iff @racket[c] holds a @racket[monster-group*].
 }
 
 @defstruct*[state
-             ([|@|mode symbol?]
-              [|@|level (obs/c level/c)]
+             ([|@|level (obs/c level/c)]
               [|@|num-players (obs/c num-players/c)]
               [|@|creatures (obs/c (listof creature?))]
               [|@|type->number-of-cards (obs/c (hash/c loot-type/c natural-number/c))]
@@ -68,7 +67,6 @@ All of the "global" manager state.
 }
 
 @defproc[(make-state
-           [|@|mode (maybe-obs/c symbol?) (|@| 'play)]
            [|@|level (maybe-obs/c level/c) (|@| 0)]
            [|@|num-players (maybe-obs/c num-players/c) (|@| 2)]
            [|@|creatures (maybe-obs/c (listof creature?)) (|@| empty)]
