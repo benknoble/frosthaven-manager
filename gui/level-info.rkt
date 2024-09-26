@@ -20,7 +20,7 @@
 (define (level-stats @level @num-players)
   (define @level-info (@> @level get-level-info))
   (group
-    "Level Stats"
+    (@> @level {(format "Level Stats (~a)" _)})
     (hpanel
       #:stretch '(#f #f)
       (text (@> @level-info {~>> level-info-trap-damage (~a "Trap: ")}))
