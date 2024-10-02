@@ -48,7 +48,7 @@
                       (hash "C" 2 "L" 0)))
 
 (define (make-sample-state)
-  (define sample-state (make-state (@ 'play)))
+  (define sample-state (make-state))
   (void
    (init-dbs more-monsters sample-state)
    (:= (state-@num-players sample-state) 2)
