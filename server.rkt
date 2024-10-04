@@ -219,7 +219,10 @@
    (λ (m)
      (multicast-channel-put ch `(text modifier-discard ,(~a (if m
                                                                 (format-monster-modifier m)
-                                                                "N/A"))))))
+                                                                "N/A"))))
+     (when m
+       (multicast-channel-put ch `(alert
+                                   ,(format "The monster drew: ~a." (format-monster-modifier m)))))))
 
   (define-values (app the-reverse-uri)
     (dispatch-rules
@@ -370,18 +373,10 @@
   (define discard (@! (@> (state-@modifier (s)) {(if _ format-monster-modifier "N/A")})))
   `((div
      ([class "bottom-info"])
-     (p (button
-         ([type "button"]
-          [onclick
-           ,(string-join
-             (list
-              (string-trim (action-script (list "draw-modifier") empty)
-                           ";"
-                           #:left? #f)
-              ".then((r) => r.json())"
-              ".then((j) => { alert(`The monster drew: ${j.modifier}.`); },"
-              "      (_) => { /* silence the error: empty response */ })"))])
-         "Draw Modifier")
+     (p ,(action-button
+          (list "draw-modifier")
+          empty
+          "Draw Modifier")
         (span ([id "modifier-discard"])
               ,discard)
         " "
@@ -936,9 +931,7 @@
 
 (define (web-draw-modifier _req)
   (do ((draw-modifier s)))
-  (cond
-    [(@! (state-@modifier (s))) => {~>> format-monster-modifier (hash 'modifier) response/jsexpr}]
-    [else (response/empty)]))
+  (response/empty))
 
 (define (progress-game _req)
   (define transition
