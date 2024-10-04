@@ -53,18 +53,7 @@
 (define ((draw-abilities s))
   (unless (@! (state-@in-draw? s))
     ;; draw new monster cards
-    (<@ (state-@ability-decks s)
-        (update-ability-decks
-         (λ (set ad)
-           ;; TODO: if we keep only ability-decks for groups with monsters, this
-           ;; can simplify?
-           (define monster-set-has-monsters?
-             (~>> (s) state-@active-monster-groups @! sep
-                  (pass (~> monster-group-set-name (equal? set)))
-                  (any (~> monster-group-monsters (not empty?)))))
-           (cond
-             [monster-set-has-monsters? (ability-decks-draw-next ad)]
-             [else ad]))))
+    (<@ (state-@ability-decks s) (update-ability-decks {~> 2> ability-decks-draw-next}))
     ;; toggle state
     (<@ (state-@in-draw? s) not)))
 
