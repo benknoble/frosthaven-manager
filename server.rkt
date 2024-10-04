@@ -929,12 +929,11 @@
     [else (response/empty)]))
 
 (define (progress-game _req)
-  (let ([s (s)])
-    (do
-      ;; double-parens: apply function that this if expression evaluates to
-      ((if (@! (state-@in-draw? s))
-           (next-round s)
-           (draw-abilities s)))))
+  (define transition
+    (cond
+      [(@! (state-@in-draw? (s))) (next-round (s))]
+      [else (draw-abilities (s))]))
+  (do (transition))
   (response/empty))
 
 (define-flow (increment-player-hp _req)
