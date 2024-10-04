@@ -32,6 +32,7 @@
   racket/runtime-path
   racket/async-channel
   syntax/parse/define
+  (for-syntax racket/syntax)
   (prefix-in tx: txexpr)
   web-server/dispatch/syntax
   web-server/dispatch/url-patterns
@@ -60,9 +61,10 @@
 ;; "do" e in a different context… (namely, the one which invoked the server)
 (define-syntax-parser do
   [(_ e:expr ...+)
+   #:with s (format-id this-syntax "s" #:source this-syntax)
    (syntax/loc this-syntax
      ((send-event)
-      (thunk e ...)))])
+      (λ (s) e ...)))])
 
 (define-syntax-rule (define-bidi-match-expander/coercions id in-test? in out-test? out)
   (begin
@@ -923,7 +925,7 @@
     [(or `(id . ,_) #f) (not-found req)]))
 
 (define (web-draw-modifier _req)
-  (do ((draw-modifier (s))))
+  (do ((draw-modifier s)))
   (cond
     [(@! (state-@modifier (s))) => {~>> format-monster-modifier (hash 'modifier) response/jsexpr}]
     [else (response/empty)]))
@@ -955,11 +957,11 @@
   (do-player-condition #t))
 
 (define (set-player-initiative id init)
-  (do (<@ (state-@creatures (s))
+  (do (<@ (state-@creatures s)
           {(update-players id {(player-set-initiative init)})})))
 
 (define (update-player-info id new-name new-max-hp)
-  (do (<@ (state-@creatures (s))
+  (do (<@ (state-@creatures s)
           {(update-players id
                            {~> (esc (player-update-name new-name))
                                (esc (player-act-on-max-hp (const new-max-hp)))})})))
@@ -969,7 +971,7 @@
     [(and id (not #f))
      (define card
        (@! (@> (state-@loot-deck (s)) {(and (not empty?) first)})))
-     (do ((give-player-loot (s)) id))
+     (do ((give-player-loot s) id))
      (when card
        (return
         (response/jsexpr
@@ -1000,7 +1002,7 @@
     [_ (void)]))
 
 (define/monster do-kill-monster (_r => [mgid num])
-  (do (kill-monster (s) mgid num)))
+  (do (kill-monster s mgid num)))
 
 (define/monster decrement-monster-hp (_r => [mgid mn])
   (do-monster-group/n mgid mn {switch [(not monster-dead?) (esc (monster-update-hp sub1))]}))
@@ -1060,14 +1062,14 @@
     [_ (void)]))
 
 (define (do-player/id id guard action)
-  (do (<@ (state-@creatures (s))
+  (do (<@ (state-@creatures s)
           {(update-players id {switch [(not guard) action]})})))
 
 (define (do-player-condition req add-or-remove)
   (match* {(req->player-id req) (req->condition req)}
     [{(and id (not #f)) (and c (not #f))}
       (define c? (list c add-or-remove))
-      (do (<@ (state-@creatures (s))
+      (do (<@ (state-@creatures s)
               {(update-players id (player-condition-handler c?))}))]
     [{_ _} (void)]))
 
@@ -1107,7 +1109,7 @@
     [_ (values #f #f)]))
 
 (define (do-monster-group/mgid mgid action [action-n {1>}])
-  (do (<@ (state-@creatures (s))
+  (do (<@ (state-@creatures s)
           {(update-monster-groups mgid action action-n)})))
 
 (define (do-monster-group/n mgid mn action)

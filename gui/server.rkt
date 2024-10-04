@@ -41,8 +41,11 @@
                  (send the-clipboard set-clipboard-string (@! @addr) 0))))
        (button "Restart Server" restart)))))
 
-(define (handle _s evt)
-  (queue-callback evt))
+(define (handle s evt)
+  (queue-callback
+   (cond
+     [(procedure-arity-includes? evt 1) (thunk (evt s))]
+     [else evt])))
 
 (module+ main
   (require frosthaven-manager/testfiles/data)
