@@ -393,6 +393,14 @@
               "Next Round"
               "Draw Abilities")
           '([id "progress-game"])))
+     (p ,(action-button
+          (list "monster" "curse")
+          empty
+          "Curse Monster")
+        ,(action-button
+          (list "monster" "bless")
+          empty
+          "Bless Monster"))
      (p "Round "
         (span ([id "round"])
               ,(number->string (@! (state-@round (s)))))
@@ -909,6 +917,8 @@
       ['("hp" "+") (increment-monster-hp req)]
       ['("condition" "add") (add-monster-condition req)]
       ['("condition" "remove") (remove-monster-condition req)]
+      ['("curse") (curse-monster req)]
+      ['("bless") (bless-monster req)]
       [_ (return (not-found req))])
     (response/empty)))
 
@@ -1028,6 +1038,12 @@
   (match (req->condition req)
     [(and c (not #f)) (do-monster-group/n mgid mn (monster-update-condition c #f))]
     [_ (void)]))
+
+(define (curse-monster _req)
+  (do ((do-curse-monster s))))
+
+(define (bless-monster _req)
+  (do ((do-bless-monster s))))
 
 ;;;; HELPERS
 
