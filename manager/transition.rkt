@@ -24,47 +24,49 @@
 ;; Play (Draw -> Next Round -> …)
 
 (define ((next-round s))
-  ;; check prompts
-  (let ([t end-of]
-        [round (@! (state-@round s))])
-    (when (should-do-prompt? t round (@! (state-@prompts s)))
-      (do-round-prompt t round)))
-  ;; wane elements
-  (for-each {(<@ wane-element)} (state-@elements s))
-  ;; reset player initiative
-  (<@ (state-@creatures s) {(update-all-players player-clear-initiative)})
-  ;; discard monster cards
-  (<@ (state-@ability-decks s)
-      (update-ability-decks {~> 2> ability-decks-discard-and-maybe-shuffle}))
-  ;; shuffle modifiers if required
-  (when (shuffle-modifier-deck? (@! (state-@monster-discard s)))
-    (reshuffle-modifier-deck s))
-  ;; increment round number
-  (<@ (state-@round s) add1)
-  ;; toggle state
-  (<@ (state-@in-draw? s) not)
-  ;; check prompts
-  (let ([t beginning-of]
-        [round (@! (state-@round s))])
-    (when (should-do-prompt? t round (@! (state-@prompts s)))
-      (do-round-prompt t round))))
+  (when (@! (state-@in-draw? s))
+    ;; check prompts
+    (let ([t end-of]
+          [round (@! (state-@round s))])
+      (when (should-do-prompt? t round (@! (state-@prompts s)))
+        (do-round-prompt t round)))
+    ;; wane elements
+    (for-each {(<@ wane-element)} (state-@elements s))
+    ;; reset player initiative
+    (<@ (state-@creatures s) {(update-all-players player-clear-initiative)})
+    ;; discard monster cards
+    (<@ (state-@ability-decks s)
+        (update-ability-decks {~> 2> ability-decks-discard-and-maybe-shuffle}))
+    ;; shuffle modifiers if required
+    (when (shuffle-modifier-deck? (@! (state-@monster-discard s)))
+      (reshuffle-modifier-deck s))
+    ;; increment round number
+    (<@ (state-@round s) add1)
+    ;; toggle state
+    (<@ (state-@in-draw? s) not)
+    ;; check prompts
+    (let ([t beginning-of]
+          [round (@! (state-@round s))])
+      (when (should-do-prompt? t round (@! (state-@prompts s)))
+        (do-round-prompt t round)))))
 
 (define ((draw-abilities s))
-  ;; draw new monster cards
-  (<@ (state-@ability-decks s)
-      (update-ability-decks
-        (λ (set ad)
-          ;; TODO: if we keep only ability-decks for groups with monsters, this
-          ;; can simplify?
-          (define monster-set-has-monsters?
-            (~>> (s) state-@active-monster-groups @! sep
-                 (pass (~> monster-group-set-name (equal? set)))
-                 (any (~> monster-group-monsters (not empty?)))))
-          (cond
-            [monster-set-has-monsters? (ability-decks-draw-next ad)]
-            [else ad]))))
-  ;; toggle state
-  (<@ (state-@in-draw? s) not))
+  (unless (@! (state-@in-draw? s))
+    ;; draw new monster cards
+    (<@ (state-@ability-decks s)
+        (update-ability-decks
+         (λ (set ad)
+           ;; TODO: if we keep only ability-decks for groups with monsters, this
+           ;; can simplify?
+           (define monster-set-has-monsters?
+             (~>> (s) state-@active-monster-groups @! sep
+                  (pass (~> monster-group-set-name (equal? set)))
+                  (any (~> monster-group-monsters (not empty?)))))
+           (cond
+             [monster-set-has-monsters? (ability-decks-draw-next ad)]
+             [else ad]))))
+    ;; toggle state
+    (<@ (state-@in-draw? s) not)))
 
 (module+ test
   (test-case "Draw Abilities: Cards not drawn for dead monster groups"
