@@ -929,8 +929,8 @@
     [else (response/empty)]))
 
 (define (progress-game _req)
-  (do
-    (let ([s (s)])
+  (let ([s (s)])
+    (do
       ;; double-parens: apply function that this if expression evaluates to
       ((if (@! (state-@in-draw? s))
            (next-round s)
