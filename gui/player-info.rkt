@@ -75,7 +75,7 @@
               (when (equal? event 'return)
                 (close!))
               (cond [(string->number init-str) => on-initiative]))
-            #:label @init-label)))))
+            #:label (@> @init-label escape-text))))))
   (define name-initiative-panel
     (vpanel
       #:stretch '(#f #t)
