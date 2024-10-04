@@ -42,7 +42,7 @@
        (button "Restart Server" restart)))))
 
 (define (handle _s evt)
-  (evt))
+  (queue-callback evt))
 
 (module+ main
   (require frosthaven-manager/testfiles/data)
