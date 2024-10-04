@@ -17,5 +17,6 @@ used as the action for a @racket[button].
               @defthing[draw-abilities transition/c]
               )]{
 Transition functions that define how to progress through the round structure of
-the game.
+the game. These are idempotent in that if they are called with the wrong
+@racket[state-@in-draw?], they do nothing.
 }
