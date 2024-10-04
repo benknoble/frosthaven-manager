@@ -438,16 +438,13 @@
   ;; structures, this would likely be unnecessary.
   (define g (box #f))
   (<@ (state-@creatures s)
-      (λ (cs)
-        (define cs* (update-monster-groups
-                     cs
-                     monster-group-id
-                     (λ (mg)
-                       (define new-mg ((monster-group-remove monster-number) mg))
-                       (set-box! g new-mg)
-                       new-mg)
-                     {~> 2> monster-group-first-monster}))
-        cs*))
+      {(update-monster-groups
+        monster-group-id
+        (λ (mg)
+          (define new-mg ((monster-group-remove monster-number) mg))
+          (set-box! g new-mg)
+          new-mg)
+        {~> 2> monster-group-first-monster})})
   (when (~> (g) unbox monster-group-monsters empty?)
     ((add-or-remove-monster-group s) `(remove ,(unbox g)))))
 
