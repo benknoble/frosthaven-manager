@@ -1,0 +1,33 @@
+name: Resyntax Autofixer
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 6"
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3.0.2
+      - name: Install Racket
+        uses: Bogdanp/setup-racket@v1.9.1
+        with:
+          version: current
+      - name: Installing frosthaven-manager and its dependencies
+        run: make install
+      - name: Compiling frosthaven-manager and building its docs
+        run: make check-deps RACO_SETUP_ARGS=--unused-pkg-deps
+      - name: Create a Resyntax pull request
+        uses: jackfirth/create-resyntax-pull-request@v0.4.1
+        with:
+          private-key: ${{ secrets.RESYNTAX_APP_PRIVATE_KEY }}
+          max-fixes: '50'
+          max-modified-files: '20'
+          max-modified-lines: '500'
