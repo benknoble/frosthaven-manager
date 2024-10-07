@@ -46,5 +46,6 @@
                              "macOS-FrosthavenManager"
                              "linux-FrosthavenManager"
                              "windows-FrosthavenManager"
-                             "docs"))
+                             "docs"
+                             "screenshots"))
 (define test-omit-paths compile-omit-paths)
