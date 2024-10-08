@@ -28,7 +28,7 @@
 
 (define num/p
   (do [num <- number/p]
-    (pure (const num))))
+      (pure (const num))))
 
 (define bracketed-expr/p
   (fmap second
