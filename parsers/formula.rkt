@@ -72,8 +72,13 @@
             [("+") (λ (env) (+ (res env) (p env)))]
             [("-") (λ (env) (- (res env) (p env)))])))))
 
+(define whole-string-expr/p
+  (do [p <- expr/p]
+      eof/p
+      (pure p)))
+
 (define (parse-expr s)
-  (parse-result! (parse-string expr/p s)))
+  (parse-result! (parse-string whole-string-expr/p s)))
 
 (module+ test
   (test-case "parse-expr"
@@ -82,4 +87,6 @@
     (check-equal? ((parse-expr "5*6-2") (hash)) 28)
     (check-equal? ((parse-expr "5 + 3 - 1") (hash)) 7)
     (check-equal? ((parse-expr "down(4 * 3 / 2)") (hash)) 6)
-    (check-equal? ((parse-expr "4 * 3 / 2") (hash)) 6)))
+    (check-equal? ((parse-expr "4 * 3 / 2") (hash)) 6)
+    (check-exn exn:fail:read:megaparsack? (thunk (parse-expr "(3*4))")))
+    (check-exn exn:fail:read:megaparsack? (thunk (parse-expr "down((C-1)/2) * (L+3))")))))
