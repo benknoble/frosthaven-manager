@@ -60,14 +60,15 @@
 (module+ test
   (test-case "Draw Abilities: Cards not drawn for dead monster groups"
     (define s (make-sample-state))
-    (define initial-deck (get-ability-decks s archers))
+    (define mg
+      (~> (s archers)
+          get-creature creature-v monster-group*-mg))
     ;; kill all archers
-    (<@ (state-@creatures s)
-        {(update-monster-groups
-          archers
-          (λ (mg)
-            (for/fold ([mg mg])
-                      ([m (monster-group-monsters mg)])
-              ((monster-group-remove (monster-number m)) mg))))})
+    (for ([m (monster-group-monsters mg)])
+      (kill-monster s archers (monster-number m)))
+    ;; fail: these cards no longer exist!
+    (check-exn exn:fail? (thunk (get-ability-decks s archers)))
+    ;; Draw should still succeed
     ((draw-abilities s))
-    (check-equal? (get-ability-decks s archers) initial-deck)))
+    ;; fail: these cards still don't exist!
+    (check-exn exn:fail? (thunk (get-ability-decks s archers)))))
