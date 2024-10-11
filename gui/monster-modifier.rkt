@@ -51,6 +51,7 @@
     (card-swapper @monster-ability-cards #:on-add add #:on-remove remove)
     ;; TODO: compute points spent? Only "valid" for removing minus cards, and
     ;; card-swapper permits removing any card…
+    ;; TODO: after shuffle, card-swapper's internal state is wrong
     (button "Shuffle Deck" shuffle))))
 
 (define (card-swapper @monster-ability-cards #:on-add [add void] #:on-remove [remove void])
