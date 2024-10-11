@@ -54,6 +54,7 @@
     (button "Shuffle Deck" shuffle))))
 
 (define (card-swapper @monster-ability-cards #:on-add [add void] #:on-remove [remove void])
+  (define-flow moveable? (not (one-of? curse bless)))
   (define/obs @current-index #f)
   (define/obs @current #f)
   (define/obs @absent-index #f)
@@ -90,8 +91,12 @@
           #:selection @current-index)
    (vpanel
     #:alignment '(center center)
-    (button "=>" (thunk (cond [(@! @current-index) => remove])))
-    (button "<=" (thunk (cond [(@! @absent) => add*]))))
+    (button "=>" (thunk (cond [(@! @current-index) => remove]))
+            #:enabled? (obs-combine (flow (and% moveable? values))
+                                    @current
+                                    @current-index))
+    (button "<=" (thunk (cond [(@! @absent) => add*]))
+            #:enabled? @absent))
    (table '("Out of the Game")
           @absent-cards
           (action @absent-index @absent)

@@ -100,9 +100,10 @@
   (~>> list (argmin modifier-ranking)))
 
 (define (absent-from-modifier-deck cards)
+  (define-flow moveable? (not (one-of? curse bless)))
   (define default-modifier-deck-counter (counter monster-modifier-deck))
   (define current-counter (counter cards))
-  (unless (subset? (hash-keys current-counter)
+  (unless (subset? (~>> (current-counter) hash-keys (filter moveable?))
                    (hash-keys default-modifier-deck-counter))
     (raise-argument-error 'absent-from-modifier-deck
                           "subset of monster-modifier-deck"
@@ -115,12 +116,13 @@
     (raise-argument-error 'absent-from-modifier-deck
                           "subset of monster-modifier-deck"
                           cards))
-  (append* (for/list ([(card num) (in-hash difference)])
+  (append* (for/list ([(card num) (in-hash difference)]
+                      #:when (moveable? card))
              (build-list num (const card)))))
 
 (module+ test
-  (test-exn "absent-from-modifier-deck: fails on non-subset keys" #rx"subset"
-            (thunk (absent-from-modifier-deck (list curse))))
+  (test-not-exn "absent-from-modifier-deck: does not fail on non-subset keys"
+                (thunk (absent-from-modifier-deck (list curse))))
   (test-exn "absent-from-modifier-deck: fails on too many cards" #rx"subset"
             (thunk (absent-from-modifier-deck (build-list 10 (const crit)))))
   (test-case "absent-from-modifier-deck: computes the difference from the standard modifier deck"
