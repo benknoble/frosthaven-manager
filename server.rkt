@@ -111,6 +111,13 @@
      (define (name req)
        (-do-monster req (λ (req monster-group-id monster-number) e ...))))])
 
+;; tags procedures that need state to yield the action to apply (see
+;; do-monster-group/mgid): IOW, proc should be state -> Action (for some
+;; "Action" type).
+(struct needs-state [proc]
+  #:transparent
+  #:property prop:procedure (struct-field-index proc))
+
 ;; safe way to evaluate selector:condition, which contract errors when the
 ;; input is outside the domain; if this produces #t, input is a valid condition
 ;; number
@@ -1011,16 +1018,19 @@
   (do-monster-group/n mgid mn {switch [(not monster-dead?) (esc (monster-update-hp sub1))]}))
 
 (define/monster increment-monster-hp (_r => [mgid mn])
+  ;; monster -> monster
   (define inc-hp (monster-update-hp add1))
-  (define ((inc-hp/mg mg) m)
+  ;; state * mg -> monster -> monster
+  (define ((inc-hp/mg s mg) m)
     (define stats (get-monster-stats mg m))
     (cond
-      [(monster-at-max-health? m stats (@! (state-@env (s)))) m]
+      [(monster-at-max-health? m stats (@! (state-@env s))) m]
       [else (inc-hp m)]))
-  (define (inc-hp/mg/n mg)
-    (define do-it (monster-group-update-num mn (inc-hp/mg mg)))
+  ;; state -> mg -> mg
+  (define ((inc-hp/mg/n s) mg)
+    (define do-it (monster-group-update-num mn (inc-hp/mg s mg)))
     (do-it mg))
-  (do-monster-group/mgid mgid inc-hp/mg/n))
+  (do-monster-group/mgid mgid (needs-state inc-hp/mg/n)))
 
 (define/monster add-monster-condition (req => [mgid mn])
   (match (req->condition req)
@@ -1117,9 +1127,12 @@
      (values monster-group-id monster-number)]
     [_ (values #f #f)]))
 
+;; action: mg -> mg U state[mg -> mg]
 (define (do-monster-group/mgid mgid action [action-n {1>}])
-  (do (<@ (state-@creatures s)
-          {(update-monster-groups mgid action action-n)})))
+  (do
+    (define action* (if (needs-state? action) (action s) action))
+    (<@ (state-@creatures s)
+        {(update-monster-groups mgid action* action-n)})))
 
 (define (do-monster-group/n mgid mn action)
   (do-monster-group/mgid mgid (monster-group-update-num mn action)))
