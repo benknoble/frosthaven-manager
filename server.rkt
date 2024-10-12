@@ -181,9 +181,10 @@
   (obs-observe!
     (state-@level an-s)
     (λ (level)
+      (define info (get-level-info level))
       (for ([id '(trap hazardous-terrain gold xp)]
             [f (list level-info-trap-damage level-info-hazardous-terrain level-info-gold level-info-exp)])
-        (define n (~> (level) get-level-info f))
+        (define n (f info))
         (multicast-channel-put ch `(number ,id ,n)))))
   (obs-observe!
     (state-@in-draw? an-s)
