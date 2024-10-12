@@ -230,6 +230,14 @@
      (when m
        (multicast-channel-put ch `(alert
                                    ,(format "The monster drew: ~a." (format-monster-modifier m)))))))
+  (obs-observe!
+   (state-@curses an-s)
+   (λ (cs)
+     (multicast-channel-put ch `(number curses ,(length cs)))))
+  (obs-observe!
+   (state-@blesses an-s)
+   (λ (cs)
+     (multicast-channel-put ch `(number blesses ,(length cs)))))
 
   (define-values (app the-reverse-uri)
     (dispatch-rules
@@ -378,6 +386,8 @@
   (define num-players (@! (state-@num-players (s))))
   (define in-draw? (@! (state-@in-draw? (s))))
   (define discard (@! (@> (state-@modifier (s)) {(if _ format-monster-modifier "N/A")})))
+  (define curses (@! (@> (state-@curses (s)) {~> length ~a})))
+  (define blesses (@! (@> (state-@blesses (s)) {~> length ~a})))
   `((div
      ([class "bottom-info"])
      (p ,(action-button
@@ -398,11 +408,15 @@
      (p ,(action-button
           (list "monster" "curse")
           empty
-          "Curse Monster")
+          `(span "Curse Monster ("
+                 (span ([id "curses"]) ,curses)
+                 "/" ,(~a (length monster-curse-deck)) ")"))
         ,(action-button
           (list "monster" "bless")
           empty
-          "Bless Monster"))
+          `(span "Bless Monster ("
+                 (span ([id "blesses"]) ,blesses)
+                 "/" ,(~a (length bless-deck)) ")")))
      (p "Round "
         (span ([id "round"])
               ,(number->string (@! (state-@round (s)))))
