@@ -13,9 +13,9 @@
               (hash/c string? ability-decks?)))]
     [move-top-draw-to-bottom (-> ability-decks? ability-decks?)]))
 
-(require racket/serialize
-         frosthaven-manager/curlique
-         frosthaven-manager/defns)
+(require frosthaven-manager/curlique
+         frosthaven-manager/defns
+         racket/serialize)
 
 (module+ test (require rackunit))
 

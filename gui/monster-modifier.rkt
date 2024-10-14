@@ -20,12 +20,11 @@
          #:on-remove (-> exact-nonnegative-integer? any)}
         (is-a?/c view<%>))]))
 
-(require racket/gui/easy
-         racket/gui/easy/contract
+(require frosthaven-manager/defns
          frosthaven-manager/observable-operator
          frosthaven-manager/qi/utils
-
-         frosthaven-manager/defns)
+         racket/gui/easy
+         racket/gui/easy/contract)
 
 (define (modify-monster-deck-menu-item @monster-ability-cards
                                        #:on-add [add void]

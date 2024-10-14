@@ -14,16 +14,16 @@
                        #:kill-summon (-> natural-number/c any))
                       (is-a?/c view<%>))]))
 
-(require racket/gui/easy
-         frosthaven-manager/observable-operator
-         racket/gui/easy/contract
-         frosthaven-manager/defns
+(require frosthaven-manager/defns
          frosthaven-manager/gui/counter
-         frosthaven-manager/gui/render
-         frosthaven-manager/gui/mixins
          frosthaven-manager/gui/font
          frosthaven-manager/gui/helpers
-         frosthaven-manager/gui/rich-text-display)
+         frosthaven-manager/gui/mixins
+         frosthaven-manager/gui/render
+         frosthaven-manager/gui/rich-text-display
+         frosthaven-manager/observable-operator
+         racket/gui/easy
+         racket/gui/easy/contract)
 
 (define (player-view @player
                      #:on-condition [on-condition void]
@@ -233,11 +233,10 @@
 
 (module+ main
   (define (update-players players k f)
-    (map (λ (e)
-           (if (eq? (car e) k)
-             (cons k (f (cdr e)))
-             e))
-         players))
+    (for/list ([e (in-list players)])
+      (if (eq? (car e) k)
+          (cons k (f (cdr e)))
+          e)))
   (define/obs @players
     (list
       (cons 0 (player "A" 15 10 3 (list regenerate invisible immobilize) 23

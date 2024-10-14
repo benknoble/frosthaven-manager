@@ -5,8 +5,8 @@
     [init-dbs (-> path-string? state? any)]
     [init-dbs-and-foes (-> path-string? state? any)]))
 
-(require frosthaven-manager/observable-operator
-         frosthaven-manager/manager/state)
+(require frosthaven-manager/manager/state
+         frosthaven-manager/observable-operator)
 
 (define (init-dbs db s)
   ;; remove all monster groups from creatures

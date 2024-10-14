@@ -9,8 +9,8 @@
   [wane-element (-> element-state/c element-state/c)]
   [transition-element-state (-> element-state/c element-state/c)]))
 
-(require racket/gui/easy/contract
-         frosthaven-manager/observable-operator)
+(require frosthaven-manager/observable-operator
+         racket/gui/easy/contract)
 
 (module+ test (require rackunit))
 

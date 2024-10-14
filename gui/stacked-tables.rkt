@@ -13,9 +13,9 @@
                          #:rest (listof column?)
                          (is-a?/c view<%>)))))
 
-(require racket/gui/easy
-         racket/gui/easy/contract
-         frosthaven-manager/observable-operator)
+(require frosthaven-manager/observable-operator
+         racket/gui/easy
+         racket/gui/easy/contract)
 
 (struct column [title entry->label entry->next])
 
@@ -71,8 +71,8 @@
            frosthaven-manager/gui/render
            frosthaven-manager/observable-operator)
 
-  (require frosthaven-manager/monster-db
-           frosthaven-manager/defns)
+  (require frosthaven-manager/defns
+           frosthaven-manager/monster-db)
   (define-values (info-db _ability-db) (get-dbs default-monster-db))
   (render/eventspace
     (window

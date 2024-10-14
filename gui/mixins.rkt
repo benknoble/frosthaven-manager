@@ -8,8 +8,8 @@
          define-close!
          hide-caret/selection)
 
-(require (only-in racket/gui/base top-level-window<%>)
-         syntax/parse/define)
+(require syntax/parse/define
+         (only-in racket/gui/base top-level-window<%>))
 
 ;; Dialogs need to be closed, but rendering a dialog yields so there's
 ;; no way to retrieve a dialog's renderer from within itself.  This

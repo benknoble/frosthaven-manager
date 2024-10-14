@@ -8,11 +8,11 @@
          boss
          more-monsters)
 
-(require racket/runtime-path
-         syntax/parse/define
-         frosthaven-manager/defns
+(require frosthaven-manager/defns
          frosthaven-manager/monster-db
-         frosthaven-manager/observable-operator)
+         frosthaven-manager/observable-operator
+         racket/runtime-path
+         syntax/parse/define)
 
 ;; (submod manager/loot test) uses this module; break the cycle
 (define-syntax-parser define-manager-values

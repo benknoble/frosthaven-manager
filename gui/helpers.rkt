@@ -6,11 +6,11 @@
   define-error-text)
 
 (require racket/class
-         syntax/parse/define
-         racket/gui/easy/operator)
+         racket/gui/easy/operator
+         syntax/parse/define)
 
-(module+ test (require rackunit
-                       racket/gui/easy
+(module+ test (require racket/gui/easy
+                       rackunit
                        syntax/macro-testing))
 
 (define (translate-to-top-coords this top x y)

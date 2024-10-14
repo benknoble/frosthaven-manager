@@ -86,18 +86,18 @@
     [add-prompt (-> state? (-> prompt/c any))]
     [remove-prompt (-> state? (-> natural-number/c prompt/c any))]))
 
-(require racket/serialize
+(require frosthaven-manager/defns
+         frosthaven-manager/manager/ability-decks
+         frosthaven-manager/manager/elements
+         frosthaven-manager/manager/round-prompts
+         frosthaven-manager/monster-db
+         frosthaven-manager/observable-operator
+         frosthaven-manager/parsers/formula
+         frosthaven-manager/qi/utils
          racket/fasl
          racket/gui/easy/contract
          racket/gui/easy/observable
-         frosthaven-manager/observable-operator
-         frosthaven-manager/defns
-         frosthaven-manager/qi/utils
-         frosthaven-manager/monster-db
-         frosthaven-manager/manager/ability-decks
-         frosthaven-manager/manager/round-prompts
-         frosthaven-manager/manager/elements
-         frosthaven-manager/parsers/formula)
+         racket/serialize)
 
 (serializable-struct creature [id v] #:transparent)
 (serializable-struct monster-group* [active mg] #:transparent)
@@ -420,16 +420,15 @@
 
 (define (update-monster-groups creatures k f [fn {1>}])
   (define (maybe-update-monster-group e)
-    (if (~> (e)
-            (-< creature-id creature-v)
-            (and% (eq? k) monster-group*?))
-      (let* ([mg* (creature-v e)]
-             [n (monster-group*-active mg*)]
-             [mg (monster-group*-mg mg*)]
-             [new-mg (f mg)]
-             [new-n (fn n new-mg)])
-        (creature k (monster-group* new-n new-mg)))
-      e))
+    (cond
+      [(~> (e) (-< creature-id creature-v) (and% (eq? k) monster-group*?))
+       (define mg* (creature-v e))
+       (define n (monster-group*-active mg*))
+       (define mg (monster-group*-mg mg*))
+       (define new-mg (f mg))
+       (define new-n (fn n new-mg))
+       (creature k (monster-group* new-n new-mg))]
+      [else e]))
   (map maybe-update-monster-group creatures))
 
 (define (kill-monster s monster-group-id monster-number)

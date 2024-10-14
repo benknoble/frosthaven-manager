@@ -20,13 +20,13 @@
                                    'resize-corner 'deleted 'transparent)))
         (is-a?/c view<%>))]))
 
-(require (except-in racket/gui newline)
+(require frosthaven-manager/gui/mixins
+         pict/snip
          racket/gui/easy
          racket/gui/easy/contract
          racket/gui/easy/observable
-         pict/snip
-         (prefix-in pict: pict)
-         frosthaven-manager/gui/mixins)
+         (except-in racket/gui newline)
+         (prefix-in pict: pict))
 
 (module model racket
   (provide
@@ -46,9 +46,9 @@
                                     newline?))
                       any/c)]))
 
-  (require racket/snip
+  (require pict
            racket/draw
-           pict)
+           racket/snip)
 
   (define newline
     (let ([s (make-object string-snip% "\n")])

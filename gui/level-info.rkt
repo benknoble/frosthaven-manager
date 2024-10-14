@@ -10,12 +10,12 @@
     [inspiration-table (-> (obs/c num-players/c)
                            (is-a?/c view<%>))]))
 
-(require racket/gui/easy
-         racket/gui/easy/contract
-         frosthaven-manager/observable-operator
-         frosthaven-manager/defns
+(require frosthaven-manager/defns
+         frosthaven-manager/gui/render
          frosthaven-manager/gui/static-table
-         frosthaven-manager/gui/render)
+         frosthaven-manager/observable-operator
+         racket/gui/easy
+         racket/gui/easy/contract)
 
 (define (level-stats @level @num-players)
   (define @level-info (@> @level get-level-info))
