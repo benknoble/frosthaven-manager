@@ -14,7 +14,7 @@
                "nat-traversal"
                "web-server-lib"
                "functional-lib"
-               "megaparsack-lib"
+               ("megaparsack-lib" #:version "1.8")
                "reprovide-lang-lib"
                "draw-lib"
                "markdown"

@@ -32,7 +32,8 @@
                                  (-> any/c input-port? #:syntax? any/c any/c))]))
 
 (require megaparsack
-         megaparsack/text
+         (rename-in megaparsack/text
+                    [string-ci/p original-string-ci/p])
          data/monad
          data/applicative
          (rename-in data/functor
@@ -43,14 +44,11 @@
 
 (module+ test (require rackunit))
 
-;; megaparsack's string-ci/p is broken
-;; (https://github.com/lexi-lambda/megaparsack/issues/24)
+;; megaparsack's string-ci/p returns the matched input; we want the constructor
+;; https://github.com/lexi-lambda/megaparsack/commit/ebadf6ddd130986efc1cc826e0f806b19b7f4609
 (define (string-ci/p s)
-  (if (zero? (string-length s))
-    (pure "")
-    (label/p s (do (char-ci/p (string-ref s 0))
-                   (string-ci/p (substring s 1))
-                   (pure s)))))
+  (do (original-string-ci/p s)
+      (pure s)))
 
 (module+ test
   (test-case "string-ci/p"
