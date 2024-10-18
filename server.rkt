@@ -863,7 +863,7 @@
      (define mg (monster-group*-mg (creature-v c)))
      (define id (creature-id c))
      (define css-id (monster-group-css-id id))
-     (define ability (~>> (mg) monster-group-set-name (hash-ref ads #f) (and _ ability-decks-current)))
+     (define ability (~> (mg) monster-group-set-name (hash-ref ads _ #f) (and _ ability-decks-current)))
      (define data
        (hash 'id css-id
              'data (hash
