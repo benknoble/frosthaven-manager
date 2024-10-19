@@ -10,6 +10,5 @@
                      [gui:λ:= λ:=])
          (all-from-out frosthaven-manager/curlique))
 
-(require (prefix-in gui: (combine-in racket/gui/easy
-                                     racket/gui/easy/operator))
-         frosthaven-manager/curlique)
+(require frosthaven-manager/curlique
+         (prefix-in gui: (combine-in racket/gui/easy racket/gui/easy/operator)))

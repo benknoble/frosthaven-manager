@@ -21,13 +21,13 @@
                                           string?)]))
 
 ;;;; requires and implementation macros
-(require syntax/parse/define
-         racket/hash
-         racket/runtime-path
-         frosthaven-manager/curlique
+(require frosthaven-manager/curlique
          frosthaven-manager/defns
          frosthaven-manager/monster-db
-         frosthaven-manager/parsers/foes)
+         frosthaven-manager/parsers/foes
+         racket/hash
+         racket/runtime-path
+         syntax/parse/define)
 
 (define-syntax-parser define/ability-sets
   [(_ (f sets ability-sets) body ...+)

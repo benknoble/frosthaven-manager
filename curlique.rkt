@@ -9,10 +9,10 @@
                      ~>>
                      switch))
 
-(require (only-in racket [#%app racket:app])
+(require (for-syntax syntax/parse/class/paren-shape)
+         qi
          syntax/parse/define
-         (for-syntax syntax/parse/class/paren-shape)
-         qi)
+         (only-in racket [#%app racket:app]))
 
 (define-syntax-parser curlique-app
   [{~braces _ x ...}

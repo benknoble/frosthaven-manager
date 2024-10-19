@@ -11,12 +11,12 @@
          ref-doc
          gui-doc)
 
-(require racket/match
+(require markdown
+         markdown/scrib
+         racket/match
          racket/runtime-path
          scribble/base
-         scribble/decode
-         markdown
-         markdown/scrib)
+         scribble/decode)
 
 (define-runtime-path ABOUT.md "../ABOUT.md")
 

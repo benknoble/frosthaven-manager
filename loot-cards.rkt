@@ -10,10 +10,10 @@
   lumber metal hide
   arrowvine axenut corpsecap flamefruit rockroot snowthistle)
 
-(require syntax/parse/define
+(require (for-syntax racket/syntax)
+         frosthaven-manager/defns
          racket/hash
-         (for-syntax racket/syntax)
-         frosthaven-manager/defns)
+         syntax/parse/define)
 
 (module reader syntax/module-reader
   frosthaven-manager/loot-cards)

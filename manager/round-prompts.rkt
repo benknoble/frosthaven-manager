@@ -10,9 +10,9 @@
   [should-do-prompt? (-> time/c natural-number/c (listof prompt/c) any/c)]
   [prompt->string (-> prompt/c string?)]))
 
-(require racket/serialize
-         syntax/parse/define
-         (for-syntax racket/contract))
+(require (for-syntax racket/contract)
+         racket/serialize
+         syntax/parse/define)
 
 (define beginning-of 'beginning-of)
 (define end-of 'end-of)

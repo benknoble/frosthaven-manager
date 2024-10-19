@@ -31,16 +31,14 @@
            [make-reader-like (-> (parser/c char? any/c)
                                  (-> any/c input-port? #:syntax? any/c any/c))]))
 
-(require megaparsack
-         (rename-in megaparsack/text
-                    [string-ci/p original-string-ci/p])
+(require data/applicative
          data/monad
-         data/applicative
-         (rename-in data/functor
-                    [map fmap])
          frosthaven-manager/curlique
          frosthaven-manager/qi/list2hash
-         frosthaven-manager/qi/utils)
+         frosthaven-manager/qi/utils
+         megaparsack
+         (rename-in megaparsack/text [string-ci/p original-string-ci/p])
+         (rename-in data/functor [map fmap]))
 
 (module+ test (require rackunit))
 

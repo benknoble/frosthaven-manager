@@ -13,9 +13,9 @@
     [player->rewards (-> player? num-players/c level/c
                          (listof string?))]))
 
-(require frosthaven-manager/observable-operator
-         frosthaven-manager/defns
-         frosthaven-manager/manager/state)
+(require frosthaven-manager/defns
+         frosthaven-manager/manager/state
+         frosthaven-manager/observable-operator)
 
 (module+ test (require rackunit))
 

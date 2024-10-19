@@ -13,9 +13,9 @@
     [foes/p (parser/c char? foes/pc)]
     [foe/p (parser/c char? foe/pc)]))
 
-(require frosthaven-manager/parsers/base
-         frosthaven-manager/parsers/monster
-         frosthaven-manager/defns)
+(require frosthaven-manager/defns
+         frosthaven-manager/parsers/base
+         frosthaven-manager/parsers/monster)
 
 #| foes syntax
 - outside of <text> elements, whitespace is ignored

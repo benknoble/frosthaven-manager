@@ -11,14 +11,14 @@
    [teleport (-> pict?)]
    [attack (-> pict?)]))
 
-(require pict
-         pict/color
-         pict/shadow
-         pict/flash
-         (only-in 2htdp/image triangle)
-         racket/draw
+(require frosthaven-manager/aoe-images
          frosthaven-manager/curlique
-         frosthaven-manager/aoe-images)
+         pict
+         pict/color
+         pict/flash
+         pict/shadow
+         racket/draw
+         (only-in 2htdp/image triangle))
 
 (define-flow highlight
   (shadow 10 0 0 #:shadow-color "white"))

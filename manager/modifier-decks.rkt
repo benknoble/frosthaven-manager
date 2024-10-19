@@ -15,10 +15,10 @@
     [add-monster-modifier (-> state? (-> monster-modifier? any))]
     [remove-monster-modifier (-> state? (-> exact-nonnegative-integer? any))]))
 
-(require frosthaven-manager/observable-operator
-         frosthaven-manager/qi/utils
-         frosthaven-manager/defns
-         frosthaven-manager/manager/state)
+(require frosthaven-manager/defns
+         frosthaven-manager/manager/state
+         frosthaven-manager/observable-operator
+         frosthaven-manager/qi/utils)
 
 (module+ test (require rackunit)
   (define (counter . xs)

@@ -17,13 +17,12 @@
     [elements (-> (listof element-pics?))]
     [wild (-> element-pics?)]))
 
-(require pict
+(require frosthaven-manager/curlique
+         pict
          pict/color
          pict/flash
-         (only-in 2htdp/image
-                  wedge)
          racket/draw
-         frosthaven-manager/curlique)
+         (only-in 2htdp/image wedge))
 
 (struct element-pics [name infused waning unfused consume] #:transparent)
 
@@ -121,17 +120,15 @@
   (element-pics "Fire" infused-fire waning-fire unfused-fire (make-consume infused-fire)))
 
 (define (ice-overlay)
-  (let* ([bar (~> ((filled-rectangle 2 trimmed-size)) white (inset 5 0))]
-         [branch (white (filled-rectangle 2 5))]
-         [fractal
-           (~> (bar)
-               (pin-over 1 5 (rotate branch (/ pi 3)))
-               (pin-over 6 5 (rotate branch (/ pi -3)))
-               (pin-over 1 (- size 5 10) (rotate branch (* pi 2/3)))
-               (pin-over 6 (- size 5 10) (rotate branch (* pi -2/3))))])
-    (~> (fractal)
-        (-< _ (rotate (half pi)) (rotate (/ pi 4)) (rotate (/ pi -4)))
-        cc-superimpose)))
+  (define bar (~> ((filled-rectangle 2 trimmed-size)) white (inset 5 0)))
+  (define branch (white (filled-rectangle 2 5)))
+  (define fractal
+    (~> (bar)
+        (pin-over 1 5 (rotate branch (/ pi 3)))
+        (pin-over 6 5 (rotate branch (/ pi -3)))
+        (pin-over 1 (- size 5 10) (rotate branch (* pi 2/3)))
+        (pin-over 6 (- size 5 10) (rotate branch (* pi -2/3)))))
+  (~> (fractal) (-< _ (rotate (half pi)) (rotate (/ pi 4)) (rotate (/ pi -4))) cc-superimpose))
 (define (ice)
   (define overlay (ice-overlay))
   (define infused-ice (cc-superimpose (cyan (base)) overlay))
@@ -198,34 +195,30 @@
   {~> right-isoceles-hypotenuse->leg -})
 
 (define (earth-overlay)
-  (let* ([stem (white (filled-rectangle 2 trimmed-size))]
-         [large-size (- (half trimmed-size) 3)]
-         [large-branch (white (filled-rectangle 2 large-size))]
-         [med-size (/ trimmed-size 3)]
-         [med-branch (white (filled-rectangle 2 med-size))]
-         [small-size (- (/ trimmed-size 5) 3)]
-         [small-branch (white (filled-rectangle 2 small-size))])
-    (~> (stem)
-        (pin-over (size->dx large-size)
-                  (half trimmed-size)
-                  (rotate large-branch (* pi 1/4)))
-        (pin-over (size->dx med-size)
-                  (/ trimmed-size 3)
-                  (rotate med-branch (* pi 1/4)))
-        (pin-over (size->dx small-size)
-                  (/ trimmed-size 8)
-                  (rotate small-branch (* pi 1/4)))
-        (pin-line stem {~> cb-find (== _ (- 2))}
-                  stem ct-find
-                  #:color "white"
-                  #:start-angle (* pi 7/8)
-                  #:end-angle (/ pi 3)
-                  #:start-pull 3/4
-                  #:end-pull 1/4)
-        (-< _ (scale -1 1))
-        hc-append
-        (refocus stem)
-        (rotate (* pi -1/4)))))
+  (define stem (white (filled-rectangle 2 trimmed-size)))
+  (define large-size (- (half trimmed-size) 3))
+  (define large-branch (white (filled-rectangle 2 large-size)))
+  (define med-size (/ trimmed-size 3))
+  (define med-branch (white (filled-rectangle 2 med-size)))
+  (define small-size (- (/ trimmed-size 5) 3))
+  (define small-branch (white (filled-rectangle 2 small-size)))
+  (~> (stem)
+      (pin-over (size->dx large-size) (half trimmed-size) (rotate large-branch (* pi 1/4)))
+      (pin-over (size->dx med-size) (/ trimmed-size 3) (rotate med-branch (* pi 1/4)))
+      (pin-over (size->dx small-size) (/ trimmed-size 8) (rotate small-branch (* pi 1/4)))
+      (pin-line stem
+                {~> cb-find (== _ (- 2))}
+                stem
+                ct-find
+                #:color "white"
+                #:start-angle (* pi 7/8)
+                #:end-angle (/ pi 3)
+                #:start-pull 3/4
+                #:end-pull 1/4)
+      (-< _ (scale -1 1))
+      hc-append
+      (refocus stem)
+      (rotate (* pi -1/4))))
 (define (earth)
   (define overlay (earth-overlay))
   (define infused-earth (cc-superimpose (colorize (base) "dark green") overlay))

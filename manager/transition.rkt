@@ -6,14 +6,14 @@
   [next-round transition/c]
   [draw-abilities transition/c]))
 
-(require frosthaven-manager/observable-operator
-         frosthaven-manager/defns
-         frosthaven-manager/manager/state
+(require frosthaven-manager/defns
+         frosthaven-manager/gui/round-prompts
          frosthaven-manager/manager/ability-decks
-         frosthaven-manager/manager/modifier-decks
          frosthaven-manager/manager/elements
+         frosthaven-manager/manager/modifier-decks
          frosthaven-manager/manager/round-prompts
-         frosthaven-manager/gui/round-prompts)
+         frosthaven-manager/manager/state
+         frosthaven-manager/observable-operator)
 
 (module+ test (require rackunit
                        frosthaven-manager/testfiles/data

@@ -12,30 +12,30 @@
     [spec-sym? flat-contract?]
     [spec? flat-contract?]
     [spec->shape (-> spec? pict?)]
-    [syntaxes-can-be-spec? predicate/c]
+    [syntaxes-can-be-spec? (-> any/c boolean?)]
     [syntaxes->spec (-> (and/c (listof syntax?) syntaxes-can-be-spec?) spec?)]
     [string->spec (-> string? spec?)]))
 
-(require pict
-         racket/draw
-         frosthaven-manager/curlique)
+(require frosthaven-manager/curlique
+         pict
+         racket/draw)
 
 (define (custom-hex s)
   (define h (* (sqrt 3) s))
   (define r (* 1/2 h))
   (define extra-dy (* 1/2 s))
 
+  (define p (new dc-path%))
   (define path
-    (let ([p (new dc-path%)])
-      (begin0 p
-        (send* p
-               (move-to 0 0)
-               (line-to 0 s)
-               (line-to r (* 3/2 s))
-               (line-to (* 2 r) s)
-               (line-to (* 2 r) 0)
-               (line-to r (* -1/2 s))
-               (close)))))
+    (begin0 p
+      (send* p
+             (move-to 0 0)
+             (line-to 0 s)
+             (line-to r (* 3/2 s))
+             (line-to (* 2 r) s)
+             (line-to (* 2 r) 0)
+             (line-to r (* -1/2 s))
+             (close))))
 
   (dc (λ (dc dx dy)
         (define old-pen (send dc get-pen))
@@ -88,8 +88,8 @@
     (match s
       [(cons `[,line ,dedent? ,columns] s)
        (if (= line (add1 last-line))
-         (loop s (cons `[,line ,dedent? ,(fill-in-columns columns)] result) line)
-         (loop (cons `[,line ,dedent? ,columns] s)
+         (loop s (cons (list line dedent? (fill-in-columns columns)) result) line)
+         (loop (cons (list line dedent? columns) s)
                (cons `[,(add1 last-line) #f ()] result)
                (add1 last-line)))]
       ['() (reverse result)])))
@@ -102,7 +102,7 @@
       [(cons `[,shape ,column] cs)
        (if (= column (add1 last-column))
          (loop cs (cons shape result) column)
-         (loop (cons `[,shape ,column] cs)
+         (loop (cons (list shape column) cs)
                (cons 'g result)
                (add1 last-column)))]
       ['() (reverse result)])))

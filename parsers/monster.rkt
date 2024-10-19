@@ -13,8 +13,8 @@
     [bestiary-dupes (-> (listof any/c) (values (or/c #f (listof string?))
                                                (or/c #f (listof string?))))]))
 
-(require frosthaven-manager/parsers/base
-         frosthaven-manager/defns)
+(require frosthaven-manager/defns
+         frosthaven-manager/parsers/base)
 
 (module+ test (require rackunit))
 

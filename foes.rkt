@@ -4,12 +4,12 @@
   #%app #%datum #%top #%top-interaction
   (rename-out [mb #%module-begin]))
 
-(require syntax/parse/define
-         frosthaven-manager/defns
+(require (for-syntax frosthaven-manager/syntax/monsters
+                     racket/syntax)
          frosthaven-manager/curlique
+         frosthaven-manager/defns
          frosthaven-manager/syntax/monsters
-         (for-syntax racket/syntax
-                     frosthaven-manager/syntax/monsters))
+         syntax/parse/define)
 
 ;; e ::= '(import "path") | <monster-info> | listof <monster-ability> | <foe>
 (define-syntax-parser mb
@@ -72,9 +72,9 @@
 (module+ debug
   (provide view-foes
            view-all-foes)
-  (require racket/gui/easy
+  (require frosthaven-manager/gui/monsters
            frosthaven-manager/observable-operator
-           frosthaven-manager/gui/monsters)
+           racket/gui/easy)
   (define (view-all-foes make-foes level)
     (for-each (compose1 view-foes make-foes)
               (list level level level)
