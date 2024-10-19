@@ -66,19 +66,6 @@
           (~> pict-width (* max-col)))
       max (* 3/2)))
 
-;; (define top (hc-append (X) (X)))
-;; (define middle (translate (hc-append (X) (X) (X) (M) (O)) (- (r)) 0))
-;; (define bottom (hc-append (X) (X)))
-;; (define extra (translate (hc-append (X) (ghost (S)) (X)) (- (r)) 0))
-;; (require racket/gui)
-;; (show-pict
-;;   (explain-child (cc-superimpose (rectangle (border-size 4 5) (border-size 4 5))
-;;                                  (vl-append top middle bottom extra))
-;;                  top middle bottom extra
-;;                  #:scale 1))
-;; (show-pict (cc-superimpose (rectangle (border-size 1 1) (border-size 1 1))
-;;                            (X)))
-
 (define (fill-in-spec s)
   (let loop ([s s]
              [result null]
