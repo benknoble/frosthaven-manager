@@ -64,30 +64,40 @@
           (~> pict-width (* max-col)))
       max (* 3/2)))
 
+;; TODO: use struct/contract?
+;; columns: (or/c (listof column?) (listof spec-sym?))
+(struct line [number dedent? columns] #:prefab)
+;; shape: spec-sym?
+(struct column [shape number] #:prefab)
+
+;; spec? -> spec?
 (define (fill-in-spec s)
   (let loop ([s s]
              [result null]
              [last-line (match s
                           ['() 0]
-                          [(cons `[,line ,_ ,_] _) (sub1 line)])])
+                          [(cons [line number _ _] _) (sub1 number)])])
     (match s
-      [(cons `[,line ,dedent? ,columns] s)
-       (if (= line (add1 last-line))
-         (loop s (cons (list line dedent? (fill-in-columns columns)) result) line)
-         (loop (cons (list line dedent? columns) s)
-               (cons `[,(add1 last-line) #f ()] result)
-               (add1 last-line)))]
+      [(cons [line line-number dedent? columns] s)
+       (if (= line-number (add1 last-line))
+           (loop s
+                 (cons [line line-number dedent? (fill-in-columns columns)] result)
+                 line-number)
+           (loop (cons [line line-number dedent? columns] s)
+                 (cons [line (add1 last-line) #f '()] result)
+                 (add1 last-line)))]
       ['() (reverse result)])))
 
+;; (listof column?) -> (listof spec-sym?)
 (define (fill-in-columns cs)
   (let loop ([cs cs]
              [result null]
              [last-column -1])
     (match cs
-      [(cons `[,shape ,column] cs)
-       (if (= column (add1 last-column))
-         (loop cs (cons shape result) column)
-         (loop (cons (list shape column) cs)
+      [(cons [column shape column-number] cs)
+       (if (= column-number (add1 last-column))
+         (loop cs (cons shape result) column-number)
+         (loop (cons [column shape column-number] cs)
                (cons 'g result)
                (add1 last-column)))]
       ['() (reverse result)])))
@@ -102,21 +112,23 @@
     [(m) (M)]
     [(g) (ghost (S))]))
 
+;; (listof spec-sym?) -> pict?
 (define (row->shape r)
   (match r
     ['() (ghost (S))]
     [(list sym ...) (apply hc-append (map sym->shape sym))]))
 
+;; spec? -> pict?
 (define (rows->shape rs)
   (define max-row (length rs))
   (define max-col
-    (apply max (map (match-lambda [`[,_ ,_ ,r] (length r)]) rs)))
+    (apply max (map (match-lambda [[line _ _ row-spec] (length row-spec)]) rs)))
   (define frame-length (border-size max-row max-col))
   (cc-superimpose
     (rectangle frame-length frame-length)
     (for/fold ([p (blank)])
               ([row (in-list rs)])
-      (match-define `[,_line ,dedent? ,row-spec] row)
+      (match-define [line _ dedent? row-spec] row)
       (define dx (if dedent? 0 (- (r))))
       (vl-append p (translate (row->shape row-spec) dx 0)))))
 
@@ -128,12 +140,13 @@
     (syntax-line (argmin syntax-column stxs)))
   (define dedent? (if (even? line-with-least-column) odd? even?))
   (for/list ([group (in-list groups)])
-    (define line (syntax-line (first group)))
-    (list line
-          (dedent? line)
-          (for/list ([stx (in-list group)])
-            (list (syntax-e stx)
-                  (exact-floor (/ (syntax-column stx) 2)))))))
+    (define line-number (syntax-line (first group)))
+    (line
+     line-number
+     (dedent? line-number)
+     (for/list ([stx (in-list group)])
+       (column (syntax-e stx)
+               (exact-floor (/ (syntax-column stx) 2)))))))
 
 ;; pre-condition: ((listof syntax?) stxs)
 (define (syntaxes-can-be-spec? stxs)
@@ -141,8 +154,7 @@
     (and (syntax-line stx)
          (spec-sym? (syntax-e stx)))))
 
-(define spec?
-  (listof (list/c exact-positive-integer? boolean? (listof (list/c spec-sym? natural-number/c)))))
+(define spec? (listof line?))
 
 (define string->spec
   {~>> open-input-string
