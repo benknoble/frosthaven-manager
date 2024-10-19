@@ -26,22 +26,20 @@
   (define extra-dy (* 1/2 s))
 
   (define p (new dc-path%))
-  (define path
-    (begin0 p
-      (send* p
-             (move-to 0 0)
-             (line-to 0 s)
-             (line-to r (* 3/2 s))
-             (line-to (* 2 r) s)
-             (line-to (* 2 r) 0)
-             (line-to r (* -1/2 s))
-             (close))))
+  (send* p
+         (move-to 0 0)
+         (line-to 0 s)
+         (line-to r (* 3/2 s))
+         (line-to (* 2 r) s)
+         (line-to (* 2 r) 0)
+         (line-to r (* -1/2 s))
+         (close))
 
   (dc (λ (dc dx dy)
         (define old-pen (send dc get-pen))
         (send* dc
                (set-pen "black" 1 'solid)
-               (draw-path path dx (+ dy (* 1/2 extra-dy)))
+               (draw-path p dx (+ dy (* 1/2 extra-dy)))
                (set-pen old-pen)))
       h (+ s extra-dy)
       (* 1/2 extra-dy) (* 1/2 extra-dy)))
