@@ -64,7 +64,6 @@
           (~> pict-width (* max-col)))
       max (* 3/2)))
 
-;; TODO: use struct/contract?
 (struct line [number dedent? columns] #:prefab)
 ;; shape: spec-sym?
 (struct column [shape number] #:prefab)
@@ -153,7 +152,8 @@
     (and (syntax-line stx)
          (spec-sym? (syntax-e stx)))))
 
-(define spec? (listof line?))
+(define spec?
+  (listof (struct/c line exact-positive-integer? boolean? (listof (struct/c column spec-sym? natural-number/c)))))
 
 (define string->spec
   {~>> open-input-string
