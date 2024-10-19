@@ -65,7 +65,6 @@
       max (* 3/2)))
 
 ;; TODO: use struct/contract?
-;; columns: (or/c (listof column?) (listof spec-sym?))
 (struct line [number dedent? columns] #:prefab)
 ;; shape: spec-sym?
 (struct column [shape number] #:prefab)
@@ -88,18 +87,18 @@
                  (add1 last-line)))]
       ['() (reverse result)])))
 
-;; (listof column?) -> (listof spec-sym?)
+;; (listof column?) -> (listof column?)
 (define (fill-in-columns cs)
   (let loop ([cs cs]
              [result null]
              [last-column -1])
     (match cs
-      [(cons [column shape column-number] cs)
+      [(cons (and c [column _ column-number]) cs)
        (if (= column-number (add1 last-column))
-         (loop cs (cons shape result) column-number)
-         (loop (cons [column shape column-number] cs)
-               (cons 'g result)
-               (add1 last-column)))]
+           (loop cs (cons c result) column-number)
+           (loop (cons c cs)
+                 (cons [column 'g column-number] result)
+                 (add1 last-column)))]
       ['() (reverse result)])))
 
 (define spec-sym? (or/c 's 'x 'o 'm 'g))
@@ -116,7 +115,7 @@
 (define (row->shape r)
   (match r
     ['() (ghost (S))]
-    [(list sym ...) (apply hc-append (map sym->shape sym))]))
+    [(list [column sym _] ...) (apply hc-append (map sym->shape sym))]))
 
 ;; spec? -> pict?
 (define (rows->shape rs)
