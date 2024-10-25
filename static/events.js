@@ -73,5 +73,18 @@ evtSource.addEventListener('text', (event) => {
 
 evtSource.addEventListener('alert', (event) => {
   const text = JSON.parse(event.data);
-  alert(text);
+  showDialog(text);
 });
+
+let dialog;
+function showDialog(text) {
+  if (!dialog) {
+    dialog = document.getElementById('dialog');
+    if (!dialog) return;
+  }
+  dialog.innerHTML = text;
+  dialog.showModal();
+  setTimeout(function () {
+    dialog.close();
+  }, 5000);
+}

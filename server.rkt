@@ -320,11 +320,13 @@
          (script ([src "/static/events.js"]))
          ,@common-heads)
        (body
-         (h1 "Frosthaven Manager")
-         ,@(elements-body embed/url)
-         ,@(creatures-body embed/url)
-         ,@(bottom-info-body embed/url)
-         ))))
+        (dialog ([id "dialog"]
+                 [onclick "this.close()"]))
+        (h1 "Frosthaven Manager")
+        ,@(elements-body embed/url)
+        ,@(creatures-body embed/url)
+        ,@(bottom-info-body embed/url)
+        ))))
 
 (define/page (rewards)
   (define players
@@ -514,8 +516,8 @@
                            (list
                             (string-trim (action-script (list "player" "loot") (list id-binding)) ";" #:left? #f)
                             ".then((r) => r.json())"
-                            ".then((j) => { alert(`You got ${j.loot}!`); },"
-                            "      (_) => { alert('The loot deck is empty.'); })"))])
+                            ".then((j) => { showDialog(`You got ${j.loot}!`); },"
+                            "      (_) => { showDialog('The loot deck is empty.'); })"))])
                        "Loot!")))
        (div ([class "smash-inline"])
             (p (select ([id ,(~a "select-conditions-" id)]
