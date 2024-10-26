@@ -11,6 +11,18 @@
                   name->set)
          frosthaven-manager/parsers/monster)
 
+(module pp-extras racket/base
+  (provide <$*>)
+  (require pretty-expressive)
+
+  ;; like the v- family, but with soft newlines
+  (define (v*-append/bin x y)
+    (<> x nl y))
+  (define+provide-family v* v*-append/bin)
+  (define <$*> v*-append))
+
+(require 'pp-extras)
+
 (define lang-line (text "#lang frosthaven-manager/bestiary"))
 
 (define (pretty-bestiary bestiary #:lang-line? [lang-line? #t])
@@ -87,16 +99,16 @@
   (match-define (monster-stats max-hp move attack bonuses effects immunities) stats)
   (<+> lbrack
        (group
-        (<$>
+        (<$*>
          (text (~a level))
          (text label)
          (group
-          (<$>
+          (<$*>
            (labelled-value "HP" (aligned max-hp max-hp-width))
            (labelled-value "Move" (aligned (or move '-) max-move-width))
            (labelled-value "Attack" (aligned attack max-attack-width))))
          (group
-          (<$>
+          (<$*>
            (empty-or bonuses (labelled-value "Bonuses" (pretty-list (map pretty-string bonuses))))
            (empty-or effects (labelled-value "Effects" (pretty-list (map pretty-string effects))))
            (empty-or immunities (labelled-value "Immunities" (pretty-list (map pretty-string immunities))))))))
@@ -133,7 +145,7 @@
   (<+> lbrack (text label) space value-doc rbrack))
 
 (define (pretty-list docs)
-  (<+> lbrace (group (v-concat docs)) rbrace))
+  (<+> lbrace (group (v*-concat docs)) rbrace))
 
 (define (pretty-string x)
   (text (~s x)))
