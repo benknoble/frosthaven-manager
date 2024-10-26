@@ -4,12 +4,12 @@
   (contract-out
     [launch-server (-> state? renderer?)]))
 
-(require (except-in racket/gui #%app)
-         racket/gui/easy
-         net/sendurl
-         frosthaven-manager/observable-operator
-         frosthaven-manager/gui/render
+(require frosthaven-manager/gui/render
          frosthaven-manager/manager
+         frosthaven-manager/observable-operator
+         net/sendurl
+         racket/gui/easy
+         (except-in racket/gui #%app)
          (prefix-in server: frosthaven-manager/server))
 
 (define (launch-server s)

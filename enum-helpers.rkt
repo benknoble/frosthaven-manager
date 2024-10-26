@@ -3,13 +3,12 @@
 (provide
   define-serializable-enum-type)
 
-(require
-  racket/serialize
-  (for-syntax racket/syntax)
-  syntax/parse/define
-  rebellion/type/enum
-  rebellion/collection/keyset
-  frosthaven-manager/curlique)
+(require (for-syntax racket/syntax)
+         frosthaven-manager/curlique
+         racket/serialize
+         rebellion/collection/keyset
+         rebellion/type/enum
+         syntax/parse/define)
 
 (module+ test (require rackunit))
 

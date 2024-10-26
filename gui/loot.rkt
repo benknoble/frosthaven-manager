@@ -20,18 +20,18 @@
                       (obs/c num-players/c)
                       (is-a?/c view<%>))]))
 
-(require racket/gui/easy
-         frosthaven-manager/observable-operator
-         racket/gui/easy/contract
-         frosthaven-manager/defns
+(require frosthaven-manager/defns
          frosthaven-manager/files
-         frosthaven-manager/gui/mixins
          frosthaven-manager/gui/counter
          frosthaven-manager/gui/helpers
+         frosthaven-manager/gui/mixins
          frosthaven-manager/gui/render
-         frosthaven-manager/gui/table
          frosthaven-manager/gui/rich-text-display
-         frosthaven-manager/qi/list2hash)
+         frosthaven-manager/gui/table
+         frosthaven-manager/observable-operator
+         frosthaven-manager/qi/list2hash
+         racket/gui/easy
+         racket/gui/easy/contract)
 
 (define (loot-picker @type->cards @type->deck
                      #:on-card [on-card void]

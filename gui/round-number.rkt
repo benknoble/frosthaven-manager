@@ -6,11 +6,11 @@
                               (#:new-round-number (-> (-> natural-number/c natural-number/c) any))
                               (is-a?/c window-view<%>))]))
 
-(require racket/gui/easy
-         racket/gui/easy/contract
-         frosthaven-manager/observable-operator
+(require frosthaven-manager/gui/counter
          frosthaven-manager/gui/mixins
-         frosthaven-manager/gui/counter)
+         frosthaven-manager/observable-operator
+         racket/gui/easy
+         racket/gui/easy/contract)
 
 (define (round-number-modifier @round #:new-round-number [send-new-round void])
   (define-close! close! closing-mixin)

@@ -8,10 +8,10 @@
     [get-dbs (-> path-string? (values info-db/c ability-db/c))]
     [default-monster-db path-string?]))
 
-(require racket/runtime-path
-         frosthaven-manager/curlique
+(require frosthaven-manager/curlique
+         frosthaven-manager/defns
          frosthaven-manager/qi/list2hash
-         frosthaven-manager/defns)
+         racket/runtime-path)
 
 (define info-db/c
   ;; Monster Set -> Monster Name -> Monster Info
@@ -38,8 +38,8 @@
                               (list~>hash #:->key (~> car monster-ability-set-name)))])})
 
 (module+ test
-  (require rackunit
-           racket/path)
+  (require racket/path
+           rackunit)
   ;; append "." to account for (define-runtime-path here "."), which does not
   ;; simplify as expected
   (define base (build-path (path-only default-monster-db) "."))
