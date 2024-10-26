@@ -4,12 +4,11 @@
  (contract-out
   [pretty-bestiary (->* (bestiary/c) (#:lang-line? any/c) doc?)]))
 
-(require pretty-expressive
+(require frosthaven-manager/curlique
          frosthaven-manager/defns
-         frosthaven-manager/curlique
-         (only-in frosthaven-manager/parsers/base
-                  name->set)
-         frosthaven-manager/parsers/monster)
+         frosthaven-manager/parsers/monster
+         pretty-expressive
+         (only-in frosthaven-manager/parsers/base name->set))
 
 (module pp-extras racket/base
   (provide <$*>)
@@ -45,9 +44,8 @@
             (<> nl nl (v-concat (map pretty-import imports)))))
 
 (define (pretty-import import)
-  (match import
-    [(list 'import file)
-     (<s> (text "import-monsters") (text (~s file)))]))
+  (match-define (list 'import file) import)
+  (<s> (text "import-monsters") (text (~s file))))
 
 (define (pretty-monster-infos monster-infos)
   (empty-or monster-infos

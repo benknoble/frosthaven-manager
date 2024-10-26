@@ -4,10 +4,10 @@
   #%app #%datum #%top #%top-interaction
   (rename-out [mb #%module-begin]))
 
-(require syntax/parse/define
+(require (for-syntax frosthaven-manager/syntax/monsters
+                     racket/syntax)
          frosthaven-manager/syntax/monsters
-         (for-syntax racket/syntax
-                     frosthaven-manager/syntax/monsters))
+         syntax/parse/define)
 
 ;; e ::= '(import "path") | <monster-info> | listof <monster-ability>
 (define-syntax-parser mb

@@ -12,14 +12,14 @@
     [launch-server-menu-item (-> state? (is-a?/c view<%>))]
     [gc-menu-item (-> (is-a?/c view<%>))]))
 
-(require racket/runtime-path
-         net/sendurl
-         racket/gui/easy
-         (prefix-in gui: racket/gui)
-         frosthaven-manager/gui/markdown
+(require frosthaven-manager/gui/markdown
          frosthaven-manager/gui/render
          frosthaven-manager/gui/server
-         frosthaven-manager/manager)
+         frosthaven-manager/manager
+         net/sendurl
+         racket/gui/easy
+         racket/runtime-path
+         (prefix-in gui: racket/gui))
 
 (module+ test (require rackunit))
 
@@ -39,8 +39,7 @@
 
 (define (get-about-text)
   (define about-text (file->string about.md))
-  (define about+version (string-join (list about-text "---" (string-append "Version: " version)) "\n"))
-  about+version)
+  (string-join (list about-text "---" (string-append "Version: " version)) "\n"))
 
 (module+ test
   (test-case "about information"

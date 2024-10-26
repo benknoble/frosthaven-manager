@@ -2,9 +2,9 @@
 
 (provide (rename-out [mb #%module-begin]) #%app #%datum #%top #%top-interaction)
 
-(require syntax/parse/define
-         (for-syntax racket/syntax)
-         frosthaven-manager/aoe-images)
+(require (for-syntax racket/syntax)
+         frosthaven-manager/aoe-images
+         syntax/parse/define)
 
 (define-syntax-parser mb
   [(_ spec:expr)
@@ -32,8 +32,8 @@
                  #`(module name module-path
                      (#%module-begin #,spec)))])]
       [else (make-module)]))
-  (require syntax/parse
-           syntax/strip-context
-           frosthaven-manager/aoe-images)
+  (require frosthaven-manager/aoe-images
+           syntax/parse
+           syntax/strip-context)
   (define-syntax-class aoe-spec
     [pattern {~or {~datum s} {~datum x} {~datum o} {~datum m} {~datum g}}]))

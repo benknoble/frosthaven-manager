@@ -28,34 +28,31 @@
 
 (provide manager)
 
-(require racket/gui/easy
-         (only-in racket/gui
-                  get-file
-                  put-file
-                  application-about-handler)
-         frosthaven-manager/observable-operator
-         frosthaven-manager/defns
-         frosthaven-manager/manager
+(require frosthaven-manager/defns
          frosthaven-manager/files
          frosthaven-manager/gui/common-menu
-         frosthaven-manager/gui/formula-editor
-         frosthaven-manager/gui/player-info
-         frosthaven-manager/gui/level-info
-         frosthaven-manager/gui/loot
-         (only-in frosthaven-manager/elements elements)
          frosthaven-manager/gui/elements
+         frosthaven-manager/gui/formula-editor
          frosthaven-manager/gui/helpers
-         frosthaven-manager/monster-db
+         frosthaven-manager/gui/level-info
+         frosthaven-manager/gui/level-picker
+         frosthaven-manager/gui/loot
          frosthaven-manager/gui/mixins
-         frosthaven-manager/gui/monsters
          frosthaven-manager/gui/monster-modifier
+         frosthaven-manager/gui/monsters
+         frosthaven-manager/gui/number-players
+         frosthaven-manager/gui/player-info
          frosthaven-manager/gui/render
          frosthaven-manager/gui/rewards
-         frosthaven-manager/gui/round-prompts
          frosthaven-manager/gui/rich-text-display
-         frosthaven-manager/gui/level-picker
-         frosthaven-manager/gui/number-players
-         frosthaven-manager/gui/round-number)
+         frosthaven-manager/gui/round-number
+         frosthaven-manager/gui/round-prompts
+         frosthaven-manager/manager
+         frosthaven-manager/monster-db
+         frosthaven-manager/observable-operator
+         racket/gui/easy
+         (only-in racket/gui get-file put-file application-about-handler)
+         (only-in frosthaven-manager/elements elements))
 
 (define modifier
   (case (system-type 'os)

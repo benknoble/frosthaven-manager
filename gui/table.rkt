@@ -25,8 +25,8 @@
 
 (module+ test
   (require frosthaven-manager/defns
-           frosthaven-manager/monster-db
-           frosthaven-manager/manager/loot)
+           frosthaven-manager/manager/loot
+           frosthaven-manager/monster-db)
 
   (test-case "make-preview-rows for monster abilities"
     (define-values {_info abilities} (get-dbs default-monster-db))

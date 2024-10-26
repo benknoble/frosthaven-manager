@@ -7,11 +7,10 @@
                               (#:label (maybe-obs/c maybe-label/c))
                               (is-a?/c view<%>))]))
 
-(require racket/gui/easy
-         racket/gui/easy/contract
-
-         frosthaven-manager/defns
-         frosthaven-manager/observable-operator)
+(require frosthaven-manager/defns
+         frosthaven-manager/observable-operator
+         racket/gui/easy
+         racket/gui/easy/contract)
 
 (define (number-players-picker #:choose on-choose #:selection selection #:label [label "Number of Players"])
   (choice #:label (@ label)

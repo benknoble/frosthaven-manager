@@ -12,12 +12,12 @@
                                 (is-a?/c view<%>))]
   [do-round-prompt (-> time/c natural-number/c any)]))
 
-(require racket/gui/easy
-         racket/gui/easy/contract
+(require frosthaven-manager/gui/mixins
          frosthaven-manager/manager/round-prompts
          frosthaven-manager/observable-operator
          frosthaven-manager/qi/utils
-         frosthaven-manager/gui/mixins)
+         racket/gui/easy
+         racket/gui/easy/contract)
 
 (define (prompts-input-view @prompts #:on-add [on-add void] #:on-remove [on-remove void])
   (define @keyed-prompts

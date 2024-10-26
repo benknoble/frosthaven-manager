@@ -8,12 +8,12 @@
                             (#:mixin (make-mixin-contract top-level-window<%>))
                             (is-a?/c view<%>))]))
 
-(require (only-in racket/gui top-level-window<%>)
+(require frosthaven-manager/defns
+         frosthaven-manager/manager/loot
+         frosthaven-manager/observable-operator
          racket/gui/easy
          racket/gui/easy/contract
-         frosthaven-manager/defns
-         frosthaven-manager/observable-operator
-         frosthaven-manager/manager/loot)
+         (only-in racket/gui top-level-window<%>))
 
 (module+ test (require rackunit))
 

@@ -12,10 +12,10 @@
   with-closing-custodian/eventspace
   closing-custodian closing-eventspace close-custodian-mixin)
 
-(require racket/gui
-         (for-syntax racket/base)
-         syntax/parse/define
-         racket/stxparam)
+(require (for-syntax racket/base)
+         racket/gui
+         racket/stxparam
+         syntax/parse/define)
 
 (define current-renderer (make-parameter #f))
 
