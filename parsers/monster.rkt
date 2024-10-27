@@ -14,7 +14,8 @@
                                                (or/c #f (listof string?))))]))
 
 (require frosthaven-manager/defns
-         frosthaven-manager/parsers/base)
+         frosthaven-manager/parsers/base
+         frosthaven-manager/parsers/formula)
 
 (module+ test (require rackunit))
 
@@ -47,12 +48,22 @@
 (define monster-type/p
   (or/p (string-ci/p "normal") (string-ci/p "elite")))
 
+(define (check-formula str)
+  (with-handlers ([exn:fail:read:megaparsack? {#f}])
+    (parse-expr str)
+    #t))
+
+(define (valid-formula/p message)
+  (guard/p (non-empty-text/p message)
+           check-formula
+           "valid formula"))
+
 (define (value/p s p)
   (labelled/p (string-ci/p s) p))
 
 (define hp/p
   (value/p "HP"
-           (or/p (non-empty-text/p "non-empty HP formula")
+           (or/p (valid-formula/p "non-empty HP formula")
                  (guard/p number/p positive-integer? "positive maximum health"))))
 (define move/p
   (value/p "Move"
@@ -60,7 +71,7 @@
                  (guard/p number/p natural-number/c "base move value at least 0"))))
 (define attack/p
   (value/p "Attack"
-           (or/p (non-empty-text/p "non-empty Attack formula")
+           (or/p (valid-formula/p "non-empty Attack formula")
                  (guard/p number/p natural-number/c "base attack at least 0"))))
 (define bonuses/p (value/p "Bonuses" (list-value/p (non-empty-text/p "non-empty bonus text"))))
 (define effects/p (value/p "Effects" (list-value/p (non-empty-text/p "non-empty effect text"))))
