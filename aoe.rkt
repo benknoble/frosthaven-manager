@@ -2,13 +2,11 @@
 
 (provide (rename-out [mb #%module-begin]) #%app #%datum #%top #%top-interaction)
 
-(require (for-syntax racket/syntax)
-         frosthaven-manager/aoe-images
+(require frosthaven-manager/aoe-images
          syntax/parse/define)
 
 (define-syntax-parser mb
   [(_ spec:expr)
-   #:with aoe (format-id this-syntax "aoe" #:source this-syntax)
    (syntax/loc this-syntax
      (#%module-begin
       (provide aoe)

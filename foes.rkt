@@ -4,8 +4,7 @@
   #%app #%datum #%top #%top-interaction
   (rename-out [mb #%module-begin]))
 
-(require (for-syntax frosthaven-manager/syntax/monsters
-                     racket/syntax)
+(require (for-syntax frosthaven-manager/syntax/monsters)
          frosthaven-manager/curlique
          frosthaven-manager/defns
          frosthaven-manager/syntax/monsters
@@ -14,9 +13,6 @@
 ;; e ::= '(import "path") | <monster-info> | listof <monster-ability> | <foe>
 (define-syntax-parser mb
   [(_ e:expr ...)
-   #:with info-db (format-id this-syntax "info-db" #:source this-syntax)
-   #:with ability-db (format-id this-syntax "ability-db" #:source this-syntax)
-   #:with make-foes (format-id this-syntax "make-foes" #:source this-syntax)
    #:with ((({~datum import} imports) ...)
            (infos ...)
            ((actions ...) ...)
@@ -37,9 +33,10 @@
                                      (syntax->datum #'(infos ...))
                                      (syntax->datum #'(foes ...)))
    ;;=>
-   (syntax/loc this-syntax
+   (quasisyntax/loc this-syntax
      (#%module-begin
-      (make-dbs (provide info-db ability-db)
+      (make-dbs #,this-syntax
+                (provide info-db ability-db)
                 (import imports ...)
                 (info infos ...)
                 (ability (actions ...) ...))

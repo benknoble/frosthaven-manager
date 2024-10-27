@@ -47,14 +47,17 @@
 
 ;;;; exports
 (define-syntax-parser make-dbs
-  [(_ ({~literal provide} info-db ability-db)
+  [(_ original-stx
+      ({~literal provide} info-db ability-db)
       ({~datum import} imports ...)
       ({~datum info} infos ...)
       ({~datum ability} (actions ...) ...))
    #:with (imported-info-db ...) (generate-temporaries #'(imports ...))
    #:with (imported-ability-db ...) (generate-temporaries #'(imports ...))
    ;; also binds `here` correctly
-   #:with runtime-path-define (datum->syntax #'info-db (syntax-e #'(define-runtime-path here ".")) #'info-db)
+   #:with runtime-path-define (datum->syntax #'original-stx
+                                             (syntax-e #'(define-runtime-path here "."))
+                                             #'original-stx)
    (syntax/loc this-syntax
      (begin
        (provide info-db ability-db)

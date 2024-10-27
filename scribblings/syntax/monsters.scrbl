@@ -10,7 +10,8 @@
 @defmodule[frosthaven-manager/syntax/monsters]
 
 @defform[#:literals (provide import info ability)
-         (make-dbs (provide info-db-id ability-db-id)
+         (make-dbs original-syntax
+                   (provide info-db-id ability-db-id)
                    (import import-mod-path ...)
                    (info monster-info ...)
                    (ability (monster-ability ...) ...))
@@ -28,6 +29,9 @@ The @racket[provide] keyword in the provide specification is recognized by
 binding and must be the same as the one from @racketmodname[racket/base]. The
 @racket[import], @racket[info], and @racket[ability] keywords are recognized by
 datum identity.
+
+The @racket[original-syntax] input is used for binding and source information
+for constructed runtime paths which mark paths for later use to find AoE specs.
 }
 
 @defproc[(syntaxes->bestiary-parts [syntaxes (listof syntax?)])
