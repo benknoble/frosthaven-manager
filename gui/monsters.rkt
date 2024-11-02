@@ -34,24 +34,23 @@
                             (#:on-group (-> monster-group? any))
                             any)]))
 
-(require (only-in pict pict-width pict-height)
-         racket/gui/easy
-         racket/gui/easy/contract
-         frosthaven-manager/observable-operator
-         frosthaven-manager/gui/mixins
+(require frosthaven-manager/defns
          frosthaven-manager/gui/counter
-         frosthaven-manager/gui/stacked-tables
-         frosthaven-manager/gui/render
          frosthaven-manager/gui/font
          frosthaven-manager/gui/helpers
-         frosthaven-manager/gui/table
-         frosthaven-manager/gui/rich-text-display
          frosthaven-manager/gui/level-picker
-
-         frosthaven-manager/defns
+         frosthaven-manager/gui/mixins
+         frosthaven-manager/gui/render
+         frosthaven-manager/gui/rich-text-display
+         frosthaven-manager/gui/stacked-tables
+         frosthaven-manager/gui/table
          frosthaven-manager/manager
          frosthaven-manager/monster-db
-         frosthaven-manager/parsers/formula)
+         frosthaven-manager/observable-operator
+         frosthaven-manager/parsers/formula
+         racket/gui/easy
+         racket/gui/easy/contract
+         (only-in pict pict-width pict-height))
 
 (module+ test (require rackunit))
 

@@ -6,15 +6,14 @@
                            (listof element-pics?))
                           ((unconstrained-domain-> (is-a?/c view<%>)))
                           (is-a?/c view<%>))]))
-(require racket/gui/easy
+(require frosthaven-manager/elements
+         frosthaven-manager/gui/helpers
+         frosthaven-manager/gui/render
+         frosthaven-manager/manager
          frosthaven-manager/observable-operator
+         racket/gui/easy
          racket/gui/easy/contract
          (except-in racket/gui #%app)
-         frosthaven-manager/gui/render
-         frosthaven-manager/gui/helpers
-
-         frosthaven-manager/elements
-         frosthaven-manager/manager
          (only-in pict inset))
 
 (module+ test (require rackunit))

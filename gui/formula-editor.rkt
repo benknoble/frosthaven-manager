@@ -5,12 +5,12 @@
     [formula-editor (-> (obs/c env/c) (is-a?/c view<%>))]
     [formula-menu-item (-> (obs/c env/c) (is-a?/c view<%>))]))
 
-(require racket/gui/easy
-         racket/gui/easy/contract
-         megaparsack
+(require frosthaven-manager/gui/render
          frosthaven-manager/observable-operator
          frosthaven-manager/parsers/formula
-         frosthaven-manager/gui/render)
+         megaparsack
+         racket/gui/easy
+         racket/gui/easy/contract)
 
 (module+ test (require rackunit))
 

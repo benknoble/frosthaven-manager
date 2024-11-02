@@ -54,12 +54,11 @@
                             (-> player? player?))]
   [player-kill-summon (-> natural-number/c (-> player? player?))]))
 
-(require
- racket/serialize
- frosthaven-manager/curlique
- frosthaven-manager/qi/utils
- frosthaven-manager/defns/loot
- frosthaven-manager/defns/scenario)
+(require frosthaven-manager/curlique
+         frosthaven-manager/defns/loot
+         frosthaven-manager/defns/scenario
+         frosthaven-manager/qi/utils
+         racket/serialize)
 
 (serializable-struct player [name max-hp current-hp xp conditions initiative loot summons] #:transparent)
 (define (make-player name max-hp)
@@ -124,9 +123,8 @@
   (struct-copy player p [loot (cons card loot)]))
 
 (define (player->hp-text p)
-  (match p
-    [(struct* player ([max-hp max] [current-hp current]))
-      (~a "HP: " current "/" max)]))
+  (match-define (struct* player ([max-hp max] [current-hp current])) p)
+  (~a "HP: " current "/" max))
 
 (define (player-conditions* p)
   (sort (player-conditions p) string<=? #:key format-condition))
@@ -171,9 +169,8 @@
   (>= (summon-current-hp s) (summon-max-hp s)))
 
 (define (summon->hp-text s)
-  (match s
-    [(struct* summon ([max-hp max] [current-hp current]))
-      (~a "HP: " current "/" max)]))
+  (match-define (struct* summon ([max-hp max] [current-hp current])) s)
+  (~a "HP: " current "/" max))
 
 (define (summon-conditions* s)
   (sort (summon-conditions s) string<=? #:key format-condition))
