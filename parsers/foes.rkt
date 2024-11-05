@@ -77,7 +77,7 @@
   (~> sep (partition
             [foe/pc (~> (>< second) collect check-duplicates)])))
 
-(define foes/p
+(define big-bag-foes/p
   (guard/p
     (ws-separated-whole-file/p (or/p import-monsters/p
                                      (try/p monster/p)
@@ -87,5 +87,16 @@
                (~> foe-dupes none?)))
     "no duplicate monsters, ability decks, or foes"
     (flow (~> (-< bestiary-dupes foe-dupes) (pass _) collect (string-join ",")))))
+
+(define-flow big-bag->structured
+  (~> sep
+      (partition
+       [(esc (list/c 'import string?)) (~>> (>< second) collect (cons 'import))]
+       [monster-info? (~>> collect (cons 'info))]
+       [(esc (listof monster-ability?)) (~>> (>< sep) collect (cons 'ability))]
+       [foe/pc (~>> collect (cons 'foe))])
+      collect))
+
+(define foes/p (fmap big-bag->structured big-bag-foes/p))
 
 (define parse-foes (make-reader-like foes/p))

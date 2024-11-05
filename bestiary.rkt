@@ -8,22 +8,18 @@
          frosthaven-manager/syntax/monsters
          syntax/parse/define)
 
-;; e ::= '(import "path") | <monster-info> | listof <monster-ability>
 (define-syntax-parser mb
-  [(_ e:expr ...)
-   #:with ((({~datum import} imports) ...)
-           (infos ...)
-           ((actions ...) ...)
-           _)
-   (syntaxes->bestiary-parts (attribute e))
+  [(_ ({~datum import} imports:string ...)
+      ({~datum info} infos ...)
+      ({~datum ability} actions ...))
    #:do [(define-values (imported-info-dbs imported-ability-dbs)
            (imports->dbs (syntax->datum #'(imports ...))))]
    #:fail-unless (check-monsters-have-abilities imported-info-dbs imported-ability-dbs
                                                 (syntax->datum #'(infos ...))
-                                                (syntax->datum #'(actions ... ...)))
+                                                (syntax->datum #'(actions ...)))
    (check-monsters-have-abilities-message imported-info-dbs imported-ability-dbs
                                           (syntax->datum #'(infos ...))
-                                          (syntax->datum #'(actions ... ...)))
+                                          (syntax->datum #'(actions ...)))
    ;;=>
    (quasisyntax/loc this-syntax
      (#%module-begin
@@ -31,7 +27,7 @@
                 (provide info-db ability-db)
                 (import imports ...)
                 (info infos ...)
-                (ability (actions ...) ...))))])
+                (ability actions ...))))])
 
 (module reader frosthaven-manager/syntax/module-reader
   frosthaven-manager/bestiary

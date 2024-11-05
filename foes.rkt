@@ -10,22 +10,19 @@
          frosthaven-manager/syntax/monsters
          syntax/parse/define)
 
-;; e ::= '(import "path") | <monster-info> | listof <monster-ability> | <foe>
 (define-syntax-parser mb
-  [(_ e:expr ...)
-   #:with ((({~datum import} imports) ...)
-           (infos ...)
-           ((actions ...) ...)
-           (foes ...))
-   (syntaxes->bestiary-parts (attribute e))
+  [(_ ({~datum import} imports:string ...)
+      ({~datum info} infos ...)
+      ({~datum ability} actions ...)
+      ({~datum foe} foes ...))
    #:do [(define-values (imported-info-dbs imported-ability-dbs)
            (imports->dbs (syntax->datum #'(imports ...))))]
    #:fail-unless (check-monsters-have-abilities imported-info-dbs imported-ability-dbs
                                                 (syntax->datum #'(infos ...))
-                                                (syntax->datum #'(actions ... ...)))
+                                                (syntax->datum #'(actions ...)))
    (check-monsters-have-abilities-message imported-info-dbs imported-ability-dbs
                                           (syntax->datum #'(infos ...))
-                                          (syntax->datum #'(actions ... ...)))
+                                          (syntax->datum #'(actions ...)))
    #:fail-unless (check-foes-have-monsters imported-info-dbs
                                            (syntax->datum #'(infos ...))
                                            (syntax->datum #'(foes ...)))
@@ -39,7 +36,7 @@
                 (provide info-db ability-db)
                 (import imports ...)
                 (info infos ...)
-                (ability (actions ...) ...))
+                (ability actions ...))
       (provide make-foes)
       (define make-foes (make-foes-maker '(foes ...) info-db))))])
 

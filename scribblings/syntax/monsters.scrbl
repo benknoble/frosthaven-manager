@@ -14,7 +14,7 @@
                    (provide info-db-id ability-db-id)
                    (import import-mod-path ...)
                    (info monster-info ...)
-                   (ability (monster-ability ...) ...))
+                   (ability monster-ability ...))
          #:contracts ([monster-info monster-info?]
                       [monster-ability monster-ability?])]{
 Binds and provides @racket[info-db-id] and @racket[ability-db-id] to
@@ -32,14 +32,6 @@ datum identity.
 
 The @racket[original-syntax] input is used for binding and source information
 for constructed runtime paths which mark paths for later use to find AoE specs.
-}
-
-@defproc[(syntaxes->bestiary-parts [syntaxes (listof syntax?)])
-         (list/c (listof syntax?) (listof syntax?) (listof syntax?) (listof syntax?))]{
-Separates the input @racket[syntaxes] into 4 categories: imports whose datum
-matches @racket[(list/c 'import string?)], monster information matching
-@racket[monster-info?], ability decks matching @racket[(listof monster-ability?)],
-and foes matching @racket[foe/pc].
 }
 
 @defproc[(imports->dbs [import-paths (listof string?)])

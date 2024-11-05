@@ -4,9 +4,6 @@
 (provide
   make-dbs
   (contract-out
-    [syntaxes->bestiary-parts
-      (-> (listof syntax?)
-          (list/c (listof syntax?) (listof syntax?) (listof syntax?) (listof syntax?)))]
     [imports->dbs (-> (listof string?)
                       (values (listof info-db/c) (listof ability-db/c)))]
     [check-monsters-have-abilities (-> (listof info-db/c) (listof ability-db/c)
@@ -51,7 +48,7 @@
       ({~literal provide} info-db ability-db)
       ({~datum import} imports ...)
       ({~datum info} infos ...)
-      ({~datum ability} (actions ...) ...))
+      ({~datum ability} actions ...))
    #:with (imported-info-db ...) (generate-temporaries #'(imports ...))
    #:with (imported-ability-db ...) (generate-temporaries #'(imports ...))
    ;; also binds `here` correctly
@@ -66,18 +63,11 @@
                            [ability-db imported-ability-db]) ...)
        runtime-path-define
        (define-values (original-info-db original-ability-db)
-         (datums->dbs (list infos ... (struct-copy monster-ability actions [location here]) ... ...)))
+         (datums->dbs (list infos ... (struct-copy monster-ability actions [location here]) ...)))
        (define info-db
          (combine-infos original-info-db imported-info-db ...))
        (define ability-db
          (combine-abilities original-ability-db imported-ability-db ...))))])
-
-;; -> imports monster-infos ability-decks foes
-(define syntaxes->bestiary-parts
-  {~> sep (collect-matching/stx (list/c 'import string?)
-                                monster-info?
-                                (listof monster-ability?)
-                                foe/pc) collect})
 
 (define (imports->dbs imports)
   (for/fold ([info-dbs empty]
@@ -98,15 +88,6 @@
   (subset-error-message "foes" "monster definition" foe-names monster-names))
 
 ;;;; helper definitions
-(define (syntaxish? p)
-  {~> syntax->datum p})
-
-(define-qi-syntax-parser collect-matching
-  [(_ p-flo:expr ...) #'(partition [p-flo collect] ...)])
-
-(define-qi-syntax-parser collect-matching/stx
-  [(_ p:expr ...) #'(collect-matching (esc (syntaxish? p)) ...)])
-
 (define hash-keys/set {~> hash-keys list->set})
 
 (define ((make-set-names get-set-name) dbs xs)

@@ -216,11 +216,21 @@
             [monster-info? monster-name-dupes]
             [listof-monster-ability? ability-set-dupes])))
 
-(define bestiary/p
+(define big-bag-bestiary/p
   (guard/p
     (ws-separated-whole-file/p (or/p import-monsters/p (try/p monster/p) ability-deck/p))
     (flow (~> bestiary-dupes none?))
     "no duplicate monsters or ability decks"
     (flow (~> bestiary-dupes (pass _) collect (string-join ",")))))
+
+(define-flow big-bag->structured
+  (~> sep
+      (partition
+       [(esc (list/c 'import string?)) (~>> (>< second) collect (cons 'import))]
+       [monster-info? (~>> collect (cons 'info))]
+       [(esc (listof monster-ability?)) (~>> (>< sep) collect (cons 'ability))])
+      collect))
+
+(define bestiary/p (fmap big-bag->structured big-bag-bestiary/p))
 
 (define parse-bestiary (make-reader-like bestiary/p))
