@@ -16,7 +16,7 @@
   [struct herb ([name herb-kind?]
                 [amount natural-number/c])]
   [struct special-loot ([name string?])]
-  [loot-card? predicate/c]
+  [loot-card? (-> any/c boolean?)]
   [format-loot-card (-> num-players/c (-> loot-card? string?))]
   [max-money-cards natural-number/c]
   [max-material-cards natural-number/c]
@@ -34,14 +34,13 @@
   [loot-type/c flat-contract?]
   [card->type (-> loot-card? loot-type/c)]))
 
-(require
- racket/hash
- racket/serialize
- rebellion/type/enum
- frosthaven-manager/curlique
- frosthaven-manager/enum-helpers
- frosthaven-manager/constants
- frosthaven-manager/defns/level)
+(require frosthaven-manager/constants
+         frosthaven-manager/curlique
+         frosthaven-manager/defns/level
+         frosthaven-manager/enum-helpers
+         racket/hash
+         racket/serialize
+         rebellion/type/enum)
 
 (module+ test (require rackunit))
 

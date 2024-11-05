@@ -288,12 +288,11 @@
   (define get-dbs (dynamic-require 'frosthaven-manager/monster-db 'get-dbs))
   (match-define (list mg mg1 mg2 mg3)
     (match-let-values ([{info _} (get-dbs "../testfiles/sample-bestiary-import.rkt")])
-      (map (λ (level)
-             (make-monster-group (~> (info) (hash-ref "archer") (hash-ref "hynox archer"))
-                                 level
-                                 empty
-                                 env))
-           (list 0 1 2 3))))
+      (for/list ([level (in-list (list 0 1 2 3))])
+        (make-monster-group (~> (info) (hash-ref "archer") (hash-ref "hynox archer"))
+                            level
+                            empty
+                            env))))
   (define ability-card
     (match-let-values ([{_ ability} (get-dbs  "../testfiles/sample-bestiary-import.rkt")])
       (~> (ability) (hash-ref "archer") first)))

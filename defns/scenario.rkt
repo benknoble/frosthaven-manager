@@ -11,8 +11,8 @@
   [parse-monster-modifier (-> string? monster-modifier?)]
   [format-condition (-> condition? string?)]
   [parse-condition (-> string? condition?)]
-  [initiative? predicate/c]
-  [ability? predicate/c]
+  [initiative? (-> any/c boolean?)]
+  [ability? (-> any/c boolean?)]
   [conditions (listof condition?)]
   [discriminator:condition (-> condition? integer?)]
   [selector:condition (-> integer? condition?)]
@@ -26,12 +26,11 @@
   [bless-deck (listof monster-modifier?)]
   [conditions->string (-> (listof condition?) string?)]))
 
-(require
- racket/hash
- rebellion/type/enum
- frosthaven-manager/enum-helpers
- frosthaven-manager/constants
- frosthaven-manager/curlique)
+(require frosthaven-manager/constants
+         frosthaven-manager/curlique
+         frosthaven-manager/enum-helpers
+         racket/hash
+         rebellion/type/enum)
 
 (module+ test (require rackunit))
 

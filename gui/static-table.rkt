@@ -22,10 +22,10 @@
                         #:entry->value (-> natural-number/c any/c))
                        (is-a?/c view<%>))]))
 
-(require (only-in racket/gui label-string? dimension-integer?)
+(require frosthaven-manager/curlique
          racket/gui/easy
          racket/gui/easy/contract
-         frosthaven-manager/curlique)
+         (only-in racket/gui label-string? dimension-integer?))
 
 ;; index->entry computes the "row index", which is always the first column
 ;; entry->value computes the value that each function in entry->columns will be

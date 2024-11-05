@@ -3,7 +3,7 @@
 (provide
   (contract-out
     [markdown-text
-      (->* ((maybe-obs/c (or/c string? path?)))
+      (->* ((maybe-obs/c path-string?))
            (#:min-size (maybe-obs/c size/c)
             #:stretch (maybe-obs/c stretch/c)
             #:margin (maybe-obs/c margin/c)
@@ -22,17 +22,15 @@
 ;; N.B. Markdown requires 4 spaces or one tab as leading indent for nested lists
 ;; and other semantically-indented blocks!
 
-(require racket/gui
+(require frosthaven-manager/gui/mixins
+         net/sendurl
+         racket/gui
          racket/gui/easy
          racket/gui/easy/contract
          racket/gui/easy/observable
-         net/sendurl
          (only-in pict pict->bitmap hline)
-         (only-in markdown
-                  parse-markdown
-                  current-strict-markdown?)
-         (only-in txexpr attr-ref)
-         frosthaven-manager/gui/mixins)
+         (only-in markdown parse-markdown current-strict-markdown?)
+         (only-in txexpr attr-ref))
 
 (define (peek v)
   (if (obs? v)
