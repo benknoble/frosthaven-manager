@@ -18,7 +18,7 @@ The result is @racket[syntax?] with source @racket[src] if @racket[syn?] is
 true, and the datum it contains matches @racket[foes/pc].
 }
 
-@deftogether[(@defthing[foes/pc flat-contract? #:value (listof (or/c (list/c 'import string?) monster-info? (listof monster-ability?) foe/pc))]
+@deftogether[(@defthing[foes/pc flat-contract? #:value (list/c (cons/c 'import (listof string?)) (cons/c 'info (listof monster-info?)) (cons/c 'ability (listof monster-ability?)) (cons/c 'foe (listof foe/pc)))]
               @defthing[foe/pc flat-contract? #:value (list/c string? string? numbering/pc (listof spec/pc))]
               @defthing[spec/pc flat-contract? #:value (hash/c num-players/c monster-type/pc #:immutable #t)]
               @defthing[numbering/pc flat-contract? #:value (or/c "ordered" "random" #f)]

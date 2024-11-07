@@ -20,9 +20,9 @@
 (module+ test (require rackunit))
 
 (define bestiary/c
-  (listof (or/c (list/c 'import string?)
-                monster-info?
-                (listof monster-ability?))))
+  (list/c (cons/c 'import (listof string?))
+          (cons/c 'info (listof monster-info?))
+          (cons/c 'ability (listof monster-ability?))))
 
 #| monster syntax
 - outside of <text> elements, whitespace is ignored

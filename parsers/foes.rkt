@@ -68,14 +68,14 @@
       (pure (list set-name name numbering specs))))
 
 (define foes/pc
-  (listof (or/c (list/c 'import string?)
-                monster-info?
-                (listof monster-ability?)
-                foe/pc)))
+  (list/c (cons/c 'import (listof string?))
+          (cons/c 'info (listof monster-info?))
+          (cons/c 'ability (listof monster-ability?))
+          (cons/c 'foe (listof foe/pc))))
 
 (define-flow foe-dupes
   (~> sep (partition
-            [foe/pc (~> (>< second) collect check-duplicates)])))
+           [foe/pc (~> (>< second) collect check-duplicates)])))
 
 (define big-bag-foes/p
   (guard/p

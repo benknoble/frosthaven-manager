@@ -20,9 +20,9 @@ true, and the datum it contains matches @racket[bestiary/c].
 
 @defthing[bestiary/c flat-contract?
                      #:value
-                     (listof (or/c (list/c 'import string?)
-                                   monster-info?
-                                   (listof monster-ability?)))]{
+                     (list/c (cons/c 'import (listof string?))
+                             (cons/c 'info (listof monster-info?))
+                             (cons/c 'ability (listof monster-ability?)))]{
 A contract for bestiary values.
 }
 

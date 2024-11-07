@@ -25,18 +25,13 @@
 (define lang-line (text "#lang frosthaven-manager/bestiary"))
 
 (define (pretty-bestiary bestiary #:lang-line? [lang-line? #t])
-  (define-values (imports monster-infos monster-abilitiess)
-    (~> (bestiary)
-        sep
-        (partition
-         [(esc (list/c 'import string?)) collect]
-         [monster-info? collect]
-         [(esc (listof monster-ability?)) collect])))
+  (define-values (imports monster-infos monster-abilities)
+    (~> (bestiary) sep (>< cdr)))
   ;; TODO avoid spurious empty lines if preceding group is empty
   (<> (if lang-line? lang-line (<>))
       (pretty-imports imports)
       (pretty-monster-infos monster-infos)
-      (pretty-monster-abilitiess monster-abilitiess)
+      (pretty-monster-abilitiess (group-by monster-ability-set-name monster-abilities))
       nl))
 
 (define (pretty-imports imports)
