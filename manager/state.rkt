@@ -444,8 +444,9 @@
           (set-box! g new-mg)
           new-mg)
         {~> 2> monster-group-first-monster})})
-  (when (~> (g) unbox monster-group-monsters empty?)
-    ((add-or-remove-monster-group s) `(remove ,(unbox g)))))
+  (define new-mg (unbox g))
+  (when (and new-mg (~> (new-mg) monster-group-monsters empty?))
+    ((add-or-remove-monster-group s) `(remove ,new-mg))))
 
 (define (update-all-players creatures f)
   (define (update-only-player c)
