@@ -18,7 +18,9 @@
                                           string?)]))
 
 ;;;; requires and implementation macros
-(require frosthaven-manager/curlique
+(require (for-syntax frosthaven-manager/defns/monsters
+                     racket)
+         frosthaven-manager/curlique
          frosthaven-manager/defns
          frosthaven-manager/monster-db
          frosthaven-manager/parsers/foes
@@ -55,12 +57,14 @@
    #:with runtime-path-define (datum->syntax #'original-stx
                                              (syntax-e #'(define-runtime-path here "."))
                                              #'original-stx)
+   #:with (aoe-imports ...) (find-imports (syntax->datum #'(actions ...)))
    (syntax/loc this-syntax
      (begin
        (provide info-db ability-db)
        (require (rename-in imports
                            [info-db imported-info-db]
-                           [ability-db imported-ability-db]) ...)
+                           [ability-db imported-ability-db]) ...
+                (only-in (file aoe-imports)) ...)
        runtime-path-define
        (define-values (original-info-db original-ability-db)
          (datums->dbs (list infos ... (struct-copy monster-ability actions [location here]) ...)))
@@ -88,6 +92,14 @@
   (subset-error-message "foes" "monster definition" foe-names monster-names))
 
 ;;;; helper definitions
+(define-for-syntax (find-imports actions)
+  (remove-duplicates
+   (for*/list ([ability-card (in-list actions)]
+               [ability (in-list (monster-ability-abilities ability-card))]
+               [aoe-spec (in-list (regexp-match* #rx"aoe\\(([^)]+)\\)" ability
+                                                 #:match-select second))])
+     aoe-spec)))
+
 (define hash-keys/set {~> hash-keys list->set})
 
 (define ((make-set-names get-set-name) dbs xs)

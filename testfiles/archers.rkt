@@ -45,6 +45,6 @@ begin-ability-deck "archer"
   ["explosive" 60 {"attack -1, range 3, aoe(aoes/ring1.rkt)"}]
   ["explosive" 60 {"attack -1, range 3, aoe(aoes/ring1.rkt)"}]
   ["explosive" 60 {"attack -1, range 3, aoe(aoes/ring1.rkt)"}]
-  ["explosive" 60 {"attack -1, range 3, aoe(aoes/ring1.rkt)"}]
+  ["curved shot" 70 {"attack -1, aoe(aoes/drag-down.rkt)"}]
   ["take aim" 80 shuffle {"move +2" "strengthen self"}]
 end-ability-deck
