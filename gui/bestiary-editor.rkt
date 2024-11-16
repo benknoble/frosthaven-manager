@@ -326,6 +326,7 @@
                         #:enabled? @button-enabled))))))
    (button "+" (thunk (edit 'new)))))
 
+;; TODO: HP, Attack can be a formula
 (define stats-editor-parts
   `(["Max HP" ,monster-stats-max-hp ,number-editor]
     ["Move" ,monster-stats-move ,optional-number-editor]
