@@ -15,7 +15,7 @@
   [struct monster-ability ([set-name string?]
                            [name string?]
                            [initiative initiative?]
-                           [abilities (listof string?)]
+                           [abilities (listof (listof (or/c string? pict:pict?)))]
                            [shuffle? boolean?]
                            [location (or/c path? #f)])]
   [monster-number/c contract?]
@@ -36,7 +36,8 @@
   [monster-stats-immunities-string (-> monster-stats? string?)]
   [monster-ability-name->text (-> (or/c #f monster-ability?) string?)]
   [monster-ability-initiative->text (-> (or/c #f monster-ability?) string?)]
-  [monster-ability-ability->rich-text (-> string? (or/c #f monster-ability?)
+  [monster-ability-ability->rich-text (-> (listof (or/c string? pict:pict?))
+                                          (or/c #f monster-ability?)
                                           monster-group? env/c
                                           (listof (or/c string? pict:pict? pict/alt-text? newline?)))]
   [make-monster (-> monster-info? level/c
@@ -133,7 +134,12 @@
 (define-flow (monster-ability-initiative->text _ability)
   (if monster-ability? (~> monster-ability-initiative ~a) "??"))
 
-(define (monster-ability-ability->rich-text ability-text ability-card mg env)
+(define (monster-ability-ability->rich-text ability-parts ability-card mg env)
+  (append-map
+   (only-on-text {(monster-ability-part->rich-text ability-card mg env)})
+   ability-parts))
+
+(define (monster-ability-part->rich-text ability-text ability-card mg env)
   (define bulleted '(#rx"^" "• "))
   (define attack
     (list #px"(.*)((?i:attack))\\s+([+-])(\\d+)"
@@ -301,37 +307,37 @@
   (define-syntax-rule (test-model-equal? name actual expected)
     (test-check name check-model-equal? actual expected))
   (test-model-equal? "Simple Attack"
-                     (monster-ability-ability->rich-text "Attack +1" ability-card mg env)
+                     (monster-ability-ability->rich-text (list "Attack +1") ability-card mg env)
                      (list "• " (icons:attack) " 3 (E:4, wound)"))
   (test-model-equal? "Simple Attack 1"
-                     (monster-ability-ability->rich-text "Attack +1" ability-card mg1 env)
+                     (monster-ability-ability->rich-text (list "Attack +1") ability-card mg1 env)
                      (list "• " (icons:attack) " 4 (E:5), wound"))
   (test-model-equal? "Simple Attack 2"
-                     (monster-ability-ability->rich-text "Attack +1" ability-card mg2 env)
+                     (monster-ability-ability->rich-text (list "Attack +1") ability-card mg2 env)
                      (list "• " (icons:attack) " 5 (E:6, stun), wound"))
   (test-model-equal? "Simple Attack 3"
-                     (monster-ability-ability->rich-text "Attack +1" ability-card mg3 env)
+                     (monster-ability-ability->rich-text (list "Attack +1") ability-card mg3 env)
                      (list "• " (icons:attack) " 6 (N:muddle) (E:7, stun), wound"))
   (test-model-equal? "Attack, X"
-                     (monster-ability-ability->rich-text "Attack +1, Push 1" ability-card mg3 env)
+                     (monster-ability-ability->rich-text (list "Attack +1, Push 1") ability-card mg3 env)
                      (list "• " (icons:attack) " 6 (N:muddle) (E:7, stun), wound, " (scale-icon (icons:push)) " 1"))
   (test-model-equal? "Simple Move"
-                     (monster-ability-ability->rich-text "Move +1" ability-card mg env)
+                     (monster-ability-ability->rich-text (list "Move +1") ability-card mg env)
                      (list "• " (scale-icon (icons:move)) " 3 (E:3)"))
   (test-model-equal? "Granted Attack"
-                     (monster-ability-ability->rich-text "Grant Piranha: Attack +1" ability-card mg env)
+                     (monster-ability-ability->rich-text (list "Grant Piranha: Attack +1") ability-card mg env)
                      (list "• Grant Piranha: " (icons:attack) " +1"))
   (test-model-equal? "Granted Move"
-                     (monster-ability-ability->rich-text "Grant Piranha: Move +1" ability-card mg env)
+                     (monster-ability-ability->rich-text (list "Grant Piranha: Move +1") ability-card mg env)
                      (list "• Grant Piranha: " (scale-icon (icons:move)) " +1"))
   (test-model-equal? "Controlled Attack"
-                     (monster-ability-ability->rich-text "Control Enemy: Attack +1" ability-card mg env)
+                     (monster-ability-ability->rich-text (list "Control Enemy: Attack +1") ability-card mg env)
                      (list "• Control Enemy: " (icons:attack) " +1"))
   (test-model-equal? "Controlled Move"
-                     (monster-ability-ability->rich-text "Control Enemy: Move +1" ability-card mg env)
+                     (monster-ability-ability->rich-text (list "Control Enemy: Move +1") ability-card mg env)
                      (list "• Control Enemy: " (scale-icon (icons:move)) " +1"))
   (test-model-equal? "Complicated Targeting"
-                     (monster-ability-ability->rich-text "Attack -2, Target 2, +2 Targets, Range 3, Push 2" ability-card mg env)
+                     (monster-ability-ability->rich-text (list "Attack -2, Target 2, +2 Targets, Range 3, Push 2") ability-card mg env)
                      (list
                       "• " (icons:attack) " 0 (E:1, wound), "
                       (scale-icon (icons:target)) " 2"

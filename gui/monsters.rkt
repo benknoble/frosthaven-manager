@@ -50,7 +50,7 @@
          frosthaven-manager/parsers/formula
          racket/gui/easy
          racket/gui/easy/contract
-         (only-in pict pict-width pict-height))
+         (only-in pict pict? pict-width pict-height))
 
 (module+ test (require rackunit))
 
@@ -621,9 +621,15 @@
       (observable-view
        @ability?
        (λ (ability?)
+         (define abilities (if ability? (monster-ability-abilities ability?) empty))
          (apply vpanel
-                (for/list ([ability-text (if ability? (monster-ability-abilities ability?) empty)])
-                  (text (escape-text ability-text)))
+                (for/list ([ability-text (in-list abilities)])
+                  (define text-representation
+                    (string-join (for/list ([part (in-list ability-text)])
+                                   (cond
+                                     [(string? part) part]
+                                     [(pict? part) "<AoE diagram>"]))))
+                  (text (escape-text text-representation)))
                 #:alignment '(left center)))))))
   (apply vpanel (append from-table others)))
 

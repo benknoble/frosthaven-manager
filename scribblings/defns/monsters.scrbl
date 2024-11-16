@@ -37,13 +37,17 @@ The monster information representation, often for reading pre-fab structs.
              ([set-name string?]
               [name string?]
               [initiative initiative?]
-              [abilities (listof string?)]
+              [abilities (listof (listof (or/c string? pict?)))]
               [shuffle? boolean?]
               [location (or/c #f path?)])
              #:prefab]{
 The monster ability representation, often for reading pre-fab structs.
 
-Note that pre-fab syntax does not permit @racket[path?] objects.
+Note that pre-fab syntax does not permit @racket[path?] or @racket[pict?] objects.
+
+The monster abilities are a list of sub-abilities, much like a character's
+ability card. Each sub-ability is a list of parts, which may include pictures
+such as for embedded AoE diagrams.
 }
 
 @defthing[monster-number/c contract?]{
@@ -112,7 +116,7 @@ possibly-absent monster ability.
 }
 
 @defproc[(monster-ability-ability->rich-text
-           [ability-text string?]
+           [ability-text (listof (or/c string? pict?))]
            [ability-card monster-ability?]
            [mg monster-group?]
            [env env/c])

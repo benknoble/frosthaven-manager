@@ -190,7 +190,10 @@
             (list/p (guard/p number/p (flow (<= 0 _ 99)) "valid initiative between 0 and 99")
                     (or/p (try/p (fmap (const #t) (string/p "shuffle")))
                           (pure #f))
-                    (guard/p (list-value/p text/p) (flow (not empty?)) "non-empty list of card abilities")
+                    (fmap {(map list _)}
+                          (guard/p (list-value/p text/p)
+                                   (flow (not empty?))
+                                   "non-empty list of card abilities"))
                     #:sep skip-ws)))))
 
 (define ability-deck/p

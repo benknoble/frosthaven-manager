@@ -96,7 +96,9 @@
   (remove-duplicates
    (for*/list ([ability-card (in-list actions)]
                [ability (in-list (monster-ability-abilities ability-card))]
-               [aoe-spec (in-list (regexp-match* #rx"aoe\\(([^)]+)\\)" ability
+               [part (in-list ability)]
+               #:when (string? part)
+               [aoe-spec (in-list (regexp-match* #rx"aoe\\(([^)]+)\\)" part
                                                  #:match-select second))])
      aoe-spec)))
 
