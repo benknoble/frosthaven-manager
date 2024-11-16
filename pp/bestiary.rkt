@@ -92,7 +92,7 @@
   (match-define (monster-stats max-hp move attack bonuses effects immunities) stats)
   (<+> lbrack
        (group
-        (<$*>
+        (<$*> ;; TODO: too many trailing spaces in stats
          (text (~a level))
          (text label)
          (group
@@ -170,9 +170,9 @@
      '("file")))
 
   (define write-lang-line #f)
-  (cond
-    [(regexp-match-peek #rx"#lang" ip) (void (read-line ip 'any))
-                                       (set! write-lang-line #t)])
+  (when (regexp-match-peek #rx"#lang" ip)
+    (void (read-line ip 'any))
+    (set! write-lang-line #t))
 
   (~> (ip)
       (parse-bestiary "stdin" _ #:syntax? #f)
