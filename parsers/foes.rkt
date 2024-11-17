@@ -51,12 +51,12 @@
 (define spec/p
   (guard/p
     (fmap
-      (flow (hash-map/copy (flow (== (~> string string->number) _))))
+      {(hash-map/copy {(== (~> string string->number) _)})}
       (map/p (char-in/p "234") monster-type/p))
-    (flow (~> hash-keys (set=? valid-player-nums)))
+    {~> hash-keys (set=? valid-player-nums)}
     "entries for each of 2, 3, and 4 players"
-    (flow (~>> hash-keys (set-subtract valid-player-nums)
-               (map ~a) (string-join _ ", " #:before-first "missing ")))))
+    {~>> hash-keys (set-subtract valid-player-nums)
+         (map ~a) (string-join _ ", " #:before-first "missing ")}))
 
 (define foe/pc (list/c string? string? numbering/pc (listof spec/pc)))
 (define foe/p
@@ -83,10 +83,10 @@
                                      (try/p monster/p)
                                      (try/p ability-deck/p)
                                      foe/p))
-    (flow (and (~> bestiary-dupes none?)
-               (~> foe-dupes none?)))
+    {(and (~> bestiary-dupes none?)
+          (~> foe-dupes none?))}
     "no duplicate monsters, ability decks, or foes"
-    (flow (~> (-< bestiary-dupes foe-dupes) (pass _) collect (string-join ",")))))
+    {~> (-< bestiary-dupes foe-dupes) (pass _) collect (string-join ",")}))
 
 (define-flow big-bag->structured
   (~> sep

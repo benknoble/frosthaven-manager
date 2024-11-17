@@ -108,7 +108,7 @@
     (fmap stats-values->monster-stats
           (guard/p
            (many+/p (apply or/p (map try-with-ws stat/ps)) #:sep skip-ws)
-           (flow (~> stats-labels (and (not check-duplicates) stats-labels-sufficient)))
+           {~> stats-labels (and (not check-duplicates) stats-labels-sufficient)}
            "exactly one each of HP, Move, Attack, and up to one each of Bonuses, Effects, and Immunities"
            stats-labels))))
 
@@ -121,12 +121,12 @@
      (parse-result! (parse-string stats/p "[move -] [hp 4] [attack 3]"))
      (monster-stats 4 #f 3 empty empty empty))))
 
-(define cons-label (flow (~> (-< labelled-label labelled-v) cons)))
+(define cons-label {~> (-< labelled-label labelled-v) cons})
 
 ;; (list level type stats)
 (define full-stats/p
   (fmap cons-label (labelled/p
-                     (guard/p number/p (flow (<= 0 _ 7)) "level between 0 and 7")
+                     (guard/p number/p {(<= 0 _ 7)} "level between 0 and 7")
                      (list/p monster-type/p stats/p #:sep skip-ws))))
 
 (define level-x-type
@@ -168,11 +168,11 @@
       [name <- (non-empty-text/p "non-empty monster name")] skip-ws
       [set-name <- (set-name?/p name)] skip-ws
       [stats <- (guard/p (repeat/p (set-count level-x-type) (do [s <- full-stats/p] skip-ws (pure s)))
-                         (flow (and (not level-x-type-dupes) (~> level-x-type-set (set=? level-x-type))))
+                         {(and (not level-x-type-dupes) (~> level-x-type-set (set=? level-x-type)))}
                          "exactly one set of stats for each level (0–7) and type (normal or elite)"
-                         (flow (or level-x-type-dupes
-                                   (~>> level-x-type-set (set-subtract level-x-type)
-                                        set->list (string-join _ ",")))))] skip-ws
+                         {(or level-x-type-dupes
+                              (~>> level-x-type-set (set-subtract level-x-type)
+                                   set->list (string-join _ ",")))})] skip-ws
       (string/p "end-monster")
       (pure
         (apply monster-info
@@ -187,12 +187,12 @@
     (fmap cons-label
           (labelled/p
             (non-empty-text/p "non-empty card name")
-            (list/p (guard/p number/p (flow (<= 0 _ 99)) "valid initiative between 0 and 99")
+            (list/p (guard/p number/p {(<= 0 _ 99)} "valid initiative between 0 and 99")
                     (or/p (try/p (fmap (const #t) (string/p "shuffle")))
                           (pure #f))
                     (fmap {(map list _)}
                           (guard/p (list-value/p text/p)
-                                   (flow (not empty?))
+                                   {(not empty?)}
                                    "non-empty list of card abilities"))
                     #:sep skip-ws)))))
 
@@ -222,9 +222,9 @@
 (define big-bag-bestiary/p
   (guard/p
     (ws-separated-whole-file/p (or/p import-monsters/p (try/p monster/p) ability-deck/p))
-    (flow (~> bestiary-dupes none?))
+    {(~> bestiary-dupes none?)}
     "no duplicate monsters or ability decks"
-    (flow (~> bestiary-dupes (pass _) collect (string-join ",")))))
+    {(~> bestiary-dupes (pass _) collect (string-join ","))}))
 
 (define-flow big-bag->structured
   (~> sep
