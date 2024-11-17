@@ -92,7 +92,7 @@
    (vpanel
     #:alignment '(center center)
     (button "=>" (thunk (cond [(@! @current-index) => remove]))
-            #:enabled? (obs-combine (flow (and% moveable? values))
+            #:enabled? (obs-combine {(and% moveable? values)}
                                     @current
                                     @current-index))
     (button "<=" (thunk (cond [(@! @absent) => add*]))
