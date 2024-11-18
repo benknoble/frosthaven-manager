@@ -25,7 +25,7 @@ jobs:
       - name: Compiling frosthaven-manager and building its docs
         run: make setup
       - name: Create a Resyntax pull request
-        uses: jackfirth/create-resyntax-pull-request@v0.4.2
+        uses: jackfirth/create-resyntax-pull-request@v0.5.1
         with:
           private-key: ${{ secrets.RESYNTAX_APP_PRIVATE_KEY }}
           max-fixes: '50'
