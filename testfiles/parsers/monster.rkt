@@ -1,8 +1,7 @@
 #lang racket
 
 (require frosthaven-manager/parsers/monster
-         megaparsack
-         rackunit)
+         megaparsack)
 
 (define bestiary-bad-formula
   #<<EOF
@@ -40,8 +39,10 @@ end-ability-deck
 EOF
   )
 
-(check-exn exn:fail:read:megaparsack?
-           (thunk
-            (parse-bestiary 'bestiary-bad-formula
-                            (open-input-string bestiary-bad-formula)
-                            #:syntax? #f)))
+(module+ test
+  (require rackunit)
+  (check-exn exn:fail:read:megaparsack?
+             (thunk
+              (parse-bestiary 'bestiary-bad-formula
+                              (open-input-string bestiary-bad-formula)
+                              #:syntax? #f))))
