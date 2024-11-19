@@ -25,5 +25,6 @@ and compelling reason.
 @include-section{pp.scrbl}
 @include-section{qi/list2hash.scrbl}
 @include-section{qi/utils.scrbl}
+@include-section{rich-text-helpers.scrbl}
 @include-section{server.scrbl}
 @include-section{syntax.scrbl}

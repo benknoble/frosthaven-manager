@@ -1,4 +1,5 @@
 #lang racket
+; vim: lw+=match-loop
 
 (provide
  (contract-out
@@ -82,7 +83,8 @@
  frosthaven-manager/defns/scenario
  (prefix-in elements: frosthaven-manager/elements)
  (submod frosthaven-manager/gui/rich-text-display model)
- (prefix-in icons: frosthaven-manager/icons))
+ (prefix-in icons: frosthaven-manager/icons)
+ frosthaven-manager/rich-text-helpers)
 
 (struct monster-stats [max-hp move attack bonuses effects immunities] #:prefab)
 (struct monster-info [set-name name normal-stats elite-stats] #:prefab)
@@ -183,13 +185,6 @@
                  (if (not (empty? common-effects))
                    (string-join common-effects ", " #:before-first ", ")
                    ""))))))
-  (define-syntax-rule (match-loop var [pat e ... res] ...)
-    (let loop ([var var])
-      (match var
-        [pat e ... (append-map loop res)]
-        ...
-        ;; break
-        [_ (list var)])))
   (define (infuse-wild x)
     (match-loop x
       [(regexp #px"(.*)(?i:infuse)\\s*(?i:any)(?:\\s*element)?(.*)$"
@@ -368,11 +363,6 @@
   (if (regexp-match #px"(?i:grant)|(?i:control)" before)
     match
     (format "~a~a" before (apply f (substring match (string-length before)) args))))
-
-(define ((only-on-text f) x)
-  (cond
-    [(string? x) (f x)]
-    [else (list x)]))
 
 (define (element->element-pics e)
   ((case (string-downcase e)

@@ -1,5 +1,5 @@
 #lang racket
-; vim: lw+=define/ability-sets,define/monster-names
+; vim: lw+=define/ability-sets,define/monster-names,match-loop
 
 (provide
   make-dbs
@@ -19,6 +19,7 @@
 
 ;;;; requires and implementation macros
 (require (for-syntax frosthaven-manager/defns/monsters
+                     frosthaven-manager/rich-text-helpers
                      racket
                      racket/syntax)
          frosthaven-manager/curlique
@@ -136,22 +137,14 @@
     (values aoe-spec (generate-temporary aoe-spec))))
 
 (define-for-syntax (substitute-aoe aoe->id-map part)
-  (let go ([part part])
-    (match part
-      [(regexp aoe-rx (list _ prefix aoe suffix))
-       ;; Compute an expr like (make-aoe)
-       (define aoe-pict-expr
-         (list (hash-ref aoe->id-map aoe)))
-       (append-map go (list prefix aoe-pict-expr suffix))]
-      [_ (list part)])))
+  (match-loop part
+    [(regexp aoe-rx (list _ prefix aoe suffix))
+     ;; Compute an expr like (make-aoe)
+     (define aoe-pict-expr
+       (list (hash-ref aoe->id-map aoe)))
+     (list prefix aoe-pict-expr suffix)]))
 
 (define-for-syntax aoe-rx #rx"aoe\\(([^)]+)\\)")
-
-;; f: x -> listof y
-(define-for-syntax ((only-on-text f . xs) x)
-  (cond
-    [(string? x) ((apply curry f xs) x)]
-    [else (list x)]))
 
 (define hash-keys/set {~> hash-keys list->set})
 
