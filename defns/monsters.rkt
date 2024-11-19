@@ -369,15 +369,6 @@
     match
     (format "~a~a" before (apply f (substring match (string-length before)) args))))
 
-(define (not-an-aoe)
-  (pict:text "Not an AoE module"))
-
-(define (get-aoe path)
-  (namespace-call-with-registry-lock
-   (current-namespace)
-   (thunk
-    (dynamic-require path 'aoe (thunk not-an-aoe)))))
-
 (define ((only-on-text f) x)
   (cond
     [(string? x) (f x)]
