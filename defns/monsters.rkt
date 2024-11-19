@@ -303,7 +303,7 @@
     (match-let-values ([{_ ability} (get-dbs  "../testfiles/sample-bestiary-import.rkt")])
       (~> (ability) (hash-ref "archer") first)))
   (define model-equal? (dynamic-require '(submod frosthaven-manager/gui/rich-text-display model) 'model-equal?))
-  (define-binary-check (check-model-equal? model-equal? actual expected))
+  (define-binary-check (check-model-equal? model-equal? _actual _expected))
   (define-syntax-rule (test-model-equal? name actual expected)
     (test-check name check-model-equal? actual expected))
   (test-model-equal? "Simple Attack"
