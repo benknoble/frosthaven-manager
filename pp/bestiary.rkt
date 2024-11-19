@@ -117,7 +117,7 @@
                         (<>))))))
 
 (define (pretty-ability-deck ability-deck)
-  (match-define (list (monster-ability set-name _ _ _ _ _) _ ...) ability-deck)
+  (match-define (list (monster-ability set-name _ _ _ _) _ ...) ability-deck)
   (<>
    (<s> (text "begin-ability-deck") (text (~s set-name)))
    (nest 2 (<> nl (pretty-abilities ability-deck)))
@@ -128,7 +128,7 @@
   (v-concat (map pretty-ability ability-deck)))
 
 (define (pretty-ability ability-card)
-  (match-define (monster-ability _ name initiative abilities shuffle? _) ability-card)
+  (match-define (monster-ability _ name initiative abilities shuffle?) ability-card)
   (labelled-value
    (~s name)
    (<s> (text (format "~a~a" initiative (if shuffle? " shuffle" "")))

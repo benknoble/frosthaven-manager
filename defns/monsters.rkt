@@ -17,8 +17,7 @@
                            [initiative initiative?]
                            ;; TODO: allow newlines, whole rich-text model?
                            [abilities (listof (listof (or/c string? pict:pict?)))]
-                           [shuffle? boolean?]
-                           [location (or/c path? #f)])]
+                           [shuffle? boolean?])]
   [monster-number/c contract?]
   [struct monster ([number monster-number/c]
                    [elite? boolean?]
@@ -87,7 +86,7 @@
 
 (struct monster-stats [max-hp move attack bonuses effects immunities] #:prefab)
 (struct monster-info [set-name name normal-stats elite-stats] #:prefab)
-(struct monster-ability [set-name name initiative abilities shuffle? location] #:prefab)
+(struct monster-ability [set-name name initiative abilities shuffle?] #:prefab)
 (define monster-number/c (integer-in 1 10))
 (serializable-struct monster [number elite? current-hp conditions] #:transparent)
 (serializable-struct monster-group [set-name name level normal-stats elite-stats monsters] #:transparent)
@@ -191,21 +190,6 @@
         ...
         ;; break
         [_ (list var)])))
-  (define (splice-aoe x)
-    (match-loop x
-      [(regexp #rx"^(.*)aoe\\(([^)]+)\\)(.*)$"
-               (list _ prefix aoe suffix))
-       (define base
-         (switch (ability-card)
-           [monster-ability? monster-ability-location]
-           [else "."]))
-       (define aoe-pict
-         (~> (base aoe)
-             build-path
-             (switch
-               [file-exists? (~> get-aoe apply)]
-               [else (gen (pict:text "AoE File Not Found"))])))
-       (list prefix newline aoe-pict newline suffix)]))
   (define (infuse-wild x)
     (match-loop x
       [(regexp #px"(.*)(?i:infuse)\\s*(?i:any)(?:\\s*element)?(.*)$"
@@ -287,8 +271,7 @@
           effects
           move))
   (define pict-replacements
-    (list splice-aoe
-          infuse-element
+    (list infuse-element
           infuse-wild
           consume-element
           consume-wild

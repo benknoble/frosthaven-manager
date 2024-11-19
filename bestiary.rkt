@@ -21,10 +21,9 @@
                                           (syntax->datum #'(infos ...))
                                           (syntax->datum #'(actions ...)))
    ;;=>
-   (quasisyntax/loc this-syntax
+   (syntax/loc this-syntax
      (#%module-begin
-      (make-dbs #,this-syntax
-                (provide info-db ability-db)
+      (make-dbs (provide info-db ability-db)
                 (import imports ...)
                 (info infos ...)
                 (ability actions ...))))])

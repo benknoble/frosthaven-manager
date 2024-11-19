@@ -26,7 +26,6 @@
          frosthaven-manager/monster-db
          frosthaven-manager/parsers/foes
          racket/hash
-         racket/runtime-path
          syntax/parse/define)
 
 (define-syntax-parser define/ability-sets
@@ -47,30 +46,20 @@
 
 ;;;; exports
 (define-syntax-parser make-dbs
-  [(_ original-stx
-      ({~literal provide} info-db ability-db)
+  [(_ ({~literal provide} info-db ability-db)
       ({~datum import} imports ...)
       ({~datum info} infos ...)
       ({~datum ability} actions ...))
    #:with (imported-info-db ...) (generate-temporaries #'(imports ...))
    #:with (imported-ability-db ...) (generate-temporaries #'(imports ...))
-   ;; also binds `here` correctly
-   #:with runtime-path-define (datum->syntax #'original-stx
-                                             (syntax-e #'(define-runtime-path here "."))
-                                             #'original-stx)
    (syntax/loc this-syntax
      (begin
        (provide info-db ability-db)
        (require (rename-in imports
                            [info-db imported-info-db]
                            [ability-db imported-ability-db]) ...)
-       runtime-path-define
        (define-values (original-info-db original-ability-db)
-         (datums->dbs
-          (list infos ...
-                (struct-copy monster-ability
-                             (process-aoes actions)
-                             [location here]) ...)))
+         (datums->dbs (list infos ... (process-aoes actions) ...)))
        (define info-db
          (combine-infos original-info-db imported-info-db ...))
        (define ability-db
@@ -98,7 +87,7 @@
 (define-syntax-parser process-aoes
   [(_ action:expr)
    (define ability-card (syntax->datum #'action))
-   (match-define (monster-ability set-name name initiative abilities shuffle? location)
+   (match-define (monster-ability set-name name initiative abilities shuffle?)
      ability-card)
    (with-syntax ([(parts ...) (map (splice-aoes (attribute action)) abilities)])
      (quasisyntax/loc this-syntax
@@ -110,8 +99,7 @@
         ;; objects each represent a value computation, but the list is not an
         ;; application. Use (list expr …) to represent a list computation.
         (list parts ...)
-        #,shuffle?
-        #,location)))])
+        #,shuffle?)))])
 
 ;; ability: listof (or/c string? pict?)
 (define-for-syntax ((splice-aoes original-syntax) ability)

@@ -38,8 +38,7 @@ The monster information representation, often for reading pre-fab structs.
               [name string?]
               [initiative initiative?]
               [abilities (listof (listof (or/c string? pict?)))]
-              [shuffle? boolean?]
-              [location (or/c #f path?)])
+              [shuffle? boolean?])
              #:prefab]{
 The monster ability representation, often for reading pre-fab structs.
 
