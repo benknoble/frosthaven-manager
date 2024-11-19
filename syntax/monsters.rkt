@@ -19,7 +19,8 @@
 
 ;;;; requires and implementation macros
 (require (for-syntax frosthaven-manager/defns/monsters
-                     racket)
+                     racket
+                     racket/syntax)
          frosthaven-manager/curlique
          frosthaven-manager/defns
          frosthaven-manager/monster-db
@@ -67,7 +68,11 @@
                 (only-in (file aoe-imports)) ...)
        runtime-path-define
        (define-values (original-info-db original-ability-db)
-         (datums->dbs (list infos ... (struct-copy monster-ability actions [location here]) ...)))
+         (datums->dbs
+          (list infos ...
+                (struct-copy monster-ability
+                             (process-aoes actions)
+                             [location here]) ...)))
        (define info-db
          (combine-infos original-info-db imported-info-db ...))
        (define ability-db
@@ -101,6 +106,76 @@
                [aoe-spec (in-list (regexp-match* #rx"aoe\\(([^)]+)\\)" part
                                                  #:match-select second))])
      aoe-spec)))
+
+(define-syntax-parser process-aoes
+  [(_ action:expr)
+   (define ability-card (syntax->datum #'action))
+   (match-define (monster-ability set-name name initiative abilities shuffle? location)
+     ability-card)
+   (with-syntax ([(parts ...) (map (splice-aoes (attribute action)) abilities)])
+     (quasisyntax/loc this-syntax
+       (monster-ability
+        #,set-name
+        #,name
+        #,initiative
+        ;; correctness: see splice-aoes' use of #'list. The computed list of syntax
+        ;; objects each represent a value computation, but the list is not an
+        ;; application. Use (list expr …) to represent a list computation.
+        (list parts ...)
+        #,shuffle?
+        #,location)))])
+
+;; ability: listof (or/c string? pict?)
+(define-for-syntax ((splice-aoes original-syntax) ability)
+  (define (make-original datum)
+    (datum->syntax original-syntax datum
+                   original-syntax original-syntax))
+  (define aoe->id-map
+    (find-all-aoes ability))
+  (define with-substitutions
+    (append-map (only-on-text substitute-aoe aoe->id-map)
+                ability))
+  (define new-expression
+    ;; hygiene: use list from this module!
+    ;; correctness: parts is a list of expressions, but we want the result to be
+    ;; computed as a list, not as an application. It's not implicitly quoted in
+    ;; the desired result (unlike when it was the input to process-aoes).
+    (cons #'list with-substitutions))
+  (define expr-stx (make-original new-expression))
+  (for/fold ([res expr-stx])
+            ([(aoe-path id) (in-hash aoe->id-map)])
+    (syntax-local-lift-require
+     #`(rename (file #,aoe-path) #,id aoe)
+     res)))
+
+(define-for-syntax (find-all-aoes ability)
+  (for/hash ([part (in-list ability)]
+             #:when (string? part)
+             [aoe-spec (in-list (regexp-match* #rx"aoe\\(([^)]+)\\)" part
+                                               #:match-select second))])
+    ;; Here be dragons: messing with scopes on the generated-temporary is likely
+    ;; to break things. Example: using `syntax-e` to compute entirely with
+    ;; non-syntax data means the id use in substitute-aoe (after syntaxifying
+    ;; it) and the id use in syntax-local-lift-require from splice-aoes get
+    ;; different module scopes and don't bind each other. Blech!
+    (values aoe-spec (generate-temporary aoe-spec))))
+
+(define-for-syntax (substitute-aoe aoe->id-map part)
+  (let go ([part part])
+    (match part
+      [(regexp #rx"^(.*)aoe\\(([^)]+)\\)(.*)$"
+               (list _ prefix aoe suffix))
+       ;; Compute an expr like (make-aoe)
+       (define aoe-pict-expr
+         (list (hash-ref aoe->id-map aoe)))
+       (append-map go (list prefix aoe-pict-expr suffix))]
+      [_ (list part)])))
+
+;; f: x -> listof y
+(define-for-syntax ((only-on-text f . xs) x)
+  (cond
+    [(string? x) ((apply curry f xs) x)]
+    [else (list x)]))
 
 (define hash-keys/set {~> hash-keys list->set})
 

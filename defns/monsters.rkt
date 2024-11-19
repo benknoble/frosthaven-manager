@@ -15,6 +15,7 @@
   [struct monster-ability ([set-name string?]
                            [name string?]
                            [initiative initiative?]
+                           ;; TODO: allow newlines, whole rich-text model?
                            [abilities (listof (listof (or/c string? pict:pict?)))]
                            [shuffle? boolean?]
                            [location (or/c path? #f)])]
@@ -135,12 +136,27 @@
   (if monster-ability? (~> monster-ability-initiative ~a) "??"))
 
 (define (monster-ability-ability->rich-text ability-parts ability-card mg env)
-  (append-map
-   (only-on-text {(monster-ability-part->rich-text ability-card mg env)})
-   ability-parts))
+  (define part->rich-text
+    (only-on-text
+     {(monster-ability-part->rich-text ability-card mg env)}))
+  (~>> (ability-parts)
+       ;; bestiary expander produces some empty suffix strings
+       (filter {(not (equal? ""))})
+       ;; only the first item in each ability gets a bullet
+       make-first-bullet
+       ;; everything else has a hard newline (typically only split on images,
+       ;; though)
+       (add-between _ newline)
+       (append-map part->rich-text)))
+
+(define (make-first-bullet ability-parts)
+  (match ability-parts
+    [(cons (? string? first) rest)
+     (cons (regexp-replaces first '([#rx"^" "• "])) rest)]
+    [(cons x xs) (list* "• " x xs)]
+    [_ ability-parts]))
 
 (define (monster-ability-part->rich-text ability-text ability-card mg env)
-  (define bulleted '(#rx"^" "• "))
   (define attack
     (list #px"(.*)((?i:attack))\\s+([+-])(\\d+)"
           (skip-if-grant-or-control (keyword-sub {(monster-stats-attack* env)} mg))))
@@ -267,8 +283,7 @@
        ;; NOTE unscaled
        (list prefix (icons:attack) suffix)]))
   (define replacements
-    (list bulleted
-          attack
+    (list attack
           effects
           move))
   (define pict-replacements
@@ -306,8 +321,8 @@
   (define-binary-check (check-model-equal? model-equal? _actual _expected))
   (define-syntax-rule (test-model-equal? name actual expected)
     (test-check name check-model-equal? actual expected))
-  (test-model-equal? "Simple Attack"
-                     (monster-ability-ability->rich-text (list "Attack +1") ability-card mg env)
+  (test-model-equal? "Simple Attack (and empty strings filtered)"
+                     (monster-ability-ability->rich-text (list "Attack +1" "") ability-card mg env)
                      (list "• " (icons:attack) " 3 (E:4, wound)"))
   (test-model-equal? "Simple Attack 1"
                      (monster-ability-ability->rich-text (list "Attack +1") ability-card mg1 env)
@@ -343,7 +358,19 @@
                       (scale-icon (icons:target)) " 2"
                       ", " "+2 " (scale-icon (icons:target)) ", "
                       (scale-icon (icons:range)) " 3, "
-                      (scale-icon (icons:push)) " 2")))
+                      (scale-icon (icons:push)) " 2"))
+  (test-model-equal? "Expander result"
+                     (monster-ability-ability->rich-text (list "Attack +1" (pict:text "AoE") "and more")
+                                                         ability-card mg env)
+                     (list "• " (icons:attack) " 3 (E:4, wound)"
+                           newline
+                           (pict:text "AoE")
+                           newline
+                           "and more"))
+  (test-model-equal? "Make first bullet"
+                     (monster-ability-ability->rich-text (list (pict:text "AoE"))
+                                                         ability-card mg env)
+                     (list "• " newline (pict:text "AoE"))))
 
 (define ((keyword-sub stats-f mg) _match word +- amount)
   (define op (eval (string->symbol +-) (make-base-namespace)))
