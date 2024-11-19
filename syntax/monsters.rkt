@@ -127,8 +127,7 @@
 (define-for-syntax (find-all-aoes ability)
   (for/hash ([part (in-list ability)]
              #:when (string? part)
-             [aoe-spec (in-list (regexp-match* #rx"aoe\\(([^)]+)\\)" part
-                                               #:match-select second))])
+             [aoe-spec (in-list (regexp-match* aoe-rx part #:match-select second))])
     ;; Here be dragons: messing with scopes on the generated-temporary is likely
     ;; to break things. Example: using `syntax-e` to compute entirely with
     ;; non-syntax data means the id use in substitute-aoe (after syntaxifying
@@ -139,13 +138,14 @@
 (define-for-syntax (substitute-aoe aoe->id-map part)
   (let go ([part part])
     (match part
-      [(regexp #rx"^(.*)aoe\\(([^)]+)\\)(.*)$"
-               (list _ prefix aoe suffix))
+      [(regexp aoe-rx (list _ prefix aoe suffix))
        ;; Compute an expr like (make-aoe)
        (define aoe-pict-expr
          (list (hash-ref aoe->id-map aoe)))
        (append-map go (list prefix aoe-pict-expr suffix))]
       [_ (list part)])))
+
+(define-for-syntax aoe-rx #rx"aoe\\(([^)]+)\\)")
 
 ;; f: x -> listof y
 (define-for-syntax ((only-on-text f . xs) x)
