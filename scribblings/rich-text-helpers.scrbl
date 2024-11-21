@@ -6,14 +6,16 @@
 
 @(define my-eval
    (make-base-eval '(require frosthaven-manager/rich-text-helpers)))
+@(define-syntax-rule (submod-link mod sub ...)
+   @racketmodlink[(submod mod sub ...)]{@racket[(submod mod sub ...)]})
 
 @title{@tt{rich-text-helpers}}
 @defmodule[frosthaven-manager/rich-text-helpers]
 
 This module provides helpers for converting values to the rich text model of
-@racketmodname[(submod frosthaven-manager/gui/rich-text-display model)]. In
-particular, these helpers work with functions that take single values to lists
-which are intended to be spliced into the resulting model list.
+@submod-link[frosthaven-manager/gui/rich-text-display model]. In particular,
+these helpers work with functions that take single values to lists which are
+intended to be spliced into the resulting model list.
 
 @defproc[(only-on-text [f (-> any/c ... list?)] [arg any/c] ...)
          (-> any/c list?)]{
