@@ -6,23 +6,22 @@
 ;;   (require racket/gui/easy/debugger)
 ;;   (start-debugger))
 
-(require (only-in racket/gui
-                  application-about-handler)
-         racket/gui/easy
-         (only-in pretty-expressive pretty-print)
-         frosthaven-manager/observable-operator
-         frosthaven-manager/curlique
-         frosthaven-manager/qi/utils
+(require frosthaven-manager/curlique
          frosthaven-manager/defns
+         frosthaven-manager/files
+         frosthaven-manager/gui/common-menu
+         frosthaven-manager/gui/counter
+         frosthaven-manager/gui/helpers
+         frosthaven-manager/gui/mixins
+         frosthaven-manager/gui/stacked-tables
          frosthaven-manager/monster-db
+         frosthaven-manager/observable-operator
          frosthaven-manager/parsers/monster
          frosthaven-manager/pp/bestiary
-         frosthaven-manager/gui/common-menu
-         frosthaven-manager/gui/mixins
-         frosthaven-manager/gui/helpers
-         frosthaven-manager/gui/stacked-tables
-         frosthaven-manager/gui/counter
-         frosthaven-manager/files)
+         frosthaven-manager/qi/utils
+         racket/gui/easy
+         (only-in racket/gui application-about-handler)
+         (only-in pretty-expressive pretty-print))
 
 (define modifier
   (case (system-type 'os)
