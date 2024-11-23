@@ -11,6 +11,7 @@ and compelling reason.
 @include-section{aoe-images.scrbl}
 @include-section{constants.scrbl}
 @include-section{contracts.scrbl}
+@include-section{curlique.scrbl}
 @include-section{defns.scrbl}
 @include-section{elements.scrbl}
 @include-section{enum-helpers.scrbl}
