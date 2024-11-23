@@ -7,10 +7,7 @@
 
 ;; f: x -> listof y
 (define (only-on-text f . xs)
-  (define f*
-    (if (null? xs)
-        f
-        (apply curry f xs)))
+  (define f* (if (null? xs) f (apply curry f xs)))
   (λ (x)
     (cond
       [(string? x) (f* x)]
