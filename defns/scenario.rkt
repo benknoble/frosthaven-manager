@@ -66,14 +66,14 @@
   [bless "Bless (x 2)"]))
 
 (define monster-modifier-deck
-  (append (build-list 6 (const zero))
-          (build-list 5 (const minus1))
-          (build-list 5 (const plus1))
+  (append (make-list 6 zero)
+          (make-list 5 minus1)
+          (make-list 5 plus1)
           (list minus2 plus2 null crit)))
 
-(define monster-curse-deck (build-list 10 (const curse)))
+(define monster-curse-deck (make-list 10 curse))
 
-(define bless-deck (build-list 10 (const bless)))
+(define bless-deck (make-list 10 bless))
 
 (define-flow (shuffle-modifier-deck? _pulled-cards)
   (~> sep (any (one-of? null crit))))
@@ -117,23 +117,23 @@
                           cards))
   (append* (for/list ([(card num) (in-hash difference)]
                       #:when (moveable? card))
-             (build-list num (const card)))))
+             (make-list num card))))
 
 (module+ test
   (test-not-exn "absent-from-modifier-deck: does not fail on non-subset keys"
                 (thunk (absent-from-modifier-deck (list curse))))
   (test-exn "absent-from-modifier-deck: fails on too many cards" #rx"subset"
-            (thunk (absent-from-modifier-deck (build-list 10 (const crit)))))
+            (thunk (absent-from-modifier-deck (make-list 10 crit))))
   (test-case "absent-from-modifier-deck: computes the difference from the standard modifier deck"
     (check-equal? (counter (absent-from-modifier-deck monster-modifier-deck)) (counter empty))
     (check-equal? (counter (absent-from-modifier-deck (shuffle monster-modifier-deck))) (counter empty))
     (check-equal? (counter (absent-from-modifier-deck empty)) (counter monster-modifier-deck))
     (check-equal? (counter (absent-from-modifier-deck
-                            (shuffle (append (build-list 6 (const zero))
-                                             (build-list 2 (const minus1))
-                                             (build-list 5 (const plus1))
+                            (shuffle (append (make-list 6 zero)
+                                             (make-list 2 minus1)
+                                             (make-list 5 plus1)
                                              (list plus2 null crit)))))
-                  (counter (append (build-list 3 (const minus1))
+                  (counter (append (make-list 3 minus1)
                                    (list minus2))))))
 
 (define-serializable-enum-type condition
