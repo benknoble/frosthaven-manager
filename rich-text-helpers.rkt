@@ -7,11 +7,14 @@
 
 ;; f: x -> listof y
 (define (only-on-text f . xs)
-  (let ([f* (if (null? xs) f (apply curry f xs))])
-    (λ (x)
-      (cond
-        [(string? x) (f* x)]
-        [else (list x)]))))
+  (define f*
+    (if (null? xs)
+        f
+        (apply curry f xs)))
+  (λ (x)
+    (cond
+      [(string? x) (f* x)]
+      [else (list x)])))
 
 (define-syntax-parser match-loop
   [(_ input:expr [pat:expr e ... res:expr] ...)
