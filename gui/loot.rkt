@@ -67,7 +67,7 @@
          label max-cards type)
   (define @n (@> @type->cards {(hash-ref type 0)}))
   (define (subtract-card)
-    (when (> (@! @n) 0)
+    (when (positive? (@! @n))
       (on-card `(remove ,type))))
   (define (add-card)
     (when (< (@! @n) max-cards)

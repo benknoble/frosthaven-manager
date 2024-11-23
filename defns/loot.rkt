@@ -11,7 +11,7 @@
   [parse-herb-kind (-> string? herb-kind?)]
   [struct money ([amount natural-number/c])]
   [struct material ([name material-kind?]
-                    [amount (apply list/c (build-list (sub1 max-players) (const natural-number/c)))])]
+                    [amount (apply list/c (make-list (sub1 max-players) natural-number/c))])]
   [material-amount* (-> material? num-players/c natural-number/c)]
   [struct herb ([name herb-kind?]
                 [amount natural-number/c])]

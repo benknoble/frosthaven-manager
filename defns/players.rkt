@@ -69,7 +69,7 @@
 
 (define ((player-act-on-hp proc) p)
   (define new-hp (proc (player-current-hp p)))
-  (if (not (>= new-hp 0))
+  (if (negative? new-hp)
     p
     (struct-copy player p [current-hp new-hp])))
 
@@ -81,7 +81,7 @@
 
 (define ((player-act-on-xp proc) p)
   (define new-xp (proc (player-xp p)))
-  (if (not (>= new-xp 0))
+  (if (negative? new-xp)
     p
     (struct-copy player p [xp new-xp])))
 
@@ -136,7 +136,7 @@
 
 (define ((summon-act-on-hp proc) s)
   (define new-hp (proc (summon-current-hp s)))
-  (if (not (>= new-hp 0))
+  (if (negative? new-hp)
     s
     (struct-copy summon s [current-hp new-hp])))
 

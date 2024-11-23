@@ -6,23 +6,22 @@
 ;;   (require racket/gui/easy/debugger)
 ;;   (start-debugger))
 
-(require (only-in racket/gui
-                  application-about-handler)
-         racket/gui/easy
-         (only-in pretty-expressive pretty-print)
-         frosthaven-manager/observable-operator
-         frosthaven-manager/curlique
-         frosthaven-manager/qi/utils
+(require frosthaven-manager/curlique
          frosthaven-manager/defns
+         frosthaven-manager/files
+         frosthaven-manager/gui/common-menu
+         frosthaven-manager/gui/counter
+         frosthaven-manager/gui/helpers
+         frosthaven-manager/gui/mixins
+         frosthaven-manager/gui/stacked-tables
          frosthaven-manager/monster-db
+         frosthaven-manager/observable-operator
          frosthaven-manager/parsers/monster
          frosthaven-manager/pp/bestiary
-         frosthaven-manager/gui/common-menu
-         frosthaven-manager/gui/mixins
-         frosthaven-manager/gui/helpers
-         frosthaven-manager/gui/stacked-tables
-         frosthaven-manager/gui/counter
-         frosthaven-manager/files)
+         frosthaven-manager/qi/utils
+         racket/gui/easy
+         (only-in racket/gui application-about-handler)
+         (only-in pretty-expressive pretty-print))
 
 (define modifier
   (case (system-type 'os)
@@ -80,58 +79,57 @@
                        (<@ @info-db {(hash-update monster-set {(hash-remove monster-name)})})]
       ['stats
        (match (cdr xs)
-         [(list* data f args)
-          (when data
-            (match-define (struct stats-editor-data [set name level elite? _info _name->info]) data)
-            (define current-value (f (stats-editor-data-stats data)))
-            (define (update-statss the-statss)
-              (list-update
-               the-statss
-               level
-               (λ (stats)
-                 ;; TODO: should not cause contract violation: but the edit
-                 ;; function don't know what they're operating on
-                 ;; TODO: need to handle formulas for stats that can be?
-                 (match* (f args)
-                   [{(== monster-stats-max-hp) (list proc)}
-                    (struct-copy monster-stats stats [max-hp (proc current-value)])]
-                   [{(== monster-stats-move) (list proc)}
-                    (struct-copy monster-stats stats [move (proc current-value)])]
-                   [{(== monster-stats-attack) (list proc)}
-                    (struct-copy monster-stats stats [attack (proc current-value)])]
-                   [{(== monster-stats-bonuses) '(new)}
-                    (struct-copy monster-stats stats [bonuses (append current-value '(""))])]
-                   [{(== monster-stats-bonuses) (list index 'remove)}
-                    (struct-copy monster-stats stats [bonuses (list-remove current-value index)])]
-                   [{(== monster-stats-bonuses) (list index value)}
-                    (struct-copy monster-stats stats [bonuses (list-set current-value index value)])]
-                   [{(== monster-stats-effects) '(new)}
-                    (struct-copy monster-stats stats [effects (append current-value '(""))])]
-                   [{(== monster-stats-effects) (list index 'remove)}
-                    (struct-copy monster-stats stats [effects (list-remove current-value index)])]
-                   [{(== monster-stats-effects) (list index value)}
-                    (struct-copy monster-stats stats [effects (list-set current-value index value)])]
-                   [{(== monster-stats-immunities) '(new)}
-                    (struct-copy monster-stats stats [immunities (append current-value '(""))])]
-                   [{(== monster-stats-immunities) (list index 'remove)}
-                    (struct-copy monster-stats stats [immunities (list-remove current-value index)])]
-                   [{(== monster-stats-immunities) (list index value)}
-                    (struct-copy monster-stats stats [immunities (list-set current-value index value)])]))))
-            (<@ @info-db
-                (λ (info-db)
-                  (hash-update
-                   info-db
-                   set
-                   (λ (name->info)
-                     (hash-update
-                      name->info
-                      name
-                      (λ (info)
-                        (define ->stats (if elite? monster-info-elite-stats monster-info-normal-stats))
-                        (define the-statss (->stats info))
-                        (if elite?
+         [(cons #f _) (void)]
+         [(list* (and data (struct stats-editor-data [set name level elite? _info _name->info])) f args)
+          (define current-value (f (stats-editor-data-stats data)))
+          (define (update-statss the-statss)
+            (list-update
+             the-statss
+             level
+             (λ (stats)
+               ;; TODO: should not cause contract violation: but the edit
+               ;; function don't know what they're operating on
+               ;; TODO: need to handle formulas for stats that can be?
+               (match* (f args)
+                 [{(== monster-stats-max-hp) (list proc)}
+                  (struct-copy monster-stats stats [max-hp (proc current-value)])]
+                 [{(== monster-stats-move) (list proc)}
+                  (struct-copy monster-stats stats [move (proc current-value)])]
+                 [{(== monster-stats-attack) (list proc)}
+                  (struct-copy monster-stats stats [attack (proc current-value)])]
+                 [{(== monster-stats-bonuses) '(new)}
+                  (struct-copy monster-stats stats [bonuses (append current-value '(""))])]
+                 [{(== monster-stats-bonuses) (list index 'remove)}
+                  (struct-copy monster-stats stats [bonuses (list-remove current-value index)])]
+                 [{(== monster-stats-bonuses) (list index value)}
+                  (struct-copy monster-stats stats [bonuses (list-set current-value index value)])]
+                 [{(== monster-stats-effects) '(new)}
+                  (struct-copy monster-stats stats [effects (append current-value '(""))])]
+                 [{(== monster-stats-effects) (list index 'remove)}
+                  (struct-copy monster-stats stats [effects (list-remove current-value index)])]
+                 [{(== monster-stats-effects) (list index value)}
+                  (struct-copy monster-stats stats [effects (list-set current-value index value)])]
+                 [{(== monster-stats-immunities) '(new)}
+                  (struct-copy monster-stats stats [immunities (append current-value '(""))])]
+                 [{(== monster-stats-immunities) (list index 'remove)}
+                  (struct-copy monster-stats stats [immunities (list-remove current-value index)])]
+                 [{(== monster-stats-immunities) (list index value)}
+                  (struct-copy monster-stats stats [immunities (list-set current-value index value)])]))))
+          (<@ @info-db
+              (λ (info-db)
+                (hash-update
+                 info-db
+                 set
+                 (λ (name->info)
+                   (hash-update
+                    name->info
+                    name
+                    (λ (info)
+                      (define ->stats (if elite? monster-info-elite-stats monster-info-normal-stats))
+                      (define the-statss (->stats info))
+                      (if elite?
                           (struct-copy monster-info info [elite-stats (update-statss the-statss)])
-                          (struct-copy monster-info info [normal-stats (update-statss the-statss)])))))))))])]
+                          (struct-copy monster-info info [normal-stats (update-statss the-statss)]))))))))])]
       ['abilities (void)]))
   (render
    (window
