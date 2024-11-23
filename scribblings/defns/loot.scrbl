@@ -56,7 +56,7 @@ Serializable.
 
 @defstruct*[material
              ([name material-kind?]
-              [amount (apply list/c (build-list (sub1 max-players) (const natural-number/c)))])
+              [amount (apply list/c (make-list (sub1 max-players) natural-number/c))])
              #:transparent]{
 Represents a loot card for a material; the amount varies by number of players.
 May have +1 stickers.

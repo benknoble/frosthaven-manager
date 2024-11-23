@@ -27,8 +27,8 @@ The monster statistic representation, usually used with pre-fabs.
 @defstruct*[monster-info
              ([set-name string?]
               [name string?]
-              [normal-stats (apply list/c (build-list number-of-levels (const monster-stats?)))]
-              [elite-stats (apply list/c (build-list number-of-levels (const monster-stats?)))])
+              [normal-stats (apply list/c (make-list number-of-levels monster-stats?))]
+              [elite-stats (apply list/c (make-list number-of-levels monster-stats?))])
              #:prefab]{
 The monster information representation, often for reading pre-fab structs.
 }
