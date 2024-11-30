@@ -162,7 +162,7 @@
          (monster-ability-name->text ability) " (" (monster-ability-initiative->text ability) ")" newline
          (~> (ability)
              (if _ monster-ability-abilities '())
-             (sep (-< (~> (monster-ability-ability->rich-text ability mg env) sep)
+             (sep (-< (~> (monster-ability-ability->rich-text mg env) sep)
                       (gen newline)))
              collect
              (dropf-right newline?)))

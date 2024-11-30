@@ -116,7 +116,6 @@ possibly-absent monster ability.
 
 @defproc[(monster-ability-ability->rich-text
            [ability-text (listof (or/c string? pict?))]
-           [ability-card monster-ability?]
            [mg monster-group?]
            [env env/c])
          (listof (or/c string? pict? pict/alt-text? newline?))]{

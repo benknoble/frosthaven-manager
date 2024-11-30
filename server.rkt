@@ -725,7 +725,7 @@
     `(li
       (span
        ([class "monster-ability-ability"])
-       ,@(for/list ([content (in-list (monster-ability-ability->rich-text the-ability ability mg env))])
+       ,@(for/list ([content (in-list (monster-ability-ability->rich-text the-ability mg env))])
            (match content
              [(? string? s) s]
              [(? newline?) `(br)]
