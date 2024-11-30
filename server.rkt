@@ -19,7 +19,7 @@
   (prefix-in elements: frosthaven-manager/elements)
   frosthaven-manager/manager
   frosthaven-manager/observable-operator
-  (submod frosthaven-manager/gui/rich-text-display model)
+  (submod frosthaven-manager/gui/rich-text-display model unsafe)
   json
   nat-traversal
   net/url

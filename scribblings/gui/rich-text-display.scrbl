@@ -4,8 +4,7 @@
                      racket/gui/easy
                      racket/gui/easy/contract
                      (only-in pict pict?)
-                     frosthaven-manager/gui/rich-text-display
-                     (submod frosthaven-manager/gui/rich-text-display model)))
+                     frosthaven-manager/gui/rich-text-display))
 
 @title{@tt{gui/rich-text-display}}
 @defmodule[frosthaven-manager/gui/rich-text-display]

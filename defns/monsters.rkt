@@ -81,7 +81,7 @@
  frosthaven-manager/defns/level
  frosthaven-manager/defns/scenario
  (prefix-in elements: frosthaven-manager/elements)
- (submod frosthaven-manager/gui/rich-text-display model)
+ (submod frosthaven-manager/gui/rich-text-display model unsafe)
  (prefix-in icons: frosthaven-manager/icons)
  frosthaven-manager/rich-text-helpers)
 

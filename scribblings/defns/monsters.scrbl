@@ -7,8 +7,7 @@
                      frosthaven-manager/contracts
                      frosthaven-manager/defns
                      frosthaven-manager/parsers/formula
-                     frosthaven-manager/gui/rich-text-display
-                     (submod frosthaven-manager/gui/rich-text-display model)))
+                     frosthaven-manager/gui/rich-text-display))
 
 @title{Monster Cards}
 @defmodule[frosthaven-manager/defns/monsters]

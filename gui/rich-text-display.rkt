@@ -1,7 +1,7 @@
 #lang racket
 
 (provide
- (all-from-out 'model)
+ (all-from-out (submod 'model unsafe))
  (contract-out
   [rich-text-display
    (->* ((maybe-obs/c (listof (or/c string?
@@ -31,6 +31,7 @@
 (module model racket
   (provide
    (contract-out
+    #:unprotected-submodule unsafe
     [struct pict/alt-text ([p pict?]
                            [alt-text string?])]
     [newline? (-> any/c boolean?)]
@@ -83,7 +84,7 @@
       (draw-pict p dc 0 0)
       (send dc get-recorded-datum))))
 
-(require 'model)
+(require (submod 'model unsafe))
 
 (define (peek v)
   (if (obs? v)
