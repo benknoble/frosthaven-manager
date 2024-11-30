@@ -420,17 +420,16 @@
     [cs cs]))
 
 (define (update-monster-groups creatures k f [fn {1>}])
-  (define (maybe-update-monster-group e)
-    (cond
-      [(~> (e) (-< creature-id creature-v) (and% (eq? k) monster-group*?))
-       (define mg* (creature-v e))
-       (define n (monster-group*-active mg*))
-       (define mg (monster-group*-mg mg*))
-       (define new-mg (f mg))
-       (define new-n (fn n new-mg))
-       (creature k (monster-group* new-n new-mg))]
-      [else e]))
-  (map maybe-update-monster-group creatures))
+  (match creatures
+    [(cons (creature (== k) (? monster-group*? mg*)) creatures)
+     (define n (monster-group*-active mg*))
+     (define mg (monster-group*-mg mg*))
+     (define new-mg (f mg))
+     (define new-n (fn n new-mg))
+     (cons (creature k (monster-group* new-n new-mg)) creatures)]
+    [(cons c creatures)
+     (cons c (update-monster-groups creatures k f fn))]
+    [cs cs]))
 
 (define (kill-monster s monster-group-id monster-number)
   ;; g records the result of monster-group-remove to avoid having to traverse
