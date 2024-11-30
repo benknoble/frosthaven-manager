@@ -156,7 +156,7 @@
     [(cons x xs) (list* "• " x xs)]
     [_ ability-parts]))
 
-(define (monster-ability-part->rich-text ability-text mg env)
+(define (monster-ability-part->rich-text* ability-text mg env)
   (define attack
     (list #px"(.*)((?i:attack))\\s+([+-])(\\d+)"
           (skip-if-grant-or-control (keyword-sub {(monster-stats-attack* env)} mg))))
@@ -279,6 +279,22 @@
   (for/fold ([result (list (regexp-replaces ability-text replacements))])
             ([pict-replacement (in-list pict-replacements)])
     (append-map (only-on-text pict-replacement) result)))
+
+;; highly specific to the monster-ability-part->rich-text!
+(define (memoize f)
+  (define cache (make-hash))
+  (define-syntax-rule (hash [k v] ...)
+    (make-hash (list (cons k v) ...)))
+  (define-syntax-rule (mg-key mg)
+    (list (monster-group-normal-stats mg)
+          (monster-group-elite-stats mg)))
+  (λ (ability-text mg env)
+    (~> (cache)
+        (hash-ref! ability-text (thunk (hash [(mg-key mg) (hash [env (f ability-text mg env)])])))
+        (hash-ref! (mg-key mg)  (thunk                    (hash [env (f ability-text mg env)])))
+        (hash-ref! env          (thunk                               (f ability-text mg env))))))
+
+(define monster-ability-part->rich-text (memoize monster-ability-part->rich-text*))
 
 (module+ test
   (require rackunit)
