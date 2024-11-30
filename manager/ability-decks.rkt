@@ -89,8 +89,9 @@
     (void)))
 
 (define ((update-ability-decks f) ads)
-  (for/hash ([(set ad) (in-hash ads)])
-    (values set (f set ad))))
+  (for/fold ([result ads])
+            ([set (in-hash-keys ads)])
+    (hash-update result set (λ (ad) (f set ad)))))
 
 (define (move-top-draw-to-bottom ads)
   (define the-draw (ability-decks-draw ads))
