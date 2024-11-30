@@ -689,7 +689,7 @@
                     @revealed)
        (monster-ability-view (obs-combine {(if (and 2> (~> X (== _ length) <))
                                                list-ref
-                                               (gen (monster-ability "" "" 0 empty #f #f)))}
+                                               (gen (monster-ability "" "" 0 empty #f)))}
                                           @cards
                                           @selection)
                              @mg
