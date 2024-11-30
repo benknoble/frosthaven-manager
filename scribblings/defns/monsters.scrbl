@@ -122,11 +122,6 @@ Format a single monster ability from an ability card as a rich text sequence,
 compatible with @racket[rich-text-display].
 }
 
-@itemlist[
-          @item{an extra @racket[`(aoe-pict ,aoe-pict)] means the ability had an area of effect specified by the pict.}
-]
-}
-
 @defproc[(make-monster [info monster-info?]
                        [level level/c]
                        [number monster-number/c]
