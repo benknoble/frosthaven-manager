@@ -449,11 +449,17 @@
     ((add-or-remove-monster-group s) `(remove ,new-mg))))
 
 (define (update-all-players creatures f)
-  (define (update-only-player c)
-    (match c
-      [(creature id (? player? p)) (creature id (f p))]
-      [c c]))
-  (map update-only-player creatures))
+  (define n-players (count {~> creature-v player?} creatures))
+  (let loop ([creatures creatures]
+             [seen-players 0])
+    (if (= seen-players n-players)
+        creatures
+        (match creatures
+          [(cons (creature id (? player? p)) creatures)
+           (cons (creature id (f p)) (loop creatures (add1 seen-players)))]
+          [(cons c creatures)
+           (cons c (loop creatures seen-players))]
+          [cs cs]))))
 
 (define (update-all-monster-groups creatures f)
   (define (update-only-monster-group c)
