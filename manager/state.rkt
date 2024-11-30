@@ -412,11 +412,12 @@
      (:= (state-@creatures s) (append (take ps n-desired-players) mgs))]))
 
 (define (update-players creatures k f)
-  (define (maybe-update-player e)
-    (if (~> (e) (-< creature-id creature-v) (and% (eq? k) player?))
-      (creature k (f (creature-v e)))
-      e))
-  (map maybe-update-player creatures))
+  (match creatures
+    [(cons (creature (== k) (? player? v)) creatures)
+     (cons (creature k (f v)) creatures)]
+    [(cons c creatures)
+     (cons c (update-players creatures k f))]
+    [cs cs]))
 
 (define (update-monster-groups creatures k f [fn {1>}])
   (define (maybe-update-monster-group e)
