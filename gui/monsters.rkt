@@ -665,19 +665,6 @@
                      [monster-name (in-hash-keys monster-name->monster-info)])
            (string-length monster-name))))
 
-(define (aoe-button pict)
-  (button "AoE" (thunk
-                 (with-closing-custodian/eventspace
-                  (render/eventspace
-                   #:eventspace closing-eventspace
-                   (window
-                    #:mixin close-custodian-mixin
-                    #:title "AoE pattern"
-                    #:size (~> (pict)
-                               (-< pict-width pict-height)
-                               (>< exact-ceiling) list)
-                    (pict-canvas pict values)))))))
-
 (define (ability-deck-preview @ability-deck @mg @env #:on-move [on-move void])
   (define (make-discard-rows ability-deck)
     (for/vector ([ability (ability-decks-discard ability-deck)])
