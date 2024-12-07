@@ -1,7 +1,7 @@
 #lang racket
 
-(require frosthaven-manager/testfiles/sample-bestiary-import
-         frosthaven-manager/defns
+(require frosthaven-manager/defns
+         frosthaven-manager/testfiles/sample-bestiary-import
          pict
          qi)
 
