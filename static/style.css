@@ -121,3 +121,7 @@ button {
     border-color: #6272a4;
   }
 }
+
+.bottom-info button {
+  font-size: 120%;
+}
