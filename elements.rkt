@@ -221,8 +221,8 @@
       (rotate (* pi -1/4))))
 (define (earth)
   (define overlay (earth-overlay))
-  (define infused-earth (cc-superimpose (colorize (base) "dark green") overlay))
-  (define waning-earth (cc-superimpose (wane "dark green") overlay))
+  (define infused-earth (cc-superimpose (colorize (base) "lime green") overlay))
+  (define waning-earth (cc-superimpose (wane "lime green") overlay))
   (define unfused-earth (cc-superimpose (base) overlay))
   (element-pics "Earth" infused-earth waning-earth unfused-earth (make-consume infused-earth)))
 
@@ -255,7 +255,7 @@
   (define wild-fire (slice "red"))
   (define wild-ice (slice "cyan"))
   (define wild-air (slice "light gray"))
-  (define wild-earth (slice "dark green"))
+  (define wild-earth (slice "lime green"))
   (define wild-light (slice "gold"))
   (define wild-dark (slice "purple"))
   ;; TODO: use a dc, draw-arc, etc.
