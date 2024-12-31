@@ -62,7 +62,8 @@ True iff @racket[c] holds a @racket[monster-group*].
               [|@|bestiary-path (obs/c (or/c #f path-string?))]
               [|@|ability-decks (obs/c (hash/c string? ability-decks?))]
               [|@|prompts (obs/c (listof prompt/c))]
-              [|@|type->deck (maybe-obs/c (hash/c loot-type/c (listof loot-card?)))])]{
+              [|@|type->deck (maybe-obs/c (hash/c loot-type/c (listof loot-card?)))]
+              [|@|error-logs (obs/c (or/c #f path?))])]{
 All of the "global" manager state.
 }
 
@@ -86,7 +87,8 @@ All of the "global" manager state.
            [|@|bestiary-path (maybe-obs/c (or/c #f path-string?)) (|@| #f)]
            [|@|ability-decks (maybe-obs/c (hash/c string? ability-decks?)) (|@| (hash))]
            [|@|prompts (maybe-obs/c (listof prompt/c)) (|@| empty)]
-           [|@|type->deck (maybe-obs/c (hash/c loot-type/c (listof loot-card?))) (|@| standard-loot-deck)])
+           [|@|type->deck (maybe-obs/c (hash/c loot-type/c (listof loot-card?))) (|@| standard-loot-deck)]
+           [|@|error-logs (maybe-obs/c (or/c #f path?))])
          state?]{
 Create an initial state.
 }

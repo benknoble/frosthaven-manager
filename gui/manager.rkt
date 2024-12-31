@@ -14,6 +14,10 @@
      (collect-garbage 'incremental)
      (base-event-handler es)))
   (define s (make-state))
+  (unless (terminal-port? (current-error-port))
+    (define temp (make-temporary-file "frosthaven-manager-~a"))
+    (current-error-port (open-output-file temp #:exists 'truncate #:mode 'text))
+    (:= (state-@error-logs s) temp))
   (command-line
    #:once-each
    [("--debug") "Enable debugging"
@@ -91,6 +95,7 @@
       (menu "Utilities"
             (formula-menu-item (state-@env s)))
       (menu "Debug"
+            (error-logs-menu-item (state-@error-logs s))
             (gc-menu-item))
       (menu "Help"
             (about-menu-item)

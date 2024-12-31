@@ -28,7 +28,8 @@
                    [@bestiary-path (obs/c (or/c #f path-string?))]
                    [@ability-decks (obs/c (hash/c string? ability-decks?))]
                    [@prompts (obs/c (listof prompt/c))]
-                   [@type->deck (obs/c (hash/c loot-type/c (listof loot-card?)))])]
+                   [@type->deck (obs/c (hash/c loot-type/c (listof loot-card?)))]
+                   [@error-logs (obs/c (or/c #f path?))])]
     [make-state
       (->* ()
            ((maybe-obs/c level/c)
@@ -50,7 +51,8 @@
             (maybe-obs/c (or/c #f path-string?))
             (maybe-obs/c (hash/c string? ability-decks?))
             (maybe-obs/c (listof prompt/c))
-            (maybe-obs/c (hash/c loot-type/c (listof loot-card?))))
+            (maybe-obs/c (hash/c loot-type/c (listof loot-card?)))
+            (maybe-obs/c (or/c #f path?)))
            state?)]
     [state-@env (-> state? (obs/c env/c))]
     [state-@info-db (-> state? (obs/c info-db/c))]
@@ -131,7 +133,8 @@
          @bestiary-path
          @ability-decks
          @prompts
-         @type->deck]
+         @type->deck
+         @error-logs]
         #:transparent ;; for struct->vector
         #:property prop:serializable
         (make-serialize-info
@@ -160,7 +163,8 @@
                     [@bestiary-path (@ #f)]
                     [@ability-decks (@ (hash))]
                     [@prompts (@ empty)]
-                    [@type->deck (@ standard-loot-deck)])
+                    [@type->deck (@ standard-loot-deck)]
+                    [@error-logs (@ #f)])
   (state (@ @level)
          (@ @num-players)
          (@ @creatures)
@@ -189,7 +193,8 @@
          (@ @bestiary-path)
          (@ @ability-decks)
          (@ @prompts)
-         (@ @type->deck)))
+         (@ @type->deck)
+         (@ @error-logs)))
 
 (define (state-@env s)
   (obs-combine (λ (c l) (hash "C" c "L" l))
@@ -295,7 +300,9 @@
   (:=     (state-@prompts to)
       (@! (state-@prompts from)))
   (:=     (state-@type->deck to)
-      (@! (state-@type->deck from))))
+      (@! (state-@type->deck from)))
+  (:=     (state-@error-logs to)
+      (@! (state-@error-logs from))))
 
 (define (state-@info-db s)
   (@> (state-@bestiary-path s)

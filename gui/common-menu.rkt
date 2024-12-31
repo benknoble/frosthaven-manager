@@ -10,14 +10,17 @@
     [send-feedback-menu-item (-> (is-a?/c view<%>))]
     [how-to-play-menu-item (-> (is-a?/c view<%>))]
     [launch-server-menu-item (-> state? (is-a?/c view<%>))]
-    [gc-menu-item (-> (is-a?/c view<%>))]))
+    [gc-menu-item (-> (is-a?/c view<%>))]
+    [error-logs-menu-item (-> (obs/c (or/c #f path?)) (is-a?/c view<%>))]))
 
 (require frosthaven-manager/gui/markdown
          frosthaven-manager/gui/render
          frosthaven-manager/gui/server
          frosthaven-manager/manager
+         frosthaven-manager/observable-operator
          net/sendurl
          racket/gui/easy
+         racket/gui/easy/contract
          racket/runtime-path
          (prefix-in gui: racket/gui))
 
@@ -107,6 +110,20 @@
                              80 80
                              (gui:make-monochrome-bitmap 80 80 (make-bytes (sqr 80) #xff))
                              (gui:make-monochrome-bitmap 80 80))))))))))
+
+(define (error-logs-menu-item @error-logs)
+  (menu-item
+   "Show error logs"
+   (thunk
+    (with-closing-custodian/eventspace
+     (render/eventspace
+      #:eventspace closing-eventspace
+      (window
+       #:mixin close-custodian-mixin
+       #:title "Error logs"
+       (text (@> @error-logs
+                 {~> (if _ path->string "standard error on your terminal device")
+                     (~a "Errors logs are written to " _ ".")}))))))))
 
 (module+ main
   (render

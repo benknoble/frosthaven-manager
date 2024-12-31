@@ -328,5 +328,6 @@ In the @onscreen{Utilities} menu, you will the find following entries:
 
 In the @onscreen{Debug} menu, you will find the following entries:
 @itemlist[
+  @item{@onscreen{Show error logs}: Find out where errors are being logged to.}
   @item{@onscreen{Observe GC}: This is used by developers to show a visual indicator of @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{garbage collection}. This is not something normal players need to worry about.}
 ]
