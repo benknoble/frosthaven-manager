@@ -170,7 +170,6 @@
     @ability @mg @env)
    #:min-size '(200 60)))
 
-
 (define ((do-new @mg on-new))
   (define @available-numbers
     (@> @mg {~>> monster-group-monsters
