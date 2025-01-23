@@ -134,7 +134,7 @@
              [type (list "normal" "elite")])
     (list level type)))
 
-(define-flow level-x-type-dupes (~> check-duplicates (and _ (take 2))))
+(define-flow level-x-type-dupes (~>> (map {(take 2)}) check-duplicates))
 (define-flow level-x-type-set (~> (sep (take 2)) set))
 
 (define-flow make-stats
@@ -172,7 +172,7 @@
                          "exactly one set of stats for each level (0–7) and type (normal or elite)"
                          {(or level-x-type-dupes
                               (~>> level-x-type-set (set-subtract level-x-type)
-                                   set->list (string-join _ ",")))})] skip-ws
+                                   set->list (map ~a) (string-join _ ",")))})] skip-ws
       (string/p "end-monster")
       (pure
         (apply monster-info
