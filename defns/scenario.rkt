@@ -173,6 +173,10 @@
 (define conditions->string
   {~> (sep format-condition) collect (string-join ", " #:before-last " and ")})
 
+(module+ test
+  (test-case "conditions->string"
+    (check-equal? (conditions->string (list regenerate ward impair)) "Regenerate, Ward and Impair")))
+
 (define (counter xs)
   (for/fold ([h (hash)])
             ([x (in-list xs)])
