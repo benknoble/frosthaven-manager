@@ -16,6 +16,8 @@ If the resources on this page don't answer your question or solve your problem,
 @link["https://github.com/benknoble/frosthaven-manager/issues/new/choose"]{report
 an issue} or @link["mailto:ben.knoble+frosthaven@gmail.com"]{send an email}.
 
+It helps to attach logs if you have them; see @secref{Other_utilities}.
+
 @section{Reference Material}
 
 For help with installation, see @secref{Installing_Frosthaven_Manager}.
