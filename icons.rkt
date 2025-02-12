@@ -9,7 +9,8 @@
    [move (-> pict?)]
    [jump (-> pict?)]
    [teleport (-> pict?)]
-   [attack (-> pict?)]))
+   [attack (-> pict?)]
+   [pierce (-> pict?)]))
 
 (require frosthaven-manager/aoe-images
          frosthaven-manager/curlique
@@ -186,6 +187,26 @@
       highlight
       (scale 1/2 1/2)))
 
+(define (pierce)
+  (define burst
+    (~> (45 45 8 .55)
+        (-< (~> (== (/ 2) (/ 2) _ _)
+                (-< (~> filled-flash (colorize "gold")) outline-flash))
+            outline-flash)
+        cc-superimpose
+        (rotate (/ pi 8))
+        (scale 0.7 1)
+        (shear -0.2 0)))
+  (~> (burst)
+      (pin-arrow-line
+       10 _
+       burst lc-find
+       burst rc-find
+       #:solid? #f)
+      panorama
+      (translate 0 (- (/ 45 2) 10))
+      highlight))
+
 (module+ main
   (require (only-in racket/gui))
   (for ([p (list target
@@ -195,5 +216,6 @@
                  move
                  jump
                  teleport
-                 attack)])
+                 attack
+                 pierce)])
     (show-pict (p))))

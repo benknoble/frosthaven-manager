@@ -260,6 +260,13 @@
                (list _ prefix suffix))
        ;; NOTE unscaled
        (list prefix (icons:attack) suffix)]))
+  (define (pierce-icon x)
+    (match-loop x
+      ;; NOTE pierce is only followed by positive numbers
+      [(regexp #px"^(.*)(?i:pierce)(\\s\\d+.*)$"
+               (list _ prefix suffix))
+       ;; NOTE unscaled
+       (list prefix (icons:pierce) suffix)]))
   (define replacements
     (list attack
           effects
@@ -275,7 +282,8 @@
           move-icon
           jump
           teleport
-          attack-icon))
+          attack-icon
+          pierce-icon))
   (for/fold ([result (list (regexp-replaces ability-text replacements))])
             ([pict-replacement (in-list pict-replacements)])
     (append-map (only-on-text pict-replacement) result)))
@@ -360,7 +368,11 @@
   (test-model-equal? "Make first bullet"
                      (monster-ability-ability->rich-text (list (pict:text "AoE"))
                                                          mg env)
-                     (list "• " newline (pict:text "AoE"))))
+                     (list "• " newline (pict:text "AoE")))
+  (test-model-equal? "Pierce"
+                     (monster-ability-ability->rich-text (list "Attack +1, Pierce 2")
+                                                         mg env)
+                     (list "• " (icons:attack) " 3 (E:4, wound), " (icons:pierce) " 2")))
 
 (define ((keyword-sub stats-f mg) _match word +- amount)
   (define op (eval (string->symbol +-) (make-base-namespace)))

@@ -27,3 +27,4 @@ are preserved. The signifier @racket[_N] denotes where a number is expected.
 @deficon[jump "Jump"]
 @deficon[teleport "Teleport"]
 @deficon[attack "Attack +N" "Attack -N"]
+@deficon[pierce "Pierce N"]
