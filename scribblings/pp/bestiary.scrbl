@@ -3,7 +3,8 @@
 @(require "../common.rkt")
 @(require (for-label racket
                      (prefix-in pretty: pretty-expressive)
-                     frosthaven-manager/parsers/monster))
+                     frosthaven-manager/parsers/monster
+                     pict))
 
 @title{@tt{pp/bestiary}}
 @defmodule[frosthaven-manager/pp/bestiary]
@@ -21,4 +22,7 @@ more options.
 Creates a document for pretty printing from the results of a parsed bestiary.
 The document starts with a @(hash-lang) line preceding the result if
 @racket[lang-line?] is not @racket[#f].
+
+The @racket[bestiary] must not contain any @racket[pict] values, so it composes
+best with @racket[parse-bestiary].
 }

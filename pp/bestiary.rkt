@@ -8,7 +8,8 @@
          frosthaven-manager/defns
          frosthaven-manager/parsers/monster
          pretty-expressive
-         (only-in frosthaven-manager/parsers/base name->set))
+         (only-in frosthaven-manager/parsers/base name->set)
+         (only-in pict pict?))
 
 (module pp-extras racket/base
   (provide <$*>)
@@ -129,10 +130,16 @@
 
 (define (pretty-ability ability-card)
   (match-define (monster-ability _ name initiative abilities shuffle?) ability-card)
+  (define pretty-abilities
+    (for*/list ([ability (in-list abilities)]
+                [part (in-list ability)])
+      (cond
+        [(string? part) (pretty-string part)]
+        [(pict? part) (raise-argument-error 'pretty-ability "string?" part)])))
   (labelled-value
    (~s name)
    (<s> (text (format "~a~a" initiative (if shuffle? " shuffle" "")))
-        (pretty-list (map pretty-string abilities)))))
+        (pretty-list pretty-abilities))))
 
 (define (labelled-value label value-doc)
   (<+> lbrack (text label) space value-doc rbrack))
