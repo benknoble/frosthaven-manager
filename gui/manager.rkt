@@ -67,7 +67,6 @@
   (application-about-handler do-about)
   (window
     #:title "Frosthaven Manager"
-    #:size '(800 600)
     (menu-bar
       (menu "File"
             (menu-item "&Save Game" (thunk (do-save-game s))
