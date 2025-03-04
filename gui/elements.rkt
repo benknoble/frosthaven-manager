@@ -14,7 +14,7 @@
          racket/gui/easy
          racket/gui/easy/contract
          (except-in racket/gui #%app)
-         (only-in pict inset pict-width pict-height scale))
+         (only-in pict inset pict-height scale))
 
 (module+ test (require rackunit))
 
@@ -29,14 +29,20 @@
     (~> (s)
         (esc (state->pict e))
         (scale 2/3)
-        (inset 3)))
-  (pict-canvas @element-state
-               make-pict-for-canvas
-               #:min-size (@> @element-state
-                              {~> make-pict-for-canvas
-                                  (-< pict-width pict-height) (>< exact-ceiling)
-                                  list})
-               #:mixin (handle-element-clicks @element-state)))
+        (inset (/ size 2) 3 0 3)))
+  (define cycle-element (make-transition-element-state @element-state))
+  (define pict-view
+    (pict-canvas @element-state
+                 make-pict-for-canvas
+                 #:min-size (@> @element-state
+                                {~> make-pict-for-canvas
+                                    pict-height exact-ceiling
+                                    (list #f _)})
+                 #:mixin (handle-element-clicks @element-state)))
+  (vpanel
+   #:stretch '(#f #f)
+   pict-view
+   (button (@> @element-state state->text) cycle-element)))
 
 (define (handle-element-clicks @state)
   (define cycle-element (make-transition-element-state @state))
@@ -81,6 +87,13 @@
     ['infused (element-pics-infused e)]
     ['waning (element-pics-waning e)]
     [_ (element-pics-unfused e)]))
+
+(define state->text
+  (match-lambda
+    ['unfused "Infuse"]
+    ['infused "Wane"]
+    ['waning "Unfuse"]
+    [_ "Infuse"]))
 
 (module+ main
   (define es (elements))
