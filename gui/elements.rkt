@@ -14,7 +14,7 @@
          racket/gui/easy
          racket/gui/easy/contract
          (except-in racket/gui #%app)
-         (only-in pict inset))
+         (only-in pict inset pict-height scale))
 
 (module+ test (require rackunit))
 
@@ -26,18 +26,23 @@
 
 (define (element-cycler @element-state e)
   (define (make-pict-for-canvas s)
-    (inset ((state->pict e) s) (+ 3 (/ size 3)) 3 0 0))
+    (~> (s)
+        (esc (state->pict e))
+        (scale 2/3)
+        (inset (/ size 2) 3 0 3)))
   (define cycle-element (make-transition-element-state @element-state))
   (define pict-view
     (pict-canvas @element-state
                  make-pict-for-canvas
-                 #:min-size (list (+ 6 size) (+ 6 size))
+                 #:min-size (@> @element-state
+                                {~> make-pict-for-canvas
+                                    pict-height exact-ceiling
+                                    (list #f _)})
                  #:mixin (handle-element-clicks @element-state)))
-  (group
-    (element-pics-name e)
-    #:stretch '(#f #f)
-    pict-view
-    (button (@> @element-state state->text) cycle-element)))
+  (vpanel
+   #:stretch '(#f #f)
+   pict-view
+   (button (@> @element-state state->text) cycle-element)))
 
 (define (handle-element-clicks @state)
   (define cycle-element (make-transition-element-state @state))
