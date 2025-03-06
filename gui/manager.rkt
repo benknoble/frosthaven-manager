@@ -169,7 +169,8 @@
             (loot-preview (state-@loot-deck s) (state-@num-players s))
             (level-stats (state-@level s) (state-@num-players s))
             (level-table (state-@level s))
-            (inspiration-table (state-@num-players s)))))
+            (inspiration-table (state-@num-players s)))
+    (logs-widget (state-@error-logs s))))
 
 (define (deck-adder-button @cards do-adder text original-deck)
   (button

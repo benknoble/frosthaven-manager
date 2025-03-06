@@ -24,3 +24,8 @@ Menu items for Frosthaven Manager.
 Renders an About window, as in @racket[about-menu-item]. Useful with
 @racket[application-about-handler].
 }
+
+@defproc[(logs-widget [|@error-logs| (obs/c (or/c #f path?))])
+         (is-a?/c view<%>)]{
+A GUI view to tell the user where logs can be found.
+}

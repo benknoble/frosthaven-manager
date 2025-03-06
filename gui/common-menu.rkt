@@ -11,6 +11,7 @@
     [how-to-play-menu-item (-> (is-a?/c view<%>))]
     [launch-server-menu-item (-> state? (is-a?/c view<%>))]
     [gc-menu-item (-> (is-a?/c view<%>))]
+    [logs-widget (-> (obs/c (or/c #f path?)) (is-a?/c view<%>))]
     [error-logs-menu-item (-> (obs/c (or/c #f path?)) (is-a?/c view<%>))]))
 
 (require frosthaven-manager/gui/markdown
@@ -121,9 +122,12 @@
       (window
        #:mixin close-custodian-mixin
        #:title "Error logs"
-       (text (@> @error-logs
-                 {~> (if _ path->string "standard error on your terminal device")
-                     (~a "Errors logs are written to " _ ".")}))))))))
+       (logs-widget @error-logs)))))))
+
+(define (logs-widget @error-logs)
+  (text (@> @error-logs
+            {~> (if _ path->string "standard error on your terminal device")
+                (~a "Errors logs are written to " _ ".")})))
 
 (module+ main
   (render
