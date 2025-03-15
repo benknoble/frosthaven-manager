@@ -37,7 +37,10 @@
                  #:min-size (@> @element-state
                                 {~> make-pict-for-canvas
                                     pict-height exact-ceiling
-                                    (list #f _)})
+                                    ;; BUG: pict-canvas -> area<%> can't handle
+                                    ;; #f for min-width in make-item% in
+                                    ;; make-canvas%
+                                    (list 0 _)})
                  #:mixin (handle-element-clicks @element-state)))
   (vpanel
    #:stretch '(#f #f)
