@@ -4,6 +4,7 @@
  (contract-out
   [do-save-game (-> state? any)]
   [do-load-game (-> state? any)]
+  [save-game (-> state? (-> path-string? any))]
   [load-game (-> state? (-> path-string? any))]))
 
 (require frosthaven-manager/files
