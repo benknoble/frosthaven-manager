@@ -12,6 +12,7 @@
          frosthaven-manager/manager/elements
          frosthaven-manager/manager/modifier-decks
          frosthaven-manager/manager/round-prompts
+         frosthaven-manager/manager/save
          frosthaven-manager/manager/state
          frosthaven-manager/observable-operator)
 
@@ -25,6 +26,9 @@
 
 (define ((next-round s))
   (when (@! (state-@in-draw? s))
+    ;; autosave
+    (when (@! (state-@autosave-dir s))
+      (do-autosave s))
     ;; check prompts
     (let ([t end-of]
           [round (@! (state-@round s))])
@@ -72,3 +76,13 @@
     ((draw-abilities s))
     ;; fail: these cards still don't exist!
     (check-exn exn:fail? (thunk (get-ability-decks s archers)))))
+
+(define current-base "frosthaven-manager-autosave-current.fasl")
+(define previous-base "frosthaven-manager-autosave-previous.fasl")
+
+(define (do-autosave s)
+  (define dir (@! (state-@autosave-dir s)))
+  (define ($ . xs) (apply build-path dir xs))
+  (when (file-exists? ($ current-base))
+    (rename-file-or-directory ($ current-base) ($ previous-base) 'exists-ok))
+  ((save-game s) ($ current-base)))
