@@ -311,6 +311,7 @@ In the @onscreen{File} menu, you will find the following entries:
 @itemlist[
   @item{@onscreen{Save Game}: see @secref{Saving_and_loading_a_game}. Also available with Ctl-S or Cmd-S, depending on your operating system.}
   @item{@onscreen{Load Game}: see @secref{Saving_and_loading_a_game}. Also available with Ctl-O or Cmd-O, depending on your operating system.}
+  @item{@onscreen{Enable Autosave}: Autosave at the end of each round with a 2-turn buffer to a directory of your choice.}
   @item{@onscreen{Launch Server}: Launches a local server. Have your players open the address shown in their web browsers and enjoy interacting with the app! Most but not all controls are available in the web browser.}
 ]
 

@@ -55,7 +55,7 @@
          frosthaven-manager/monster-db
          frosthaven-manager/observable-operator
          racket/gui/easy
-         (only-in racket/gui get-file put-file application-about-handler)
+         (only-in racket/gui get-file put-file application-about-handler get-directory)
          (only-in frosthaven-manager/elements elements))
 
 (define modifier
@@ -73,6 +73,7 @@
                        #:shortcut (list modifier #\s))
             (menu-item "L&oad Game" (thunk (do-load-game s))
                        #:shortcut (list modifier #\o))
+            (menu-item "Enable Autosave" (thunk (do-autosave s)))
             (launch-server-menu-item s))
       (menu "Edit"
             (edit-level-menu-item (state-@level s)
@@ -319,6 +320,13 @@
              [else (spacer)]))))
 
 ;;;; Menu Items
+
+(define (do-autosave s)
+  (cond
+    [(get-directory "Autosave Directory")
+     =>
+     (λ (dir)
+       (:= (state-@autosave-dir s) dir))]))
 
 (define (edit-level-menu-item @level [on-change void])
   (menu-item
