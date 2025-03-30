@@ -29,7 +29,8 @@
                    [@ability-decks (obs/c (hash/c string? ability-decks?))]
                    [@prompts (obs/c (listof prompt/c))]
                    [@type->deck (obs/c (hash/c loot-type/c (listof loot-card?)))]
-                   [@error-logs (obs/c (or/c #f path?))])]
+                   [@error-logs (obs/c (or/c #f path?))]
+                   [@autosave-dir (obs/c (or/c #f path?))])]
     [make-state
       (->* ()
            ((maybe-obs/c level/c)
@@ -52,6 +53,7 @@
             (maybe-obs/c (hash/c string? ability-decks?))
             (maybe-obs/c (listof prompt/c))
             (maybe-obs/c (hash/c loot-type/c (listof loot-card?)))
+            (maybe-obs/c (or/c #f path?))
             (maybe-obs/c (or/c #f path?)))
            state?)]
     [state-@env (-> state? (obs/c env/c))]
@@ -134,7 +136,8 @@
          @ability-decks
          @prompts
          @type->deck
-         @error-logs]
+         @error-logs
+         @autosave-dir]
         #:transparent ;; for struct->vector
         #:property prop:serializable
         (make-serialize-info
@@ -164,7 +167,8 @@
                     [@ability-decks (@ (hash))]
                     [@prompts (@ empty)]
                     [@type->deck (@ standard-loot-deck)]
-                    [@error-logs (@ #f)])
+                    [@error-logs (@ #f)]
+                    [@autosave-dir (@ #f)])
   (state (@ @level)
          (@ @num-players)
          (@ @creatures)
@@ -194,7 +198,8 @@
          (@ @ability-decks)
          (@ @prompts)
          (@ @type->deck)
-         (@ @error-logs)))
+         (@ @error-logs)
+         (@ @autosave-dir)))
 
 (define (state-@env s)
   (obs-combine (λ (c l) (hash "C" c "L" l))
@@ -302,7 +307,9 @@
   (:=     (state-@type->deck to)
       (@! (state-@type->deck from)))
   (:=     (state-@error-logs to)
-      (@! (state-@error-logs from))))
+      (@! (state-@error-logs from)))
+  (:=     (state-@autosave-dir to)
+      (@! (state-@autosave-dir from))))
 
 (define (state-@info-db s)
   (@> (state-@bestiary-path s)
