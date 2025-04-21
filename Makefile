@@ -40,7 +40,7 @@ clean:
 	$(RACO) setup $(RACO_SETUP_ARGS) --fast-clean --pkgs $(PKG)
 
 docs/frosthaven-manager/index.html:
-	scribble +m --redirect-main http://pkg-build.racket-lang.org/doc/ --htmls --dest ./docs ./scribblings/frosthaven-manager.scrbl
+	scribble +m --redirect-main http://pkg-build.racket-lang.org/doc/ --redirect https://docs.racket-lang.org/local-redirect/index.html --htmls --dest ./docs ./scribblings/frosthaven-manager.scrbl
 
 $(EXES): gui/manager.rkt
 	$(RACO) exe --gui -o FrosthavenManager $(LANGS) gui/manager.rkt
