@@ -78,14 +78,14 @@
                           ['() 0]
                           [(cons [line number _ _] _) (sub1 number)])])
     (match s
-      [(cons [line line-number dedent? columns] s)
-       (if (= line-number (add1 last-line))
-           (loop s
-                 (cons [line line-number dedent? (fill-in-columns columns)] result)
-                 line-number)
-           (loop (cons [line line-number dedent? columns] s)
-                 (cons [line (add1 last-line) #f '()] result)
-                 (add1 last-line)))]
+      [(cons [line (and line-number (== (add1 last-line))) dedent? columns] s)
+       (loop s
+             (cons [line line-number dedent? (fill-in-columns columns)] result)
+             line-number)]
+      [(cons a-line s)
+       (loop (cons a-line s)
+             (cons [line (add1 last-line) #f '()] result)
+             (add1 last-line))]
       ['() (reverse result)])))
 
 (module+ test
@@ -131,14 +131,14 @@ EOF
              [result null]
              [last-column -1])
     (match cs
+      [(cons (and c [column _ (and column-number (== (add1 last-column)))]) cs)
+       (loop cs (cons c result) column-number)]
       [(cons (and c [column _ column-number]) cs)
-       (if (= column-number (add1 last-column))
-           (loop cs (cons c result) column-number)
-           (loop (cons c cs)
-                 ;; we don't actually end up using this number when building the
-                 ;; shape!
-                 (cons [column 'g column-number] result)
-                 (add1 last-column)))]
+       (loop (cons c cs)
+             ;; we don't actually end up using this number when building the
+             ;; shape!
+             (cons [column 'g column-number] result)
+             (add1 last-column))]
       ['() (reverse result)])))
 
 (define spec-sym? (or/c 's 'x 'o 'm 'g))
