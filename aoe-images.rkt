@@ -20,6 +20,8 @@
          pict
          racket/draw)
 
+(module+ test (require rackunit))
+
 (define (custom-hex s)
   (define h (* (sqrt 3) s))
   (define r (* 1/2 h))
@@ -86,6 +88,43 @@
                  (add1 last-line)))]
       ['() (reverse result)])))
 
+(module+ test
+  (check-equal? (fill-in-spec (string->spec "x m x"))
+                (list (line 1 #f (list (column 'x 0)
+                                       (column 'm 1)
+                                       (column 'x 2)))))
+  (check-equal? (fill-in-spec (string->spec " x m x"))
+                (list (line 1 #f (list (column 'x 0)
+                                       (column 'm 1)
+                                       (column 'x 2)))))
+  (check-equal? (fill-in-spec (string->spec " x x\nx x x\n x x"))
+                (list (line 1 #t (list (column 'x 0)
+                                       (column 'x 1)))
+                      (line 2 #f (list (column 'x 0)
+                                       (column 'x 1)
+                                       (column 'x 2)))
+                      (line 3 #t (list (column 'x 0)
+                                       (column 'x 1)))))
+  (check-equal? (fill-in-spec (string->spec " x x\nx   x\n x x"))
+                (list (line 1 #t (list (column 'x 0)
+                                       (column 'x 1)))
+                      (line 2 #f (list (column 'x 0)
+                                       (column 'g 2)
+                                       (column 'x 2)))
+                      (line 3 #t (list (column 'x 0)
+                                       (column 'x 1)))))
+  (check-equal? (fill-in-spec (string->spec #<<EOF
+
+   x
+  m x
+EOF
+                                           ))
+                (list (line 2 #t (list (column 'g 1)
+                                       (column 'x 1)))
+                      (line 3 #f (list (column 'g 1)
+                                       (column 'm 1)
+                                       (column 'x 2))))))
+
 ;; (listof column?) -> (listof column?)
 (define (fill-in-columns cs)
   (let loop ([cs cs]
@@ -96,6 +135,8 @@
        (if (= column-number (add1 last-column))
            (loop cs (cons c result) column-number)
            (loop (cons c cs)
+                 ;; we don't actually end up using this number when building the
+                 ;; shape!
                  (cons [column 'g column-number] result)
                  (add1 last-column)))]
       ['() (reverse result)])))
