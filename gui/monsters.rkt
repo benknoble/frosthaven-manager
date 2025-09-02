@@ -262,7 +262,8 @@
            (match-lambda**
              [{'input val} (:= @inc val)]
              [{'return val} (:= @inc val)
-                            (change!)])
+                            (change!)]
+             [{_ _} (void)])
            #:label "Enter a number or a formula to add")
     (hpanel
      (button "Change" change!)

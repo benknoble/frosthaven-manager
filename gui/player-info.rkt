@@ -207,7 +207,8 @@
                        (add-summon (@! @name) (@! @hp)))))}
     (hpanel (input @name (match-lambda**
                            [{'input s} (:= @name s)]
-                           [{'return s} (:= @name s) (close!)]))
+                           [{'return s} (:= @name s) (close!)]
+                           [{_ _} (void)]))
             (counter (@> @hp {(~a "Max HP: " _)})
                      (thunk (<@ @hp add1))
                      (thunk (<@ @hp {switch [(<= 1) _] [else sub1]})))
@@ -227,7 +228,8 @@
     #:style '(close-button resize-border)
     (input @name (match-lambda**
                    [{'input s} (:= @name s)]
-                   [{'return s} (:= @name s) (finish!)]))
+                   [{'return s} (:= @name s) (finish!)]
+                   [{_ _} (void)]))
     (hpanel (button "Accept" finish!)
             (button "Cancel" close!)))))
 
