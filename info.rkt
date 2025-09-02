@@ -38,7 +38,7 @@
                      "racket-doc"))
 (define scribblings '(("scribblings/frosthaven-manager.scrbl" (multi-page))))
 (define pkg-desc "Frosthaven Scenario Manager")
-(define version "0.27")
+(define version "0.27.1")
 (define pkg-authors '(benknoble))
 (define license 'MIT)
 
