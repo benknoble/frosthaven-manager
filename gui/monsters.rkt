@@ -468,7 +468,8 @@
   (define new-group (vector set info (hash) (@! @initial-level)))
   (define (finish)
     (match-define (vector set info num->elite level) new-group)
-    (when (and set info
+    (when (and set
+               info
                (not (or (hash-empty? num->elite)
                         ;; valid because inside a dialog-closer: @monster-names
                         ;; won't update until the end of this form
