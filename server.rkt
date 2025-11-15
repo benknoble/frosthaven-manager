@@ -173,6 +173,9 @@
              [(creature-is-mg*? c) (multicast-channel-put ch `(monster-group* ,c ,env ,ads))]))
          (define new-ids (map creature-css-id (sort creatures < #:key (creature-initiative ads))))
          (unless (equal? (unbox ids) new-ids)
+           ;; with thread, maybe this should be box-cas!, but we can't always
+           ;; guarantee we know what the "old" value is… maybe just remove
+           ;; thread here?
            (set-box! ids new-ids)
            (multicast-channel-put ch `(reorder ,(unbox ids)))))))))
   (obs-observe! (state-@round an-s) (λ (r) (multicast-channel-put ch `(number round ,r))))
