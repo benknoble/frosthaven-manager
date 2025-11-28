@@ -368,14 +368,14 @@
        (when (regexp-match-peek #rx"#lang" ip)
          (void (read-line ip 'any)))
        (parse-bestiary file ip #:syntax? #f))))
-  (~> (bestiary)
-      sep (>< (switch [(esc (listof monster-ability?)) sep])) collect
-      datums->dbs
-      (== (ε (:= @info-db _) ground)
-          (ε (:= @ability-db _) ground)))
-  (:= @imports (filter-map (and/c (list/c 'import string?)
-                                  second)
-                           bestiary)))
+  (match bestiary
+    [(list (cons 'import imports)
+           (cons 'info infos)
+           (cons 'ability abilities))
+     (~> (infos abilities) append datums->dbs
+         (== (ε (:= @info-db _) ground)
+             (ε (:= @ability-db _) ground)))
+     (:= @imports imports)]))
 
 (define (file-relative-to-current file current-file)
   (cond
