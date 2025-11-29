@@ -5,16 +5,15 @@
 (require frosthaven-manager/aoe-images
          syntax/parse/define)
 
-(define-syntax-parser mb
-  [(_ spec:expr)
-   (syntax/loc this-syntax
-     (#%module-begin
-      (provide aoe)
-      (define (aoe)
-        (spec->shape 'spec))
-      (module+ main
-        (require racket/gui pict)
-        (show-pict (aoe)))))])
+(define-syntax-parse-rule (mb spec:expr)
+  (syntax/loc this-syntax
+    (#%module-begin (provide aoe)
+                    (define (aoe)
+                      (spec->shape 'spec))
+                    (module+ main
+                      (require racket/gui
+                               pict)
+                      (show-pict (aoe))))))
 
 (module reader syntax/module-reader
   frosthaven-manager/aoe
