@@ -13,12 +13,12 @@
       [(string? x) (f* x)]
       [else (list x)])))
 
-(define-syntax-parser match-loop
-  [(_ input:expr [pat:expr e ... res:expr] ...)
-   (syntax/loc this-syntax
-     (let loop ([x input])
-       (match x
-         [pat e ... (append-map loop res)]
-         ...
-         ;; break
-         [_ (list x)])))])
+(define-syntax-parse-rule (match-loop input:expr [pat:expr e ... res:expr] ...)
+  (syntax/loc this-syntax
+    (let loop ([x input])
+      (match x
+        [pat
+         e ...
+         (append-map loop res)] ...
+        ;; break
+        [_ (list x)]))))
