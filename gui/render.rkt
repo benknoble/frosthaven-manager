@@ -26,16 +26,16 @@
     (queue-callback (thunk (current-renderer r)) 'high-priority)
     r))
 
-(define-syntax-parser with-closing-custodian/eventspace
-  [(_ body:expr ...+)
-   (syntax/loc this-syntax
-     (let* ([cust (make-custodian)]
-            [es (parameterize ([current-custodian cust]) (make-eventspace))]
-            [shutdown-cust (shutdown-on-close cust)])
-       (syntax-parameterize ([closing-custodian (make-rename-transformer #'cust)]
-                             [closing-eventspace (make-rename-transformer #'es)]
-                             [close-custodian-mixin (make-rename-transformer #'shutdown-cust)])
-         body ...)))])
+(define-syntax-parse-rule (with-closing-custodian/eventspace body:expr ...+)
+  (syntax/loc this-syntax
+    (let* ([cust (make-custodian)]
+           [es (parameterize ([current-custodian cust])
+                 (make-eventspace))]
+           [shutdown-cust (shutdown-on-close cust)])
+      (syntax-parameterize ([closing-custodian (make-rename-transformer #'cust)]
+                            [closing-eventspace (make-rename-transformer #'es)]
+                            [close-custodian-mixin (make-rename-transformer #'shutdown-cust)])
+        body ...))))
 
 (begin-for-syntax
   (define (only-in-with-closing-custodian/eventspace stx)
