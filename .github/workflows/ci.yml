@@ -9,22 +9,16 @@ jobs:
       fail-fast: false
       matrix:
         racket-version: ["stable", "current"]
-        racket-variant: ["BC", "CS"]
         include:
           - racket-version: current
             experimental: true
-        exclude:
-          # CI failing on BC stable lately, possible TR bug:
-          # https://github.com/bennn/rackunit-abbrevs/issues/6
-          - racket-variant: BC
-            racket-version: stable
     steps:
       - uses: actions/checkout@v4
       - uses: Bogdanp/setup-racket@v1.11
         with:
           architecture: x64
           distribution: full
-          variant: ${{ matrix.racket-variant }}
+          variant: CS
           version: ${{ matrix.racket-version }}
       - name: Installing frosthaven-manager and its dependencies
         run: make install
