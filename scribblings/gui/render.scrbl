@@ -81,4 +81,8 @@ on whether window A or window B was closed first. Note also the use of
 (sync main-es) ;; wait until window A is closed
 (eventspace-shutdown? aux-es) ;; true if window B was closed first
 }
+
+Note that if @racket[current-renderer] is a @racket[renderer?] when the
+eventspace is shutdown, it will be destroyed by @racket[renderer-destroy].
+Misuse may cause bugs.
 }

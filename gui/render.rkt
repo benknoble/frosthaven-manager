@@ -22,8 +22,9 @@
 (define (render/eventspace tree #:parent [parent #f] #:eventspace [es (current-eventspace)])
   (parameterize ([current-eventspace es])
     (define r (render tree parent))
-    ;; set current-renderer in handler-thread of es
-    (queue-callback (thunk (current-renderer r)) 'high-priority)
+    (when (renderer? r)
+      ;; set current-renderer in handler-thread of es
+      (queue-callback (thunk (current-renderer r)) 'high-priority))
     r))
 
 (define-syntax-parser with-closing-custodian/eventspace
@@ -48,5 +49,12 @@
   (mixin (top-level-window<%>) ()
     (super-new)
     (define/augment (on-close)
-      ;; shutdown the custodian after processing remaining events
-      (queue-callback (thunk (custodian-shutdown-all cust))))))
+      (queue-callback
+       (thunk
+        ;; If we rendered a non-dialog, we should destroy it for resource
+        ;; reclamation. NB only works well with render/eventspace; misuse may
+        ;; cause bugs.
+        (when (renderer? (current-renderer))
+          (renderer-destroy (current-renderer)))
+        ;; shutdown the custodian after processing remaining events
+        (custodian-shutdown-all cust))))))
