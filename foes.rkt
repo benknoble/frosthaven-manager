@@ -10,34 +10,37 @@
          frosthaven-manager/syntax/monsters
          syntax/parse/define)
 
-(define-syntax-parser mb
-  [(_ ({~datum import} imports:string ...)
-      ({~datum info} infos ...)
-      ({~datum ability} actions ...)
-      ({~datum foe} foes ...))
-   #:do [(define-values (imported-info-dbs imported-ability-dbs)
-           (imports->dbs (syntax->datum #'(imports ...))))]
-   #:fail-unless (check-monsters-have-abilities imported-info-dbs imported-ability-dbs
-                                                (syntax->datum #'(infos ...))
-                                                (syntax->datum #'(actions ...)))
-   (check-monsters-have-abilities-message imported-info-dbs imported-ability-dbs
-                                          (syntax->datum #'(infos ...))
-                                          (syntax->datum #'(actions ...)))
-   #:fail-unless (check-foes-have-monsters imported-info-dbs
-                                           (syntax->datum #'(infos ...))
-                                           (syntax->datum #'(foes ...)))
-   (check-foes-have-monsters-message imported-info-dbs
-                                     (syntax->datum #'(infos ...))
-                                     (syntax->datum #'(foes ...)))
-   ;;=>
-   (syntax/loc this-syntax
-     (#%module-begin
-      (make-dbs (provide info-db ability-db)
-                (import imports ...)
-                (info infos ...)
-                (ability actions ...))
-      (provide make-foes)
-      (define make-foes (make-foes-maker '(foes ...) info-db))))])
+(define-syntax-parse-rule (mb ({~datum import} imports:string ...)
+                              ({~datum info} infos ...)
+                              ({~datum ability} actions ...)
+                              ({~datum foe} foes ...))
+  #:do [(define-values (imported-info-dbs imported-ability-dbs)
+          (imports->dbs (syntax->datum #'(imports ...))))]
+  #:fail-unless
+  (check-monsters-have-abilities imported-info-dbs
+                                 imported-ability-dbs
+                                 (syntax->datum #'(infos ...))
+                                 (syntax->datum #'(actions ...)))
+  (check-monsters-have-abilities-message imported-info-dbs
+                                         imported-ability-dbs
+                                         (syntax->datum #'(infos ...))
+                                         (syntax->datum #'(actions ...)))
+  #:fail-unless
+  (check-foes-have-monsters imported-info-dbs
+                            (syntax->datum #'(infos ...))
+                            (syntax->datum #'(foes ...)))
+  (check-foes-have-monsters-message imported-info-dbs
+                                    (syntax->datum #'(infos ...))
+                                    (syntax->datum #'(foes ...)))
+  ;;=>
+  (syntax/loc this-syntax
+    (#%module-begin (make-dbs (provide info-db
+                                       ability-db)
+                              (import imports ...)
+                              (info infos ...)
+                              (ability actions ...))
+                    (provide make-foes)
+                    (define make-foes (make-foes-maker '(foes ...) info-db)))))
 
 (define ((make-foes-maker foes info-db) level number-of-players)
   (for/list ([foe (in-list foes)])
